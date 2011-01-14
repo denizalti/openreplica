@@ -1,7 +1,6 @@
-from utils import computeNodeID
 
 class Peer():
-    def __init__(self, addr, port, id):
+    def __init__(self,id,port,addr):
         self.port = port
         self.addr = addr
         self.ID = id

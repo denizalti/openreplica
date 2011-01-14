@@ -13,7 +13,6 @@ from NeighborhoodSet import *
 from Peer import *
 from Generators import *
 from Handlers import *
-from Message import *
 
 parser = OptionParser(usage="usage: %prog -i id -p port -t type -b bootstrap")
 parser.add_option("-i", "--id", action="store", dest="id", help="node id")
@@ -28,7 +27,7 @@ LEADER = 1
 LEARNER = 2
 
 # TIMEOUT THREAD
-class Acceptor():
+class Node():
     def __init__(self, id, port, bootstrap=None):
         print "port: ", port
         print "id: ", id
@@ -36,6 +35,7 @@ class Acceptor():
         self.addr = findOwnIP()
         self.port = int(port)
         self.ID = int(id)
+        self.type = ACCEPTOR
         # neighbors
         self.neighborhoodSet = NeighborhoodSet()   # Keeps ID-Addr-Port
         # print some information
@@ -91,13 +91,24 @@ class Acceptor():
         connection.close()
         
 # MESSAGE HANDLERS
+    def handle_helo(self,msg):
+        print "DEBUG: received HELO msg"
+        # When a HELO msg is received, it indicates that the node is a bootstrap node
+        # So the Node receiving the HELO message should start the process for
+        # reaching consensus
+        n = HighestBallotNumber
+        data = n
+        msggenerator = getattr(Generators,"create_prep")
+        msg = msggenerator(Generators,data)
+        #prep_replies = neighborhoodSet.broadcast(msg)
+        # Here broadcast returns (n,v) pairs received.
+    
     def handle_prep(self,msg):
         print "DEBUG: received PREP msg"
         # When a PREPare msg is received, it indicates that the node is an acceptor
         # The following scenarios can apply:
         # 1) The proposal number N is greater than any previous proposal number: Acpt(LastValueAccepted)
         # 2) The proposal number N is less than a previous proposal number: Rjct()
-        Message.unpack(Message, msg)
     
     def handle_prop(self,msg):
         print "DEBUG: received PROP msg"
@@ -105,8 +116,13 @@ class Acceptor():
         # The following scenarios can apply:
         # 1) The PROPose msg is for a proposal that has not been rejected: Acpt(LastValueAccepted)
         # 2) The PROPose msg is for a proposal that has been rejected: Rjct()
-        Message.unpack(Message, msg)
-
+    
+    def handle_acpt(self,msg):
+        print "DEBUG: received ACPT msg"
+    
+    def handle_rjct(self,msg):
+        print "DEBUG: received RJCT msg"
+        
     def handle_cmmt(self,msg):
         print "DEBUG: received CMMT msg"
     

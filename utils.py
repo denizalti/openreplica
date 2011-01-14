@@ -10,9 +10,7 @@ def hash(name):
 
 def findOwnIP():
 #    return socket.gethostbyname(socket.gethostname())
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(('google.com', 0))
-    return s.getsockname()[0]
+    return socket.gethostbyname(socket.gethostname())
 
 # This function computes a NodeID given an addr and port
 def computeNodeID(addr, port):
