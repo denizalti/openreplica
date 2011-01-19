@@ -9,11 +9,8 @@ from optparse import OptionParser
 import threading
 from utils import *
 from Connection import *
-from NeighborhoodSet import *
+from Group import *
 from Peer import *
-from Generators import *
-from Handlers import *
-from Message import *
 
 parser = OptionParser(usage="usage: %prog -i id -p port -t type -b bootstrap")
 parser.add_option("-i", "--id", action="store", dest="id", help="node id")
@@ -22,10 +19,6 @@ parser.add_option("-t", "--type", action="store", dest="type", help="type of the
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port tuple for the peer")
 
 (options, args) = parser.parse_args()
-
-ACCEPTOR = 0
-LEADER = 1
-LEARNER = 2
 
 # TIMEOUT THREAD
 class Leader():
@@ -36,8 +29,9 @@ class Leader():
         self.addr = findOwnIP()
         self.port = int(port)
         self.id = int(id)
-        # neighbors
-        self.neighborhoodSet = NeighborhoodSet()   # Keeps ID-Addr-Port
+        # groups
+        self.acceptors = Group()
+        self.leaders = Group()
         # print some information
         print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.ID)
         if bootstrap:
@@ -45,12 +39,10 @@ class Leader():
             bootpeer = Peer(int(bootid),int(bootport),bootaddr)
             helomsg = self.create_helo('')
             self.neighborhoodSet.send_to_peer(bootpeer,helomsg)
-        self.serverloop()
         
         # Synod Leader State
+        self.state = LEADER_ST_INITIAL
         self.ballot_num = ballotnumber(self.id,0)
-        self.acceptors = 0
-        self.rejectors = 0
         self.pvalues = [] # array of pvalues
         
     def serverloop(self):
@@ -71,26 +63,26 @@ class Leader():
                 continue
         s.close()
         
-    def handleconnection(self,clientsock):
-        print "DEBUG: Handling the connection.."
-        addr,port = clientsock.getpeername()
-        tuple = addr+":"+str(port)
-        connection = Connection(addr,port,clientsock)
-        msgtype,msg = connection.receive()
-        try:
-            msghandler = getattr(Handlers,"handle_"+msgtype)
-        except AttributeError:
-            print "Attribute Not Found"            
-        result = msghandler(Handlers,msg)
-        data = ''
-        try: 
-            msggenerator = getattr(Generators,"create_"+msgtype)
-        except AttributeError:
-            print "Attribute Not Found"
-        msg = msggenerator(Handlers,data)
-    
-        print "DEBUG: Closing the connection for %s:%d" % (addr,port)    
-        connection.close()
+    def prepare(self, commandnumber, proposal):
+        print "DEBUG: Preparing for commandnumber: %d proposal: %s" % commandnumber, proposal
+        msg = Message(type=PREP,givenpvalues=[pvalue(ballotnumber=(self.ballot_num,self.id),commandnumber=commandnumber,proposal=proposal)])
+        self.ballot_num += 1
+        replies = self.acceptors.broadcast(msg)
+        self.state = LEADER_ST_PREPARESENT
+        return 200
+        
+    def changeState(self, message):
+        # Change State depending on the message
+        if self.state == LEADER_ST_PREPARESENT:
+            print "In State PREPARESENT"
+        elif self.state == LEADER_ST_PROPOSESENT:
+            print "In State PROPOSESENT"
+        elif self.state == LEADER_ST_ACCEPTED:
+            print "In State ACCEPTED"
+        elif self.state == LEADER_ST_REJECTED:
+            print "In State REJECTED"
+        else:
+            print "DEBUG: Shouldn't reach here."
         
 # MESSAGE HANDLERS
     def handle_acpt(self,msg):
@@ -129,9 +121,9 @@ class Leader():
     
     def create_prep(self):
         print "DEBUG: creating PREP msg"
-        msg = Message(type=PREP,number=self.ballot_num,givenpvalue=pvalue(ballot=self.ballot_num,command=0,proposal=0))
+        msg = Message(type=PREP,givenpvalues=[pvalue(ballotnumber=(self.ballot_num,self.id),commandnumber=0,proposal="")])
         self.ballot_num += 1
-        return msg
+        return msg 
     
     def create_prop(self,proposal):
         print "DEBUG: creating PROP msg"

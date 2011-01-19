@@ -23,10 +23,6 @@ parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="addres
 
 (options, args) = parser.parse_args()
 
-ACCEPTOR = 0
-LEADER = 1
-LEARNER = 2
-
 # TIMEOUT THREAD
 class Acceptor():
     def __init__(self, id, port, bootstrap=None):

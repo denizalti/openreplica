@@ -2,30 +2,29 @@ from threading import RLock
 from Connection import *
 from utils import *
 
-class NeighborhoodSet():
+class Group():
     def __init__(self):
-        self.neighbors = []
+        self.members = []
         self.lock = RLock()
 
     def remove(self,peer):
-        if peer in self.neighbors:
-            self.neighbors.remove(peer)
+        if peer in self.members:
+            self.members.remove(peer)
 
     def add(self,peer):
         if self.ID == peer.ID:
             return
-        for oldPeer in self.neighbors:
+        for oldPeer in self.members:
             if oldPeer.ID == peer.ID:
                 return
-        self.neighbors.append(peer)
+        self.members.append(peer)
         
     def broadcast(self,msg):
         print "DEBUG: broadcasting message.."
         replies = []
-        for neighbor in self.neighborhoodSet.neighbors:
-            reply = self.send_to_peer(neighbor.addr,neighbor.port,msg)
-            if reply != "acpt":
-                return None 
+        for member in self.Group.members:
+            reply = self.send_to_peer(member.addr,member.port,msg)
+            replies.append(reply)
         return replies
     
     def send_to_peer(self,peer,msg):
@@ -45,6 +44,6 @@ class NeighborhoodSet():
             
     def __str__(self):
         output = ''
-        for neighbor in self.neighbors:
-            output += str(neighbor)+'\n'
+        for member in self.members:
+            output += str(member)+'\n'
         return output
