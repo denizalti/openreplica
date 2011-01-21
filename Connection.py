@@ -1,5 +1,6 @@
 import socket
 import struct
+from Message import *
 
 class Connection():
     def __init__( self,addr,port,ex_socket=None):
@@ -18,7 +19,8 @@ class Connection():
         
     def get_details(self):
         print "The peer name: %s addr: %s port: %d" % (self.peer_name, self.addr, self.port)
-        
+    
+    # Change this to return a Message()    
     def receive(self):
         print "DEBUG: Receiving msg"
         try:

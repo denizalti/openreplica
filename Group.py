@@ -4,7 +4,7 @@ from utils import *
 
 class Group():
     def __init__(self):
-        self.members = []
+        self.members = []   # array of Peer()
         self.lock = RLock()
 
     def remove(self,peer):
@@ -43,7 +43,10 @@ class Group():
         return reply
             
     def __str__(self):
-        output = ''
+        returnstr = 'Members of the Group:\n'
         for member in self.members:
-            output += str(member)+'\n'
-        return output
+            returnstr += str(member)+'\n'
+        return returnstr
+    
+    def __len__(self):
+        return len(self.members)

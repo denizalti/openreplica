@@ -1,18 +1,12 @@
 '''
 @author: denizalti
-@note: The Node is responsible for
-        1) building and maintaining an unstructured mesh
-        2) for forwarding queries along edges of the mesh
-        3) responding to queries
+@note: The Acceptor acts like a server.
 '''
 from optparse import OptionParser
 import threading
-from utils import *
+from Utils import *
 from Connection import *
-from NeighborhoodSet import *
 from Peer import *
-from Generators import *
-from Handlers import *
 from Message import *
 
 parser = OptionParser(usage="usage: %prog -i id -p port -t type -b bootstrap")
@@ -23,7 +17,6 @@ parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="addres
 
 (options, args) = parser.parse_args()
 
-# TIMEOUT THREAD
 class Acceptor():
     def __init__(self, id, port, bootstrap=None):
         print "port: ", port
@@ -31,9 +24,8 @@ class Acceptor():
         print "bootstrap: ", bootstrap
         self.addr = findOwnIP()
         self.port = int(port)
-        self.ID = int(id)
-        # neighbors
-        self.neighborhoodSet = NeighborhoodSet()   # Keeps ID-Addr-Port
+        self.id = int(id)
+        self.toPeer = Peer(self.id,self.addr,self.port)
         # print some information
         print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.ID)
         if bootstrap:
@@ -44,11 +36,10 @@ class Acceptor():
         self.serverloop()
         
         # Synod Acceptor State
-        self.ballot_num = 0
+        self.ballotnumber = (0,0)
         self.accepted = None # Array of pvalues
         
     def serverloop(self):
-        # wait for other peers to connect
         s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         s.bind((self.addr,self.port))
@@ -70,88 +61,25 @@ class Acceptor():
         addr,port = clientsock.getpeername()
         tuple = addr+":"+str(port)
         connection = Connection(addr,port,clientsock)
-        msgtype,msg = connection.receive()
-        try:
-            msghandler = getattr(Handlers,"handle_"+msgtype)
-        except AttributeError:
-            print "Attribute Not Found"            
-        result = msghandler(Handlers,msg)
-        data = ''
-        try: 
-            msggenerator = getattr(Generators,"create_"+msgtype)
-        except AttributeError:
-            print "Attribute Not Found"
-        msg = msggenerator(Handlers,data)
-    
+        message = connection.receive()
+        if message.type == MSG_PREPARE:
+            if message.ballotnumber > self.ballotnumber:
+                self.ballotnumber = message.ballotnumber
+                replymessage = Message(type=MSG_ACCEPT,source=self.toPeer.serialize(),ballotnumber=self.ballotnumber,givenpvalues=self.accepted)
+            else:
+                replymessage = Message(type=MSG_REJECT,source=self.toPeer.serialize(),ballotnumber=self.ballotnumber,givenpvalues=self.accepted)
+            connection.send(replymessage)
+        elif messagetype == MSG_PROPOSE:
+            if message.ballotnumber >= self.ballotnumber:
+                self.ballotnumber = message.ballotnumber
+                newpvalue = pvalue(ballotnumber=message.ballotnumber,commandnumber=message.commandnumber,proposal=message.proposal)
+                self.accepted.append(newpvalue)
+                replymessage = Message(type=MSG_ACCEPT,source=self.toPeer.serialize(),ballotnumber=self.ballotnumber,commandnumber=newpvalue.commandnumber)
+            else:
+                replymessage = Message(type=MSG_REJECT,source=self.toPeer.serialize(),ballotnumber=self.ballotnumber,commandnumber=newpvalue.commandnumber)
+            connection.send(replymessage)
         print "DEBUG: Closing the connection for %s:%d" % (addr,port)    
         connection.close()
-        
-# MESSAGE HANDLERS
-    def handle_prep(self,msg):
-        print "DEBUG: received PREP msg"
-        # When a PREPare msg is received, it indicates that the node is an acceptor
-        # The following scenarios can apply:
-        # 1) The proposal number N is greater than any previous proposal number: Acpt(LastValueAccepted)
-        # 2) The proposal number N is less than a previous proposal number: Rjct()
-        msg_type, msg_length, msg_number, msg_content = Message.unpack(Message, msg)
-        
-        if msg_number > self.highestballot:
-            return ACPT
-        else:
-            return RJCT
-        
-    def handle_prop(self,msg):
-        print "DEBUG: received PROP msg"
-        # When a PROPose msg is received, it indicates that the proposer is proposing a value
-        # The following scenarios can apply:
-        # 1) The PROPose msg is for a proposal that has not been rejected: Acpt(LastValueAccepted)
-        # 2) The PROPose msg is for a proposal that has been rejected: Rjct()
-        msg_type, msg_length, msg_number, msg_content = Message.unpack(Message, msg)
-        
-        if msg_number > self.highestballot:
-            return ACPT
-        else:
-            return RJCT
-    
-    def handle_done(self,msg):
-        print "DEBUG: received DONE msg"
-    
-    def handle_rmve(self,msg):
-        print "DEBUG: received RMVE msg"
-    
-    def handle_ping(self,msg):
-        print "DEBUG: received PING msg"
-    
-    def handle_errr(self,msg):
-        print "DEBUG: received ERRR msg"
-        
-# MESSAGE GENERATORS
-    def create_helo(self):
-        print "DEBUG: creating HELO msg"
-        # HELO to the bootstrap
-        Message.pack(HELO)
-    
-    def create_prep(self):
-        print "DEBUG: creating PREP msg"
-        Message.pack(PREP, self.ballot_num)
-        self.ballot_num += 1
-    
-    def create_prop(self,value):
-        print "DEBUG: creating PROP msg"
-        Message.pack(PROP, self.ballot_num, value)
-        self.ballot_num += 1
-        
-    def create_done(self,data):
-        print "DEBUG: creating DONE msg"
-    
-    def create_rmve(self,data):
-        print "DEBUG: creating RMVE msg"
-    
-    def create_ping(self,data):
-        print "DEBUG: creating PING msg"
-    
-    def create_errr(self,data):
-        print "DEBUG: creating ERRR msg"
    
 '''main'''
 def main():

@@ -1,16 +1,17 @@
 '''
 @author: denizalti
-@note: The Node is responsible for
-        1) building and maintaining an unstructured mesh
-        2) for forwarding queries along edges of the mesh
-        3) responding to queries
+@note: The Leader
 '''
 from optparse import OptionParser
 import threading
-from utils import *
+from Utils import *
 from Connection import *
 from Group import *
 from Peer import *
+from Message import *
+from Acceptor import *
+from Scout import *
+from Commander import *
 
 parser = OptionParser(usage="usage: %prog -i id -p port -t type -b bootstrap")
 parser.add_option("-i", "--id", action="store", dest="id", help="node id")
@@ -29,8 +30,10 @@ class Leader():
         self.addr = findOwnIP()
         self.port = int(port)
         self.id = int(id)
+        self.toPeer = Peer(self.id,self.addr,self.port)
         # groups
         self.acceptors = Group()
+        self.replicas = Group()
         self.leaders = Group()
         # print some information
         print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.ID)
@@ -41,106 +44,50 @@ class Leader():
             self.neighborhoodSet.send_to_peer(bootpeer,helomsg)
         
         # Synod Leader State
-        self.state = LEADER_ST_INITIAL
-        self.ballot_num = ballotnumber(self.id,0)
+        self.ballotnumber = (self.id,0)
         self.pvalues = [] # array of pvalues
+        self.waitfor = len(self.acceptors)
+    
+    def incrementBallotnumber(self):
+        self.ballotnumber[1] += 1
+    
+    def newCommand(self,commandnumber,proposal):
+        replyFromScout = None
+        replyFromCommander = None
+        chosenpvalue = pvalue(self.ballotnumber,commandnumber,proposal)
+        scout = Scout(self.toPeer,self.acceptors,self.ballotnumber,replyFromScout)
+        scout.start()
+        # This is a busy-wait, should be optimized
+        # Need Locks for Replies.
+        while replyFromScout != None or replyFromCommander != None:
+            if replyFromScout != None:
+                if replyFromScout[0] == SCOUT_ADOPTED:
+                    possiblepvalues = []
+                    for pvalue in replyFromScout[2]:
+                        if pvalue.commandnumber == commandnumber:
+                            possiblepvalues.append(pvalue)
+                    if len(possiblepvalues) > 0:
+                        chosenpvalue = max(possiblepvalues)
+                    replyFromCommander = None
+                    commander = Commander(self.toPeer,self.acceptors,self.ballotnumber,chosenpvalue,replyFromCommander)
+                    continue
+                elif replyFromScout[0] == SCOUT_PREEMPTED:
+                    if replyFromScout[1][1] > self.ballotnumber[1]:
+                        self.incrementBallotnumber()
+                        replyFromScout = None
+                        scout = Scout(self.toPeer,self.acceptors,self.ballotnumber,replyFromScout)
+            elif replyFromCommander != None:
+                if replyFromCommander[0] == COMMANDER_CHOSEN:
+                    message = Message(type=MSG_PERFORM,source=self.leader.serialize,commandnumber=replyFromCommander[1],proposal=proposal)
+                    self.replicas.broadcast()
+                elif replyFromCommander[0] == COMMANDER_PREEMPTED:
+                    if replyFromScout[1][1] > self.ballotnumber[1]:
+                        self.incrementBallotnumber()
+                        replyFromScout = None
+                        scout = Scout(self.toPeer,self.acceptors,self.ballotnumber,replyFromScout)
+            else:
+                print "DEBUG: Shouldn't reach here.."
         
-    def serverloop(self):
-        # wait for other peers to connect
-        s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        s.bind((self.addr,self.port))
-        s.listen(10)
-#        s.settimeout(10)
-        while True:
-            try:
-                clientsock,clientaddr = s.accept()
-                print "DEBUG: Accepted a connection on socket:",clientsock," and address:",clientaddr
-                # Start a Thread
-                threading.Thread(target=self.handleconnection,args =[clientsock]).start()
-            except KeyboardInterrupt:
-                print 'DEBUG: Keyboard Interrupt..'
-                continue
-        s.close()
-        
-    def prepare(self, commandnumber, proposal):
-        print "DEBUG: Preparing for commandnumber: %d proposal: %s" % commandnumber, proposal
-        msg = Message(type=PREP,givenpvalues=[pvalue(ballotnumber=(self.ballot_num,self.id),commandnumber=commandnumber,proposal=proposal)])
-        self.ballot_num += 1
-        replies = self.acceptors.broadcast(msg)
-        self.state = LEADER_ST_PREPARESENT
-        return 200
-        
-    def changeState(self, message):
-        # Change State depending on the message
-        if self.state == LEADER_ST_PREPARESENT:
-            print "In State PREPARESENT"
-        elif self.state == LEADER_ST_PROPOSESENT:
-            print "In State PROPOSESENT"
-        elif self.state == LEADER_ST_ACCEPTED:
-            print "In State ACCEPTED"
-        elif self.state == LEADER_ST_REJECTED:
-            print "In State REJECTED"
-        else:
-            print "DEBUG: Shouldn't reach here."
-        
-# MESSAGE HANDLERS
-    def handle_acpt(self,msg):
-        print "DEBUG: received ACPT msg"
-        # If enough ACPT is received the Leader should proceed to the next Phase.
-        # The number of ACPTs received should be more than 50%
-        receivedmessage = Message(msg)
-        self.acceptors += 1
-        self.pvalues.extend(receivedmessage.pvalue) # XXX
-        return self.acceptors
-            
-    def handle_rjct(self,msg):
-        print "DEBUG: received RJCT msg"
-        receivedmessage = Message(msg)
-        self.rejectors += 1
-        return self.rejectors
-
-    def handle_done(self,msg):
-        print "DEBUG: received DONE msg"
-    
-    def handle_rmve(self,msg):
-        print "DEBUG: received RMVE msg"
-    
-    def handle_ping(self,msg):
-        print "DEBUG: received PING msg"
-    
-    def handle_errr(self,msg):
-        print "DEBUG: received ERRR msg"
-        
-# MESSAGE FACTORY
-    def create_helo(self):
-        print "DEBUG: creating HELO msg"
-        # HELO to the bootstrap
-        msg = Message(type=HELO)
-        return msg
-    
-    def create_prep(self):
-        print "DEBUG: creating PREP msg"
-        msg = Message(type=PREP,givenpvalues=[pvalue(ballotnumber=(self.ballot_num,self.id),commandnumber=0,proposal="")])
-        self.ballot_num += 1
-        return msg 
-    
-    def create_prop(self,proposal):
-        print "DEBUG: creating PROP msg"
-        msg = Message(type=PROP,number=self.ballot_num,givenpvalue=pvalue(ballot=self.ballot_num,command=0,proposal=0))
-        return msg
-        
-    def create_done(self,data):
-        print "DEBUG: creating DONE msg"
-    
-    def create_rmve(self,data):
-        print "DEBUG: creating RMVE msg"
-    
-    def create_ping(self,data):
-        print "DEBUG: creating PING msg"
-    
-    def create_errr(self,data):
-        print "DEBUG: creating ERRR msg"
    
 '''main'''
 def main():
