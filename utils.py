@@ -98,3 +98,28 @@ def max(pvalues):
         if pvalue > maxpvalue:
             maxpvalue = pvalue
     return maxpvalue
+
+class scoutReply():
+    def __init__(self, giventype=0, givenballotnumber=0, givenpvalues=[]):
+        self.type = giventype
+        self.ballotnumber = givenballotnumber
+        self.pvalues = givenpvalues
+#        self.lock = Lock()
+        
+    def __str__(self):
+        returnstr = "Scout Reply\nType: %d\nBallotnumber: %d\n" % (self.type, self.ballotnumber)
+        if len(self.pvalues) > 0:
+            returnstr += "Pvalues:\n"
+            for pvalue in self.pvalues:
+                returnstr += str(pvalue)
+        return returnstr        
+        
+class commanderReply():
+    def __init__(self, giventype=0, givenballotnumber=0, givencommandnumber=0):
+        self.type = giventype
+        self.ballotnumber = givenballotnumber
+        self.commandnumber = givencommandnumber
+#        self.lock = Lock()
+
+    def __str__(self):
+        return "Commander Reply\nType: %d\nBallotnumber: %d\nCommandnumber: %d" % (self.type, self.ballotnumber, self.commandnumber)

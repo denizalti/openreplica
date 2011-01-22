@@ -1,40 +1,37 @@
 import struct
+from Utils import *
 
 # The Ordering is as follows:
-length          #4
-type            #4
-ballotnumber    #8
-commandnumber   #4
-proposal        #20
-source          #12
-numpvalues      #4
-pvalues         #*32
+#length
+#type
+#ballotnumber
+#commandnumber
+#proposallength  
+#proposal
+#numpvalues
+#pvalues
 
 class Message():
-    def __init__(self,serialmessage=None,type=-1,source=(0,'',0),ballotnumber=(0,0),commandnumber=0,proposal='',givenpvalues=[]):
+    def __init__(self,serialmessage=None,source=(0,'',0),type=-1,ballotnumber=(0,0),commandnumber=0,proposal='',givenpvalues=[]):
         if serialmessage == None:
             self.type = type
             self.ballotnumber = ballotnumber
             self.commandnumber = commandnumber
             self.proposal = proposal
-            self.source = source
             self.numpvalues = len(givenpvalues)
             self.pvalues = givenpvalues
-            self.length = 56+self.numpvalues*PVALUELENGTH
         else:
             temp = serialmessage
-            self.length = struct.unpack("I", temp[0:4])[0]
-            temp = temp[4:]
-            self.type = struct.unpack("I", temp[0:4])[0]
-            temp = temp[4:]
+            length, self.type = struct.unpack("II", temp[0:8])
+            temp = temp[8:]
             self.ballotnumber = struct.unpack("II", temp[0:8])
             temp = temp[8:]
             self.commandnumber = struct.unpack("I", temp[0:4])[0]
             temp = temp[4:]
-            self.proposal = struct.unpack("20s",temp)[0]
-            temp = temp[20:]
-            self.source = struct.unpack("III", temp[0:12])
-            temp = temp[12:]
+            proposallength = struct.unpack("I", temp[0:4])[0]
+            temp = temp[4:]
+            self.proposal = struct.unpack("%ds" % proposallength,temp[0:proposallength])[0]
+            temp = temp[proposallength:]
             self.numpvalues = struct.unpack("I", temp[0:4])[0]
             temp = temp[4:]
             self.pvalues = []
@@ -44,23 +41,28 @@ class Message():
         
     def serialize(self):
         temp = ""
-        temp += struct.pack("I", self.length)
         temp += struct.pack("I", self.type)
+        print self.ballotnumber[0]
         temp += struct.pack("I", self.ballotnumber[0])
         temp += struct.pack("I", self.ballotnumber[1])
         temp += struct.pack("I", self.commandnumber)
-        temp += struct.pack("20s", self.proposal)
-        temp += struct.pack("I", self.source[0])
-        temp += struct.pack("I", self.source[1])
-        temp += struct.pack("I", self.source[2])
+        temp += struct.pack("I", len(self.proposal))
+        temp += struct.pack("%ds" % len(self.proposal), self.proposal)
         temp += struct.pack("I", self.numpvalues)
         for i in range(0,self.numpvalues):
                 temp += self.pvalues[i].serialize()
-        return temp
+        msg = struct.pack("I", len(temp) + 4) + temp
+        print "Test!!!"
+        print self.testTheMessage(msg)
+        return msg
+    
+    def testTheMessage(self, temporary):
+        testing = Message(temporary)
+        return str(testing)
     
     def __str__(self):
-        temp = 'Message\n=======\nType: %d\n Ballotnumber: (%d,%d)\nCommandnumber: %d\nProposal: %s\n,Length: %d\nPValues:\n' \
-        % (self.type,self.ballotnumber[0],self.ballotnumber[1],self.commandnumber,self.proposal,self.length)
+        temp = 'Message\n=======\nType: %d\nBallotnumber: (%d,%d)\nCommandnumber: %d\nProposal: %s\nPValues:\n' \
+        % (self.type,self.ballotnumber[0],self.ballotnumber[1],self.commandnumber,self.proposal)
         for i in range(0,self.numpvalues):
             temp += str(self.pvalues[i]) + '\n'
         return temp

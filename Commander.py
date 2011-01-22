@@ -2,7 +2,8 @@
 @author: denizalti
 @note: The Commander is responsible for
 '''
-import threading, math
+import math
+from threading import Thread
 from Utils import *
 from Connection import *
 from Group import *
@@ -37,15 +38,15 @@ class Commander(Thread):
         # Change State depending on the message
             print "Scout Changing State"
             if message.type == MSG_ACCEPT:
-                if message.ballot_num == self.ballot_num:
+                if message.ballotnumber == self.ballotnumber:
                     self.waitfor -= 1
                     if self.waitfor < len(self.acceptors)/2:
                         return (COMMANDER_CHOSEN, self.commandnumber)
                     else:
-                        return (SCOUT_BUSY, self.ballot_num)
+                        return (SCOUT_BUSY, self.ballotnumber)
                 # There is a higher ballotnumber
                 else:
-                    return (SCOUT_PREEMPTED, self.ballot_num)
+                    return (SCOUT_PREEMPTED, self.ballotnumber)
                 
     def __str__(self):
         return "Commander for Leader %d" % self.leader.id

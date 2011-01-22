@@ -1,6 +1,6 @@
 from threading import RLock
 from Connection import *
-from utils import *
+from Utils import *
 
 class Group():
     def __init__(self):
@@ -12,10 +12,8 @@ class Group():
             self.members.remove(peer)
 
     def add(self,peer):
-        if self.ID == peer.ID:
-            return
         for oldPeer in self.members:
-            if oldPeer.ID == peer.ID:
+            if oldPeer.id == peer.id:
                 return
         self.members.append(peer)
         
@@ -23,22 +21,24 @@ class Group():
         print "DEBUG: broadcasting message.."
         replies = []
         for member in self.Group.members:
-            reply = self.send_to_peer(member.addr,member.port,msg)
+            reply = self.send_to_peer(member,msg)
             replies.append(reply)
         return replies
     
     def send_to_peer(self,peer,msg):
         print "DEBUG: sending message to " + str(peer)
         reply = ""
+        message = msg.serialize()
         try:
             connection = Connection(peer.addr, peer.port)
             connection.send(msg)
-            chunk = connection.receive()
-            while (chunk != (None,None)):
+            chunk = ""
+            while (chunk != None):
                 reply += chunk
                 chunk = connection.receive()
             connection.close()
-        except:
+        except Exception as inst:
+            print inst     # the exception instance
             print "Error in send_to_peer."
         return reply
             

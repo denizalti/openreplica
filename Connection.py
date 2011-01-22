@@ -2,56 +2,67 @@ import socket
 import struct
 from Message import *
 
+# Connection Pool, eit
+
+class ConnectionPool():
+    def __init__(self):
+        self.pool = {}
+        
+    def getConnection(self, addr, port):
+        connectionkey = '%s:%d' % (addr,port)
+        if self.pool.has_key(connectionkey):
+            return self.pool[connectionkey]
+        else:
+            connection = Connection(addr,port)
+            self.pool[connectionkey] = connection
+            return connection
+            
 class Connection():
-    def __init__( self,addr,port,ex_socket=None):
+    def __init__(self, addr, port, reusesock=None):
         self.addr = addr
         self.port = port
-        if ex_socket==None:
+        if reusesock == None:
             print "DEBUG: A new socket is being created.."
             addr = addr.replace("\x00", "")
-            self.the_socket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+            self.the_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.the_socket.connect((addr, port))
         else:
-            print "DEBUG: An existing socket is being used.."
-            self.the_socket = ex_socket
+            self.the_socket = reusesock
     
-        self.socket_file_desc = self.the_socket.makefile('rw', 0)
-        
     def get_details(self):
-        print "The peer name: %s addr: %s port: %d" % (self.peer_name, self.addr, self.port)
+        print "The peer addr: %s port: %d" % (self.addr, self.port)
     
-    # Change this to return a Message()    
     def receive(self):
         print "DEBUG: Receiving msg"
         try:
-            str = self.socket_file_desc.read(4)
-            msg_type = struct.unpack("I", str[0:4])[0]
-            msg_type = int(msg_type)
-            if not msg_type:
-                print "DEBUG: no msg_type in recvmsg" 
-                return (None, None)
-            str = self.socket_file_desc.read(4)
-            msg_length = int(struct.unpack("I", str[0:4])[0])
-            msg_length = msg_length-8
-            msg = ""
+            returnstring = self.the_socket.recv(4)
+            msg_length = struct.unpack("I", returnstring[0:4])[0]
+            msg_length -= 4
+            msg = ''
             while len(msg) != msg_length:
-                chunk = self.socket_file_desc.read(min(1024, msg_length-len(msg)))
-                if len(chunk) == 0 :
+                print msg
+                chunk = self.the_socket.recv(min(1024, msg_length-len(msg)))
+                print "Chunk:", chunk
+                if len(chunk) == 0:
                     break
                 msg += chunk
             if len(msg) != msg_length:
-                return (None, None)
-        except:
-            return (None, None)
-        print "DEBUG: msg_type: %d msg_length: %d msg: %s" % (msg_type, msg_length, msg)
-        return (msg_type, msg)
+                return None
+        except Exception as inst:
+            print inst     # the exception instance
+            return None
+        message = Message(serialmessage=returnstring[0:4]+msg)
+        print "DEBUG: %s" % message
+        return message
     
     def send(self,msg):
+        print "DEBUG: Connection.send"
+        print msg
+        message = msg.serialize()
         try:
-            self.socket_file_desc.write(msg)
-            self.socket_file_desc.flush()
-        except:
-            print "DEBUG: in Connector.send msg cannot be sent"
+            self.the_socket.send(message)
+        except Exception as inst:
+            print inst
             return False
         return True
     

@@ -13,12 +13,10 @@ from Acceptor import *
 from Scout import *
 from Commander import *
 
-parser = OptionParser(usage="usage: %prog -i id -p port -t type -b bootstrap")
+parser = OptionParser(usage="usage: %prog -i id -p port -b bootstrap")
 parser.add_option("-i", "--id", action="store", dest="id", help="node id")
 parser.add_option("-p", "--port", action="store", dest="port", help="port for the node")
-parser.add_option("-t", "--type", action="store", dest="type", help="type of the node")
-parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port tuple for the peer")
-
+parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:id triple for the peer")
 (options, args) = parser.parse_args()
 
 # TIMEOUT THREAD
@@ -36,7 +34,7 @@ class Leader():
         self.replicas = Group()
         self.leaders = Group()
         # print some information
-        print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.ID)
+        print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
         if bootstrap:
             bootaddr,bootport,bootid = bootstrap.split(":")
             bootpeer = Peer(int(bootid),int(bootport),bootaddr)
@@ -46,45 +44,50 @@ class Leader():
         # Synod Leader State
         self.ballotnumber = (self.id,0)
         self.pvalues = [] # array of pvalues
-        self.waitfor = len(self.acceptors)
     
     def incrementBallotnumber(self):
         self.ballotnumber[1] += 1
     
     def newCommand(self,commandnumber,proposal):
-        replyFromScout = None
-        replyFromCommander = None
+        replyFromScout = scoutReply()
+        replyFromCommander = commanderReply()
         chosenpvalue = pvalue(self.ballotnumber,commandnumber,proposal)
         scout = Scout(self.toPeer,self.acceptors,self.ballotnumber,replyFromScout)
         scout.start()
         # This is a busy-wait, should be optimized
         # Need Locks for Replies.
-        while replyFromScout != None or replyFromCommander != None:
-            if replyFromScout != None:
-                if replyFromScout[0] == SCOUT_ADOPTED:
+        while replyFromScout.type != 0 or replyFromCommander.type != 0:
+            if replyFromScout.type != 0:
+                if replyFromScout.type == SCOUT_ADOPTED:
                     possiblepvalues = []
-                    for pvalue in replyFromScout[2]:
+                    for pvalue in replyFromScout.pvalues:
                         if pvalue.commandnumber == commandnumber:
                             possiblepvalues.append(pvalue)
                     if len(possiblepvalues) > 0:
                         chosenpvalue = max(possiblepvalues)
-                    replyFromCommander = None
+                    replyFromCommander = commanderReply()
                     commander = Commander(self.toPeer,self.acceptors,self.ballotnumber,chosenpvalue,replyFromCommander)
+                    commander.start()
                     continue
-                elif replyFromScout[0] == SCOUT_PREEMPTED:
-                    if replyFromScout[1][1] > self.ballotnumber[1]:
+                elif replyFromScout.type == SCOUT_PREEMPTED:
+                    if replyFromScout.ballotnumber > self.ballotnumber:
                         self.incrementBallotnumber()
-                        replyFromScout = None
+                        replyFromScout = scoutReply()
                         scout = Scout(self.toPeer,self.acceptors,self.ballotnumber,replyFromScout)
-            elif replyFromCommander != None:
-                if replyFromCommander[0] == COMMANDER_CHOSEN:
+                        scout.start()
+
+            elif replyFromCommander.type != 0:
+                if replyFromCommander.type == COMMANDER_CHOSEN:
                     message = Message(type=MSG_PERFORM,source=self.leader.serialize,commandnumber=replyFromCommander[1],proposal=proposal)
-                    self.replicas.broadcast()
-                elif replyFromCommander[0] == COMMANDER_PREEMPTED:
-                    if replyFromScout[1][1] > self.ballotnumber[1]:
+                    self.replicas.broadcast(message)
+                    break
+                elif replyFromCommander.type == COMMANDER_PREEMPTED:
+                    if replyFromScout.ballotnumber > self.ballotnumber:
                         self.incrementBallotnumber()
-                        replyFromScout = None
+                        replyFromScout = scoutReply()
                         scout = Scout(self.toPeer,self.acceptors,self.ballotnumber,replyFromScout)
+                        scout.start()
+
             else:
                 print "DEBUG: Shouldn't reach here.."
         
