@@ -2,8 +2,6 @@ import socket
 import struct
 from Message import *
 
-# Connection Pool, eit
-
 class ConnectionPool():
     def __init__(self):
         self.pool = {}
@@ -24,10 +22,10 @@ class Connection():
         if reusesock == None:
             print "DEBUG: A new socket is being created.."
             addr = addr.replace("\x00", "")
-            self.the_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.the_socket.connect((addr, port))
+            self.thesocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.thesocket.connect((addr, port))
         else:
-            self.the_socket = reusesock
+            self.thesocket = reusesock
     
     def get_details(self):
         print "The peer addr: %s port: %d" % (self.addr, self.port)
@@ -35,13 +33,13 @@ class Connection():
     def receive(self):
         print "DEBUG: Receiving msg"
         try:
-            returnstring = self.the_socket.recv(4)
+            returnstring = self.thesocket.recv(4)
             msg_length = struct.unpack("I", returnstring[0:4])[0]
             msg_length -= 4
             msg = ''
             while len(msg) != msg_length:
                 print msg
-                chunk = self.the_socket.recv(min(1024, msg_length-len(msg)))
+                chunk = self.thesocket.recv(min(1024, msg_length-len(msg)))
                 print "Chunk:", chunk
                 if len(chunk) == 0:
                     break
@@ -60,13 +58,13 @@ class Connection():
         print msg
         message = msg.serialize()
         try:
-            self.the_socket.send(message)
+            self.thesocket.send(message)
         except Exception as inst:
             print inst
             return False
         return True
     
     def close(self):
-        self.the_socket.close()
-        self.the_socket = None
+        self.thesocket.close()
+        self.thesocket = None
         self.sd = None

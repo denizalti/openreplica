@@ -37,7 +37,14 @@ class Acceptor():
             bootpeer = Peer(int(bootid),bootaddr,int(bootport))
             helomessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
             heloreply = self.acceptors.send_to_peer(bootpeer,helomessage)
-            print "HELO msg sent.."
+            print "+++++++++++++++++++"
+            print heloreply
+            print "+++++++++++++++++++"
+            self.leaders = heloreply.leaders
+            self.acceptors = heloreply.acceptors
+            self.replicas = heloreply.replicas
+            print "Now the Acceptors are:"
+            print self.acceptors
         self.serverloop()
         
         # Synod Acceptor State
@@ -70,8 +77,29 @@ class Acceptor():
         print message
         if message.type == MSG_HELO:
             print "HELO received.."
-            replymessage = Message(type=MSG_HELO)
+            print "Source: ", message.source
+            self.acceptors.add(Peer(message.source[0],message.source[1],message.source[2]))
+            print "Now the Acceptors are:"
+            print self.acceptors
+            replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize(),acceptors=self.acceptors.toList())
+            newmessage = Message(type=MSG_NEW,source=self.toPeer.serialize(),acceptors=self.acceptors.toList())
             connection.send(replymessage)
+            self.acceptors.broadcast(newmessage)
+        elif message.type == MSG_HELOREPLY:
+            print "HELOREPLY received.."
+            self.leaders = message.leaders
+            self.acceptors = message.acceptors
+            self.replicas = message.replicas
+            print self.acceptors
+        elif message.type == MSG_NEW:
+            print "NEW received.."
+            for leader in message.leaders:
+                self.leaders.add(leader)
+            for acceptor in message.acceptors:
+                self.acceptors.add(acceptor)
+            for replica in message.replicas:
+                self.replicas.add(replica)
+            print self.acceptors
         elif message.type == MSG_PREPARE:
             if message.ballotnumber > self.ballotnumber:
                 self.ballotnumber = message.ballotnumber

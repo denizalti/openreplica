@@ -47,6 +47,57 @@ class Leader():
     
     def incrementBallotnumber(self):
         self.ballotnumber[1] += 1
+        
+    def serverloop(self):
+        s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+        s.bind((self.addr,self.port))
+        s.listen(10)
+#        s.settimeout(10)
+        while True:
+            try:
+                clientsock,clientaddr = s.accept()
+                print "DEBUG: Accepted a connection on socket:",clientsock," and address:",clientaddr
+                # Start a Thread
+                Thread(target=self.handleconnection,args =[clientsock]).start()
+            except KeyboardInterrupt:
+                break
+        s.close()
+        
+    def handleconnection(self,clientsock):
+        print "DEBUG: Handling the connection.."
+        addr,port = clientsock.getpeername()
+        tuple = addr+":"+str(port)
+        print tuple
+        connection = Connection(addr,port,reusesock=clientsock)
+        message = connection.receive()
+        print message
+        if message.type == MSG_HELO:
+            print "HELO received.."
+            print "Source: ", message.source
+            self.acceptors.add(Peer(message.source[0],message.source[1],message.source[2]))
+            print "Now the Acceptors are:"
+            print self.acceptors
+            replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize(),acceptors=self.acceptors.toList())
+            newmessage = Message(type=MSG_NEW,source=self.toPeer.serialize(),acceptors=self.acceptors.toList())
+            connection.send(replymessage)
+            self.acceptors.broadcast(newmessage)
+        elif message.type == MSG_HELOREPLY:
+            print "HELOREPLY received.."
+            self.leaders = message.leaders
+            self.acceptors = message.acceptors
+            self.replicas = message.replicas
+            print self.acceptors
+        elif message.type == MSG_NEW:
+            print "NEW received.."
+            for leader in message.leaders:
+                self.leaders.add(leader)
+            for acceptor in message.acceptors:
+                self.acceptors.add(acceptor)
+            for replica in message.replicas:
+                self.replicas.add(replica)
+            print self.acceptors
+        connection.close()
     
     def newCommand(self,commandnumber,proposal):
         replyFromScout = scoutReply()
