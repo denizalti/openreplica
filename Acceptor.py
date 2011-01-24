@@ -25,24 +25,23 @@ class Acceptor():
         self.addr = findOwnIP()
         self.port = int(port)
         self.id = int(id)
-        self.toPeer = Peer(self.id,self.addr,self.port)
+        self.type = ACCEPTOR
+        self.toPeer = Peer(self.id,self.addr,self.port,self.type)
         # groups
-        self.acceptors = Group()
-        self.replicas = Group()
-        self.leaders = Group()
+        self.acceptors = Group(self.toPeer)
+        self.replicas = Group(self.toPeer)
+        self.leaders = Group(self.toPeer)
         # print some information
         print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
         if bootstrap:
             bootaddr,bootport,bootid = bootstrap.split(":")
-            bootpeer = Peer(int(bootid),bootaddr,int(bootport))
+            bootpeer = Peer(int(bootid),bootaddr,int(bootport),ACCEPTOR)
+            self.acceptors.add(bootpeer)
             helomessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
             heloreply = self.acceptors.send_to_peer(bootpeer,helomessage)
-            print "+++++++++++++++++++"
-            print heloreply
-            print "+++++++++++++++++++"
-            self.leaders = heloreply.leaders
-            self.acceptors = heloreply.acceptors
-            self.replicas = heloreply.replicas
+            self.leaders.mergeList(heloreply.leaders)
+            self.acceptors.mergeList(heloreply.acceptors)
+            self.replicas.mergeList(heloreply.replicas)
             print "Now the Acceptors are:"
             print self.acceptors
         self.serverloop()
@@ -78,7 +77,7 @@ class Acceptor():
         if message.type == MSG_HELO:
             print "HELO received.."
             print "Source: ", message.source
-            self.acceptors.add(Peer(message.source[0],message.source[1],message.source[2]))
+            self.acceptors.add(Peer(message.source[0],message.source[1],message.source[2],message.source[3]))
             print "Now the Acceptors are:"
             print self.acceptors
             replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize(),acceptors=self.acceptors.toList())
@@ -87,10 +86,12 @@ class Acceptor():
             self.acceptors.broadcast(newmessage)
         elif message.type == MSG_HELOREPLY:
             print "HELOREPLY received.."
-            self.leaders = message.leaders
-            self.acceptors = message.acceptors
-            self.replicas = message.replicas
+            self.leaders.mergeList(message.leaders)
+            self.acceptors.mergeList(message.acceptors)
+            self.replicas.mergeList(message.replicas)
+            print "-----------------------------"
             print self.acceptors
+            print "-----------------------------"
         elif message.type == MSG_NEW:
             print "NEW received.."
             for leader in message.leaders:

@@ -28,18 +28,26 @@ class Leader():
         self.addr = findOwnIP()
         self.port = int(port)
         self.id = int(id)
-        self.toPeer = Peer(self.id,self.addr,self.port)
+        self.type = LEADER
+        self.toPeer = Peer(self.id,self.addr,self.port,self.type)
         # groups
-        self.acceptors = Group()
-        self.replicas = Group()
-        self.leaders = Group()
+        self.acceptors = Group(self.toPeer)
+        self.replicas = Group(self.toPeer)
+        self.leaders = Group(self.toPeer)
         # print some information
         print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
         if bootstrap:
             bootaddr,bootport,bootid = bootstrap.split(":")
-            bootpeer = Peer(int(bootid),int(bootport),bootaddr)
-            helomsg = self.create_helo('')
-            self.neighborhoodSet.send_to_peer(bootpeer,helomsg)
+            bootpeer = Peer(int(bootid),bootaddr,int(bootport),LEADER)
+            self.leaders.add(bootpeer)
+            helomessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
+            heloreply = self.acceptors.send_to_peer(bootpeer,helomessage)
+            self.leaders.mergeList(heloreply.leaders)
+            self.acceptors.mergeList(heloreply.acceptors)
+            self.replicas.mergeList(heloreply.replicas)
+            print "Now the Acceptors are:"
+            print self.acceptors
+        self.serverloop()
         
         # Synod Leader State
         self.ballotnumber = (self.id,0)
@@ -75,7 +83,7 @@ class Leader():
         if message.type == MSG_HELO:
             print "HELO received.."
             print "Source: ", message.source
-            self.acceptors.add(Peer(message.source[0],message.source[1],message.source[2]))
+            self.acceptors.add(Peer(message.source[0],message.source[1],message.source[2],message.source[3]))
             print "Now the Acceptors are:"
             print self.acceptors
             replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize(),acceptors=self.acceptors.toList())

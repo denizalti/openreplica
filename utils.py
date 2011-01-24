@@ -38,8 +38,13 @@ COMMANDER_PREEMPTED = 42
 # Lengths
 MAXPROPOSALLENGTH = 20
 PVALUELENGTH = 32
-PEERLENGTH = 24
+PEERLENGTH = 28
 ADDRLENGTH = 15
+
+# Node Types
+ACCEPTOR = 50 
+LEADER = 51
+REPLICA = 52
 
 # This function hashes any given string
 def hash(name):

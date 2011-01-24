@@ -4,7 +4,8 @@ from Utils import *
 from Peer import *
 
 class Group():
-    def __init__(self):
+    def __init__(self,owner):
+        self.owner = owner
         self.members = []   # array of Peer()
         self.lock = RLock()
 
@@ -13,8 +14,10 @@ class Group():
             self.members.remove(peer)
 
     def add(self,peer):
+        if peer == self.owner:
+            return
         for oldPeer in self.members:
-            if oldPeer.id == peer.id:
+            if oldPeer == peer:
                 return
         self.members.append(peer)
         
@@ -42,6 +45,10 @@ class Group():
 
     def toList(self):
         return self.members
+    
+    def mergeList(self, list):
+        for entry in list:
+            self.add(entry)
     
     def __str__(self):
         returnstr = 'Members of the Group:\n'
