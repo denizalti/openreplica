@@ -29,7 +29,7 @@ class Message():
             temp = serialmessage
             length, self.type = struct.unpack("II", temp[0:8])
             temp = temp[8:]
-            if self.type == MSG_HELO or MSG_HELOREPLY or MSG_NEW:
+            if self.type >= MSG_HELO:
                 self.source = struct.unpack("I%dsII"% ADDRLENGTH, temp[0:PEERLENGTH])
                 (id,addr,port,type) = (self.source[0],self.source[1],self.source[2],self.source[3])
                 addr = addr.strip("\x00")
@@ -74,11 +74,11 @@ class Message():
                 temp = temp[4:]
                 self.pvalues = []
                 for i in range(0,numpvalues):
-                    self.pvalues.append(pvalue(temp[0:32]))
+                    self.pvalues.append(PValue(temp[0:32]))
                     temp = temp[32:]
         
     def serialize(self):
-        if self.type == MSG_HELO or MSG_HELOREPLY or MSG_NEW:
+        if self.type >= MSG_HELO:
             temp = ""
             temp += struct.pack("I", self.type)
             temp += struct.pack("I%dsII" % ADDRLENGTH, self.source[0], self.source[1], self.source[2],self.source[3])
@@ -106,16 +106,10 @@ class Message():
             for pvalue in self.pvalues:
                     temp += pvalue.serialize()
             msg = struct.pack("I", len(temp) + 4) + temp
-            print "Test!!!"
-            print self.testTheMessage(msg)
             return msg
     
-    def testTheMessage(self, temporary):
-        testing = Message(temporary)
-        return str(testing)
-    
     def __str__(self):
-        if self.type == MSG_HELO or MSG_HELOREPLY or MSG_NEW:
+        if self.type >= MSG_HELO:
             temp = 'Message\n=======\nType: %d\nSource: (%d,%s,%d,%d)\nAcceptors:\n' \
             % (self.type,self.source[0],self.source[1],self.source[2],self.source[3])
             for acceptor in self.acceptors:
@@ -134,7 +128,7 @@ class Message():
                 temp += str(pvalue) + '\n'
             return temp
     
-class pvalue():
+class PValue():
     def __init__(self,serialpvalue=None,ballotnumber=(0,0),commandnumber=0,proposal=""):
         if serialpvalue == None:
             self.ballotnumber = ballotnumber

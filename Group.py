@@ -25,11 +25,11 @@ class Group():
         print "DEBUG: broadcasting message.."
         replies = []
         for member in self.members:
-            reply = self.send_to_peer(member,msg)
+            reply = self.sendToPeer(member,msg)
             replies.append(reply)
         return replies
     
-    def send_to_peer(self,peer,msg):
+    def sendToPeer(self,peer,msg):
         print "DEBUG: sending message to " + str(peer)
         reply = ""
         message = msg.serialize()
@@ -40,7 +40,7 @@ class Group():
             connection.close()
         except Exception as inst:
             print inst     # the exception instance
-            print "Error in send_to_peer."
+            return None
         return reply
 
     def toList(self):
@@ -51,7 +51,7 @@ class Group():
             self.add(entry)
     
     def __str__(self):
-        returnstr = 'Members of the Group:\n'
+        returnstr = ''
         for member in self.members:
             returnstr += str(member)+'\n'
         return returnstr

@@ -23,7 +23,7 @@ class Scout(Thread):
         self.waitfor = math.ceil(len(self.acceptors)/2)
     
     def run(self):
-        message = Message(type=PREP,source=self.leader.serialize,ballotnumber=self.ballotnumber)
+        message = Message(type=MSG_PREPARE,source=self.leader.serialize,ballotnumber=self.ballotnumber)
         replies = self.acceptors.broadcast(message)
         for reply in replies:
             returnvalue = self.changeState(reply)

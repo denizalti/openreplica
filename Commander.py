@@ -18,13 +18,13 @@ class Commander(Thread):
         print "DEBUG: Commander for Leader %d" % self.leader.id
         
         # Synod State
-        self.pvalue = pvalue            # pvalue()
+        self.pvalue = pvalue            # PValue()
         self.ballotnumber = ballotnum   # (leaderid,b)
         self.commandnumber = self.pvalues
         self.waitfor = math.ceil(len(self.acceptors)/2)
     
     def run(self):
-        message = Message(type=PROP,source=self.leader.serialize,ballotnumber=self.ballotnumber,givenpvalues=self.pvalues)
+        message = Message(type=MSG_PROPOSE,source=self.leader.serialize,ballotnumber=self.ballotnumber,givenpvalues=self.pvalues)
         replies = self.acceptors.broadcast(message)
         for reply in replies:
             returnvalue = self.changeState(reply)

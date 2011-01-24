@@ -20,7 +20,7 @@ class Connection():
         self.addr = addr
         self.port = port
         if reusesock == None:
-            print "DEBUG: A new socket is being created.."
+#            print "DEBUG: A new socket is being created.."
             addr = addr.replace("\x00", "")
             self.thesocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.thesocket.connect((addr, port))
@@ -31,16 +31,14 @@ class Connection():
         print "The peer addr: %s port: %d" % (self.addr, self.port)
     
     def receive(self):
-        print "DEBUG: Receiving msg"
+#        print "DEBUG: Receiving msg"
         try:
             returnstring = self.thesocket.recv(4)
             msg_length = struct.unpack("I", returnstring[0:4])[0]
             msg_length -= 4
             msg = ''
             while len(msg) != msg_length:
-                print msg
                 chunk = self.thesocket.recv(min(1024, msg_length-len(msg)))
-                print "Chunk:", chunk
                 if len(chunk) == 0:
                     break
                 msg += chunk
@@ -50,12 +48,11 @@ class Connection():
             print inst     # the exception instance
             return None
         message = Message(serialmessage=returnstring[0:4]+msg)
-        print "DEBUG: %s" % message
+#        print "DEBUG: %s" % message
         return message
     
     def send(self,msg):
-        print "DEBUG: Connection.send"
-        print msg
+#        print "DEBUG: Connection.send"
         message = msg.serialize()
         try:
             self.thesocket.send(message)

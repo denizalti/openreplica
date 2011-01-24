@@ -17,6 +17,7 @@ MSG_ERROR = 8
 MSG_HELO = 9
 MSG_HELOREPLY = 10
 MSG_NEW = 11
+MSG_BYE = 12
 
 # STATES
 LEADER_ST_INITIAL = 20
@@ -42,9 +43,9 @@ PEERLENGTH = 28
 ADDRLENGTH = 15
 
 # Node Types
-ACCEPTOR = 50 
-LEADER = 51
-REPLICA = 52
+ACCEPTOR = 0 
+LEADER = 1
+REPLICA = 2
 
 # This function hashes any given string
 def hash(name):
