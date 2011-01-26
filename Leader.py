@@ -3,7 +3,7 @@
 @note: The Leader
 '''
 from optparse import OptionParser
-import threading
+from threading import Thread, Lock, Condition
 from Utils import *
 from Connection import *
 from Group import *
@@ -16,7 +16,7 @@ from Commander import *
 parser = OptionParser(usage="usage: %prog -i id -p port -b bootstrap")
 parser.add_option("-i", "--id", action="store", dest="id", help="node id")
 parser.add_option("-p", "--port", action="store", dest="port", help="port for the node")
-parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:id triple for the peer")
+parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:id:type for the bootstrap peer")
 (options, args) = parser.parse_args()
 
 # TIMEOUT THREAD
@@ -34,6 +34,9 @@ class Leader():
         # Synod Leader State
         self.ballotnumber = (self.id,0)
         self.pvalues = [] # array of pvalues
+        # Condition Variable
+        self.replyLock = Lock()
+        self.replyCondition = Condition(self.replyLock)
         # Exit
         self.run = True 
         # print some information
@@ -54,10 +57,10 @@ class Leader():
             self.replicas.mergeList(heloreply.replicas)
             print str(self)
         # Start a thread with the server which will start a thread for each request
-        server_thread = threading.Thread(target=self.serverloop)
+        server_thread = Thread(target=self.serverloop)
         server_thread.start()
         # Start a thread that waits for inputs
-        input_thread = threading.Thread(target=self.getInputs)
+        input_thread = Thread(target=self.getInputs)
         input_thread.start()
         
     def __str__(self):
@@ -93,10 +96,8 @@ class Leader():
 #        print "DEBUG: Handling the connection.."
         addr,port = clientsock.getpeername()
         tuple = addr+":"+str(port)
-        print tuple
         connection = Connection(addr,port,reusesock=clientsock)
         message = connection.receive()
-        print message
         if message.type == MSG_HELO:
             messagesource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
             if messagesource.type == ACCEPTOR:
@@ -105,7 +106,6 @@ class Leader():
                 self.leaders.add(messagesource)
             else:
                 self.replicas.add(messagesource)
-            print str(self)
             replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize(),acceptors=self.acceptors.toList(),\
                                    leaders=self.leaders.toList(),replicas=self.replicas.toList())
             newmessage = Message(type=MSG_NEW,source=self.toPeer.serialize(),acceptors=self.acceptors.toList(),\
@@ -118,7 +118,6 @@ class Leader():
             self.leaders = message.leaders
             self.acceptors = message.acceptors
             self.replicas = message.replicas
-            print self.acceptors
         elif message.type == MSG_NEW:
             for leader in message.leaders:
                 self.leaders.add(leader)
@@ -126,7 +125,6 @@ class Leader():
                 self.acceptors.add(acceptor)
             for replica in message.replicas:
                 self.replicas.add(replica)
-            print self.acceptors
         elif message.type == MSG_BYE:
             messagesource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
             if messagesource.type == ACCEPTOR:
@@ -154,6 +152,8 @@ class Leader():
                     self.newCommand(int(commandnumber), proposal)
                 elif input[0] == 'STATE':
                     print self
+                elif input[0] == 'PAXOS':
+                    print self.pvalues
                 elif input[0] == 'EXIT':
                     print "So long and thanks for all the fish.."
                     self.die()
@@ -172,53 +172,60 @@ class Leader():
     def printHelp(self):
         print "I can execute a new Command for you as follows:"
         print "COMMAND commandnumber proposal"
-        print "To see my state type STATE"
+        print "To see my Connection State type STATE"
+        print "To see my Paxos State type PAXOS"
         print "For help type HELP"
         print "To exit type EXIT"
     
     def newCommand(self,commandnumber,proposal):
         print "************New Command"
-        replyFromScout = scoutReply()
-        replyFromCommander = commanderReply()
+        replyFromScout = scoutReply(self.replyLock,self.replyCondition)
+        replyFromCommander = commanderReply(self.replyLock,self.replyCondition)
         print "BALLOTNUMBER: ",self.ballotnumber
         chosenpvalue = PValue(ballotnumber=self.ballotnumber,commandnumber=commandnumber,proposal=proposal)
         scout = Scout(self.toPeer,self.acceptors,self.ballotnumber,replyFromScout)
         scout.start()
-        # This is a busy-wait, should be optimized
+        # This is a busy-wait, should be optimized - This logic is not right! Fix this!
+        # Condition Variables.
         # Need Locks for Replies.
-        while replyFromScout.type != 0 or replyFromCommander.type != 0:
-            if replyFromScout.type != 0:
-                if replyFromScout.type == SCOUT_ADOPTED:
-                    possiblepvalues = []
-                    for pvalue in replyFromScout.pvalues:
-                        if pvalue.commandnumber == commandnumber:
-                            possiblepvalues.append(pvalue)
-                    if len(possiblepvalues) > 0:
-                        chosenpvalue = max(possiblepvalues)
-                    replyFromCommander = commanderReply()
-                    commander = Commander(self.toPeer,self.acceptors,self.ballotnumber,chosenpvalue,replyFromCommander)
-                    commander.start()
-                    continue
-                elif replyFromScout.type == SCOUT_PREEMPTED:
-                    if replyFromScout.ballotnumber > self.ballotnumber:
-                        self.incrementBallotnumber()
-                        replyFromScout = scoutReply()
-                        scout = Scout(self.toPeer,self.acceptors,self.ballotnumber,replyFromScout)
-                        scout.start()
-
-            elif replyFromCommander.type != 0:
-                if replyFromCommander.type == COMMANDER_CHOSEN:
-                    message = Message(type=MSG_PERFORM,source=self.leader.serialize,commandnumber=replyFromCommander[1],proposal=proposal)
-                    self.replicas.broadcast(message)
-                    break
-                elif replyFromCommander.type == COMMANDER_PREEMPTED:
-                    if replyFromScout.ballotnumber > self.ballotnumber:
-                        self.incrementBallotnumber()
-                        replyFromScout = scoutReply()
-                        scout = Scout(self.toPeer,self.acceptors,self.ballotnumber,replyFromScout)
-                        scout.start()
-            else:
-                print "DEBUG: Shouldn't reach here.."
+        while True:
+            with self.replyLock:
+                while replyFromScout.type == 0 and replyFromCommander.type == 0:
+                    self.replyCondition.wait()
+                if replyFromScout.type != 0:
+                    print "There is a reply from Scout.."
+                    print replyFromScout
+                    if replyFromScout.type == SCOUT_ADOPTED:
+                        possiblepvalues = []
+                        for pvalue in replyFromScout.pvalues:
+                            if pvalue.commandnumber == commandnumber:
+                                possiblepvalues.append(pvalue)
+                        if len(possiblepvalues) > 0:
+                            chosenpvalue = max(possiblepvalues)
+                        replyFromCommander = commanderReply(self.replyLock,self.replyCondition)
+                        commander = Commander(self.toPeer,self.acceptors,self.ballotnumber,chosenpvalue,replyFromCommander)
+                        commander.start()
+                        continue
+                    elif replyFromScout.type == SCOUT_PREEMPTED:
+                        if replyFromScout.ballotnumber > self.ballotnumber:
+                            self.incrementBallotnumber()
+                            replyFromScout = scoutReply(self.replyLock,self.replyCondition)
+                            scout = Scout(self.toPeer,self.acceptors,self.ballotnumber,replyFromScout)
+                            scout.start()
+                elif replyFromCommander.type != 0:
+                    print "There is a reply from Commander.."
+                    if replyFromCommander.type == COMMANDER_CHOSEN:
+                        message = Message(type=MSG_PERFORM,source=self.leader.serialize,commandnumber=replyFromCommander.commandnumber,proposal=proposal)
+                        self.replicas.broadcast(message)
+                        break
+                    elif replyFromCommander.type == COMMANDER_PREEMPTED:
+                        if replyFromScout.ballotnumber > self.ballotnumber:
+                            self.incrementBallotnumber()
+                            replyFromScout = scoutReply(self.replyLock,self.replyCondition)
+                            scout = Scout(self.toPeer,self.acceptors,self.ballotnumber,replyFromScout)
+                            scout.start()
+                else:
+                    print "DEBUG: Shouldn't reach here.."
         
    
 '''main'''

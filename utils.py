@@ -19,6 +19,8 @@ MSG_HELOREPLY = 10
 MSG_NEW = 11
 MSG_BYE = 12
 
+messageTypes = {1:'ACCEPT',2:'REJECT',3:'PREPARE',4:'PROPOSE',5:'PERFORM',6:'REMOVE',7:'PING',8:'ERROR',9:'HELO',10:'HELOREPLY',11:'NEW',12:'BYE'}
+
 # STATES
 LEADER_ST_INITIAL = 20
 LEADER_ST_PREPARESENT = 21
@@ -35,6 +37,8 @@ SCOUT_PREEMPTED = 32
 COMMANDER_CHOSEN = 40
 COMMANDER_BUSY = 41
 COMMANDER_PREEMPTED = 42
+
+replyTypes = {30:'SCOUT_ADOPTED',31:'SCOUT_BUSY',32:'SCOUT_PREEMPTED',40:'COMMANDER_CHOSEN',41:'COMMANDER_BUSY',42:'COMMANDER_PREEMPTED'}
 
 # Lengths
 MAXPROPOSALLENGTH = 20
@@ -100,6 +104,7 @@ def union(pvalues1, pvalues2):
             pass
         else:
             pvalues1.append(pvalue)
+    return pvalues1
 
 # Returns the max of a pvalue array            
 def max(pvalues):
@@ -110,14 +115,26 @@ def max(pvalues):
     return maxpvalue
 
 class scoutReply():
-    def __init__(self, giventype=0, givenballotnumber=0, givenpvalues=[]):
+    def __init__(self,replyLock,replyCondition,giventype=0,givenballotnumber=0,givenpvalues=[]):
         self.type = giventype
         self.ballotnumber = givenballotnumber
         self.pvalues = givenpvalues
-#        self.lock = Lock()
+        self.replyLock = replyLock
+        self.replyCondition = replyCondition
+
+    def setType(self,giventype):
+        self.type = giventype
+        
+    def setBallotnumber(self,givenballotnumber):
+        self.ballotnumber = givenballotnumber
+        
+    def setPValues(self,givenpvalues):
+        self.pvalues = givenpvalues
         
     def __str__(self):
-        returnstr = "Scout Reply\nType: %d\nBallotnumber: %d\n" % (self.type, self.ballotnumber)
+        print "+++++++++++++++++++++++++++++"
+        print self.pvalues
+        returnstr = "Scout Reply\nType: %s\nBallotnumber: (%d,%d)\n" % (replyTypes[self.type],self.ballotnumber[0],self.ballotnumber[1])
         if len(self.pvalues) > 0:
             returnstr += "Pvalues:\n"
             for pvalue in self.pvalues:
@@ -125,11 +142,21 @@ class scoutReply():
         return returnstr        
         
 class commanderReply():
-    def __init__(self, giventype=0, givenballotnumber=0, givencommandnumber=0):
+    def __init__(self,replyLock,replyCondition,giventype=0,givenballotnumber=0,givencommandnumber=0):
         self.type = giventype
         self.ballotnumber = givenballotnumber
         self.commandnumber = givencommandnumber
-#        self.lock = Lock()
+        self.replyLock = replyLock
+        self.replyCondition = replyCondition
+        
+    def setType(self,giventype):
+        self.type = giventype
+        
+    def setBallotnumber(self,givenballotnumber):
+        self.ballotnumber = givenballotnumber
+        
+    def setCommandnumber(self,givencommandnumber):
+        self.commandnumber = givencommandnumber
 
     def __str__(self):
-        return "Commander Reply\nType: %d\nBallotnumber: %d\nCommandnumber: %d" % (self.type, self.ballotnumber, self.commandnumber)
+        return "Commander Reply\nType: %s\nBallotnumber: (%d,%d)\nCommandnumber: %d" % (replyTypes[self.type],self.ballotnumber[0],self.ballotnumber[1],self.commandnumber)

@@ -2,17 +2,6 @@ import struct
 from Utils import *
 from Peer import *
 
-# The Ordering is as follows:
-#length
-#type
-#ballotnumber
-#commandnumber
-#proposallength  
-#proposal
-#source
-#numpvalues
-#pvalues
-
 class Message():
     def __init__(self,serialmessage=None,source=(0,'',0,0),acceptors=[],leaders=[],replicas=[],type=-1,ballotnumber=(0,0),commandnumber=0,proposal='',givenpvalues=[]):
         if serialmessage == None:
@@ -110,8 +99,8 @@ class Message():
     
     def __str__(self):
         if self.type >= MSG_HELO:
-            temp = 'Message\n=======\nType: %d\nSource: (%d,%s,%d,%d)\nAcceptors:\n' \
-            % (self.type,self.source[0],self.source[1],self.source[2],self.source[3])
+            temp = 'Message\n=======\nType: %s\nSource: (%d,%s,%d,%d)\nAcceptors:\n' \
+            % (messageTypes[self.type],self.source[0],self.source[1],self.source[2],self.source[3])
             for acceptor in self.acceptors:
                 temp += str(acceptor) + '\n'
             temp += 'Leaders:\n'
@@ -122,12 +111,12 @@ class Message():
                 temp += str(replica) + '\n'
             return temp
         else:
-            temp = 'Message\n=======\nType: %d\nBallotnumber: (%d,%d)\nCommandnumber: %d\nProposal: %s\nSource: (%d,%s,%d,%d)\nPValues:\n' \
-            % (self.type,self.ballotnumber[0],self.ballotnumber[1],self.commandnumber,self.proposal,self.source[0],self.source[1],self.source[2],self.source[3])
+            temp = 'Message\n=======\nType: %s\nBallotnumber: (%d,%d)\nCommandnumber: %d\nProposal: %s\nSource: (%d,%s,%d,%d)\nPValues:\n' \
+            % (messageTypes[self.type],self.ballotnumber[0],self.ballotnumber[1],self.commandnumber,self.proposal,self.source[0],self.source[1],self.source[2],self.source[3])
             for pvalue in self.pvalues:
                 temp += str(pvalue) + '\n'
             return temp
-    
+        
 class PValue():
     def __init__(self,serialpvalue=None,ballotnumber=(0,0),commandnumber=0,proposal=""):
         if serialpvalue == None:

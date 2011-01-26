@@ -31,7 +31,7 @@ class Acceptor():
         self.leaders = Group(self.toPeer)
         # Synod Acceptor State
         self.ballotnumber = (0,0)
-        self.accepted = None # Array of pvalues
+        self.accepted = [] # Array of pvalues
         # Exit
         self.run = True 
         # print some information
@@ -131,6 +131,9 @@ class Acceptor():
                 self.replicas.remove(messagesource)
         elif message.type == MSG_PREPARE:
             if message.ballotnumber > self.ballotnumber:
+                print "ACCEPTOR got a PREPARE with Ballotnumber: ", message.ballotnumber
+                print "ACCEPTOR's Ballotnumber: ", self.ballotnumber
+                print "This should be True: ", (message.ballotnumber > self.ballotnumber)
                 self.ballotnumber = message.ballotnumber
                 replymessage = Message(type=MSG_ACCEPT,source=self.toPeer.serialize(),ballotnumber=self.ballotnumber,givenpvalues=self.accepted)
             else:
@@ -164,6 +167,8 @@ class Acceptor():
                     self.newCommand(commandnumber, proposal)
                 elif input[0] == 'STATE':
                     print self
+                elif input[0] == 'PAXOS':
+                    print self.accepted
                 elif input[0] == 'EXIT':
                     print "So long and thanks for all the fish.."
                     self.die()
@@ -182,7 +187,8 @@ class Acceptor():
     def printHelp(self):
         print "I can execute a new Command for you as follows:"
         print "COMMAND commandnumber proposal"
-        print "To see my state type STATE"
+        print "To see my Connection State type STATE"
+        print "To see my Paxos State type PAXOS"
         print "For help type HELP"
         print "To exit type EXIT"
    
