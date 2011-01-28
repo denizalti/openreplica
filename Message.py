@@ -3,7 +3,7 @@ from Utils import *
 from Peer import *
 
 class Message():
-    def __init__(self,serialmessage=None,source=(0,'',0,0),acceptors=[],leaders=[],replicas=[],type=-1,ballotnumber=(0,0),commandnumber=0,proposal='',givenpvalues=[]):
+    def __init__(self,serialmessage=None,source=(0,'',0,0),acceptors=[],leaders=[],replicas=[],type=-1,ballotnumber=(0,0),commandnumber=0,proposal='',givenpvalues=[],balance=0.0):
         if serialmessage == None:
             self.type = type
             self.ballotnumber = ballotnumber
@@ -14,6 +14,7 @@ class Message():
             self.acceptors = acceptors
             self.leaders = leaders
             self.replicas = replicas
+            self.balance = balance
         else:
             temp = serialmessage
             length, self.type = struct.unpack("II", temp[0:8])
@@ -24,6 +25,8 @@ class Message():
                 addr = addr.strip("\x00")
                 self.source = (id,addr,port,type)
                 temp = temp[PEERLENGTH:]
+                self.balance = struct.unpack("f", temp[0:4])[0]
+                temp = temp[4:]
                 numacceptors = struct.unpack("I", temp[0:4])[0]
                 temp = temp[4:]
                 self.acceptors = []
@@ -71,6 +74,7 @@ class Message():
             temp = ""
             temp += struct.pack("I", self.type)
             temp += struct.pack("I%dsII" % ADDRLENGTH, self.source[0], self.source[1], self.source[2],self.source[3])
+            temp += struct.pack("f", self.balance)
             temp += struct.pack("I", len(self.acceptors))
             for acceptor in self.acceptors:
                 temp += acceptor.pack()

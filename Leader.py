@@ -128,6 +128,10 @@ class Leader():
                 self.acceptors.add(acceptor)
             for replica in message.replicas:
                 self.replicas.add(replica)
+        elif message.type == MSG_DEBIT:
+            pass
+        elif message.type == MSG_DEPOSIT:
+            pass
         elif message.type == MSG_BYE:
             messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
             if messageSource.type == ACCEPTOR:
@@ -151,7 +155,6 @@ class Leader():
                 elif input[0] == 'COMMAND':
                     commandnumber = input[1]
                     proposal = input[2]
-                    print "INPUT:", input
                     self.newCommand(int(commandnumber), proposal)
                 elif input[0] == 'STATE':
                     print self
@@ -170,7 +173,7 @@ class Leader():
         self.leaders.broadcast(byeMessage)
         self.acceptors.broadcast(byeMessage)
         self.replicas.broadcast(byeMessage)
-        self.leaders.sendToPeer(self.toPeer,byeMessage)
+        Group.sendToPeer(self.toPeer,byeMessage)
                     
     def printHelp(self):
         print "I can execute a new Command for you as follows:"

@@ -183,7 +183,7 @@ class Acceptor():
         self.leaders.broadcast(byeMessage)
         self.acceptors.broadcast(byeMessage)
         self.replicas.broadcast(byeMessage)
-        self.leaders.sendToPeer(self.toPeer,byeMessage)
+        Group.sendToPeer(self.toPeer,byeMessage)
                     
     def printHelp(self):
         print "I can execute a new Command for you as follows:"

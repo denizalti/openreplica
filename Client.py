@@ -18,7 +18,7 @@ parser.add_option("-s", "--server", action="store", dest="server", help="address
 
 # TIMEOUT THREAD
 class Client():
-    def __init__(self, id, port, bootstrap=None):
+    def __init__(self, id, port, bootstrap):
         self.addr = findOwnIP()
         self.port = int(port)
         self.id = int(id)
@@ -36,7 +36,8 @@ class Client():
             self.leaders.mergeList(heloReply.leaders)
             self.acceptors.mergeList(heloReply.acceptors)
             self.replicas.mergeList(heloReply.replicas)
-            print str(self)
+        else:
+            print "Client needs a server to connect.."
         # Start a thread with the server which will start a thread for each request
         server_thread = Thread(target=self.serverLoop)
         server_thread.start()
@@ -45,7 +46,7 @@ class Client():
         input_thread.start()
         
     def __str__(self):
-        returnstr = "Bank Information\n"
+        returnstr = "Client Information\n"
         returnstr += "IP: %s\n" % self.addr
         returnstr += "Port: %d\n" % self.port
         return returnstr
@@ -92,6 +93,11 @@ class Client():
             print "Transaction performed."
         elif depositReply.type == MSG_FAIL:
             print "Transaction failed.." 
+            
+    def checkBalance(self):
+        balanceMessage = Message(type=MSG_BALANCE,source=self.toPeer.serialize())
+        balanceReply = Group.sendToPeer(bootpeer,balanceMessage)
+        print "The balance is $%d\n" % balanceReply.balance
         
     def getInputs(self):
         while self.run:
@@ -104,10 +110,12 @@ class Client():
                 if input[0] == 'HELP':
                     self.printHelp()
                     self.newCommand(int(commandnumber), proposal)
-                elif input[0] == 'STATE':
-                    print self
-                elif input[0] == 'PAXOS':
-                    print self.state
+                elif input[0] == 'DEBIT':
+                    self.debitTen()
+                elif input[0] == 'DEPOSIT':
+                    self.depositTen()
+                elif input[0] == 'BALANCE':
+                    self.checkBalance()
                 elif input[0] == 'EXIT':
                     print "So long and thanks for all the fish.."
                     self.die()
@@ -121,7 +129,7 @@ class Client():
         self.leaders.broadcast(byeMessage)
         self.acceptors.broadcast(byeMessage)
         self.replicas.broadcast(byeMessage)
-        self.leaders.sendToPeer(self.toPeer,byeMessage)
+        Group.sendToPeer(self.toPeer,byeMessage)
                     
     def printHelp(self):
         print "I can execute a new Command for you as follows:"
