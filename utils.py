@@ -18,6 +18,10 @@ MSG_HELO = 9
 MSG_HELOREPLY = 10
 MSG_NEW = 11
 MSG_BYE = 12
+MSG_DEBIT = 13
+MSG_DEPOSIT = 14
+MSG_DONE = 15
+MSG_FAIL = 16
 
 messageTypes = {1:'ACCEPT',2:'REJECT',3:'PREPARE',4:'PROPOSE',5:'PERFORM',6:'REMOVE',7:'PING',8:'ERROR',9:'HELO',10:'HELOREPLY',11:'NEW',12:'BYE'}
 
@@ -50,6 +54,7 @@ ADDRLENGTH = 15
 ACCEPTOR = 0 
 LEADER = 1
 REPLICA = 2
+CLIENT = 3
 
 # This function hashes any given string
 def hash(name):
@@ -58,43 +63,6 @@ def hash(name):
 def findOwnIP():
 #    return socket.gethostbyname(socket.gethostname())
     return socket.gethostbyname(socket.gethostname())
-
-# This function computes a NodeID given an addr and port
-def computeNodeID(addr, port):
-    name = addr+str(port)
-    return hash(name)
-
-def from_str_to_dict(self, string):
-    string = string.rstrip("-")
-    items = [s for s in string.split("-") if s]
-    dictionary = {}
-    for item in items:
-        key,value = item.split("/")
-        dictionary[key] = value
-    return dictionary
-    
-def from_dict_to_str(self, dictionary):
-    string = ""
-    for key in dictionary:
-        string += key + "/" + str(dictionary[key]) + "-"
-    return string
-
-def from_neighbors_to_str(self, neighbor_list):
-    liststr = ''
-    for peer in neighbor_list:
-        peerstr = "%s:%d:%s" % (peer.addr, peer.port, peer.ID)
-        liststr = liststr + "/" + peerstr
-    return liststr
-
-def from_str_to_neighbors(self, string):
-    neighbors = []
-    string = string.rstrip("/")
-    peers = string.split("/")
-    for peer in peers:
-        peercontents = peer.split(":")
-        #p = Peer(peercontents[0], peercontents[1])
-        #neighbors.append(p)
-    return neighbors
 
 # pvalue calculations
 # Returns the union of two pvalue arrays

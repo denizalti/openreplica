@@ -27,8 +27,8 @@ class Connection():
         else:
             self.thesocket = reusesock
     
-    def get_details(self):
-        print "The peer addr: %s port: %d" % (self.addr, self.port)
+    def __str__(self):
+        return "Connection with Peer at addr: %s port: %d" % (self.addr, self.port)
     
     def receive(self):
 #        print "DEBUG: Receiving msg"
@@ -45,10 +45,9 @@ class Connection():
             if len(msg) != msg_length:
                 return None
         except Exception as inst:
-            print inst     # the exception instance
+            print "Receive Error: ", inst
             return None
         message = Message(serialmessage=returnstring[0:4]+msg)
-#        print "DEBUG: %s" % message
         return message
     
     def send(self,msg):
@@ -57,9 +56,7 @@ class Connection():
         try:
             self.thesocket.send(message)
         except Exception as inst:
-            print inst
-            return False
-        return True
+            print "Send Error: ", inst
     
     def close(self):
         self.thesocket.close()

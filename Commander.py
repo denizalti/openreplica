@@ -22,11 +22,15 @@ class Commander(Thread):
         self.pvalue = pvalue            # PValue()
         self.ballotnumber = ballotnum   # (leaderid,b)
         self.waitfor = math.ceil(len(self.acceptors)/2)
+        print "Here.."
     
     def run(self):
-        message = Message(type=MSG_PROPOSE,source=self.leader.serialize,ballotnumber=self.ballotnumber,\
+        print "XXX", self.leader.serialize()
+        message = Message(type=MSG_PROPOSE,source=self.leader.serialize(),ballotnumber=self.ballotnumber,\
                           commandnumber=self.pvalue.commandnumber,proposal=self.pvalue.proposal)
+        print "Commander: Here!"
         replies = self.acceptors.broadcast(message)
+        print "Commander waiting for replies.."
         for reply in replies:
             self.changeState(reply)
             with self.replyToLeader.replyLock:
