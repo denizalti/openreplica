@@ -6,10 +6,11 @@ from optparse import OptionParser
 from threading import Thread
 import threading
 from Utils import *
-from Connection import *
+import Connection
 from Group import *
 from Peer import *
 from Message import *
+from random import randint
 
 parser = OptionParser(usage="usage: %prog -i id -p port -b bootstrap")
 parser.add_option("-i", "--id", action="store", dest="id", help="node id")
@@ -33,7 +34,7 @@ class Acceptor():
         self.ballotnumber = (0,0)
         self.accepted = [] # Array of pvalues
         # Exit
-        self.run = True 
+        self.run = True
         # print some information
         print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
         if bootstrap:
@@ -46,7 +47,7 @@ class Acceptor():
             else:
                 self.replicas.add(bootpeer)
             heloMessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
-            heloReply = self.acceptors.sendToPeer(bootpeer,heloMessage)
+            heloReply = bootpeer.send(heloMessage)
             self.leaders.mergeList(heloReply.leaders)
             self.acceptors.mergeList(heloReply.acceptors)
             self.replicas.mergeList(heloReply.replicas)
@@ -76,7 +77,7 @@ class Acceptor():
         while self.run:
             try:
                 clientsock,clientaddr = s.accept()
-#                print "DEBUG: Accepted a connection on socket:",clientsock," and address:",clientaddr
+                print "DEBUG: Accepted a connection on socket:",clientsock," and address:",clientaddr
                 # Start a Thread
                 Thread(target=self.handleConnection,args =[clientsock]).start()
             except KeyboardInterrupt:
@@ -87,20 +88,10 @@ class Acceptor():
     def handleConnection(self,clientsock):
 #        print "DEBUG: Handling the connection.."
         addr,port = clientsock.getpeername()
-        tuple = addr+":"+str(port)
-        print tuple
-        connection = Connection(addr,port,reusesock=clientsock)
+        connection = Connection.Connection(addr,port,reusesock=clientsock)
         message = connection.receive()
-        print message
         if message.type == MSG_HELO:
             messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
-            if messageSource.type == ACCEPTOR:
-                self.acceptors.add(messageSource)
-            elif messageSource.type == LEADER:
-                self.leaders.add(messageSource)
-            else:
-                self.replicas.add(messageSource)
-            print str(self)
             replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize(),acceptors=self.acceptors.toList(),\
                                    leaders=self.leaders.toList(),replicas=self.replicas.toList())
             newmessage = Message(type=MSG_NEW,source=self.toPeer.serialize(),acceptors=self.acceptors.toList(),\
@@ -109,6 +100,12 @@ class Acceptor():
             self.acceptors.broadcast(newmessage)
             self.leaders.broadcast(newmessage)
             self.replicas.broadcast(newmessage)
+            if messageSource.type == ACCEPTOR:
+                self.acceptors.add(messageSource)
+            elif messageSource.type == LEADER:
+                self.leaders.add(messageSource)
+            elif messageSource.type == REPLICA:
+                self.replicas.add(messageSource)
         elif message.type == MSG_HELOREPLY:
             self.leaders.mergeList(message.leaders)
             self.acceptors.mergeList(message.acceptors)
@@ -121,6 +118,12 @@ class Acceptor():
             for replica in message.replicas:
                 self.replicas.add(replica)
             print str(self)
+        elif message.type == MSG_DEBIT:
+            randomleader = randint(0,len(self.leaders)-1)
+            self.leaders[randomleader].send(message)
+        elif message.type == MSG_DEPOSIT:
+            randomleader = randint(0,len(self.leaders)-1)
+            self.leaders[randomleader].send(message)
         elif message.type == MSG_BYE:
             messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
             if messageSource.type == ACCEPTOR:
@@ -183,7 +186,7 @@ class Acceptor():
         self.leaders.broadcast(byeMessage)
         self.acceptors.broadcast(byeMessage)
         self.replicas.broadcast(byeMessage)
-        Group.sendToPeer(self.toPeer,byeMessage)
+        self.toPeer.send(byeMessage)
                     
     def printHelp(self):
         print "I can execute a new Command for you as follows:"

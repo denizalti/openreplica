@@ -5,13 +5,14 @@
 from optparse import OptionParser
 from threading import Thread, Lock, Condition
 from Utils import *
-from Connection import *
+import Connection
 from Group import *
 from Peer import *
 from Message import *
 from Acceptor import *
 from Scout import *
 from Commander import *
+from Bank import *
 from time import sleep
 
 parser = OptionParser(usage="usage: %prog -i id -p port -b bootstrap -d delay")
@@ -32,6 +33,7 @@ class Leader():
         self.acceptors = Group(self.toPeer)
         self.replicas = Group(self.toPeer)
         self.leaders = Group(self.toPeer)
+        self.clients = Group(self.toPeer)
         # Synod Leader State
         self.ballotnumber = (self.id,0)
         self.pvalues = [] # array of pvalues
@@ -39,7 +41,11 @@ class Leader():
         self.replyLock = Lock()
         self.replyCondition = Condition(self.replyLock)
         # Exit
-        self.run = True 
+        self.run = True
+        # Paxos State
+        self.state = {}
+        # Bank
+        self.bank = Bank()
         print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
         if bootstrap:
             bootaddr,bootport,bootid,boottype = bootstrap.split(":")
@@ -51,7 +57,7 @@ class Leader():
             else:
                 self.replicas.add(bootpeer)
             heloMessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
-            heloReply = self.acceptors.sendToPeer(bootpeer,heloMessage)
+            heloReply = bootpeer.send(heloMessage)
             self.leaders.mergeList(heloReply.leaders)
             self.acceptors.mergeList(heloReply.acceptors)
             self.replicas.mergeList(heloReply.replicas)
@@ -75,6 +81,12 @@ class Leader():
         temp = (self.ballotnumber[0],self.ballotnumber[1]+1)
         self.ballotnumber = temp
         
+    def getHighestCommandNumber(self):
+        if len(self.state) == 0:
+            return 1
+        else:
+            return max(k for k, v in self.state.iteritems() if v != 0)
+        
     def wait(self, delay):
         sleep(delay)
         
@@ -87,7 +99,7 @@ class Leader():
         while self.run:
             try:
                 clientsock,clientaddr = s.accept()
-#                print "DEBUG: Accepted a connection on socket:",clientsock," and address:",clientaddr
+                print "DEBUG: Accepted a connection on socket:",clientsock," and address:",clientaddr
                 # Start a Thread
                 Thread(target=self.handleConnection,args =[clientsock]).start()
             except KeyboardInterrupt:
@@ -96,27 +108,32 @@ class Leader():
         return
         
     def handleConnection(self,clientsock):
-#        print "DEBUG: Handling the connection.."
+        print "DEBUG: Handling the connection.."
         addr,port = clientsock.getpeername()
-        tuple = addr+":"+str(port)
-        connection = Connection(addr,port,reusesock=clientsock)
+        connection = Connection.Connection(addr,port,reusesock=clientsock)
+        print "Receiving message.."
         message = connection.receive()
         if message.type == MSG_HELO:
             messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
-            if messageSource.type == ACCEPTOR:
-                self.acceptors.add(messageSource)
-            elif messageSource.type == LEADER:
-                self.leaders.add(messageSource)
-            else:
-                self.replicas.add(messageSource)
+            print "Message received from.."
+            print messageSource
             replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize(),acceptors=self.acceptors.toList(),\
                                    leaders=self.leaders.toList(),replicas=self.replicas.toList())
             newmessage = Message(type=MSG_NEW,source=self.toPeer.serialize(),acceptors=self.acceptors.toList(),\
                                    leaders=self.leaders.toList(),replicas=self.replicas.toList())
             connection.send(replymessage)
+            print "Sending broadcast to everyone..."
             self.acceptors.broadcast(newmessage)
             self.leaders.broadcast(newmessage)
             self.replicas.broadcast(newmessage)
+            if messageSource.type == ACCEPTOR:
+                self.acceptors.add(messageSource)
+            elif messageSource.type == LEADER:
+                self.leaders.add(messageSource)
+            elif messageSource.type == REPLICA:
+                self.replicas.add(messageSource)
+            elif messageSource.type == CLIENT:
+                self.clients.add(messageSource)
         elif message.type == MSG_HELOREPLY:
             self.leaders = message.leaders
             self.acceptors = message.acceptors
@@ -129,9 +146,9 @@ class Leader():
             for replica in message.replicas:
                 self.replicas.add(replica)
         elif message.type == MSG_DEBIT:
-            pass
+            self.newCommand(self.getHighestCommandNumber(), "Debit")
         elif message.type == MSG_DEPOSIT:
-            pass
+            self.newCommand(self.getHighestCommandNumber(), "Deposit")
         elif message.type == MSG_BYE:
             messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
             if messageSource.type == ACCEPTOR:
@@ -173,7 +190,7 @@ class Leader():
         self.leaders.broadcast(byeMessage)
         self.acceptors.broadcast(byeMessage)
         self.replicas.broadcast(byeMessage)
-        Group.sendToPeer(self.toPeer,byeMessage)
+        self.toPeer.send(byeMessage)
                     
     def printHelp(self):
         print "I can execute a new Command for you as follows:"

@@ -5,13 +5,14 @@
 from optparse import OptionParser
 from threading import Thread, Lock, Condition
 from Utils import *
-from Connection import *
+import Connection
 from Group import *
 from Peer import *
 from Message import *
 from Acceptor import *
 from Scout import *
 from Commander import *
+from Bank import *
 
 parser = OptionParser(usage="usage: %prog -i id -p port -b bootstrap")
 parser.add_option("-i", "--id", action="store", dest="id", help="node id")
@@ -31,10 +32,12 @@ class Replica():
         self.acceptors = Group(self.toPeer)
         self.replicas = Group(self.toPeer)
         self.leaders = Group(self.toPeer)
+        # Exit
+        self.run = True
         # Paxos State
         self.state = {}
-        # Exit
-        self.run = True 
+        # Bank
+        self.bank = Bank()
         # print some information
         print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
         if bootstrap:
@@ -47,7 +50,7 @@ class Replica():
             else:
                 self.replicas.add(bootpeer)
             heloMessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
-            heloReply = self.acceptors.sendToPeer(bootpeer,heloMessage)
+            heloReply = bootpeer.send(heloMessage)
             self.leaders.mergeList(heloReply.leaders)
             self.acceptors.mergeList(heloReply.acceptors)
             self.replicas.mergeList(heloReply.replicas)
@@ -89,7 +92,7 @@ class Replica():
 #        print "DEBUG: Handling the connection.."
         addr,port = clientsock.getpeername()
         tuple = addr+":"+str(port)
-        connection = Connection(addr,port,reusesock=clientsock)
+        connection = Connection.Connection(addr,port,reusesock=clientsock)
         message = connection.receive()
         if message.type == MSG_HELO:
             messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
@@ -118,6 +121,12 @@ class Replica():
                 self.acceptors.add(acceptor)
             for replica in message.replicas:
                 self.replicas.add(replica)
+        elif message.type == MSG_DEBIT:
+            randomleader = randint(0,len(self.leaders)-1)
+            self.leaders[randomleader].send(message)
+        elif message.type == MSG_DEPOSIT:
+            randomleader = randint(0,len(self.leaders)-1)
+            self.leaders[randomleader].send(message)
         elif message.type == MSG_BYE:
             messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
             if messageSource.type == ACCEPTOR:
@@ -128,6 +137,7 @@ class Replica():
                 self.replicas.remove(messageSource)
         elif message.type == MSG_PERFORM:
             self.state[message.commandnumber] = message.proposal
+            self.bank.executeCommand(message.proposal)
         connection.close()
         
     def getInputs(self):
@@ -158,7 +168,7 @@ class Replica():
         self.leaders.broadcast(byeMessage)
         self.acceptors.broadcast(byeMessage)
         self.replicas.broadcast(byeMessage)
-        Group.sendToPeer(self.toPeer,byeMessage)
+        self.toPeer.send(byeMessage)
                     
     def printHelp(self):
         print "I can execute a new Command for you as follows:"

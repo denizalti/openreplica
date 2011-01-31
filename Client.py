@@ -1,6 +1,6 @@
 '''
 @author: denizalti
-@note: The Leader
+@note: The Client
 '''
 from optparse import OptionParser
 from threading import Thread, Lock, Condition
@@ -9,8 +9,9 @@ from Connection import *
 from Group import *
 from Peer import *
 from Message import *
+from Bank import *
 
-parser = OptionParser(usage="usage: %prog -n name -p port -b bootstrap")
+parser = OptionParser(usage="usage: %prog -n name -p port -s server")
 parser.add_option("-i", "--id", action="store", dest="id", help="account id")
 parser.add_option("-p", "--port", action="store", dest="port", help="port for the node")
 parser.add_option("-s", "--server", action="store", dest="server", help="address:port:id:type for the server")
@@ -27,15 +28,12 @@ class Client():
         # Exit
         self.run = True 
         # print some information
-        print "DEBUG: IP: %s Port: %d" % (self.addr,self.port,self.name)
+        print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
         if bootstrap:
             bootaddr,bootport,bootid,boottype = bootstrap.split(":")
-            bootpeer = Peer(int(bootid),bootaddr,int(bootport),int(boottype))
+            self.server = Peer(int(bootid),bootaddr,int(bootport),int(boottype))
             heloMessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
-            heloReply = Group.sendToPeer(bootpeer,heloMessage)
-            self.leaders.mergeList(heloReply.leaders)
-            self.acceptors.mergeList(heloReply.acceptors)
-            self.replicas.mergeList(heloReply.replicas)
+            heloReply = self.server.send(heloMessage)
         else:
             print "Client needs a server to connect.."
         # Start a thread with the server which will start a thread for each request
@@ -67,9 +65,10 @@ class Client():
         return
         
     def handleConnection(self,clientsock):
-#        print "DEBUG: Handling the connection.."
+        print "DEBUG: Handling the connection.."
         addr,port = clientsock.getpeername()
         tuple = addr+":"+str(port)
+        print tuple
         connection = Connection(addr,port,reusesock=clientsock)
         message = connection.receive()
         if message.type == MSG_DONE:
@@ -80,15 +79,15 @@ class Client():
         
     def debitTen(self):
         debitMessage = Message(type=MSG_DEBIT,source=self.toPeer.serialize())
-        debitReply = Group.sendToPeer(bootpeer,debitMessage)
+        debitReply = self.server.send(debitMessage)
         if debitReply.type == MSG_DONE:
             print "Transaction performed."
         elif debitReply.type == MSG_FAIL:
             print "Transaction failed.."      
     
     def depositTen(self):
-        depositMessage = Message(type=MSG_DEBIT,source=self.toPeer.serialize())
-        depositReply = Group.sendToPeer(bootpeer,depositMessage)
+        depositMessage = Message(type=MSG_DEPOSIT,source=self.toPeer.serialize())
+        depositReply = self.server.send(depositMessage)
         if depositReply.type == MSG_DONE:
             print "Transaction performed."
         elif depositReply.type == MSG_FAIL:
@@ -96,8 +95,14 @@ class Client():
             
     def checkBalance(self):
         balanceMessage = Message(type=MSG_BALANCE,source=self.toPeer.serialize())
-        balanceReply = Group.sendToPeer(bootpeer,balanceMessage)
+        balanceReply = self.server.send(balanceMessage)
         print "The balance is $%d\n" % balanceReply.balance
+        
+    def openAccount(self):
+        pass
+    
+    def closeAccount(self):
+        pass
         
     def getInputs(self):
         while self.run:
@@ -126,10 +131,8 @@ class Client():
     def die(self):
         self.run = False
         byeMessage = Message(type=MSG_BYE,source=self.toPeer.serialize())
-        self.leaders.broadcast(byeMessage)
-        self.acceptors.broadcast(byeMessage)
-        self.replicas.broadcast(byeMessage)
-        Group.sendToPeer(self.toPeer,byeMessage)
+        self.server.send(byeMessage)
+        self.toPeer.send(byeMessage)
                     
     def printHelp(self):
         print "I can execute a new Command for you as follows:"
@@ -140,7 +143,7 @@ class Client():
    
 '''main'''
 def main():
-    theClient = Bank(options.id,options.port,options.server)
+    theClient = Client(options.id,options.port,options.server)
 
 '''run'''
 if __name__=='__main__':

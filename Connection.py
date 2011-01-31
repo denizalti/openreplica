@@ -31,7 +31,7 @@ class Connection():
         return "Connection with Peer at addr: %s port: %d" % (self.addr, self.port)
     
     def receive(self):
-#        print "DEBUG: Receiving msg"
+        print "DEBUG: Receiving msg"
         try:
             returnstring = self.thesocket.recv(4)
             msg_length = struct.unpack("I", returnstring[0:4])[0]
@@ -48,6 +48,7 @@ class Connection():
             print "Receive Error: ", inst
             return None
         message = Message(serialmessage=returnstring[0:4]+msg)
+        print message
         return message
     
     def send(self,msg):

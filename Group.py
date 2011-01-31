@@ -22,23 +22,25 @@ class Group():
         self.members.append(peer)
         
     def broadcast(self,msg):
-#        print "DEBUG: broadcasting message.."
+        print "DEBUG: broadcasting message.."
         replies = []
         for member in self.members:
-            reply = self.sendToPeer(member,msg)
+            reply = member.send(msg)
             replies.append(reply)
+        print "XXX"
+        print replies
         return replies
     
-    def sendToPeer(self,peer,msg):
-#        print "DEBUG: sending message to " + str(peer)
-        reply = ""
-        message = msg.serialize()
-        connection = Connection(peer.addr, peer.port)
-        connection.send(msg)
-        if msg.type != MSG_BYE:
-            reply = connection.receive()
-        connection.close()
-        return reply
+#    def sendToPeer(self,peer,msg):
+##        print "DEBUG: sending message to " + str(peer)
+#        reply = ""
+#        message = msg.serialize()
+#        connection = Connection(peer.addr, peer.port)
+#        connection.send(msg)
+#        if msg.type != MSG_BYE:
+#            reply = connection.receive()
+#        connection.close()
+#        return reply
 
     def toList(self):
         return self.members
