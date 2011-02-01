@@ -57,7 +57,7 @@ class Leader():
             else:
                 self.replicas.add(bootpeer)
             heloMessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
-            heloReply = bootpeer.send(heloMessage)
+            heloReply = bootpeer.sendWaitReply(heloMessage)
             self.leaders.mergeList(heloReply.leaders)
             self.acceptors.mergeList(heloReply.acceptors)
             self.replicas.mergeList(heloReply.replicas)
@@ -117,10 +117,12 @@ class Leader():
             messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
             print "Message received from.."
             print messageSource
-            replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize(),acceptors=self.acceptors.toList(),\
+            if messageSource.type == CLIENT:
+                replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize())
+            else:
+                replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize(),acceptors=self.acceptors.toList(),\
                                    leaders=self.leaders.toList(),replicas=self.replicas.toList())
-            newmessage = Message(type=MSG_NEW,source=self.toPeer.serialize(),acceptors=self.acceptors.toList(),\
-                                   leaders=self.leaders.toList(),replicas=self.replicas.toList())
+            newmessage = Message(type=MSG_NEW,source=self.toPeer.serialize(),newpeer=messageSource.serialize())
             connection.send(replymessage)
             print "Sending broadcast to everyone..."
             self.acceptors.broadcast(newmessage)
@@ -139,16 +141,25 @@ class Leader():
             self.acceptors = message.acceptors
             self.replicas = message.replicas
         elif message.type == MSG_NEW:
-            for leader in message.leaders:
-                self.leaders.add(leader)
-            for acceptor in message.acceptors:
-                self.acceptors.add(acceptor)
-            for replica in message.replicas:
-                self.replicas.add(replica)
+            newpeer = Peer(message.newpeer[0],message.newpeer[1],message.newpeer[2],message.newpeer[3])
+            if newpeer.type == ACCEPTOR:
+                self.acceptors.add(newpeer)
+            elif newpeer.type == LEADER:
+                self.leaders.add(newpeer)
+            elif newpeer.type == REPLICA:
+                self.replicas.add(newpeer)
         elif message.type == MSG_DEBIT:
-            self.newCommand(self.getHighestCommandNumber(), "Debit")
+            proposal = "Debit " + str(message.accountid)
+            self.newCommand(self.getHighestCommandNumber(),proposal)
         elif message.type == MSG_DEPOSIT:
-            self.newCommand(self.getHighestCommandNumber(), "Deposit")
+            proposal = "Deposit " + str(message.accountid)
+            self.newCommand(self.getHighestCommandNumber(),proposal)
+        elif message.type == MSG_OPEN:
+            proposal = "Open"
+            self.newCommand(self.getHighestCommandNumber(),proposal)
+        elif message.type == MSG_CLOSE:
+            proposal = "Close " + str(message.accountid)
+            self.newCommand(self.getHighestCommandNumber(),proposal)
         elif message.type == MSG_BYE:
             messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
             if messageSource.type == ACCEPTOR:

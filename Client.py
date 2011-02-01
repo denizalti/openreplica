@@ -33,7 +33,7 @@ class Client():
             bootaddr,bootport,bootid,boottype = bootstrap.split(":")
             self.server = Peer(int(bootid),bootaddr,int(bootport),int(boottype))
             heloMessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
-            heloReply = self.server.send(heloMessage)
+            heloReply = self.server.sendWaitReply(heloMessage)
         else:
             print "Client needs a server to connect.."
         # Start a thread with the server which will start a thread for each request
@@ -79,7 +79,7 @@ class Client():
         
     def debitTen(self):
         debitMessage = Message(type=MSG_DEBIT,source=self.toPeer.serialize())
-        debitReply = self.server.send(debitMessage)
+        debitReply = self.server.sendWaitReply(debitMessage)
         if debitReply.type == MSG_DONE:
             print "Transaction performed."
         elif debitReply.type == MSG_FAIL:
@@ -87,7 +87,7 @@ class Client():
     
     def depositTen(self):
         depositMessage = Message(type=MSG_DEPOSIT,source=self.toPeer.serialize())
-        depositReply = self.server.send(depositMessage)
+        depositReply = self.server.sendWaitReply(depositMessage)
         if depositReply.type == MSG_DONE:
             print "Transaction performed."
         elif depositReply.type == MSG_FAIL:
@@ -95,7 +95,7 @@ class Client():
             
     def checkBalance(self):
         balanceMessage = Message(type=MSG_BALANCE,source=self.toPeer.serialize())
-        balanceReply = self.server.send(balanceMessage)
+        balanceReply = self.server.sendWaitReply(balanceMessage)
         print "The balance is $%d\n" % balanceReply.balance
         
     def openAccount(self):
@@ -114,7 +114,6 @@ class Client():
                 input[0] = input[0].upper()
                 if input[0] == 'HELP':
                     self.printHelp()
-                    self.newCommand(int(commandnumber), proposal)
                 elif input[0] == 'DEBIT':
                     self.debitTen()
                 elif input[0] == 'DEPOSIT':
@@ -135,9 +134,11 @@ class Client():
         self.toPeer.send(byeMessage)
                     
     def printHelp(self):
-        print "I can execute a new Command for you as follows:"
-        print "To debit 10% of the account type DEBIT"
-        print "To deposit 10% of the account type DEPOSIT"
+        print "To open an account type OPEN"
+        print "To debit 10% of the account type DEBIT AccountID"
+        print "To deposit 10% of the account type DEPOSIT AccountID"
+        print "To see the balance of the account type BALANCE AccountID"
+        print "To close an account type CLOSE AccountID"
         print "For help type HELP"
         print "To exit type EXIT"
    

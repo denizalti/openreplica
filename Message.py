@@ -3,18 +3,20 @@ from Utils import *
 from Peer import *
 
 class Message():
-    def __init__(self,serialmessage=None,source=(0,'',0,0),acceptors=[],leaders=[],replicas=[],type=-1,ballotnumber=(0,0),commandnumber=0,proposal='',givenpvalues=[],balance=0.0):
+    def __init__(self,serialmessage=None,source=(0,'',0,0),newpeer=(0,'',0,0),acceptors=[],leaders=[],replicas=[],type=-1,ballotnumber=(0,0),commandnumber=0,proposal='',givenpvalues=[],balance=0.0,accountid=0):
         if serialmessage == None:
             self.type = type
             self.ballotnumber = ballotnumber
             self.commandnumber = commandnumber
             self.proposal = proposal
             self.source = source
+            self.newpeer = newpeer
             self.pvalues = givenpvalues
             self.acceptors = acceptors
             self.leaders = leaders
             self.replicas = replicas
             self.balance = balance
+            self.accountid = accountid
         else:
             temp = serialmessage
             length, self.type = struct.unpack("II", temp[0:8])
@@ -25,7 +27,14 @@ class Message():
                 addr = addr.strip("\x00")
                 self.source = (id,addr,port,type)
                 temp = temp[PEERLENGTH:]
+                self.newpeer = struct.unpack("I%dsII"% ADDRLENGTH, temp[0:PEERLENGTH])
+                (id,addr,port,type) = (self.newpeer[0],self.newpeer[1],self.newpeer[2],self.newpeer[3])
+                addr = addr.strip("\x00")
+                self.newpeer = (id,addr,port,type)
+                temp = temp[PEERLENGTH:]
                 self.balance = struct.unpack("f", temp[0:4])[0]
+                temp = temp[4:]
+                self.accountid = struct.unpack("f", temp[0:4])[0]
                 temp = temp[4:]
                 numacceptors = struct.unpack("I", temp[0:4])[0]
                 temp = temp[4:]
@@ -74,7 +83,9 @@ class Message():
             temp = ""
             temp += struct.pack("I", self.type)
             temp += struct.pack("I%dsII" % ADDRLENGTH, self.source[0], self.source[1], self.source[2],self.source[3])
+            temp += struct.pack("I%dsII" % ADDRLENGTH, self.newpeer[0], self.newpeer[1], self.newpeer[2],self.newpeer[3])
             temp += struct.pack("f", self.balance)
+            temp += struct.pack("f", self.accountid)
             temp += struct.pack("I", len(self.acceptors))
             for acceptor in self.acceptors:
                 temp += acceptor.pack()
@@ -102,7 +113,11 @@ class Message():
             return msg
     
     def __str__(self):
-        if self.type >= MSG_HELO:
+        if self.type == MSG_NEW:
+            temp = 'Message\n=======\nType: %s\nSource: (%d,%s,%d,%d)\nNewPeer: (%d,%s,%d,%d)' \
+            % (messageTypes[self.type],self.source[0],self.source[1],self.source[2],self.source[3], \
+               self.newpeer[0],self.newpeer[1],self.newpeer[2],self.newpeer[3])
+        elif self.type >= MSG_HELO:
             temp = 'Message\n=======\nType: %s\nSource: (%d,%s,%d,%d)\nAcceptors:\n' \
             % (messageTypes[self.type],self.source[0],self.source[1],self.source[2],self.source[3])
             for acceptor in self.acceptors:
@@ -113,13 +128,16 @@ class Message():
             temp += 'Replicas:\n'
             for replica in self.replicas:
                 temp += str(replica) + '\n'
-            return temp
+        elif self.type >= MSG_DEBIT:
+            temp = 'Message\n=======\nType: %s\nSource: (%d,%s,%d,%d)\nAccountID:\nBalance:\n' \
+            % (messageTypes[self.type],self.source[0],self.source[1],self.source[2],self.source[3],\
+               self.accountid,self.balance)
         else:
             temp = 'Message\n=======\nType: %s\nBallotnumber: (%d,%d)\nCommandnumber: %d\nProposal: %s\nSource: (%d,%s,%d,%d)\nPValues:\n' \
             % (messageTypes[self.type],self.ballotnumber[0],self.ballotnumber[1],self.commandnumber,self.proposal,self.source[0],self.source[1],self.source[2],self.source[3])
             for pvalue in self.pvalues:
                 temp += str(pvalue) + '\n'
-            return temp
+        return temp
         
 class PValue():
     def __init__(self,serialpvalue=None,ballotnumber=(0,0),commandnumber=0,proposal=""):

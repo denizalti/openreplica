@@ -50,7 +50,7 @@ class Replica():
             else:
                 self.replicas.add(bootpeer)
             heloMessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
-            heloReply = bootpeer.send(heloMessage)
+            heloReply = bootpeer.sendWaitReply(heloMessage)
             self.leaders.mergeList(heloReply.leaders)
             self.acceptors.mergeList(heloReply.acceptors)
             self.replicas.mergeList(heloReply.replicas)
@@ -96,31 +96,34 @@ class Replica():
         message = connection.receive()
         if message.type == MSG_HELO:
             messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
-            if messageSource.type == ACCEPTOR:
-                self.acceptors.add(messageSource)
-            elif messageSource.type == LEADER:
-                self.leaders.add(messageSource)
+            if messageSource.type == CLIENT:
+                replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize())
             else:
-                self.replicas.add(messageSource)
-            replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize(),acceptors=self.acceptors.toList(),\
+                replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize(),acceptors=self.acceptors.toList(),\
                                    leaders=self.leaders.toList(),replicas=self.replicas.toList())
-            newmessage = Message(type=MSG_NEW,source=self.toPeer.serialize(),acceptors=self.acceptors.toList(),\
-                                   leaders=self.leaders.toList(),replicas=self.replicas.toList())
+            newmessage = Message(type=MSG_NEW,source=self.toPeer.serialize(),newpeer=messageSource.serialize())
             connection.send(replymessage)
             self.acceptors.broadcast(newmessage)
             self.leaders.broadcast(newmessage)
             self.replicas.broadcast(newmessage)
+            if messageSource.type == ACCEPTOR:
+                self.acceptors.add(messageSource)
+            elif messageSource.type == LEADER:
+                self.leaders.add(messageSource)
+            elif messageSource.type == REPLICA:
+                self.replicas.add(messageSource)
         elif message.type == MSG_HELOREPLY:
             self.leaders = message.leaders
             self.acceptors = message.acceptors
             self.replicas = message.replicas
         elif message.type == MSG_NEW:
-            for leader in message.leaders:
-                self.leaders.add(leader)
-            for acceptor in message.acceptors:
-                self.acceptors.add(acceptor)
-            for replica in message.replicas:
-                self.replicas.add(replica)
+            newpeer = Peer(message.newpeer[0],message.newpeer[1],message.newpeer[2],message.newpeer[3])
+            if newpeer.type == ACCEPTOR:
+                self.acceptors.add(newpeer)
+            elif newpeer.type == LEADER:
+                self.leaders.add(newpeer)
+            elif newpeer.type == REPLICA:
+                self.replicas.add(newpeer)
         elif message.type == MSG_DEBIT:
             randomleader = randint(0,len(self.leaders)-1)
             self.leaders[randomleader].send(message)

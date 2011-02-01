@@ -16,7 +16,7 @@ class Peer():
     def pack(self):
         return struct.pack("I%dsII" % ADDRLENGTH, self.id,self.addr,self.port,self.type)
     
-    def send(self, message):
+    def sendWaitReply(self, message):
         reply = ""
         print "Trying to send a message to %s:%d" % (self.addr,self.port)
         connection = Connection.Connection(self.addr,self.port)
@@ -26,6 +26,12 @@ class Peer():
         connection.close()
         return reply
     
+    def send(self, message):
+        print "Trying to send a message to %s:%d" % (self.addr,self.port)
+        connection = Connection.Connection(self.addr,self.port)
+        connection.send(message)
+        connection.close()
+    
     def __eq__(self, otherpeer):
         if self.id == otherpeer.id:
             if self.addr == otherpeer.addr:
@@ -34,13 +40,7 @@ class Peer():
         return False
         
     def __str__(self):
-        if self.type == LEADER:
-            temp = "LEADER "
-        elif self.type == ACCEPTOR:
-            temp = "ACCEPTOR "
-        else:
-            temp = "REPLICA "
-        temp += 'PEER(%d, %s, %d)' % (self.id, self.addr, self.port)
+        temp = '%s PEER(%d, %s, %d)' % (nodeTypes[self.type],self.id, self.addr, self.port)
         return temp
     
 

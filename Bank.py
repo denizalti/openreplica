@@ -40,7 +40,7 @@ class Bank():
 class Account():
     def __init__(self,id):
         self.id = id
-        self.balance = 0
+        self.balance = 100
         self.commands = {} # dictionary indexed by commandnumber storing commands
         
     def __str__(self):
