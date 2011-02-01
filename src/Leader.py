@@ -1,9 +1,13 @@
 '''
 @author: denizalti
 @note: The Leader
+@date: February 1, 2011
 '''
 from optparse import OptionParser
 from threading import Thread, Lock, Condition
+import time
+import random
+
 from Utils import *
 import Connection
 from Group import *
@@ -13,11 +17,13 @@ from Acceptor import *
 from Scout import *
 from Commander import *
 from Bank import *
-from time import sleep
+
+# XXX 
+defaultid=random.randint(0, 1000000)
 
 parser = OptionParser(usage="usage: %prog -i id -p port -b bootstrap -d delay")
-parser.add_option("-i", "--id", action="store", dest="id", help="node id")
-parser.add_option("-p", "--port", action="store", dest="port", help="port for the node")
+parser.add_option("-i", "--id", action="store", dest="id", type="int", default=defaultid, help="node id")
+parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:id:type for the bootstrap peer")
 (options, args) = parser.parse_args()
 
@@ -88,7 +94,7 @@ class Leader():
             return max(k for k, v in self.state.iteritems() if v != 0)
         
     def wait(self, delay):
-        sleep(delay)
+        time.sleep(delay)
         
     def serverLoop(self):
         s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -137,9 +143,9 @@ class Leader():
             elif messageSource.type == CLIENT:
                 self.clients.add(messageSource)
         elif message.type == MSG_HELOREPLY:
-            self.leaders = message.leaders
-            self.acceptors = message.acceptors
-            self.replicas = message.replicas
+            self.leaders.add(message.leaders)
+            self.acceptors.add(message.acceptors)
+            self.replicas.add(message.replicas)
         elif message.type == MSG_NEW:
             newpeer = Peer(message.newpeer[0],message.newpeer[1],message.newpeer[2],message.newpeer[3])
             if newpeer.type == ACCEPTOR:
@@ -271,8 +277,3 @@ def main():
 '''run'''
 if __name__=='__main__':
     main()
-
-  
-
-
-    

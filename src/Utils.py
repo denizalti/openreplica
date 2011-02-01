@@ -3,47 +3,21 @@ import socket
 import struct
 #from Peer import *
 
-INFINITY = float('inf')
-
-# MSGS
-MSG_ACCEPT = 1
-MSG_REJECT = 2
-MSG_PREPARE = 3
-MSG_PROPOSE = 4
-MSG_PERFORM = 5
-MSG_REMOVE = 6
-MSG_PING = 7
-MSG_ERROR = 8
-MSG_HELO = 9
-MSG_HELOREPLY = 10
-MSG_NEW = 11
-MSG_BYE = 12
-MSG_DEBIT = 13
-MSG_DEPOSIT = 14
-MSG_DONE = 15
-MSG_FAIL = 16
-MSG_ACK = 17
-MSG_NACK = 18
+# message types
+# XXX separate application messages from paxi protocol message
+MSG_ACCEPT, MSG_REJECT, MSG_PREPARE, MSG_PROPOSE, MSG_PERFORM, MSG_REMOVE, MSG_PING, MSG_ERROR, MSG_HELO, MSG_HELOREPLY, MSG_NEW, MSG_BYE, MSG_DEBIT, MSG_DEPOSIT, MSG_DONE, MSG_FAIL, MSG_ACK, MSG_NACK = range(1,19)
 
 messageTypes = {1:'ACCEPT',2:'REJECT',3:'PREPARE',4:'PROPOSE',5:'PERFORM',6:'REMOVE',7:'PING',8:'ERROR',9:'HELO',\
                 10:'HELOREPLY',11:'NEW',12:'BYE',13:'MSG_DEBIT',14:'MSG_DEPOSIT',15:'MSG_DONE',16:'MSG_FAIL',17:'MSG_ACK',18:'MSG_NACK'}
 
 # STATES
-LEADER_ST_INITIAL = 20
-LEADER_ST_PREPARESENT = 21
-LEADER_ST_PROPOSESENT = 22
-LEADER_ST_ACCEPTED = 23
-LEADER_ST_REJECTED = 24
+LEADER_ST_INITIAL, LEADER_ST_PREPARESENT, LEADER_ST_PROPOSESENT, LEADER_ST_ACCEPTED, LEADER_ST_REJECTED = range(20,25)
 
 # SCOUT RETURN VALUES
-SCOUT_ADOPTED = 30
-SCOUT_BUSY = 31
-SCOUT_PREEMPTED = 32
+SCOUT_ADOPTED, SCOUT_BUSY, SCOUT_PREEMPTED = range(30,33)
 
 # COMMANDER RETURN VALUES
-COMMANDER_CHOSEN = 40
-COMMANDER_BUSY = 41
-COMMANDER_PREEMPTED = 42
+COMMANDER_CHOSEN, COMMANDER_BUSY, COMMANDER_PREEMPTED = range(40,43)
 
 replyTypes = {30:'SCOUT_ADOPTED',31:'SCOUT_BUSY',32:'SCOUT_PREEMPTED',40:'COMMANDER_CHOSEN',41:'COMMANDER_BUSY',42:'COMMANDER_PREEMPTED'}
 
@@ -54,10 +28,7 @@ PEERLENGTH = 28
 ADDRLENGTH = 15
 
 # Node Types
-ACCEPTOR = 0 
-LEADER = 1
-REPLICA = 2
-CLIENT = 3
+ACCEPTOR, LEADER, REPLICA, CLIENT = range(0,4)
 
 nodeTypes = {0:'ACCEPTOR',1:'LEADER',2:'REPLICA',3:'CLIENT'}
 
@@ -65,15 +36,14 @@ nodeTypes = {0:'ACCEPTOR',1:'LEADER',2:'REPLICA',3:'CLIENT'}
 COMMANDNUMBER = 0
 COMMAND = 1
 
-# Int Infinity
+# integer infinity
 INFINITY = 10**100
 
-# This function hashes any given string
-def hash(name):
-    return hashlib.md5(name).hexdigest()
+# hashes any given string
+def hash(string):
+    return hashlib.md5(string).hexdigest()
 
 def findOwnIP():
-#    return socket.gethostbyname(socket.gethostname())
     return socket.gethostbyname(socket.gethostname())
 
 # pvalue calculations
