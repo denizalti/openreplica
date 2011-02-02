@@ -11,10 +11,9 @@ from Peer import *
 from Message import *
 from Bank import *
 
-parser = OptionParser(usage="usage: %prog -n name -p port -s server")
-parser.add_option("-i", "--id", action="store", dest="id", help="account id")
+parser = OptionParser(usage="usage: %prog -p port -s server")
 parser.add_option("-p", "--port", action="store", dest="port", help="port for the node")
-parser.add_option("-s", "--server", action="store", dest="server", help="address:port:id:type for the server")
+parser.add_option("-s", "--server", action="store", dest="server", help="address:port:type triple for the server")
 (options, args) = parser.parse_args()
 
 # TIMEOUT THREAD
@@ -22,7 +21,7 @@ class Client():
     def __init__(self, id, port, bootstrap):
         self.addr = findOwnIP()
         self.port = int(port)
-        self.id = int(id)
+        self.id = createID(self.addr,self.port)
         self.type = CLIENT
         self.toPeer = Peer(self.id,self.addr,self.port,self.type)
         # Exit
@@ -30,7 +29,8 @@ class Client():
         # print some information
         print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
         if bootstrap:
-            bootaddr,bootport,bootid,boottype = bootstrap.split(":")
+            bootaddr,bootport,boottype = bootstrap.split(":")
+            bootid = createID(bootaddr,bootport)
             self.server = Peer(int(bootid),bootaddr,int(bootport),int(boottype))
             heloMessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
             heloReply = self.server.sendWaitReply(heloMessage)
@@ -144,7 +144,7 @@ class Client():
    
 '''main'''
 def main():
-    theClient = Client(options.id,options.port,options.server)
+    theClient = Client(options.port,options.server)
 
 '''run'''
 if __name__=='__main__':

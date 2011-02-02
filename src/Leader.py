@@ -18,23 +18,20 @@ from Scout import *
 from Commander import *
 from Bank import *
 
-# XXX 
-defaultid=random.randint(0, 1000000)
-
-parser = OptionParser(usage="usage: %prog -i id -p port -b bootstrap -d delay")
-parser.add_option("-i", "--id", action="store", dest="id", type="int", default=defaultid, help="node id")
+parser = OptionParser(usage="usage: %prog -p port -b bootstrap -d delay")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
-parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:id:type for the bootstrap peer")
+parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
 (options, args) = parser.parse_args()
 
 # TIMEOUT THREAD
 class Leader():
-    def __init__(self, id, port, bootstrap=None):
+    def __init__(self, port, bootstrap=None):
         self.addr = findOwnIP()
-        self.port = int(port)
-        self.id = int(id)
+        self.port = port
+        self.id = createID(self.addr,self.port)
         self.type = LEADER
         self.toPeer = Peer(self.id,self.addr,self.port,self.type)
+        print "**** " , MSG_HELO, " ****"
         # groups
         self.acceptors = Group(self.toPeer)
         self.replicas = Group(self.toPeer)
@@ -54,19 +51,7 @@ class Leader():
         self.bank = Bank()
         print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
         if bootstrap:
-            bootaddr,bootport,bootid,boottype = bootstrap.split(":")
-            bootpeer = Peer(int(bootid),bootaddr,int(bootport),int(boottype))
-            if bootpeer.type == ACCEPTOR:
-                self.acceptors.add(bootpeer)
-            elif bootpeer.type == LEADER:
-                self.leaders.add(bootpeer)
-            else:
-                self.replicas.add(bootpeer)
-            heloMessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
-            heloReply = bootpeer.sendWaitReply(heloMessage)
-            self.leaders.mergeList(heloReply.leaders)
-            self.acceptors.mergeList(heloReply.acceptors)
-            self.replicas.mergeList(heloReply.replicas)
+            connectToBootstrap(self,bootstrap)
         # Start a thread with the server which will start a thread for each request
         server_thread = Thread(target=self.serverLoop)
         server_thread.start()
@@ -272,7 +257,7 @@ class Leader():
    
 '''main'''
 def main():
-    theLeader = Leader(options.id,options.port,options.bootstrap)
+    theLeader = Leader(options.port,options.bootstrap)
 
 '''run'''
 if __name__=='__main__':

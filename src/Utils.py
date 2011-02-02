@@ -1,25 +1,23 @@
 import hashlib
 import socket
+import random
 import struct
-#from Peer import *
+from Peer import *
 
 # message types
 # XXX separate application messages from paxi protocol message
-MSG_ACCEPT, MSG_REJECT, MSG_PREPARE, MSG_PROPOSE, MSG_PERFORM, MSG_REMOVE, MSG_PING, MSG_ERROR, MSG_HELO, MSG_HELOREPLY, MSG_NEW, MSG_BYE, MSG_DEBIT, MSG_DEPOSIT, MSG_DONE, MSG_FAIL, MSG_ACK, MSG_NACK = range(1,19)
+MSG_ACCEPT, MSG_REJECT, MSG_PREPARE, MSG_PROPOSE, MSG_PERFORM, MSG_REMOVE, MSG_PING, MSG_ERROR, MSG_HELO, MSG_HELOREPLY,\
+            MSG_NEW, MSG_BYE, MSG_DEBIT, MSG_DEPOSIT, MSG_OPEN, MSG_CLOSE, MSG_DONE, MSG_FAIL, MSG_ACK, MSG_NACK = range(20)
 
-messageTypes = {1:'ACCEPT',2:'REJECT',3:'PREPARE',4:'PROPOSE',5:'PERFORM',6:'REMOVE',7:'PING',8:'ERROR',9:'HELO',\
-                10:'HELOREPLY',11:'NEW',12:'BYE',13:'MSG_DEBIT',14:'MSG_DEPOSIT',15:'MSG_DONE',16:'MSG_FAIL',17:'MSG_ACK',18:'MSG_NACK'}
+messageTypes = ['ACCEPT','REJECT','PREPARE','PROPOSE','PERFORM','REMOVE','PING','ERROR','HELO','HELOREPLY','NEW','BYE',\
+                'MSG_DEBIT','MSG_DEPOSIT','OPEN','CLOSE','MSG_DONE','MSG_FAIL','MSG_ACK','MSG_NACK']
 
 # STATES
-LEADER_ST_INITIAL, LEADER_ST_PREPARESENT, LEADER_ST_PROPOSESENT, LEADER_ST_ACCEPTED, LEADER_ST_REJECTED = range(20,25)
+LEADER_ST_INITIAL, LEADER_ST_PREPARESENT, LEADER_ST_PROPOSESENT, LEADER_ST_ACCEPTED, LEADER_ST_REJECTED = range(5)
 
 # SCOUT RETURN VALUES
-SCOUT_ADOPTED, SCOUT_BUSY, SCOUT_PREEMPTED = range(30,33)
-
-# COMMANDER RETURN VALUES
-COMMANDER_CHOSEN, COMMANDER_BUSY, COMMANDER_PREEMPTED = range(40,43)
-
-replyTypes = {30:'SCOUT_ADOPTED',31:'SCOUT_BUSY',32:'SCOUT_PREEMPTED',40:'COMMANDER_CHOSEN',41:'COMMANDER_BUSY',42:'COMMANDER_PREEMPTED'}
+SCOUT_ADOPTED, SCOUT_BUSY, SCOUT_PREEMPTED, COMMANDER_CHOSEN, COMMANDER_BUSY, COMMANDER_PREEMPTED = range(6)
+replyTypes = ['SCOUT_ADOPTED','SCOUT_BUSY','SCOUT_PREEMPTED','COMMANDER_CHOSEN','COMMANDER_BUSY','COMMANDER_PREEMPTED']
 
 # Lengths
 MAXPROPOSALLENGTH = 20
@@ -30,7 +28,7 @@ ADDRLENGTH = 15
 # Node Types
 ACCEPTOR, LEADER, REPLICA, CLIENT = range(0,4)
 
-nodeTypes = {0:'ACCEPTOR',1:'LEADER',2:'REPLICA',3:'CLIENT'}
+nodeTypes = ['ACCEPTOR','LEADER','REPLICA','CLIENT']
 
 # Command Index
 COMMANDNUMBER = 0
@@ -39,12 +37,28 @@ COMMAND = 1
 # integer infinity
 INFINITY = 10**100
 
-# hashes any given string
-def hash(string):
-    return hashlib.md5(string).hexdigest()
+def createID(addr,port):
+    random.seed(addr+str(port))
+    return random.randint(0, 1000000)
 
 def findOwnIP():
     return socket.gethostbyname(socket.gethostname())
+
+def connectToBootstrap(givenpeer, bootstrap):
+    bootaddr,bootport,boottype = bootstrap.split(":")
+    bootid = createID(bootaddr,bootport)
+    bootpeer = Peer(int(bootid),bootaddr,int(bootport),int(boottype))
+    if bootpeer.type == ACCEPTOR:
+        givenpeer.acceptors.add(bootpeer)
+    elif bootpeer.type == LEADER:
+        givenpeer.leaders.add(bootpeer)
+    else:
+        givenpeer.replicas.add(bootpeer)
+    heloMessage = Message(type=MSG_HELO,source=givenpeer.toPeer.serialize())
+    heloReply = bootpeer.sendWaitReply(heloMessage)
+    self.leaders.mergeList(heloReply.leaders)
+    self.acceptors.mergeList(heloReply.acceptors)
+    self.replicas.mergeList(heloReply.replicas)
 
 # pvalue calculations
 # Returns the union of two pvalue arrays

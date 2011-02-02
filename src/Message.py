@@ -4,6 +4,7 @@ from Peer import *
 
 class Message():
     def __init__(self,serialmessage=None,source=(0,'',0,0),newpeer=(0,'',0,0),acceptors=[],leaders=[],replicas=[],type=-1,ballotnumber=(0,0),commandnumber=0,proposal='',givenpvalues=[],balance=0.0,accountid=0):
+        print '*********', MSG_HELO
         if serialmessage == None:
             self.type = type
             self.ballotnumber = ballotnumber

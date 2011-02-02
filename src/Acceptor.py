@@ -12,18 +12,17 @@ from Peer import *
 from Message import *
 from random import randint
 
-parser = OptionParser(usage="usage: %prog -i id -p port -b bootstrap")
-parser.add_option("-i", "--id", action="store", dest="id", help="node id")
-parser.add_option("-p", "--port", action="store", dest="port", help="port for the node")
-parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:id triple for the peer")
+parser = OptionParser(usage="usage: %prog -p port -b bootstrap")
+parser.add_option("-p", "--port", action="store", dest="port", type="int", default=5558, help="port for the node")
+parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the peer")
 
 (options, args) = parser.parse_args()
 
 class Acceptor():
-    def __init__(self, id, port, bootstrap=None):
+    def __init__(self,port, bootstrap=None):
         self.addr = findOwnIP()
-        self.port = int(port)
-        self.id = int(id)
+        self.port = port
+        self.id = createID(self.addr,self.port)
         self.type = ACCEPTOR
         self.toPeer = Peer(self.id,self.addr,self.port,self.type)
         # groups
@@ -38,20 +37,7 @@ class Acceptor():
         # print some information
         print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
         if bootstrap:
-            bootaddr,bootport,bootid,boottype = bootstrap.split(":")
-            bootpeer = Peer(int(bootid),bootaddr,int(bootport),int(boottype))
-            if bootpeer.type == ACCEPTOR:
-                self.acceptors.add(bootpeer)
-            elif bootpeer.type == LEADER:
-                self.leaders.add(bootpeer)
-            else:
-                self.replicas.add(bootpeer)
-            heloMessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
-            heloReply = bootpeer.sendWaitReply(heloMessage)
-            self.leaders.mergeList(heloReply.leaders)
-            self.acceptors.mergeList(heloReply.acceptors)
-            self.replicas.mergeList(heloReply.replicas)
-            print str(self)
+            connectToBootstrap(self,bootstrap)
         # Start a thread with the server which will start a thread for each request
         server_thread = threading.Thread(target=self.serverLoop)
         server_thread.start()
@@ -204,7 +190,7 @@ class Acceptor():
    
 '''main'''
 def main():
-    theAcceptor = Acceptor(options.id,options.port,options.bootstrap)
+    theAcceptor = Acceptor(options.port,options.bootstrap)
 
 '''run'''
 if __name__=='__main__':
