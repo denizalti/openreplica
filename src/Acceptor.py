@@ -4,26 +4,26 @@
 '''
 from optparse import OptionParser
 from threading import Thread
-import threading
-from Utils import *
-import Connection
-from Group import *
-from Peer import *
-from Message import *
 from random import randint
+import threading
+from utils import *
+from communicationutils import *
+from connection import *
+from group import *
+from peer import *
+from message import *
 
-parser = OptionParser(usage="usage: %prog -i id -p port -b bootstrap")
-parser.add_option("-i", "--id", action="store", dest="id", help="node id")
-parser.add_option("-p", "--port", action="store", dest="port", help="port for the node")
-parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:id triple for the peer")
+parser = OptionParser(usage="usage: %prog -p port -b bootstrap")
+parser.add_option("-p", "--port", action="store", dest="port", type="int", default=5558, help="port for the node")
+parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port tuple for the peer")
 
 (options, args) = parser.parse_args()
 
 class Acceptor():
-    def __init__(self, id, port, bootstrap=None):
+    def __init__(self,port, bootstrap=None):
         self.addr = findOwnIP()
-        self.port = int(port)
-        self.id = int(id)
+        self.port = port
+        self.id = createID(self.addr,self.port)
         self.type = ACCEPTOR
         self.toPeer = Peer(self.id,self.addr,self.port,self.type)
         # groups
@@ -36,22 +36,9 @@ class Acceptor():
         # Exit
         self.run = True
         # print some information
-        print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
+        print "IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
         if bootstrap:
-            bootaddr,bootport,bootid,boottype = bootstrap.split(":")
-            bootpeer = Peer(int(bootid),bootaddr,int(bootport),int(boottype))
-            if bootpeer.type == ACCEPTOR:
-                self.acceptors.add(bootpeer)
-            elif bootpeer.type == LEADER:
-                self.leaders.add(bootpeer)
-            else:
-                self.replicas.add(bootpeer)
-            heloMessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
-            heloReply = bootpeer.sendWaitReply(heloMessage)
-            self.leaders.mergeList(heloReply.leaders)
-            self.acceptors.mergeList(heloReply.acceptors)
-            self.replicas.mergeList(heloReply.replicas)
-            print str(self)
+            connectToBootstrap(self,bootstrap)
         # Start a thread with the server which will start a thread for each request
         server_thread = threading.Thread(target=self.serverLoop)
         server_thread.start()
@@ -77,7 +64,7 @@ class Acceptor():
         while self.run:
             try:
                 clientsock,clientaddr = s.accept()
-                print "DEBUG: Accepted a connection on socket:",clientsock," and address:",clientaddr
+#                print "DEBUG: Accepted a connection on socket:",clientsock," and address:",clientaddr
                 # Start a Thread
                 Thread(target=self.handleConnection,args =[clientsock]).start()
             except KeyboardInterrupt:
@@ -88,8 +75,8 @@ class Acceptor():
     def handleConnection(self,clientsock):
 #        print "DEBUG: Handling the connection.."
         addr,port = clientsock.getpeername()
-        connection = Connection.Connection(addr,port,reusesock=clientsock)
-        message = connection.receive()
+        connection = Connection(addr,port,reusesock=clientsock)
+        message = Message(connection.receive())
         if message.type == MSG_HELO:
             messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
             if messageSource.type == CLIENT:
@@ -99,9 +86,11 @@ class Acceptor():
                                    leaders=self.leaders.toList(),replicas=self.replicas.toList())
             newmessage = Message(type=MSG_NEW,source=self.toPeer.serialize(),newpeer=messageSource.serialize())
             connection.send(replymessage)
-            self.acceptors.broadcast(newmessage)
-            self.leaders.broadcast(newmessage)
-            self.replicas.broadcast(newmessage)
+            # Broadcasting MSG_NEW without waiting for a reply.
+            # To add replies, first we have to add MSG_ACK & MSG_NACK
+            self.acceptors.broadcastNoReply(newmessage)
+            self.leaders.broadcastNoReply(newmessage)
+            self.replicas.broadcastNoReply(newmessage)
             if messageSource.type == ACCEPTOR:
                 self.acceptors.add(messageSource)
             elif messageSource.type == LEADER:
@@ -112,8 +101,6 @@ class Acceptor():
             self.leaders.mergeList(message.leaders)
             self.acceptors.mergeList(message.acceptors)
             self.replicas.mergeList(message.replicas)
-            replymessage = Message(type=MSG_ACK,source=self.toPeer.serialize())
-            connection.send(replymessage)
         elif message.type == MSG_NEW:
             newpeer = Peer(message.newpeer[0],message.newpeer[1],message.newpeer[2],message.newpeer[3])
             if newpeer.type == ACCEPTOR:
@@ -142,7 +129,6 @@ class Acceptor():
             if message.ballotnumber > self.ballotnumber:
                 print "ACCEPTOR got a PREPARE with Ballotnumber: ", message.ballotnumber
                 print "ACCEPTOR's Ballotnumber: ", self.ballotnumber
-                print "This should be True: ", (message.ballotnumber > self.ballotnumber)
                 self.ballotnumber = message.ballotnumber
                 replymessage = Message(type=MSG_ACCEPT,source=self.toPeer.serialize(),ballotnumber=self.ballotnumber,givenpvalues=self.accepted)
             else:
@@ -204,7 +190,7 @@ class Acceptor():
    
 '''main'''
 def main():
-    theAcceptor = Acceptor(options.id,options.port,options.bootstrap)
+    theAcceptor = Acceptor(options.port,options.bootstrap)
 
 '''run'''
 if __name__=='__main__':

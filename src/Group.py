@@ -1,7 +1,8 @@
 from threading import RLock
-from Connection import *
-from Utils import *
-from Peer import *
+from connection import *
+from utils import *
+from peer import *
+from message import *
 
 class Group():
     def __init__(self,owner):
@@ -22,15 +23,15 @@ class Group():
         self.members.append(peer)
         
     def broadcast(self,msg):
-        print "DEBUG: broadcasting message.."
+#        print "DEBUG: broadcasting message.."
         replies = []
         for member in self.members:
-            reply = member.sendWaitReply(msg)
+            reply = Message(member.sendWaitReply(msg))
             replies.append(reply)
         return replies
     
     def broadcastNoReply(self,msg):
-        print "DEBUG: broadcasting message.."
+#        print "DEBUG: broadcasting message.."
         for member in self.members:
             member.send(msg)
 

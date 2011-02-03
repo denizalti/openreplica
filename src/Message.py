@@ -1,9 +1,10 @@
 import struct
-from Utils import *
-from Peer import *
+from utils import *
+from peer import *
 
 class Message():
-    def __init__(self,serialmessage=None,source=(0,'',0,0),newpeer=(0,'',0,0),acceptors=[],leaders=[],replicas=[],type=-1,ballotnumber=(0,0),commandnumber=0,proposal='',givenpvalues=[],balance=0.0,accountid=0):
+    def __init__(self,serialmessage=None,source=(0,'',0,0),newpeer=(0,'',0,0),acceptors=[],leaders=[],replicas=[],type=-1,\
+                 ballotnumber=(0,0),commandnumber=0,proposal='',givenpvalues=[],balance=0.0,accountid=0):
         if serialmessage == None:
             self.type = type
             self.ballotnumber = ballotnumber

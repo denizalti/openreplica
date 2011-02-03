@@ -4,10 +4,10 @@
 '''
 from threading import Thread,Lock,Condition
 import math
-from Utils import *
-from Connection import *
-from Group import *
-from Peer import *
+from utils import *
+from connection import *
+from group import *
+from peer import *
 
 class Scout(Thread):
     def __init__(self,leader,acceptors,ballotnum,replyToLeader):
@@ -43,7 +43,6 @@ class Scout(Thread):
                 if message.ballotnumber == self.ballotnumber:
                     print "with the same ballotnumber.."
                     self.pvalues = union(self.pvalues, message.pvalues)
-                    print "XXXX: union returned ", self.pvalues
                     self.waitfor -= 1
                     if self.waitfor < len(self.acceptors)/2:
                         with self.replyToLeader.replyLock:

@@ -4,28 +4,28 @@
 '''
 from optparse import OptionParser
 from threading import Thread, Lock, Condition
-from Utils import *
-import Connection
-from Group import *
-from Peer import *
-from Message import *
-from Acceptor import *
-from Scout import *
-from Commander import *
-from Bank import *
+from utils import *
+from communicationutils import *
+from connection import *
+from group import *
+from peer import *
+from message import *
+from acceptor import *
+from scout import *
+from commander import *
+from bank import *
 
-parser = OptionParser(usage="usage: %prog -i id -p port -b bootstrap")
-parser.add_option("-i", "--id", action="store", dest="id", help="node id")
-parser.add_option("-p", "--port", action="store", dest="port", help="port for the node")
-parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:id:type for the bootstrap peer")
+parser = OptionParser(usage="usage: %prog -p port -b bootstrap")
+parser.add_option("-p", "--port", action="store", dest="port", type="int", default=4448, help="port for the node")
+parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port tuple for the bootstrap peer")
 (options, args) = parser.parse_args()
 
 # TIMEOUT THREAD
 class Replica():
     def __init__(self, id, port, bootstrap=None):
         self.addr = findOwnIP()
-        self.port = int(port)
-        self.id = int(id)
+        self.port = port
+        self.id = createID(self.addr,self.port)
         self.type = REPLICA
         self.toPeer = Peer(self.id,self.addr,self.port,self.type)
         # groups
@@ -34,27 +34,12 @@ class Replica():
         self.leaders = Group(self.toPeer)
         # Exit
         self.run = True
-        # Paxos State
-        self.state = {}
         # Bank
         self.bank = Bank()
         # print some information
-        print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
+        print "IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
         if bootstrap:
-            bootaddr,bootport,bootid,boottype = bootstrap.split(":")
-            bootpeer = Peer(int(bootid),bootaddr,int(bootport),int(boottype))
-            if bootpeer.type == ACCEPTOR:
-                self.acceptors.add(bootpeer)
-            elif bootpeer.type == LEADER:
-                self.leaders.add(bootpeer)
-            else:
-                self.replicas.add(bootpeer)
-            heloMessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
-            heloReply = bootpeer.sendWaitReply(heloMessage)
-            self.leaders.mergeList(heloReply.leaders)
-            self.acceptors.mergeList(heloReply.acceptors)
-            self.replicas.mergeList(heloReply.replicas)
-            print str(self)
+            connectToBootstrap(self,bootstrap)
         # Start a thread with the server which will start a thread for each request
         server_thread = Thread(target=self.serverLoop)
         server_thread.start()
@@ -91,9 +76,8 @@ class Replica():
     def handleConnection(self,clientsock):
 #        print "DEBUG: Handling the connection.."
         addr,port = clientsock.getpeername()
-        tuple = addr+":"+str(port)
-        connection = Connection.Connection(addr,port,reusesock=clientsock)
-        message = connection.receive()
+        connection = Connection(addr,port,reusesock=clientsock)
+        message = Message(connection.receive())
         if message.type == MSG_HELO:
             messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
             if messageSource.type == CLIENT:
@@ -103,9 +87,11 @@ class Replica():
                                    leaders=self.leaders.toList(),replicas=self.replicas.toList())
             newmessage = Message(type=MSG_NEW,source=self.toPeer.serialize(),newpeer=messageSource.serialize())
             connection.send(replymessage)
-            self.acceptors.broadcast(newmessage)
-            self.leaders.broadcast(newmessage)
-            self.replicas.broadcast(newmessage)
+            # Broadcasting MSG_NEW without waiting for a reply.
+            # To add replies, first we have to add MSG_ACK & MSG_NACK
+            self.acceptors.broadcastNoReply(newmessage)
+            self.leaders.broadcastNoReply(newmessage)
+            self.replicas.broadcastNoReply(newmessage)
             if messageSource.type == ACCEPTOR:
                 self.acceptors.add(messageSource)
             elif messageSource.type == LEADER:
@@ -113,9 +99,9 @@ class Replica():
             elif messageSource.type == REPLICA:
                 self.replicas.add(messageSource)
         elif message.type == MSG_HELOREPLY:
-            self.leaders = message.leaders
-            self.acceptors = message.acceptors
-            self.replicas = message.replicas
+            self.leaders.mergeList(message.leaders)
+            self.acceptors.mergeList(message.acceptors)
+            self.replicas.mergeList(message.replicas)
         elif message.type == MSG_NEW:
             newpeer = Peer(message.newpeer[0],message.newpeer[1],message.newpeer[2],message.newpeer[3])
             if newpeer.type == ACCEPTOR:
@@ -182,7 +168,7 @@ class Replica():
    
 '''main'''
 def main():
-    theReplica = Replica(options.id,options.port,options.bootstrap)
+    theReplica = Replica(options.port,options.bootstrap)
 
 '''run'''
 if __name__=='__main__':

@@ -8,31 +8,28 @@ from threading import Thread, Lock, Condition
 import time
 import random
 
-from Utils import *
-import Connection
-from Group import *
-from Peer import *
-from Message import *
-from Acceptor import *
-from Scout import *
-from Commander import *
-from Bank import *
+from utils import *
+from communicationutils import *
+from connection import *
+from group import *
+from peer import *
+from message import *
+from acceptor import *
+from scout import *
+from commander import *
+from bank import *
 
-# XXX 
-defaultid=random.randint(0, 1000000)
-
-parser = OptionParser(usage="usage: %prog -i id -p port -b bootstrap -d delay")
-parser.add_option("-i", "--id", action="store", dest="id", type="int", default=defaultid, help="node id")
+parser = OptionParser(usage="usage: %prog -p port -b bootstrap -d delay")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
-parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:id:type for the bootstrap peer")
+parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
 (options, args) = parser.parse_args()
 
 # TIMEOUT THREAD
 class Leader():
-    def __init__(self, id, port, bootstrap=None):
+    def __init__(self, port, bootstrap=None):
         self.addr = findOwnIP()
-        self.port = int(port)
-        self.id = int(id)
+        self.port = port
+        self.id = createID(self.addr,self.port)
         self.type = LEADER
         self.toPeer = Peer(self.id,self.addr,self.port,self.type)
         # groups
@@ -52,21 +49,9 @@ class Leader():
         self.state = {}
         # Bank
         self.bank = Bank()
-        print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
+        print "IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
         if bootstrap:
-            bootaddr,bootport,bootid,boottype = bootstrap.split(":")
-            bootpeer = Peer(int(bootid),bootaddr,int(bootport),int(boottype))
-            if bootpeer.type == ACCEPTOR:
-                self.acceptors.add(bootpeer)
-            elif bootpeer.type == LEADER:
-                self.leaders.add(bootpeer)
-            else:
-                self.replicas.add(bootpeer)
-            heloMessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
-            heloReply = bootpeer.sendWaitReply(heloMessage)
-            self.leaders.mergeList(heloReply.leaders)
-            self.acceptors.mergeList(heloReply.acceptors)
-            self.replicas.mergeList(heloReply.replicas)
+            connectToBootstrap(self,bootstrap)
         # Start a thread with the server which will start a thread for each request
         server_thread = Thread(target=self.serverLoop)
         server_thread.start()
@@ -105,7 +90,7 @@ class Leader():
         while self.run:
             try:
                 clientsock,clientaddr = s.accept()
-                print "DEBUG: Accepted a connection on socket:",clientsock," and address:",clientaddr
+#                print "DEBUG: Accepted a connection on socket:",clientsock," and address:",clientaddr
                 # Start a Thread
                 Thread(target=self.handleConnection,args =[clientsock]).start()
             except KeyboardInterrupt:
@@ -114,15 +99,12 @@ class Leader():
         return
         
     def handleConnection(self,clientsock):
-        print "DEBUG: Handling the connection.."
+#        print "DEBUG: Handling the connection.."
         addr,port = clientsock.getpeername()
-        connection = Connection.Connection(addr,port,reusesock=clientsock)
-        print "Receiving message.."
-        message = connection.receive()
+        connection = Connection(addr,port,reusesock=clientsock)
+        message = Message(connection.receive())
         if message.type == MSG_HELO:
             messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
-            print "Message received from.."
-            print messageSource
             if messageSource.type == CLIENT:
                 replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize())
             else:
@@ -130,10 +112,11 @@ class Leader():
                                    leaders=self.leaders.toList(),replicas=self.replicas.toList())
             newmessage = Message(type=MSG_NEW,source=self.toPeer.serialize(),newpeer=messageSource.serialize())
             connection.send(replymessage)
-            print "Sending broadcast to everyone..."
-            self.acceptors.broadcast(newmessage)
-            self.leaders.broadcast(newmessage)
-            self.replicas.broadcast(newmessage)
+            # Broadcasting MSG_NEW without waiting for a reply.
+            # To add replies, first we have to add MSG_ACK & MSG_NACK
+            self.acceptors.broadcastNoReply(newmessage)
+            self.leaders.broadcastNoReply(newmessage)
+            self.replicas.broadcastNoReply(newmessage)
             if messageSource.type == ACCEPTOR:
                 self.acceptors.add(messageSource)
             elif messageSource.type == LEADER:
@@ -143,9 +126,9 @@ class Leader():
             elif messageSource.type == CLIENT:
                 self.clients.add(messageSource)
         elif message.type == MSG_HELOREPLY:
-            self.leaders.add(message.leaders)
-            self.acceptors.add(message.acceptors)
-            self.replicas.add(message.replicas)
+            self.leaders.mergeList(message.leaders)
+            self.acceptors.mergeList(message.acceptors)
+            self.replicas.mergeList(message.replicas)
         elif message.type == MSG_NEW:
             newpeer = Peer(message.newpeer[0],message.newpeer[1],message.newpeer[2],message.newpeer[3])
             if newpeer.type == ACCEPTOR:
@@ -204,9 +187,9 @@ class Leader():
     def die(self):
         self.run = False
         byeMessage = Message(type=MSG_BYE,source=self.toPeer.serialize())
-        self.leaders.broadcast(byeMessage)
-        self.acceptors.broadcast(byeMessage)
-        self.replicas.broadcast(byeMessage)
+        self.leaders.broadcastNoReply(byeMessage)
+        self.acceptors.broadcastNoReply(byeMessage)
+        self.replicas.broadcastNoReply(byeMessage)
         self.toPeer.send(byeMessage)
                     
     def printHelp(self):
@@ -227,9 +210,11 @@ class Leader():
         scout.start()
         while True:
             with self.replyLock:
-                while replyFromScout.type == 0 and replyFromCommander.type == 0:
+                while replyFromScout.type == NOREPLY and replyFromCommander.type == NOREPLY:
                     self.replyCondition.wait()
-                if replyFromScout.type != 0:
+                    print "Scout:", replyFromScout.type
+                    print "Commander:", replyFromCommander.type
+                if replyFromScout.type != NOREPLY:
                     print "There is a reply from Scout.."
                     print replyFromScout
                     if replyFromScout.type == SCOUT_ADOPTED:
@@ -251,7 +236,7 @@ class Leader():
                             replyFromScout = scoutReply(self.replyLock,self.replyCondition)
                             scout = Scout(self.toPeer,self.acceptors,self.ballotnumber,replyFromScout)
                             scout.start()
-                elif replyFromCommander.type != 0:
+                elif replyFromCommander.type != NOREPLY:
                     print "There is a reply from Commander.."
                     if replyFromCommander.type == COMMANDER_CHOSEN:
                         message = Message(type=MSG_PERFORM,source=self.toPeer.serialize(),commandnumber=replyFromCommander.commandnumber,proposal=proposal)
@@ -272,7 +257,7 @@ class Leader():
    
 '''main'''
 def main():
-    theLeader = Leader(options.id,options.port,options.bootstrap)
+    theLeader = Leader(options.port,options.bootstrap)
 
 '''run'''
 if __name__=='__main__':
