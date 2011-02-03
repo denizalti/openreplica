@@ -4,10 +4,11 @@
 '''
 import math
 from threading import Thread,Lock,Condition
-from Utils import *
-from Connection import *
-from Group import *
-from Peer import *
+from utils import *
+from communicationutils import *
+from connection import *
+from group import *
+from peer import *
 
 class Commander(Thread):
     def __init__(self,leader,acceptors,ballotnum,pvalue,replyToLeader):
@@ -15,20 +16,16 @@ class Commander(Thread):
         self.leader = leader            # Peer()
         self.acceptors = acceptors      # Group()
         self.replyToLeader = replyToLeader
-        # print some information
         print "DEBUG: Commander for Leader %d" % self.leader.id
         
         # Synod State
         self.pvalue = pvalue            # PValue()
         self.ballotnumber = ballotnum   # (leaderid,b)
         self.waitfor = math.ceil(len(self.acceptors)/2)
-        print "Here.."
     
     def run(self):
-        print "XXX", self.leader.serialize()
         message = Message(type=MSG_PROPOSE,source=self.leader.serialize(),ballotnumber=self.ballotnumber,\
                           commandnumber=self.pvalue.commandnumber,proposal=self.pvalue.proposal)
-        print "Commander: Here!"
         replies = self.acceptors.broadcast(message)
         print "Commander waiting for replies.."
         for reply in replies:

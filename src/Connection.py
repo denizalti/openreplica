@@ -1,6 +1,5 @@
 import socket
 import struct
-from Message import *
 
 class ConnectionPool():
     def __init__(self):
@@ -31,7 +30,7 @@ class Connection():
         return "Connection with Peer at addr: %s port: %d" % (self.addr, self.port)
     
     def receive(self):
-        print "DEBUG: Receiving msg"
+#        print "DEBUG: Connection.receive"
         try:
             returnstring = self.thesocket.recv(4)
             msg_length = struct.unpack("I", returnstring[0:4])[0]
@@ -47,9 +46,7 @@ class Connection():
         except Exception as inst:
             print "Receive Error: ", inst
             return None
-        message = Message(serialmessage=returnstring[0:4]+msg)
-        print message
-        return message
+        return returnstring[0:4]+msg
     
     def send(self,msg):
 #        print "DEBUG: Connection.send"

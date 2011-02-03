@@ -4,16 +4,17 @@
 '''
 from optparse import OptionParser
 from threading import Thread, Lock, Condition
-from Utils import *
-from Connection import *
-from Group import *
-from Peer import *
-from Message import *
-from Bank import *
+from utils import *
+from communicationutils import *
+from connection import *
+from group import *
+from peer import *
+from message import *
+from bank import *
 
 parser = OptionParser(usage="usage: %prog -p port -s server")
 parser.add_option("-p", "--port", action="store", dest="port", help="port for the node")
-parser.add_option("-s", "--server", action="store", dest="server", help="address:port:type triple for the server")
+parser.add_option("-s", "--server", action="store", dest="server", help="address:port tuple for the server")
 (options, args) = parser.parse_args()
 
 # TIMEOUT THREAD
@@ -29,11 +30,11 @@ class Client():
         # print some information
         print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
         if bootstrap:
-            bootaddr,bootport,boottype = bootstrap.split(":")
+            bootaddr,bootport = bootstrap.split(":")
             bootid = createID(bootaddr,bootport)
-            self.server = Peer(int(bootid),bootaddr,int(bootport),int(boottype))
+            self.server = Peer(bootid,bootaddr,int(bootport))
             heloMessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
-            heloReply = self.server.sendWaitReply(heloMessage)
+            self.server.send(heloMessage)
         else:
             print "Client needs a server to connect.."
         # Start a thread with the server which will start a thread for each request
@@ -70,7 +71,7 @@ class Client():
         tuple = addr+":"+str(port)
         print tuple
         connection = Connection(addr,port,reusesock=clientsock)
-        message = connection.receive()
+        message = Message(connection.receive())
         if message.type == MSG_DONE:
             print "Transaction performed."
         elif message.type == MSG_FAIL:
@@ -79,7 +80,7 @@ class Client():
         
     def debitTen(self):
         debitMessage = Message(type=MSG_DEBIT,source=self.toPeer.serialize())
-        debitReply = self.server.sendWaitReply(debitMessage)
+        debitReply = Message(self.server.sendWaitReply(debitMessage))
         if debitReply.type == MSG_DONE:
             print "Transaction performed."
         elif debitReply.type == MSG_FAIL:
@@ -87,7 +88,7 @@ class Client():
     
     def depositTen(self):
         depositMessage = Message(type=MSG_DEPOSIT,source=self.toPeer.serialize())
-        depositReply = self.server.sendWaitReply(depositMessage)
+        depositReply = Message(self.server.sendWaitReply(depositMessage))
         if depositReply.type == MSG_DONE:
             print "Transaction performed."
         elif depositReply.type == MSG_FAIL:
@@ -95,7 +96,7 @@ class Client():
             
     def checkBalance(self):
         balanceMessage = Message(type=MSG_BALANCE,source=self.toPeer.serialize())
-        balanceReply = self.server.sendWaitReply(balanceMessage)
+        balanceReply = Message(self.server.sendWaitReply(balanceMessage))
         print "The balance is $%d\n" % balanceReply.balance
         
     def openAccount(self):
