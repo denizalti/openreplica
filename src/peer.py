@@ -34,8 +34,3 @@ class Peer():
         
     def __str__(self):
         return '%s PEER(%s:%d)' % (node_names[self.type] if self.type != -1 else "UNKNOWN", self.addr, self.port)
-    
-
-    
-        
-        

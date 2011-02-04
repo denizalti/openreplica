@@ -22,7 +22,6 @@ from bank import *
 class Leader(Node):
     def __init__(self):
         Node.__init__(self, NODE_LEADER)
-
         # Synod Leader State
         self.ballotnumber = (self.id,0)
         self.pvalues = [] # array of pvalues
@@ -49,11 +48,12 @@ class Leader(Node):
         proposal = message.proposal
         self.doCommand(commandnumber, proposal)
 
-        self.waitfor = math.ceil(len(self.acceptors)/2)
-        print "Scout has to wait for %d ACCEPTS.." % self.waitfor
-    
     # Scout thread, whose job is to ...
     def scout(self, args):
+        waitfor = math.ceil(len(self.acceptors)/2)
+        print "Scout has to wait for %d ACCEPTS.." % self.waitfor
+
+    
         message = PaxosMessage(MSG_PREPARE,self.leader.me,ballotnumber=self.ballotnumber)
         replies = self.groups[NODE_ACCEPTOR].acceptors.broadcast(message)
         for reply in replies:
