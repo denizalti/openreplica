@@ -13,34 +13,38 @@ from peer import *
 from message import *
 from bank import *
 
-parser = OptionParser(usage="usage: %prog -p port -s server")
+parser = OptionParser(usage="usage: %prog -p port -b bootstrap")
 parser.add_option("-p", "--port", action="store", dest="port", help="port for the node")
-parser.add_option("-s", "--server", action="store", dest="server", help="address:port tuple for the server")
+parser.add_option("-b", "--bootstrap", action="store", dest="bootstrap", help="address:port tuple for the bootstrap")
+parser.add_option("-i", "--id", action="store", dest="id", type="int", default=0, help="[optional] id for the account")
 (options, args) = parser.parse_args()
 
 # TIMEOUT THREAD
 class Client():
-    def __init__(self, id, port, bootstrap):
+    def __init__(self,port,bootstrap,accountid):
         self.addr = findOwnIP()
         self.port = int(port)
-        self.id = createID(self.addr,self.port)
+        if accountid == 0:
+            self.accountid = createID(self.addr,self.port)
+        else:
+            self.accountid = accountid
         self.type = NODE_CLIENT
-        self.toPeer = Peer(self.id,self.addr,self.port,self.type)
+        self.toPeer = Peer(self.accountid,self.addr,self.port,self.type)
         # Exit
         self.run = True 
         # print some information
-        print "DEBUG: IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
+        print "Client of Account %d: %s:%d" % (self.accountid,self.addr,self.port)
         if bootstrap:
             bootaddr,bootport = bootstrap.split(":")
             bootid = createID(bootaddr,bootport)
-            self.server = Peer(bootid,bootaddr,int(bootport))
+            self.bootstrap = Peer(bootid,bootaddr,int(bootport))
             heloMessage = Message(type=MSG_HELO,source=self.toPeer.serialize())
-            self.server.send(heloMessage)
+            self.bootstrap.send(heloMessage)
         else:
             print "Client needs a server to connect.."
         # Start a thread with the server which will start a thread for each request
-        server_thread = Thread(target=self.serverLoop)
-        server_thread.start()
+#        server_thread = Thread(target=self.serverLoop)
+#        server_thread.start()
         # Start a thread that waits for inputs
         input_thread = Thread(target=self.getInputs)
         input_thread.start()
@@ -69,8 +73,6 @@ class Client():
     def handleConnection(self,clientsock):
         print "DEBUG: Handling the connection.."
         addr,port = clientsock.getpeername()
-        tuple = addr+":"+str(port)
-        print tuple
         connection = Connection(addr,port,reusesock=clientsock)
         message = Message(connection.receive())
         if message.type == MSG_DONE:
@@ -79,32 +81,45 @@ class Client():
             print "Transaction failed.."      
         connection.close()
         
-    def debitTen(self):
-        debitMessage = Message(type=MSG_DEBIT,source=self.toPeer.serialize())
-        debitReply = Message(self.server.sendWaitReply(debitMessage))
-        if debitReply.type == MSG_DONE:
-            print "Transaction performed."
-        elif debitReply.type == MSG_FAIL:
+    def debit(self):
+        clientmessage = Message(type=MSG_CLIENTREQUEST,source=self.toPeer.serialize(),proposal='debit %s'%self.accountid)
+        replymessage = Message(self.bootstrap.sendWaitReply(clientmessage))
+        if replymessage.type == MSG_SUCCESS:
+            print "Transaction performed.."
+        elif replymessage.type == MSG_FAIL:
             print "Transaction failed.."      
     
-    def depositTen(self):
-        depositMessage = Message(type=MSG_DEPOSIT,source=self.toPeer.serialize())
-        depositReply = Message(self.server.sendWaitReply(depositMessage))
-        if depositReply.type == MSG_DONE:
-            print "Transaction performed."
-        elif depositReply.type == MSG_FAIL:
-            print "Transaction failed.." 
+    def deposit(self):
+        clientmessage = Message(type=MSG_CLIENTREQUEST,source=self.toPeer.serialize(),proposal='deposit %s'%self.accountid)
+        replymessage = Message(self.bootstrap.sendWaitReply(clientmessage))
+        if replymessage.type == MSG_SUCCESS:
+            print "Transaction performed.."
+        elif replymessage.type == MSG_FAIL:
+            print "Transaction failed.."   
             
-    def checkBalance(self):
-        balanceMessage = Message(type=MSG_BALANCE,source=self.toPeer.serialize())
-        balanceReply = Message(self.server.sendWaitReply(balanceMessage))
-        print "The balance is $%d\n" % balanceReply.balance
+    def balance(self):
+        clientmessage = Message(type=MSG_CLIENTREQUEST,source=self.toPeer.serialize(),proposal='balance %s'%self.accountid)
+        replymessage = Message(self.bootstrap.sendWaitReply(clientmessage))
+        if replymessage.type == MSG_SUCCESS:
+            print "Balance is $%.2f"
+        elif replymessage.type == MSG_FAIL:
+            print "Request failed.." 
         
-    def openAccount(self):
-        pass
+    def openaccount(self):
+        clientmessage = Message(type=MSG_CLIENTREQUEST,source=self.toPeer.serialize(),proposal='open %s'%self.accountid)
+        replymessage = Message(self.bootstrap.sendWaitReply(clientmessage))
+        if replymessage.type == MSG_SUCCESS:
+            print "Request successful.."
+        elif replymessage.type == MSG_FAIL:
+            print "Request failed.." 
     
-    def closeAccount(self):
-        pass
+    def closeaccount(self):
+        clientmessage = Message(type=MSG_CLIENTREQUEST,source=self.toPeer.serialize(),proposal='close %s'%self.accountid)
+        replymessage = Message(self.bootstrap.sendWaitReply(clientmessage))
+        if replymessage.type == MSG_SUCCESS:
+            print "Request successful.."
+        elif replymessage.type == MSG_FAIL:
+            print "Request failed.." 
         
     def getInputs(self):
         while self.run:
@@ -116,12 +131,16 @@ class Client():
                 input[0] = input[0].upper()
                 if input[0] == 'HELP':
                     self.printHelp()
+                elif input[0] == 'OPEN':
+                    self.openaccount()
+                elif input[0] == 'CLOSE':
+                    self.closeaccount()
                 elif input[0] == 'DEBIT':
-                    self.debitTen()
+                    self.debit()
                 elif input[0] == 'DEPOSIT':
-                    self.depositTen()
+                    self.deposit()
                 elif input[0] == 'BALANCE':
-                    self.checkBalance()
+                    self.balance()
                 elif input[0] == 'EXIT':
                     print "So long and thanks for all the fish.."
                     self.die()
@@ -132,21 +151,21 @@ class Client():
     def die(self):
         self.run = False
         byeMessage = Message(type=MSG_BYE,source=self.toPeer.serialize())
-        self.server.send(byeMessage)
+        self.bootstrap.send(byeMessage)
         self.toPeer.send(byeMessage)
                     
     def printHelp(self):
         print "To open an account type OPEN"
-        print "To debit 10% of the account type DEBIT AccountID"
-        print "To deposit 10% of the account type DEPOSIT AccountID"
-        print "To see the balance of the account type BALANCE AccountID"
-        print "To close an account type CLOSE AccountID"
+        print "To debit 10% of the account type DEBIT"
+        print "To deposit 10% of the account type DEPOSIT"
+        print "To see the balance of the account type BALANCE"
+        print "To close an account type CLOSE"
         print "For help type HELP"
         print "To exit type EXIT"
    
 '''main'''
 def main():
-    theClient = Client(options.port,options.server)
+    theClient = Client(options.port,options.bootstrap,options.id)
 
 '''run'''
 if __name__=='__main__':

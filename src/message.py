@@ -4,8 +4,8 @@ from utils import *
 from peer import *
 
 class Message():
-    def __init__(self,serialmessage=None,source=(0,'',0,0),newpeer=(0,'',0,0),acceptors=[],leaders=[],replicas=[],type=-1,\
-                 ballotnumber=(0,0),commandnumber=0,proposal='',givenpvalues=[],balance=0.0,accountid=0):
+    def __init__(self,serialmessage=None,source=(0,'',0,0),newpeer=(0,'',0,0),groups={NODE_ACCEPTOR:[],NODE_REPLICA:[],NODE_LEADER:[]},\
+                 type=-1,ballotnumber=(0,0),commandnumber=0,proposal='',givenpvalues=[],balance=0.0,accountid=0):
         if serialmessage == None:
             self.type = type
             self.ballotnumber = ballotnumber
@@ -14,15 +14,14 @@ class Message():
             self.source = source
             self.newpeer = newpeer
             self.pvalues = givenpvalues
-            self.acceptors = acceptors
-            self.leaders = leaders
-            self.replicas = replicas
+            self.groups = groups
             self.balance = balance
             self.accountid = accountid
         else:
             temp = serialmessage
             length, self.type = struct.unpack("II", temp[0:8])
             temp = temp[8:]
+            # Add the proposal!!
             if self.type >= MSG_HELO:
                 self.source = struct.unpack("I%dsII"% ADDRLENGTH, temp[0:PEERLENGTH])
                 (id,addr,port,type) = (self.source[0],self.source[1],self.source[2],self.source[3])
@@ -40,27 +39,28 @@ class Message():
                 temp = temp[4:]
                 numacceptors = struct.unpack("I", temp[0:4])[0]
                 temp = temp[4:]
-                self.acceptors = []
+                self.groups = {}
+                self.groups[NODE_ACCEPTOR] = []
                 for i in range(0,numacceptors):
                     (id,addr,port,type) = struct.unpack("I%dsII"% ADDRLENGTH, temp[0:PEERLENGTH])
                     addr = addr.strip("\x00")
-                    self.acceptors.append(Peer(id,addr,port,type))
+                    self.groups[NODE_ACCEPTOR].append(Peer(id,addr,port,type))
                     temp = temp[PEERLENGTH:]
                 numleaders = struct.unpack("I", temp[0:4])[0]
                 temp = temp[4:]
-                self.leaders = []
+                self.groups[NODE_LEADER] = []
                 for i in range(0,numleaders):
                     (id,addr,port,type) = struct.unpack("I%dsII"% ADDRLENGTH, temp[0:PEERLENGTH])
                     addr = addr.strip("\x00")
-                    self.leaders.append(Peer(id,addr,port,type))
+                    self.groups[NODE_LEADER].append(Peer(id,addr,port,type))
                     temp = temp[PEERLENGTH:]
                 numreplicas = struct.unpack("I", temp[0:4])[0]
                 temp = temp[4:]
-                self.replicas = []
+                self.groups[NODE_REPLICA] = []
                 for i in range(0,numreplicas):
                     (id,addr,port,type) = struct.unpack("I%dsII"% ADDRLENGTH, temp[0:PEERLENGTH])
                     addr = addr.strip("\x00")
-                    self.replicas.append(Peer(id,addr,port,type))
+                    self.groups[NODE_REPLICA].append(Peer(id,addr,port,type))
                     temp = temp[PEERLENGTH:]
             else:    
                 self.ballotnumber = struct.unpack("II", temp[0:8])
@@ -88,14 +88,14 @@ class Message():
             temp += struct.pack("I%dsII" % ADDRLENGTH, self.newpeer[0], self.newpeer[1], self.newpeer[2],self.newpeer[3])
             temp += struct.pack("f", self.balance)
             temp += struct.pack("f", self.accountid)
-            temp += struct.pack("I", len(self.acceptors))
-            for acceptor in self.acceptors:
+            temp += struct.pack("I", len(self.groups[NODE_ACCEPTOR]))
+            for acceptor in self.groups[NODE_ACCEPTOR]:
                 temp += acceptor.pack()
-            temp += struct.pack("I", len(self.leaders))
-            for leader in self.leaders:
+            temp += struct.pack("I", len(self.groups[NODE_LEADER]))
+            for leader in self.groups[NODE_LEADER]:
                 temp += leader.pack()
-            temp += struct.pack("I", len(self.replicas))
-            for replica in self.replicas:
+            temp += struct.pack("I", len(self.groups[NODE_REPLICA]))
+            for replica in self.groups[NODE_REPLICA]:
                 temp += replica.pack()
             msg = struct.pack("I", len(temp) + 4) + temp
             return msg
@@ -120,16 +120,11 @@ class Message():
             % (msg_names[self.type],self.source[0],self.source[1],self.source[2],self.source[3], \
                self.newpeer[0],self.newpeer[1],self.newpeer[2],self.newpeer[3])
         elif self.type >= MSG_HELO:
-            temp = 'Message\n=======\nType: %s\nSource: (%d,%s,%d,%d)\nAcceptors:\n' \
+            temp = 'Message\n=======\nType: %s\nSource: (%d,%s,%d,%d)\n' \
             % (msg_names[self.type],self.source[0],self.source[1],self.source[2],self.source[3])
-            for acceptor in self.acceptors:
-                temp += str(acceptor) + '\n'
-            temp += 'Leaders:\n'
-            for leader in self.leaders:
-                temp += str(leader) + '\n'
-            temp += 'Replicas:\n'
-            for replica in self.replicas:
-                temp += str(replica) + '\n'
+            for type,group in self.groups:
+                for node in group:
+                    temp += str(node) + '\n'
         elif self.type >= MSG_DEBIT:
             temp = 'Message\n=======\nType: %s\nSource: (%d,%s,%d,%d)\nAccountID:\nBalance:\n' \
             % (msg_names[self.type],self.source[0],self.source[1],self.source[2],self.source[3],\

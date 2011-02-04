@@ -30,15 +30,13 @@ class Replica():
         self.type = NODE_REPLICA
         self.toPeer = Peer(self.id,self.addr,self.port,self.type)
         # groups
-        self.acceptors = Group(self.toPeer)
-        self.replicas = Group(self.toPeer)
-        self.leaders = Group(self.toPeer)
+        self.groups = {NODE_ACCEPTOR:Group(self.toPeer),NODE_REPLICA:Group(self.toPeer),NODE_LEADER:Group(self.toPeer)}
         # Exit
         self.run = True
         # Bank
         self.bank = Bank()
         # print some information
-        print "IP: %s Port: %d ID: %d" % (self.addr,self.port,self.id)
+        print "Replica Node %d: %s:%d" % (self.id,self.addr,self.port)
         if bootstrap:
             connectToBootstrap(self,bootstrap)
         # Start a thread with the server which will start a thread for each request
@@ -52,9 +50,8 @@ class Replica():
         returnstr = "State of Replica %d\n" %self.id
         returnstr += "IP: %s\n" % self.addr
         returnstr += "Port: %d\n" % self.port
-        returnstr += "Acceptors:\n%s" % self.acceptors
-        returnstr += "Leaders:\n%s" % self.leaders
-        returnstr += "Replicas:\n%s" % self.replicas
+        for type,group in self.groups.iteritems():
+            returnstr += str(group)
         return returnstr
         
     def serverLoop(self):
@@ -80,51 +77,33 @@ class Replica():
         connection = Connection(addr,port,reusesock=clientsock)
         message = Message(connection.receive())
         if message.type == MSG_HELO:
-            messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
-            if messageSource.type == NODE_CLIENT:
+            messagesource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
+            if messagesource.type == NODE_CLIENT:
                 replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize())
             else:
-                replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize(),acceptors=self.acceptors.toList(),\
-                                   leaders=self.leaders.toList(),replicas=self.replicas.toList())
-            newmessage = Message(type=MSG_NEW,source=self.toPeer.serialize(),newpeer=messageSource.serialize())
+                serialgroups = {}
+                for type,group in self.groups.iteritems():
+                    serialgroups[type] = group.toList()
+                replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize(),groups=serialgroups)
+            newmessage = Message(type=MSG_NEW,source=self.toPeer.serialize(),newpeer=messagesource.serialize())
             connection.send(replymessage)
             # Broadcasting MSG_NEW without waiting for a reply.
             # To add replies, first we have to add MSG_ACK & MSG_NACK
-            self.acceptors.broadcastNoReply(newmessage)
-            self.leaders.broadcastNoReply(newmessage)
-            self.replicas.broadcastNoReply(newmessage)
-            if messageSource.type == NODE_ACCEPTOR:
-                self.acceptors.add(messageSource)
-            elif messageSource.type == NODE_LEADER:
-                self.leaders.add(messageSource)
-            elif messageSource.type == NODE_REPLICA:
-                self.replicas.add(messageSource)
+            for type,group in self.groups.iteritems():
+                group.broadcastNoReply(newmessage)
+            self.groups[messagesource.type].add(messagesource)
         elif message.type == MSG_HELOREPLY:
-            self.leaders.mergeList(message.leaders)
-            self.acceptors.mergeList(message.acceptors)
-            self.replicas.mergeList(message.replicas)
+            for type,group in self.groups.iteritems():
+                group.mergeList(message.groups[type])
         elif message.type == MSG_NEW:
             newpeer = Peer(message.newpeer[0],message.newpeer[1],message.newpeer[2],message.newpeer[3])
-            if newpeer.type == NODE_ACCEPTOR:
-                self.acceptors.add(newpeer)
-            elif newpeer.type == NODE_LEADER:
-                self.leaders.add(newpeer)
-            elif newpeer.type == NODE_REPLICA:
-                self.replicas.add(newpeer)
-        elif message.type == MSG_DEBIT:
+            self.groups[newpeer.type].add(newpeer)
+        elif message.type == MSG_CLIENTREQUEST:
             randomleader = randint(0,len(self.leaders)-1)
-            self.leaders[randomleader].send(message)
-        elif message.type == MSG_DEPOSIT:
-            randomleader = randint(0,len(self.leaders)-1)
-            self.leaders[randomleader].send(message)
+            self.groups[NODE_LEADER].members[randomleader].send(message)
         elif message.type == MSG_BYE:
-            messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
-            if messageSource.type == NODE_ACCEPTOR:
-                self.acceptors.remove(messageSource)
-            elif messageSource.type == NODE_LEADER:
-                self.leaders.remove(messageSource)
-            else:
-                self.replicas.remove(messageSource)
+            messagesource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
+            self.groups[messagesource.type].remove(messagesource)
         elif message.type == MSG_PERFORM:
             self.state[message.commandnumber] = message.proposal
             self.bank.executeCommand(message.proposal)
@@ -140,13 +119,11 @@ class Replica():
                 input[0] = input[0].upper()
                 if input[0] == 'HELP':
                     self.printHelp()
-                    self.newCommand(int(commandnumber), proposal)
-                elif input[0] == 'STATE':
+                elif input[0] == 'CONN':
                     print self
-                elif input[0] == 'PAXOS':
-                    print self.state
+                elif input[0] == 'BANK':
+                    print self.bank
                 elif input[0] == 'EXIT':
-                    print "So long and thanks for all the fish.."
                     self.die()
                 else:
                     print "Sorry I couldn't get it.."
@@ -155,15 +132,13 @@ class Replica():
     def die(self):
         self.run = False
         byeMessage = Message(type=MSG_BYE,source=self.toPeer.serialize())
-        self.leaders.broadcast(byeMessage)
-        self.acceptors.broadcast(byeMessage)
-        self.replicas.broadcast(byeMessage)
+        for type,group in self.groups.iteritems():
+            group.broadcast(byeMessage)
         self.toPeer.send(byeMessage)
                     
     def printHelp(self):
-        print "I can execute a new Command for you as follows:"
-        print "To see my Connection State type STATE"
-        print "To see my Paxos State type PAXOS"
+        print "To see my Connection State type CONN"
+        print "To see my Bank State type BANK"
         print "For help type HELP"
         print "To exit type EXIT"
    

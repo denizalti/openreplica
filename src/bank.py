@@ -6,34 +6,46 @@ class Bank():
     def __init__(self):
         self.accounts = {}  # dictionary indexed by accountid storing accounts
 
-    def openAccount(self):
-        id = randint(0,100)
-        while self.accounts.has_key(id):
-            id = randint(0,100)
-        self.accounts[id] = Account(id)
+    def open(self,accountid):
+        if self.accounts.has_key(accountid):
+            print "Account already exists.."
+        else:
+            self.accounts[accountid] = Account(accountid)
         
-    def closeAccount(self):
-        del self.accounts[id]
+    def close(self):
+        if self.accounts.has_key(accountid):
+            del self.accounts[accountid]
+        else:
+            print "Account doesn't exist.."
         
     def debit(self,id):
-        self.accounts[id].debitTen()
+        if self.accounts.has_key(accountid):
+            self.accounts[id].debit()
+        else:
+            print "Account doesn't exist.."
         
     def deposit(self,id):
-        self.accounts[id].depositTen()
+        if self.accounts.has_key(accountid):
+            self.accounts[id].deposit()
+        else:
+            print "Account doesn't exist.."
         
     def balance(self,id):
-        return self.accounts[id].balance
+        if self.accounts.has_key(accountid):
+            return self.accounts[id].balance
+        else:
+            print "Account doesn't exist.."
+            return -1
     
     def executeCommand(self,proposal):
-        # The proposals are in format "ID Command": "172862 Debit"
-        id,command = proposal.split(" ")
-        id = int(id)
+        command,accountid = proposal.split(" ")
+        accountid = int(accountid)
         command = command.lower()
         function = getattr(self,command)
-        function(id)
+        function(accountid)
         
     def __str__(self):
-        temp = "Accounts:"
+        temp = "**Bank**"
         for account in self.accounts.values():
             temp += str(account)
         return temp
@@ -57,10 +69,10 @@ class Account():
             return True
         return False
     
-    def debitTen(self):
+    def debit(self):
         self.balance = self.balance*0.9
         
-    def depositTen(self):
+    def deposit(self):
         self.balance = self.balance*1.1
         
     def addCommand(self, commandnumber, command):
