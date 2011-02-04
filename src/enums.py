@@ -49,5 +49,3 @@ scout_names = get_var_list("SCOUT_")
 commander_names = get_var_list("COMMANDER_")
 node_names = get_var_list("NODE_")
 
-print get_var_mappings("NODE_")
-print msg_names
