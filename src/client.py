@@ -4,6 +4,7 @@
 '''
 from optparse import OptionParser
 from threading import Thread, Lock, Condition
+from enums import *
 from utils import *
 from communicationutils import *
 from connection import *
@@ -23,7 +24,7 @@ class Client():
         self.addr = findOwnIP()
         self.port = int(port)
         self.id = createID(self.addr,self.port)
-        self.type = CLIENT
+        self.type = NODE_CLIENT
         self.toPeer = Peer(self.id,self.addr,self.port,self.type)
         # Exit
         self.run = True 

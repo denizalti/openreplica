@@ -4,6 +4,7 @@
 '''
 from threading import Thread,Lock,Condition
 import math
+from enums import *
 from utils import *
 from connection import *
 from group import *

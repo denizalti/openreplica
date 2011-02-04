@@ -1,3 +1,4 @@
+from enums import *
 from utils import *
 import struct
 from connection import *
@@ -37,7 +38,7 @@ class Peer():
         return False
         
     def __str__(self):
-        temp = '%s PEER(%d, %s, %d)' % (nodeTypes[self.type],self.id, self.addr, self.port)
+        temp = '%s PEER(%d, %s, %d)' % (node_names[self.type],self.id, self.addr, self.port)
         return temp
     
 

@@ -8,6 +8,7 @@ from threading import Thread, Lock, Condition
 import time
 import random
 
+from enums import *
 from utils import *
 from communicationutils import *
 from connection import *
@@ -30,7 +31,7 @@ class Leader():
         self.addr = findOwnIP()
         self.port = port
         self.id = createID(self.addr,self.port)
-        self.type = LEADER
+        self.type = NODE_LEADER
         self.toPeer = Peer(self.id,self.addr,self.port,self.type)
         # groups
         self.acceptors = Group(self.toPeer)
@@ -105,7 +106,7 @@ class Leader():
         message = Message(connection.receive())
         if message.type == MSG_HELO:
             messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
-            if messageSource.type == CLIENT:
+            if messageSource.type == NODE_CLIENT:
                 replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize())
             else:
                 replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize(),acceptors=self.acceptors.toList(),\
@@ -117,13 +118,13 @@ class Leader():
             self.acceptors.broadcastNoReply(newmessage)
             self.leaders.broadcastNoReply(newmessage)
             self.replicas.broadcastNoReply(newmessage)
-            if messageSource.type == ACCEPTOR:
+            if messageSource.type == NODE_ACCEPTOR:
                 self.acceptors.add(messageSource)
-            elif messageSource.type == LEADER:
+            elif messageSource.type == NODE_LEADER:
                 self.leaders.add(messageSource)
-            elif messageSource.type == REPLICA:
+            elif messageSource.type == NODE_REPLICA:
                 self.replicas.add(messageSource)
-            elif messageSource.type == CLIENT:
+            elif messageSource.type == NODE_CLIENT:
                 self.clients.add(messageSource)
         elif message.type == MSG_HELOREPLY:
             self.leaders.mergeList(message.leaders)
@@ -131,11 +132,11 @@ class Leader():
             self.replicas.mergeList(message.replicas)
         elif message.type == MSG_NEW:
             newpeer = Peer(message.newpeer[0],message.newpeer[1],message.newpeer[2],message.newpeer[3])
-            if newpeer.type == ACCEPTOR:
+            if newpeer.type == NODE_ACCEPTOR:
                 self.acceptors.add(newpeer)
-            elif newpeer.type == LEADER:
+            elif newpeer.type == NODE_LEADER:
                 self.leaders.add(newpeer)
-            elif newpeer.type == REPLICA:
+            elif newpeer.type == NODE_REPLICA:
                 self.replicas.add(newpeer)
         elif message.type == MSG_DEBIT:
             proposal = "Debit " + str(message.accountid)
@@ -151,9 +152,9 @@ class Leader():
             self.newCommand(self.getHighestCommandNumber(),proposal)
         elif message.type == MSG_BYE:
             messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
-            if messageSource.type == ACCEPTOR:
+            if messageSource.type == NODE_ACCEPTOR:
                 self.acceptors.remove(messageSource)
-            elif messageSource.type == LEADER:
+            elif messageSource.type == NODE_LEADER:
                 self.leaders.remove(messageSource)
             else:
                 self.replicas.remove(messageSource)
@@ -210,11 +211,11 @@ class Leader():
         scout.start()
         while True:
             with self.replyLock:
-                while replyFromScout.type == NOREPLY and replyFromCommander.type == NOREPLY:
+                while replyFromScout.type == SCOUT_NOREPLY and replyFromCommander.type == SCOUT_NOREPLY:
                     self.replyCondition.wait()
                     print "Scout:", replyFromScout.type
                     print "Commander:", replyFromCommander.type
-                if replyFromScout.type != NOREPLY:
+                if replyFromScout.type != SCOUT_NOREPLY:
                     print "There is a reply from Scout.."
                     print replyFromScout
                     if replyFromScout.type == SCOUT_ADOPTED:
@@ -236,7 +237,7 @@ class Leader():
                             replyFromScout = scoutReply(self.replyLock,self.replyCondition)
                             scout = Scout(self.toPeer,self.acceptors,self.ballotnumber,replyFromScout)
                             scout.start()
-                elif replyFromCommander.type != NOREPLY:
+                elif replyFromCommander.type != SCOUT_NOREPLY:
                     print "There is a reply from Commander.."
                     if replyFromCommander.type == COMMANDER_CHOSEN:
                         message = Message(type=MSG_PERFORM,source=self.toPeer.serialize(),commandnumber=replyFromCommander.commandnumber,proposal=proposal)

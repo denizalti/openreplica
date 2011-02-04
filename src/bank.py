@@ -1,4 +1,5 @@
 from random import randint
+from enums import *
 from utils import *
 
 class Bank():

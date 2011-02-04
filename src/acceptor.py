@@ -6,6 +6,7 @@ from optparse import OptionParser
 from threading import Thread
 from random import randint
 import threading
+from enums import *
 from utils import *
 from communicationutils import *
 from connection import *
@@ -24,7 +25,7 @@ class Acceptor():
         self.addr = findOwnIP()
         self.port = port
         self.id = createID(self.addr,self.port)
-        self.type = ACCEPTOR
+        self.type = NODE_ACCEPTOR
         self.toPeer = Peer(self.id,self.addr,self.port,self.type)
         # groups
         self.acceptors = Group(self.toPeer)
@@ -79,7 +80,7 @@ class Acceptor():
         message = Message(connection.receive())
         if message.type == MSG_HELO:
             messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
-            if messageSource.type == CLIENT:
+            if messageSource.type == NODE_CLIENT:
                 replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize())
             else:
                 replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize(),acceptors=self.acceptors.toList(),\
@@ -91,11 +92,11 @@ class Acceptor():
             self.acceptors.broadcastNoReply(newmessage)
             self.leaders.broadcastNoReply(newmessage)
             self.replicas.broadcastNoReply(newmessage)
-            if messageSource.type == ACCEPTOR:
+            if messageSource.type == NODE_ACCEPTOR:
                 self.acceptors.add(messageSource)
-            elif messageSource.type == LEADER:
+            elif messageSource.type == NODE_LEADER:
                 self.leaders.add(messageSource)
-            elif messageSource.type == REPLICA:
+            elif messageSource.type == NODE_REPLICA:
                 self.replicas.add(messageSource)
         elif message.type == MSG_HELOREPLY:
             self.leaders.mergeList(message.leaders)
@@ -103,11 +104,11 @@ class Acceptor():
             self.replicas.mergeList(message.replicas)
         elif message.type == MSG_NEW:
             newpeer = Peer(message.newpeer[0],message.newpeer[1],message.newpeer[2],message.newpeer[3])
-            if newpeer.type == ACCEPTOR:
+            if newpeer.type == NODE_ACCEPTOR:
                 self.acceptors.add(newpeer)
-            elif newpeer.type == LEADER:
+            elif newpeer.type == NODE_LEADER:
                 self.leaders.add(newpeer)
-            elif newpeer.type == REPLICA:
+            elif newpeer.type == NODE_REPLICA:
                 self.replicas.add(newpeer)
             replymessage = Message(type=MSG_ACK,source=self.toPeer.serialize())
             connection.send(replymessage)
@@ -119,9 +120,9 @@ class Acceptor():
             self.leaders[randomleader].send(message)
         elif message.type == MSG_BYE:
             messageSource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
-            if messageSource.type == ACCEPTOR:
+            if messageSource.type == NODE_ACCEPTOR:
                 self.acceptors.remove(messageSource)
-            elif messageSource.type == LEADER:
+            elif messageSource.type == NODE_LEADER:
                 self.leaders.remove(messageSource)
             else:
                 self.replicas.remove(messageSource)

@@ -1,4 +1,5 @@
 import struct
+from enums import *
 from utils import *
 from peer import *
 
@@ -116,11 +117,11 @@ class Message():
     def __str__(self):
         if self.type == MSG_NEW:
             temp = 'Message\n=======\nType: %s\nSource: (%d,%s,%d,%d)\nNewPeer: (%d,%s,%d,%d)' \
-            % (messageTypes[self.type],self.source[0],self.source[1],self.source[2],self.source[3], \
+            % (msg_names[self.type],self.source[0],self.source[1],self.source[2],self.source[3], \
                self.newpeer[0],self.newpeer[1],self.newpeer[2],self.newpeer[3])
         elif self.type >= MSG_HELO:
             temp = 'Message\n=======\nType: %s\nSource: (%d,%s,%d,%d)\nAcceptors:\n' \
-            % (messageTypes[self.type],self.source[0],self.source[1],self.source[2],self.source[3])
+            % (msg_names[self.type],self.source[0],self.source[1],self.source[2],self.source[3])
             for acceptor in self.acceptors:
                 temp += str(acceptor) + '\n'
             temp += 'Leaders:\n'
@@ -131,11 +132,11 @@ class Message():
                 temp += str(replica) + '\n'
         elif self.type >= MSG_DEBIT:
             temp = 'Message\n=======\nType: %s\nSource: (%d,%s,%d,%d)\nAccountID:\nBalance:\n' \
-            % (messageTypes[self.type],self.source[0],self.source[1],self.source[2],self.source[3],\
+            % (msg_names[self.type],self.source[0],self.source[1],self.source[2],self.source[3],\
                self.accountid,self.balance)
         else:
             temp = 'Message\n=======\nType: %s\nBallotnumber: (%d,%d)\nCommandnumber: %d\nProposal: %s\nSource: (%d,%s,%d,%d)\nPValues:\n' \
-            % (messageTypes[self.type],self.ballotnumber[0],self.ballotnumber[1],self.commandnumber,self.proposal,self.source[0],self.source[1],self.source[2],self.source[3])
+            % (msg_names[self.type],self.ballotnumber[0],self.ballotnumber[1],self.commandnumber,self.proposal,self.source[0],self.source[1],self.source[2],self.source[3])
             for pvalue in self.pvalues:
                 temp += str(pvalue) + '\n'
         return temp

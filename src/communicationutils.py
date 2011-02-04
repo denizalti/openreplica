@@ -11,9 +11,10 @@ def connectToBootstrap(givenpeer, bootstrap):
     heloMessage = Message(type=MSG_HELO,source=givenpeer.toPeer.serialize())
     heloReply = Message(bootpeer.sendWaitReply(heloMessage))
     bootpeer = Peer(heloReply.source[0],heloReply.source[1],heloReply.source[2],heloReply.source[3])
-    if bootpeer.type == ACCEPTOR:
+    # XXX givenpeer.buddygroups[bootpeer].add(bootpeer)
+    if bootpeer.type == NODE_ACCEPTOR:
         givenpeer.acceptors.add(bootpeer)
-    elif bootpeer.type == LEADER:
+    elif bootpeer.type == NODE_LEADER:
         givenpeer.leaders.add(bootpeer)
     else:
         givenpeer.replicas.add(bootpeer)
@@ -39,7 +40,7 @@ class scoutReply():
         self.pvalues = givenpvalues
         
     def __str__(self):
-        returnstr = "Scout Reply\nType: %s\nBallotnumber: (%d,%d)\n" % (replyTypes[self.type],self.ballotnumber[0],self.ballotnumber[1])
+        returnstr = "Scout Reply\nType: %s\nBallotnumber: (%d,%d)\n" % (scout_names[self.type],self.ballotnumber[0],self.ballotnumber[1])
         if len(self.pvalues) > 0:
             returnstr += "Pvalues:\n"
             for pvalue in self.pvalues:
@@ -64,4 +65,4 @@ class commanderReply():
         self.commandnumber = givencommandnumber
 
     def __str__(self):
-        return "Commander Reply\nType: %s\nBallotnumber: (%d,%d)\nCommandnumber: %d" % (replyTypes[self.type],self.ballotnumber[0],self.ballotnumber[1],self.commandnumber)
+        return "Commander Reply\nType: %s\nBallotnumber: (%d,%d)\nCommandnumber: %d" % (commander_names[self.type],self.ballotnumber[0],self.ballotnumber[1],self.commandnumber)

@@ -1,5 +1,6 @@
 from threading import RLock
 from connection import *
+from enums import *
 from utils import *
 from peer import *
 from message import *
