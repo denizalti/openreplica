@@ -38,14 +38,16 @@ INFINITY = 10**100
 
 # convert a set of enums with a given prefix into a dictionary
 def get_var_mappings(prefix):
-    return dict([(varname.replace(prefix, "", 1),getattr(enums,varname)) for varname in dir(enums) if varname.startswith(prefix)]) 
+    return dict([(getattr(enums,varname),varname.replace(prefix, "", 1)) for varname in dir(enums) if varname.startswith(prefix)]) 
 
 # convert a set of enums with a given prefix into a list
 def get_var_list(prefix):
-    return [name for (name,value) in sorted(get_var_mappings(prefix).iteritems(), key=lambda (name,v): v)]
+    return [name for (value,name) in sorted(get_var_mappings(prefix).iteritems())]
 
 msg_names = get_var_list("MSG_")
 scout_names = get_var_list("SCOUT_")
 commander_names = get_var_list("COMMANDER_")
 node_names = get_var_list("NODE_")
 
+print get_var_mappings("NODE_")
+print msg_names
