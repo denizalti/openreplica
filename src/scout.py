@@ -11,13 +11,12 @@ from group import *
 from peer import *
 
 class Scout(Thread):
-    def __init__(self,leader,acceptors,ballotnum,replyToLeader):
+    def __init__(self,leader,ballotnum,replyToLeader):
         Thread.__init__(self)
         self.leader = leader
-        self.acceptors = acceptors
         self.replyToLeader = replyToLeader
         # print some information
-        print "DEBUG: Scout for Leader %d" % self.leader.id
+        print "DEBUG: Scout for Leader %s" % self.leader.id
         
         # Synod State
         self.pvalues = []
@@ -26,8 +25,8 @@ class Scout(Thread):
         print "Scout has to wait for %d ACCEPTS.." % self.waitfor
     
     def run(self):
-        message = Message(type=MSG_PREPARE,source=self.leader.serialize(),ballotnumber=self.ballotnumber)
-        replies = self.acceptors.broadcast(message)
+        message = PaxosMessage(MSG_PREPARE,self.leader.me,ballotnumber=self.ballotnumber)
+        replies = self.leader.groups[NODE_ACCEPTOR].acceptors.broadcast(message)
         for reply in replies:
             self.changeState(reply)
             with self.replyToLeader.replyLock:

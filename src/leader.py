@@ -21,7 +21,7 @@ from bank import *
 
 class Leader(Node):
     def __init__(self):
-        Node.__init__(self)
+        Node.__init__(self, NODE_LEADER)
 
         # Synod Leader State
         self.ballotnumber = (self.id,0)
@@ -43,47 +43,67 @@ class Leader(Node):
     def wait(self, delay):
         time.sleep(delay)
         
-    def handleConnection(self,clientsock):
-#        print "DEBUG: Handling the connection.."
-        addr,port = clientsock.getpeername()
-        connection = Connection(addr,port,reusesock=clientsock)
-        message = Message(connection.receive())
-        print "%s got message %s" % (self, message)
-        if message.type == MSG_HELO:
-            messagesource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
-            if messagesource.type == NODE_CLIENT:
-                replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize())
-                self.clients.add(messagesource)
-            else:
-                serialgroups = {}
-                for type,group in self.groups.iteritems():
-                    serialgroups[type] = group.toList()
-                replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize(),groups=serialgroups)
-                newmessage = Message(type=MSG_NEW,source=self.toPeer.serialize(),newpeer=messagesource.serialize())
-                for type,group in self.groups.iteritems():
-                    group.broadcastNoReply(newmessage)
-                self.groups[messagesource.type].add(messagesource)
-            connection.send(replymessage)
-        elif message.type == MSG_HELOREPLY:
-            for type,group in self.groups.iteritems():
-                group.mergeList(message.groups[type])
-        elif message.type == MSG_NEW:
-            newpeer = Peer(message.newpeer[0],message.newpeer[1],message.newpeer[2],message.newpeer[3])
-            self.groups[newpeer.type].add(newpeer)
-        elif message.type == MSG_CLIENTREQUEST:
-            self.newCommand(self.getHighestCommandNumber(),message.proposal)
-        elif message.type == MSG_BYE:
-            messagesource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
-            self.groups[messagesource.type].remove(messagesource)
-        connection.close()
-        
-    def newCommand(self,commandnumber,proposal):
+    def msg_clientrequest(self, msg):
         print "*** New Command ***"
+        commandnumber = self.getHighestCommandNumber()
+        proposal = message.proposal
+        self.doCommand(commandnumber, proposal)
+
+        self.waitfor = math.ceil(len(self.acceptors)/2)
+        print "Scout has to wait for %d ACCEPTS.." % self.waitfor
+    
+    # Scout thread, whose job is to ...
+    def scout(self, args):
+        message = PaxosMessage(MSG_PREPARE,self.leader.me,ballotnumber=self.ballotnumber)
+        replies = self.groups[NODE_ACCEPTOR].acceptors.broadcast(message)
+        for reply in replies:
+            self.changeState(reply)
+            with self.replyToLeader.replyLock:
+                if self.replyToLeader.type == SCOUT_BUSY:
+                    continue
+                else:
+                    return
+        
+    def changeState(self, message):
+        # Change State depending on the message
+            print "Scout Changing State"
+            if message.type == MSG_ACCEPT:
+                print "Got an ACCEPT Message" 
+                if message.ballotnumber == self.ballotnumber:
+                    print "with the same ballotnumber.."
+                    self.pvalues = union(self.pvalues, message.pvalues)
+                    self.waitfor -= 1
+                    if self.waitfor < len(self.acceptors)/2:
+                        with self.replyToLeader.replyLock:
+                            self.replyToLeader.setType(SCOUT_ADOPTED)
+                            self.replyToLeader.setBallotnumber(self.ballotnumber)
+                            self.replyToLeader.setPValues(self.pvalues)
+                            self.replyToLeader.replyCondition.notify()
+                        return
+                    else:
+                        with self.replyToLeader.replyLock:
+                            self.replyToLeader.setType(SCOUT_BUSY)
+                            self.replyToLeader.setBallotnumber(self.ballotnumber)
+                            self.replyToLeader.replyCondition.notify()
+                        return
+                # There is a higher ballotnumber
+                else:
+                    print "with another ballotnumber.."
+                    with self.replyToLeader.replyLock:
+                        self.replyToLeader.setType(SCOUT_PREEMPTED)
+                        self.replyToLeader.setBallotnumber(self.ballotnumber)
+                        self.replyToLeader.replyCondition.notify()
+                    return
+            else:
+                print "Scout Received.."
+                print message
+                
+    def doCommand(self, commandnumber, proposal):
         replyFromScout = scoutReply(self.replyLock,self.replyCondition)
         replyFromCommander = commanderReply(self.replyLock,self.replyCondition)
         print "BALLOTNUMBER: ",self.ballotnumber
         chosenpvalue = PValue(ballotnumber=self.ballotnumber,commandnumber=commandnumber,proposal=proposal)
-        scout = Scout(self.toPeer,self.acceptors,self.ballotnumber,replyFromScout)
+        scout = Scout(self,self.ballotnumber,replyFromScout)
         scout.start()
         while True:
             with self.replyLock:
@@ -128,13 +148,13 @@ class Leader(Node):
                             replyFromScout.setType(0)
                             continue
                 else:
-                    print "DEBUG: Shouldn't reach here.."
+                    print "[%s] shouldn't reach here.." % self
         return
    
     def cmd_command(self, args):
         commandnumber = args[1]
-        proposal = args[2] + ' ' + args[3]
-        self.newCommand(int(commandnumber), proposal)
+        proposal = ' '.join(args[2:])
+        self.doCommand(int(commandnumber), proposal)
                     
 def main():
     theLeader = Leader()

@@ -8,24 +8,28 @@ from message import *
 class Group():
     def __init__(self,owner):
         self.owner = owner
-        self.members = []   # array of Peer()
-        self.lock = RLock()
+        self.members = set()
 
     def remove(self,peer):
         if peer in self.members:
             self.members.remove(peer)
 
     def add(self,peer):
-        if peer == self.owner:
-            return
-        for oldPeer in self.members:
-            if oldPeer == peer:
-                return
-        self.members.append(peer)
+        if peer != self.owner:
+            print peer
+            self.members.add(peer)
+
+    def union(self,othergroup):
+        for peer in othergroup.members:
+            if peer != self.owner:
+                self.members.add(peer)
         
     def broadcast(self,msg):
 #        print "DEBUG: broadcasting message.."
         replies = []
+        # XXX not very efficient, does not have a timeout
+        # need to send to everyone at the same time, then collect
+        # responses as they come back
         for member in self.members:
             reply = Message(member.sendWaitReply(msg))
             replies.append(reply)
@@ -36,17 +40,10 @@ class Group():
         for member in self.members:
             member.send(msg)
 
-    def toList(self):
-        return self.members
-    
-    def mergeList(self, list):
-        for entry in list:
-            self.add(entry)
-    
     def __str__(self):
         returnstr = ''
         for member in self.members:
-            returnstr += str(member)+'\n'
+            returnstr += str(member)+' '
         return returnstr
     
     def __len__(self):

@@ -4,42 +4,36 @@ import struct
 from connection import *
 
 class Peer():
-    def __init__(self,peerid,peeraddr,peerport,peertype=-1):
+    def __init__(self,peeraddr,peerport,peertype=-1):
+        self.type = peertype
         self.port = peerport
         self.addr = peeraddr
-        self.id = peerid
-        self.type = peertype
 
-    def serialize(self):
-        return (self.id,self.addr,self.port,self.type)
-    
-    def pack(self):
-        return struct.pack("I%dsII" % ADDRLENGTH, self.id,self.addr,self.port,self.type)
-    
-    def sendWaitReply(self, message):
-        serializedreply = ""
-        connection = Connection(self.addr,self.port)
+    def id(self):
+        return "%s:%d" % (self.addr,self.port)
+
+    def sendWaitReply(self, sendernode, message):
+        connection = sendernode.connectionpool.getConnectionToPeer(self)
         connection.send(message)
         if message.type != MSG_BYE:
-            serializedreply = connection.receive()
-        connection.close()
-        return serializedreply
-    
+            return connection.receive()
+        else:
+            connection.close()
+            return None
+
     def send(self, message):
-        connection = Connection(self.addr,self.port)
+        connection = Connection(self)
         connection.send(message)
         connection.close()
     
+    def __hash__(self):
+        return self.id().__hash__()
+
     def __eq__(self, otherpeer):
-        if self.id == otherpeer.id:
-            if self.addr == otherpeer.addr:
-                if self.port == otherpeer.port:
-                    return True
-        return False
+        return self.addr == otherpeer.addr and self.port == otherpeer.port
         
     def __str__(self):
-        temp = '%s PEER(%d, %s, %d)' % (node_names[self.type],self.id, self.addr, self.port)
-        return temp
+        return '%s PEER(%s:%d)' % (node_names[self.type] if self.type != -1 else "UNKNOWN", self.addr, self.port)
     
 
     

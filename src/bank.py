@@ -1,6 +1,3 @@
-from random import randint
-from enums import *
-from utils import *
 
 class Bank():
     def __init__(self):
@@ -57,17 +54,7 @@ class Account():
         self.commands = {} # dictionary indexed by commandnumber storing commands
         
     def __str__(self):
-        temp = "Account %d" % self.id
-        temp += "Balance: %.2f" % self.balance
-        temp += "Operations:\n"
-        for command in self.commands:
-            temp += "\t(%d: %s)" % (command[COMMANDNUMBER],command[COMMAND])
-        return temp
-    
-    def __eq__(self, otheraccount):
-        if self.id == otheraccount.id:
-            return True
-        return False
+        return "Account %d: balance = %.2f" % (self.id, self.balance)
     
     def debit(self):
         self.balance = self.balance*0.9
@@ -75,16 +62,6 @@ class Account():
     def deposit(self):
         self.balance = self.balance*1.1
         
-    def addCommand(self, commandnumber, command):
-        if self.commands.has_key(commandnumber):
-            return False
-        else:
-            self.commands[commandnumber] = command
-            return True
-        
-    def removeCommand(self, commandnumber):
-        del self.commands[commandnumber]
-
     
         
         
