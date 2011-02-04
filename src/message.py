@@ -4,8 +4,8 @@ from utils import *
 from peer import *
 
 class Message():
-    def __init__(self,source=(0,'',0,0),newpeer=(0,'',0,0),groups={NODE_ACCEPTOR:[],NODE_REPLICA:[],NODE_LEADER:[]},\
-                 type=-1,ballotnumber=(0,0),commandnumber=0,proposal='',givenpvalues=[],balance=0.0,accountid=0):
+    def __init__(self,source=Peer(),newpeer=Peer(),groups={NODE_ACCEPTOR:[],NODE_REPLICA:[],NODE_LEADER:[]},\
+                 type=-1,ballotnumber=(0,0),commandnumber=0,proposal='',givenpvalues=[],balance=0.0):
         self.type = type
         self.ballotnumber = ballotnumber
         self.commandnumber = commandnumber
@@ -15,7 +15,6 @@ class Message():
         self.pvalues = givenpvalues
         self.groups = groups
         self.balance = balance
-        self.accountid = accountid
 
     def __str__(self):
         if self.type == MSG_NEW:
@@ -27,11 +26,11 @@ class Message():
                     temp += str(node) + '\n'
             return temp
         else:
-            temp = 'Message: %s src %s ballotnumber: (%d,%d) commandnumber: %d proposal: %s \nSource: (%d,%s,%d,%d)\nPValues:\n' \
+            temp = 'Message: %s src %s ballotnumber (%d,%d) commandnumber %d proposal %s\npvalues:\n' \
             % (msg_names[self.type],self.source, self.ballotnumber[0],self.ballotnumber[1],self.commandnumber,self.proposal)
             for pvalue in self.pvalues:
                 temp += str(pvalue) + '\n'
-        return temp
+            return temp
 
 class PValueSet(Set):
     pass

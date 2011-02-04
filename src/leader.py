@@ -22,7 +22,6 @@ from bank import *
 class Leader(Node):
     def __init__(self):
         Node.__init__(self)
-
         # Synod Leader State
         self.ballotnumber = (self.id,0)
         self.pvalues = [] # array of pvalues
@@ -50,6 +49,7 @@ class Leader(Node):
         message = Message(connection.receive())
         print "%s got message %s" % (self, message)
         if message.type == MSG_HELO:
+            # The message source here will be changed.
             messagesource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
             if messagesource.type == NODE_CLIENT:
                 replymessage = Message(type=MSG_HELOREPLY,source=self.toPeer.serialize())
