@@ -20,6 +20,7 @@ class Connection():
         self.port = port
         if reusesock == None:
 #            print "DEBUG: A new socket is being created.."
+            # XXX  I don't quite understand why the addr would have 0's in it -egs
             addr = addr.replace("\x00", "")
             self.thesocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.thesocket.connect((addr, port))

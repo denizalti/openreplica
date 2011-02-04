@@ -31,7 +31,7 @@ class Client():
         self.type = NODE_CLIENT
         self.toPeer = Peer(self.accountid,self.addr,self.port,self.type)
         # Exit
-        self.run = True 
+        self.alive = True 
         # print some information
         print "Client of Account %d: %s:%d" % (self.accountid,self.addr,self.port)
         if bootstrap:
@@ -60,7 +60,7 @@ class Client():
         s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         s.bind((self.addr,self.port))
         s.listen(10)
-        while self.run:
+        while self.alive:
             try:
                 clientsock,clientaddr = s.accept()
                 # Start a Thread
@@ -122,7 +122,7 @@ class Client():
             print "Request failed.." 
         
     def getInputs(self):
-        while self.run:
+        while self.alive:
             input = raw_input("What should I do? ")
             if len(input) == 0:
                 print "I'm listening.."
@@ -149,7 +149,7 @@ class Client():
         return
                     
     def die(self):
-        self.run = False
+        self.alive = False
         byeMessage = Message(type=MSG_BYE,source=self.toPeer.serialize())
         self.bootstrap.send(byeMessage)
         self.toPeer.send(byeMessage)

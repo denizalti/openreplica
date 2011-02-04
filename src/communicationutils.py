@@ -4,17 +4,6 @@ import random
 import struct
 from message import *
 
-def connectToBootstrap(givenpeer, bootstrap):
-    bootaddr,bootport = bootstrap.split(":")
-    bootid = createID(bootaddr,bootport)
-    bootpeer = Peer(bootid,bootaddr,int(bootport))
-    helomessage = Message(type=MSG_HELO,source=givenpeer.toPeer.serialize())
-    heloreply = Message(bootpeer.sendWaitReply(helomessage))
-    bootpeer = Peer(heloreply.source[0],heloreply.source[1],heloreply.source[2],heloreply.source[3])
-    givenpeer.groups[bootpeer.type].add(bootpeer)
-    for type,group in givenpeer.groups.iteritems():
-        group.mergeList(heloreply.groups[type])
-
 class scoutReply():
     def __init__(self,replyLock,replyCondition,giventype=0,givenballotnumber=0,givenpvalues=[]):
         self.type = giventype

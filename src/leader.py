@@ -3,11 +3,10 @@
 @note: The Leader
 @date: February 1, 2011
 '''
-from optparse import OptionParser
 from threading import Thread, Lock, Condition
 import time
 import random
-
+from node import Node
 from enums import *
 from utils import *
 from communicationutils import *
@@ -20,50 +19,17 @@ from scout import *
 from commander import *
 from bank import *
 
-parser = OptionParser(usage="usage: %prog -p port -b bootstrap -d delay")
-parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
-parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
-(options, args) = parser.parse_args()
+class Leader(Node):
+    def __init__(self):
+        Node.__init__(self)
 
-# TIMEOUT THREAD
-class Leader():
-    def __init__(self, port, bootstrap=None):
-        self.addr = findOwnIP()
-        self.port = port
-        self.id = createID(self.addr,self.port)
-        self.type = NODE_LEADER
-        self.toPeer = Peer(self.id,self.addr,self.port,self.type)
-        # groups
-        self.groups = {NODE_ACCEPTOR:Group(self.toPeer),NODE_REPLICA:Group(self.toPeer),NODE_LEADER:Group(self.toPeer)}
-        self.clients = Group(self.toPeer)
         # Synod Leader State
         self.ballotnumber = (self.id,0)
         self.pvalues = [] # array of pvalues
         # Condition Variable
         self.replyLock = Lock()
         self.replyCondition = Condition(self.replyLock)
-        # Exit
-        self.run = True
-        # Paxos State
-        self.state = {}
-        print "Leader Node %d: %s:%d" % (self.id,self.addr,self.port)
-        if bootstrap:
-            connectToBootstrap(self,bootstrap)
-        # Start a thread with the server which will start a thread for each request
-        server_thread = Thread(target=self.serverLoop)
-        server_thread.start()
-        # Start a thread that waits for inputs
-        input_thread = Thread(target=self.getInputs)
-        input_thread.start()
         
-    def __str__(self):
-        returnstr = "State of Leader %d\n" %self.id
-        returnstr += "IP: %s\n" % self.addr
-        returnstr += "Port: %d\n" % self.port
-        for type,group in self.groups.iteritems():
-            returnstr += str(group)
-        return returnstr
-    
     def incrementBallotNumber(self):
         temp = (self.ballotnumber[0],self.ballotnumber[1]+1)
         self.ballotnumber = temp
@@ -77,28 +43,12 @@ class Leader():
     def wait(self, delay):
         time.sleep(delay)
         
-    def serverLoop(self):
-        s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        s.bind((self.addr,self.port))
-        s.listen(10)
-#        s.settimeout(10)
-        while self.run:
-            try:
-                clientsock,clientaddr = s.accept()
-#                print "DEBUG: Accepted a connection on socket:",clientsock," and address:",clientaddr
-                # Start a Thread
-                Thread(target=self.handleConnection,args =[clientsock]).start()
-            except KeyboardInterrupt:
-                break
-        s.close()
-        return
-        
     def handleConnection(self,clientsock):
 #        print "DEBUG: Handling the connection.."
         addr,port = clientsock.getpeername()
         connection = Connection(addr,port,reusesock=clientsock)
         message = Message(connection.receive())
+        print "%s got message %s" % (self, message)
         if message.type == MSG_HELO:
             messagesource = Peer(message.source[0],message.source[1],message.source[2],message.source[3])
             if messagesource.type == NODE_CLIENT:
@@ -127,45 +77,6 @@ class Leader():
             self.groups[messagesource.type].remove(messagesource)
         connection.close()
         
-    def getInputs(self):
-        while self.run:
-            input = raw_input("What should I do? ")
-            if len(input) == 0:
-                print "I'm listening.."
-            else:
-                input = input.split()
-                input[0] = input[0].upper()
-                if input[0] == 'HELP':
-                    self.printHelp()
-                elif input[0] == 'COMMAND':
-                    commandnumber = input[1]
-                    proposal = input[2]+' '+input[3]
-                    self.newCommand(int(commandnumber), proposal)
-                elif input[0] == 'CONN':
-                    print self
-                elif input[0] == 'PAXOS':
-                    print self.state
-                elif input[0] == 'EXIT':
-                    self.die()
-                else:
-                    print "Sorry I couldn't get it.."
-        return
-                    
-    def die(self):
-        self.run = False
-        byeMessage = Message(type=MSG_BYE,source=self.toPeer.serialize())
-        for type,group in self.groups.iteritems():
-            group.broadcast(byeMessage)
-        self.toPeer.send(byeMessage)
-                    
-    def printHelp(self):
-        print "I can execute a new Command for you as follows:"
-        print "COMMAND commandnumber proposal"
-        print "To see my Connection State type CONN"
-        print "To see my Paxos State type PAXOS"
-        print "For help type HELP"
-        print "To exit type EXIT"
-    
     def newCommand(self,commandnumber,proposal):
         print "*** New Command ***"
         replyFromScout = scoutReply(self.replyLock,self.replyCondition)
@@ -220,10 +131,14 @@ class Leader():
                     print "DEBUG: Shouldn't reach here.."
         return
    
-'''main'''
+    def cmd_command(self, args):
+        commandnumber = args[1]
+        proposal = args[2] + ' ' + args[3]
+        self.newCommand(int(commandnumber), proposal)
+                    
 def main():
-    theLeader = Leader(options.port,options.bootstrap)
+    theLeader = Leader()
+    theLeader.startservice()
 
-'''run'''
 if __name__=='__main__':
     main()

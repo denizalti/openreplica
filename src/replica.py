@@ -2,8 +2,9 @@
 @author: denizalti
 @note: The Leader
 '''
-from optparse import OptionParser
 from threading import Thread, Lock, Condition
+
+from node import Node
 from enums import *
 from utils import *
 from communicationutils import *
@@ -16,60 +17,10 @@ from scout import *
 from commander import *
 from bank import *
 
-parser = OptionParser(usage="usage: %prog -p port -b bootstrap")
-parser.add_option("-p", "--port", action="store", dest="port", type="int", default=4448, help="port for the node")
-parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port tuple for the bootstrap peer")
-(options, args) = parser.parse_args()
-
-# TIMEOUT THREAD
-class Replica():
-    def __init__(self, id, port, bootstrap=None):
-        self.addr = findOwnIP()
-        self.port = port
-        self.id = createID(self.addr,self.port)
-        self.type = NODE_REPLICA
-        self.toPeer = Peer(self.id,self.addr,self.port,self.type)
-        # groups
-        self.groups = {NODE_ACCEPTOR:Group(self.toPeer),NODE_REPLICA:Group(self.toPeer),NODE_LEADER:Group(self.toPeer)}
-        # Exit
-        self.run = True
-        # Bank
-        self.bank = Bank()
-        # print some information
-        print "Replica Node %d: %s:%d" % (self.id,self.addr,self.port)
-        if bootstrap:
-            connectToBootstrap(self,bootstrap)
-        # Start a thread with the server which will start a thread for each request
-        server_thread = Thread(target=self.serverLoop)
-        server_thread.start()
-        # Start a thread that waits for inputs
-        input_thread = Thread(target=self.getInputs)
-        input_thread.start()
-        
-    def __str__(self):
-        returnstr = "State of Replica %d\n" %self.id
-        returnstr += "IP: %s\n" % self.addr
-        returnstr += "Port: %d\n" % self.port
-        for type,group in self.groups.iteritems():
-            returnstr += str(group)
-        return returnstr
-        
-    def serverLoop(self):
-        s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        s.bind((self.addr,self.port))
-        s.listen(10)
-#        s.settimeout(10)
-        while self.run:
-            try:
-                clientsock,clientaddr = s.accept()
-#                print "DEBUG: Accepted a connection on socket:",clientsock," and address:",clientaddr
-                # Start a Thread
-                Thread(target=self.handleConnection,args =[clientsock]).start()
-            except KeyboardInterrupt:
-                break
-        s.close()
-        return
+class Replica(Node):
+    def __init__(self, replicatedobject):
+        Node.__init__(self)
+        self.object = replicatedobject
         
     def handleConnection(self,clientsock):
 #        print "DEBUG: Handling the connection.."
@@ -108,45 +59,14 @@ class Replica():
             self.state[message.commandnumber] = message.proposal
             self.bank.executeCommand(message.proposal)
         connection.close()
-        
-    def getInputs(self):
-        while self.run:
-            input = raw_input("What should I do? ")
-            if len(input) == 0:
-                print "I'm listening.."
-            else:
-                input = input.split()
-                input[0] = input[0].upper()
-                if input[0] == 'HELP':
-                    self.printHelp()
-                elif input[0] == 'CONN':
-                    print self
-                elif input[0] == 'BANK':
-                    print self.bank
-                elif input[0] == 'EXIT':
-                    self.die()
-                else:
-                    print "Sorry I couldn't get it.."
-        return
-                    
-    def die(self):
-        self.run = False
-        byeMessage = Message(type=MSG_BYE,source=self.toPeer.serialize())
-        for type,group in self.groups.iteritems():
-            group.broadcast(byeMessage)
-        self.toPeer.send(byeMessage)
-                    
-    def printHelp(self):
-        print "To see my Connection State type CONN"
-        print "To see my Bank State type BANK"
-        print "For help type HELP"
-        print "To exit type EXIT"
    
-'''main'''
-def main():
-    theReplica = Replica(options.port,options.bootstrap)
+    def cmd_object(self, args):
+        print self.object
 
-'''run'''
+def main():
+    theReplica = Replica(Bank())
+    theReplica.startservice()
+
 if __name__=='__main__':
     main()
 
