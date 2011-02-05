@@ -1,6 +1,7 @@
 '''
 @author: denizalti
-@note: The Acceptor acts like a server.
+@note: The Acceptor acts like a server, responds to PaxosMessages received from the leader.
+@date: February 1, 2011
 '''
 from threading import Thread
 from random import randint

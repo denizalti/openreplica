@@ -1,6 +1,7 @@
 '''
 @author: denizalti
-@note: The Client
+@note: The Client connects to a Leader and makes requests.
+@date: February 1, 2011
 '''
 from optparse import OptionParser
 from threading import Thread, Lock, Condition

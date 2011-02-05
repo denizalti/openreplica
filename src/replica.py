@@ -1,6 +1,7 @@
 '''
 @author: denizalti
-@note: The Leader
+@note: The Replica keeps an object and responds to Perform messages received from the Leader.
+@date: February 1, 2011
 '''
 from threading import Thread, Lock, Condition
 
