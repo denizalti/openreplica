@@ -6,14 +6,12 @@ from threading import Thread
 from random import randint
 import threading
 
-from node import Node
 from enums import *
-from utils import *
-from communicationutils import *
-from connection import *
-from group import *
-from peer import *
-from message import *
+from node import Node
+from connection import ConnectionPool
+from group import Group
+from peer import Peer
+from message import Message,PaxosMessage,HandshakeMessage,PValue,PValueSet
 
 class Acceptor(Node):
     def __init__(self):

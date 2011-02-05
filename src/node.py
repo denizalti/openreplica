@@ -8,17 +8,15 @@ from threading import Thread, Lock, Condition
 import os
 import time
 import random
+import socket
 
 from enums import *
-from utils import *
-from communicationutils import *
-from connection import *
-from group import *
-from peer import *
-from message import *
-from scout import *
-from commander import *
-from bank import *
+from utils import findOwnIP
+from connection import ConnectionPool,Connection
+from group import Group
+from peer import Peer
+from message import Message,PaxosMessage,HandshakeMessage,PValue,PValueSet
+
 
 parser = OptionParser(usage="usage: %prog -p port -b bootstrap -d delay")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
