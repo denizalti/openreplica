@@ -54,7 +54,7 @@ class Leader(Node):
         for reply in replies:
             self.scoutChangeState(reply,waitfor,replyToLeader)
             with replyToLeader.replyLock:
-                if replyToLeader.type == SCOUT_BUSY:
+                if replyToLeader.type == LEADERMSG_SCOUT_BUSY:
                     continue
                 else:
                     return
@@ -67,7 +67,7 @@ class Leader(Node):
         for reply in replies:
             self.commanderChangeState(reply,waitfor,replyToLeader,chosenpvalue)
             with replyToLeader.replyLock:
-                if replyToLeader.type == COMMANDER_BUSY:
+                if replyToLeader.type == LEADERMSG_COMMANDER_BUSY:
                     continue
                 else:
                     return
@@ -78,21 +78,21 @@ class Leader(Node):
                 waitfor -= 1
                 if waitfor < float(len(self.groups[NODE_ACCEPTOR]))/2:
                     with replyToLeader.replyLock:
-                        replyToLeader.type = COMMANDER_CHOSEN
+                        replyToLeader.type = LEADERMSG_COMMANDER_CHOSEN
                         replyToLeader.ballotnumber = self.ballotnumber
                         replyToLeader.commandnumber = chosenpvalue.commandnumber
                         replyToLeader.replyCondition.notify()
                     return
                 else:
                     with replyToLeader.replyLock:
-                        self.replyToLeader.type = COMMANDER_BUSY
+                        self.replyToLeader.type = LEADERMSG_COMMANDER_BUSY
                         self.replyToLeader.ballotnumber = self.ballotnumber
                         self.replyToLeader.replyCondition.notify()
                     return
             # There is a higher ballotnumber
             else:
                 with self.replyToLeader.replyLock:
-                    self.replyToLeader.type = COMMANDER_PREEMPTED
+                    self.replyToLeader.type = LEADERMSG_COMMANDER_PREEMPTED
                     self.replyToLeader.ballotnumber = self.ballotnumber
                     self.replyToLeader.replyCondition.notify()
                 return
@@ -106,21 +106,21 @@ class Leader(Node):
                 waitfor -= 1
                 if waitfor < float(len(self.groups[NODE_ACCEPTOR]))/2:
                     with replyToLeader.replyLock:
-                        replyToLeader.type = SCOUT_ADOPTED
+                        replyToLeader.type = LEADERMSG_SCOUT_ADOPTED
                         replyToLeader.ballotnumber = self.ballotnumber
                         replyToLeader.pvalueset = self.pvalueset
                         replyToLeader.replyCondition.notify()
                     return
                 else:
                     with replyToLeader.replyLock:
-                        replyToLeader.type = SCOUT_BUSY
+                        replyToLeader.type = LEADERMSG_SCOUT_BUSY
                         replyToLeader.ballotnumber = self.ballotnumber
                         replyToLeader.replyCondition.notify()
                     return
             # There is a higher ballotnumber
             else:
                 with self.replyToLeader.replyLock:
-                    self.replyToLeader.setType(SCOUT_PREEMPTED)
+                    self.replyToLeader.setType(LEADERMSG_SCOUT_PREEMPTED)
                     self.replyToLeader.setBallotnumber(self.ballotnumber)
                     self.replyToLeader.replyCondition.notify()
                 return
@@ -137,11 +137,11 @@ class Leader(Node):
         scout_thread.start()
         while True:
             with self.replyLock:
-                while replyFromScout.type == SCOUT_NOREPLY and replyFromCommander.type == SCOUT_NOREPLY:
+                while replyFromScout.type == LEADERMSG_NOREPLY and replyFromCommander.type == LEADERMSG_NOREPLY:
                     self.replyCondition.wait()
-                if replyFromScout.type != SCOUT_NOREPLY:
+                if replyFromScout.type != LEADERMSG_NOREPLY:
                     print "[%s] reply from scout %s" % (self,replyFromScout)
-                    if replyFromScout.type == SCOUT_ADOPTED:
+                    if replyFromScout.type == LEADERMSG_SCOUT_ADOPTED:
                         possiblepvalueset = PValueSet()
                         for pvalue in replyFromScout.pvalueset:
                             if pvalue.commandnumber == commandnumber:
@@ -153,20 +153,20 @@ class Leader(Node):
                         commander_thread = Thread(target=self.commander,args=[replyFromCommander,chosenpvalue])
                         commander_thread.start()
                         continue
-                    elif replyFromScout.type == SCOUT_PREEMPTED:
+                    elif replyFromScout.type == LEADERMSG_SCOUT_PREEMPTED:
                         if replyFromScout.ballotnumber > self.ballotnumber:
                             self.incrementBallotNumber()
                             replyFromScout = scoutReply(self.replyLock,self.replyCondition)
                             scout = Scout(self.toPeer,self.acceptors,self.ballotnumber,replyFromScout)
                             scout.start()
-                elif replyFromCommander.type != SCOUT_NOREPLY:
+                elif replyFromCommander.type != LEADERMSG_NOREPLY:
                     print "[%s] reply from commander %s" % (self,replyFromCommander)
-                    if replyFromCommander.type == COMMANDER_CHOSEN:
+                    if replyFromCommander.type == LEADERMSG_COMMANDER_CHOSEN:
                         message = PaxosMessage(MSG_PERFORM,self.me,commandnumber=replyFromCommander.commandnumber,proposal=proposal)
                         self.groups[NODE_REPLICA].broadcast(self,message)
                         self.incrementBallotNumber()
                         break
-                    elif replyFromCommander.type == COMMANDER_PREEMPTED:
+                    elif replyFromCommander.type == LEADERMSG_COMMANDER_PREEMPTED:
                         if replyFromScout.ballotnumber > self.ballotnumber:
                             self.incrementBallotNumber()
                             replyFromScout = scoutReply(self.replyLock,self.replyCondition)
