@@ -15,6 +15,7 @@ from peer import Peer
 from message import Message
 
 from test import Test
+from bank import Bank
 
 class Replica(Node):
     def __init__(self, replicatedobject):
@@ -45,7 +46,7 @@ class Replica(Node):
         print self.object
 
 def main():
-    theReplica = Replica(Test())
+    theReplica = Replica(Bank())
     theReplica.startservice()
 
 if __name__=='__main__':

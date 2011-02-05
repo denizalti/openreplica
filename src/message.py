@@ -95,13 +95,15 @@ class PaxosMessage(Message):
         return temp
 
 class ClientMessage(Message):
-    def __init__(self,msgtype,myname,proposal=None):
+    def __init__(self,msgtype,myname,command=None):
         Message.__init__(self, msgtype, myname)
-        self.proposal = proposal
+        self.proposal = command
 
     def __str__(self):
         temp = Message.__str__(self)
-        if self.type == MSG_HELOREPLY:
-            temp += '  proposal: %s' % self.proposal
+        if self.type == MSG_CLIENTREQUEST:
+            temp += '  request: %s' % self.proposal
+        elif self.type == MSG_CLIENTREPLY:
+            temp += '  reply: %s' % self.proposal
         return temp
 

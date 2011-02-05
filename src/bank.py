@@ -3,50 +3,48 @@ class Bank():
     def __init__(self):
         self.accounts = {}  # dictionary indexed by accountid storing accounts
 
-    def openaccount(self,accountid):
+    def cmd_openaccount(self,args)
+        accountid = args[0]
         if self.accounts.has_key(accountid):
             print "Account already exists.."
         else:
             self.accounts[accountid] = Account(accountid)
         
-    def closeaccount(self):
+    def cmd_closeaccount(self, args):
+        accountid = args[0]
         if self.accounts.has_key(accountid):
             del self.accounts[accountid]
         else:
             print "Account doesn't exist.."
         
-    def debit(self,id):
+    def cmd_debit(self,args):
+        accountid = args[0]
         if self.accounts.has_key(accountid):
-            self.accounts[id].debit()
+            self.accounts[accountid].debit()
         else:
             print "Account doesn't exist.."
         
-    def deposit(self,id):
+    def cmd_deposit(self,args):
+        accountid = args[0]
         if self.accounts.has_key(accountid):
-            self.accounts[id].deposit()
+            self.accounts[accountid].deposit()
         else:
             print "Account doesn't exist.."
         
-    def balance(self,id):
+    def cmd_balance(self,args):
+        accountid = args[0]
         if self.accounts.has_key(accountid):
-            return self.accounts[id].balance
+            return self.accounts[accountid].balance
         else:
             print "Account doesn't exist.."
             return -1
     
-    def executeCommand(self,proposal):
-        command,accountid = proposal.split(" ")
-        accountid = int(accountid)
-        command = command.lower()
-        function = getattr(self,command)
-        function(accountid)
-        
     def __str__(self):
-        temp = "**Bank**"
+        temp = "**Bank**: "
         for account in self.accounts.values():
             temp += str(account)
         return temp
-    
+
 class Account():
     def __init__(self,id):
         self.id = id
@@ -56,10 +54,10 @@ class Account():
     def __str__(self):
         return "Account %d: balance = %.2f" % (self.id, self.balance)
     
-    def debit(self):
+    def debit(self, args):
         self.balance = self.balance*0.9
         
-    def deposit(self):
+    def deposit(self, args):
         self.balance = self.balance*1.1
         
     

@@ -3,74 +3,53 @@
 @note: The Client connects to a Leader and makes requests.
 @date: February 1, 2011
 '''
+import socket
+
 from optparse import OptionParser
 from threading import Thread, Lock, Condition
 from node import Node
 from enums import *
+from utils import findOwnIP
 from communicationutils import scoutReply,commanderReply
-from connection import ConnectionPool
+from connection import ConnectionPool, Connection
 from group import Group
 from peer import Peer
 from message import ClientMessage,Message,PaxosMessage,HandshakeMessage,PValue,PValueSet
 
-class Client(Node):
-    def __init__(self,accountid=0):
-        Node.__init__(self, NODE_CLIENT)
+parser = OptionParser(usage="usage: %prog -b bootstrap")
+parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
+(options, args) = parser.parse_args()
 
-    def startclient(self):
-        # Start a thread that waits for inputs
-        input_thread = Thread(target=self.getInputs)
-        input_thread.start()
-
-    def cmd_debit(self,args):
-        clientmessage = ClientMessage(MSG_CLIENTREQUEST,self.me,'debit %s'%self.id)
-        replymessage = self.server.sendWaitReply(self,clientmessage)
-        if replymessage.proposal == "SUCCESS":
-            print "Transaction performed.."
-        elif replymessage.proposal == "FAIL":
-            print "Transaction failed.."      
-
-    #XXX: All these functions have to be checked..
-    def cmd_deposit(self,args):
-        clientmessage = ClientMessage(MSG_CLIENTREQUEST,self.me,'deposit %s'%self.id)
-        replymessage = self.server.sendWaitReply(self,clientmessage)
-        if replymessage.proposal == "SUCCESS":
-            print "Transaction performed.."
-        elif replymessage.proposal == "FAIL":
-            print "Transaction failed.."    
-            
-    def cmd_balance(self,args):
-        clientmessage = ClientMessage(MSG_CLIENTREQUEST,self.me,'balance %s'%self.id)
-        replymessage = self.server.sendWaitReply(self,clientmessage)
-        if replymessage.proposal == "FAIL":
-            print "Request failed.."
-        else:
-            print "Balance is $%.2f" % replymessage.proposal
+class Client():
+    def __init__(self, bootstrap):
+        self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+        bootaddr,bootport = bootstrap.split(":")
+        self.socket.connect((bootaddr,int(bootport)))
+        myaddr = findOwnIP()
+        myport = self.socket.getsockname()[1]
+        self.me = Peer(myaddr,myport,NODE_CLIENT)
+        self.id = self.me.id()
+        self.conn = Connection(self.socket)
+        self.alive = True
         
-    def cmd_openaccount(self,args):
-        clientmessage = ClientMessage(MSG_CLIENTREQUEST,self.me,'openaccount %s'%self.id)
-        replymessage = self.server.sendWaitReply(self,clientmessage)
-        if replymessage.proposal == "SUCCESS":
-            print "Transaction performed.."
-        elif replymessage.proposal == "FAIL":
-            print "Request failed.."  
-    
-    def cmd_closeaccount(self,args):
-        clientmessage = ClientMessage(MSG_CLIENTREQUEST,self.me,'closeaccount %s'%self.id)
-        replymessage = self.server.sendWaitReply(self,clientmessage)
-        if replymessage.proposal == "SUCCESS":
-            print "Request successful.."
-        elif replymessage.proposal == "FAIL":
-            print "Request failed.."  
+    def clientloop(self):
+        while self.alive:
+            try:
+                input = raw_input("client-shell> ")
+                if len(input) == 0:
+                    continue
+                else:
+                    cm = ClientMessage(MSG_CLIENTREQUEST, self.me, input)
+                    self.conn.send(cm)
+                    reply = self.conn.receive()
+                    print reply
+            except ( KeyboardInterrupt,EOFError ):
+                os._exit(0)
+        return
         
-'''main'''
-def main():
-    theClient = Client()
-    theClient.startclient()
-
-'''run'''
-if __name__=='__main__':
-    main()
+theClient = Client(options.bootstrap)
+theClient.clientloop()
 
   
 
