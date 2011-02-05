@@ -21,31 +21,30 @@ class Acceptor(Node):
 
         # Synod Acceptor State
         self.ballotnumber = (0,0)
-        self.accepted = [] # Array of pvalues
+        self.accepted = PValueSet()
         
-    def msg_prepare(self, msg):
+    def msg_prepare(self, conn, msg):
         if msg.ballotnumber > self.ballotnumber:
             print "ACCEPTOR got a PREPARE with Ballotnumber: ", msg.ballotnumber
             print "ACCEPTOR's Ballotnumber: ", self.ballotnumber
             self.ballotnumber = msg.ballotnumber
-            replymsg = PaxosMessage(MSG_ACCEPT,self.me,self.ballotnumber,givenpvalues=self.accepted)
+            replymsg = PaxosMessage(MSG_ACCEPT,self.me,self.ballotnumber,givenpvalueset=self.accepted)
         else:
-            replymsg = PaxosMessage(MSG_REJECT,self.me,self.ballotnumber,givenpvalues=self.accepted)
-        connection.send(replymsg)
+            replymsg = PaxosMessage(MSG_REJECT,self.me,self.ballotnumber,givenpvalueset=self.accepted)
+        conn.send(replymsg)
 
-    def msg_propose(self, msg):
+    def msg_propose(self, conn, msg):
         if msg.ballotnumber >= self.ballotnumber:
             self.ballotnumber = msg.ballotnumber
-            newpvalue = PValue(ballotnumber=msg.ballotnumber,commandnumber=msg.commandnumber,proposal=msg.proposal)
-            self.accepted.append(newpvalue)
-            replymsg = Message(type=MSG_ACCEPT,source=self.toPeer.serialize(),ballotnumber=self.ballotnumber,commandnumber=newpvalue.commandnumber)
+            newpvalue = PValue(msg.ballotnumber,msg.commandnumber,msg.proposal)
+            self.accepted.add(newpvalue)
+            replymsg = PaxosMessage(MSG_ACCEPT,self.me,self.ballotnumber,newpvalue.commandnumber)
         else:
-            replymsg = Message(type=MSG_REJECT,source=self.toPeer.serialize(),ballotnumber=self.ballotnumber,commandnumber=newpvalue.commandnumber)
-        connection.send(replymsg)
+            replymsg = PaxosMessage(MSG_REJECT,self.me,self.ballotnumber,newpvalue.commandnumber)
+        conn.send(replymsg)
 
     def cmd_paxos(self, args):
-        for accepted in self.accepted:
-            print accepted
+        print self.accepted
         
 def main():
     theAcceptor = Acceptor()

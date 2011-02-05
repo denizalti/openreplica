@@ -1,6 +1,4 @@
 import struct
-from collections import Set
-
 from enums import *
 from utils import *
 from peer import *
@@ -13,11 +11,30 @@ class Message():
     def __str__(self):
         return 'Message: %s src %s' % (msg_names[self.type],self.source)
 
-class PValueSet(Set):
-    pass
+class PValueSet():
+    def __init__(self):
+        self.pvalues = set()
+
+    def remove(self,peer):
+        if pvalue in self.pvalues:
+            self.pvalues.remove(pvalue)
+
+    def add(self,pvalue):
+        if pvalue not in self.pvalues:
+            self.pvalues.add(pvalue)
+
+    def union(self,otherpvalueset):
+        for pvalue in otherpvalueset.pvalues:
+            self.pvalues.add(pvalue)
+
+    def __str__(self):
+        temp = ''
+        for pvalue in self.pvalues:
+            temp += pvalue
+        return temp
 
 class PValue():
-    def __init__(self,serialpvalue=None,ballotnumber=(0,0),commandnumber=0,proposal=""):
+    def __init__(self,ballotnumber=(0,0),commandnumber=0,proposal="",serialpvalue=None):
         self.ballotnumber = ballotnumber
         self.commandnumber = commandnumber
         self.proposal = proposal
@@ -60,19 +77,19 @@ class HandshakeMessage(Message):
         return temp
 
 class PaxosMessage(Message):
-    def __init__(self,msgtype, myname, ballotnumber,commandnumber=0,proposal=None,givenpvalues=None):
+    def __init__(self,msgtype, myname, ballotnumber,commandnumber=0,proposal=None,givenpvalueset=None):
         Message.__init__(self, msgtype, myname)
         self.ballotnumber = ballotnumber
         self.commandnumber = commandnumber
         self.proposal = proposal
-        self.pvalues = givenpvalues
+        self.pvalueset = givenpvalueset
 
     def __str__(self):
         temp = Message.__str__(self)
         temp += 'ballotnumber: %s commandnumber: %d proposal: %s pvalues: ' \
-            % (msg_names[self.type],self.source, self.ballotnumber,self.commandnumber,self.proposal)
-        if self.pvalues is not None:
-            for pvalue in self.pvalues:
+            % (str(self.ballotnumber),self.commandnumber,self.proposal)
+        if self.pvalueset is not None:
+            for pvalue in self.pvalueset:
                 temp += str(pvalue) + '\n'
         return temp
 

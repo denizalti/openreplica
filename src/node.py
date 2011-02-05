@@ -137,7 +137,7 @@ class Node():
         self.alive = False
         byeMessage = Message(MSG_BYE,source=self.me)
         for type,group in self.groups.iteritems():
-            group.broadcast(byeMessage)
+            group.broadcast(self,byeMessage)
         self.me.send(byeMessage)
                     
     def cmd_state(self, args):
