@@ -5,3 +5,6 @@ class Test():
 
     def append(self, args):
         self.state += args[0]
+
+    def __str__(self):
+        return self.state

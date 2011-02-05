@@ -153,7 +153,7 @@ class Leader(Node):
                             if pvalue.commandnumber == commandnumber:
                                 possiblepvalueset.append(pvalue)
                         if len(possiblepvalueset) > 0:
-                            chosenpvalue = possiblepvalueset.max()
+                            chosenpvalue = possiblepvalueset.pvaluewithmaxballotnumber()
                         replyFromCommander = commanderReply(self.replyLock,self.replyCondition)
                         replyFromScout = scoutReply(self.replyLock,self.replyCondition)
                         commander_thread = Thread(target=self.commander,args=[replyFromCommander,chosenpvalue])

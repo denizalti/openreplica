@@ -18,22 +18,6 @@ COMMANDER_CHOSEN, COMMANDER_BUSY, COMMANDER_PREEMPTED = range(4,7)
 # node types 
 NODE_ACCEPTOR, NODE_LEADER, NODE_REPLICA, NODE_CLIENT = range(4)
 
-################# 
-# Magic numbers 
-
-# Lengths
-MAXPROPOSALLENGTH = 20
-PVALUELENGTH = 32
-PEERLENGTH = 28
-ADDRLENGTH = 15
-
-# Command Index
-#COMMANDNUMBER = 0
-#COMMAND = 1
-
-# integer infinity
-INFINITY = 10**100
-
 ###########################
 # code to convert enum variables to strings of different kinds
 

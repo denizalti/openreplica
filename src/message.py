@@ -26,12 +26,12 @@ class PValueSet():
     def union(self,otherpvalueset):
         return self.pvalues | otherpvalueset.pvalues
 
-    def max(self):
-        maxpvalue = pvalue()
+    def pvaluewithmaxballotnumber(self):
+        maxballotnumberpvalue = pvalue()
         for pvalue in self.pvalues:
-            if pvalue > maxpvalue:
-                maxpvalue = pvalue
-        return maxpvalue
+            if pvalue.ballotnumber > maxballotnumberpvalue.ballotnumber:
+                maxballotnumberpvalue = pvalue
+        return maxballotnumberpvalue
 
     def __len__(self):
         return len(self.pvalues)
@@ -58,21 +58,6 @@ class PValue():
         return self.ballotnumber == otherpvalue.ballotnumber and \
             self.commandnumber == otherpvalue.commandnumber and \
             self.proposal == otherpvalue.proposal
-
-    def __ne__(self, otherpvalue):
-        return not self == otherpvalue
-
-    def __lt__(self, otherpvalue):
-        return self.ballotnumber < otherpvalue.ballotnumber
-
-    def __gt__(self, otherpvalue):
-        return self.ballotnumber > otherpvalue.ballotnumber
-        
-    def __le__(self, otherpvalue):
-        return NotImplemented
-
-    def __ge__(self, otherpvalue):
-        return NotImplemented
     
     def __str__(self):
         return 'PValue((%d,%d),%d,%s)' % (self.ballotnumber[0],self.ballotnumber[1],self.commandnumber,self.proposal.strip("\x00"))

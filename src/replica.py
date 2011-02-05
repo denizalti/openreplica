@@ -22,13 +22,13 @@ class Replica(Node):
         self.commandnumber = 1  # incremented upon performing an operation
         self.requests = {}
         
-    def msg_perform(self, msg):
-        self.requests[message.commandnumber] = message.proposal
+    def msg_perform(self, conn, msg):
+        self.requests[msg.commandnumber] = msg.proposal
         command = msg.proposal.split()
         commandname = command[0]
         commandargs = command[1:]
         try:
-            method = getattr(self, commandname)
+            method = getattr(self.object, commandname)
             method(commandargs)
         except AttributeError:
             print "command not supported: %s" % (command)
