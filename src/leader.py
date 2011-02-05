@@ -111,12 +111,12 @@ class Leader(Node):
                     print "There is a reply from Scout.."
                     print replyFromScout
                     if replyFromScout.type == SCOUT_ADOPTED:
-                        possiblepvalues = []
-                        for pvalue in replyFromScout.pvalues:
+                        possiblepvalueset = PValueSet()
+                        for pvalue in replyFromScout.pvalueset:
                             if pvalue.commandnumber == commandnumber:
-                                possiblepvalues.append(pvalue)
-                        if len(possiblepvalues) > 0:
-                            chosenpvalue = max(possiblepvalues)
+                                possiblepvalueset.append(pvalue)
+                        if len(possiblepvalueset) > 0:
+                            chosenpvalue = possiblepvalueset.max()
                         replyFromCommander = commanderReply(self.replyLock,self.replyCondition)
                         replyFromScout = scoutReply(self.replyLock,self.replyCondition)
                         commander = Commander(self.toPeer,self.acceptors,self.ballotnumber,chosenpvalue,replyFromCommander)

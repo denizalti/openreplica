@@ -15,7 +15,7 @@ class PValueSet():
     def __init__(self):
         self.pvalues = set()
 
-    def remove(self,peer):
+    def remove(self,pvalue):
         if pvalue in self.pvalues:
             self.pvalues.remove(pvalue)
 
@@ -24,8 +24,17 @@ class PValueSet():
             self.pvalues.add(pvalue)
 
     def union(self,otherpvalueset):
-        for pvalue in otherpvalueset.pvalues:
-            self.pvalues.add(pvalue)
+        return self.pvalues | otherpvalueset.pvalues
+
+    def max(self):
+        maxpvalue = pvalue()
+        for pvalue in self.pvalues:
+            if pvalue > maxpvalue:
+                maxpvalue = pvalue
+        return maxpvalue
+
+    def __len__(self):
+        return len(self.pvalues)
 
     def __str__(self):
         temp = ''
