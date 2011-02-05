@@ -162,7 +162,7 @@ class Node():
                     except AttributeError:
                         print "command not supported"
                     method(input)
-            except (KeyboardInterrupt, EOFError):
+            except ( KeyboardInterrupt,EOFError ):
                 os._exit(0)
         return
                     

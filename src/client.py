@@ -28,38 +28,39 @@ class Client(Node):
             print "Transaction performed.."
         elif replymessage.proposal == "FAIL":
             print "Transaction failed.."      
-    
+
+    #XXX: All these functions have to be checked..
     def cmd_deposit(self,args):
-        clientmessage = Message(type=MSG_CLIENTREQUEST,source=self.toPeer.serialize(),proposal='deposit %s'%self.id)
-        replymessage = Message(self.bootstrap.sendWaitReply(clientmessage))
-        if replymessage.type == MSG_SUCCESS:
+        clientmessage = ClientMessage(MSG_CLIENTREQUEST,self.me,'deposit %s'%self.id)
+        replymessage = self.server.sendWaitReply(self,clientmessage)
+        if replymessage.proposal == "SUCCESS":
             print "Transaction performed.."
-        elif replymessage.type == MSG_FAIL:
-            print "Transaction failed.."   
+        elif replymessage.proposal == "FAIL":
+            print "Transaction failed.."    
             
     def cmd_balance(self,args):
-        clientmessage = Message(type=MSG_CLIENTREQUEST,source=self.toPeer.serialize(),proposal='balance %s'%self.id)
-        replymessage = Message(self.bootstrap.sendWaitReply(clientmessage))
-        if replymessage.type == MSG_SUCCESS:
-            print "Balance is $%.2f"
-        elif replymessage.type == MSG_FAIL:
-            print "Request failed.." 
+        clientmessage = ClientMessage(MSG_CLIENTREQUEST,self.me,'balance %s'%self.id)
+        replymessage = self.server.sendWaitReply(self,clientmessage)
+        if replymessage.proposal == "FAIL":
+            print "Request failed.."
+        else:
+            print "Balance is $%.2f" % replymessage.proposal
         
     def cmd_openaccount(self,args):
-        clientmessage = Message(type=MSG_CLIENTREQUEST,source=self.toPeer.serialize(),proposal='openaccount %s'%self.id)
-        replymessage = Message(self.bootstrap.sendWaitReply(clientmessage))
-        if replymessage.type == MSG_SUCCESS:
-            print "Request successful.."
-        elif replymessage.type == MSG_FAIL:
-            print "Request failed.." 
+        clientmessage = ClientMessage(MSG_CLIENTREQUEST,self.me,'openaccount %s'%self.id)
+        replymessage = self.server.sendWaitReply(self,clientmessage)
+        if replymessage.proposal == "SUCCESS":
+            print "Transaction performed.."
+        elif replymessage.proposal == "FAIL":
+            print "Request failed.."  
     
     def cmd_closeaccount(self,args):
-        clientmessage = Message(type=MSG_CLIENTREQUEST,source=self.toPeer.serialize(),proposal='closeaccount %s'%self.id)
-        replymessage = Message(self.bootstrap.sendWaitReply(clientmessage))
-        if replymessage.type == MSG_SUCCESS:
+        clientmessage = ClientMessage(MSG_CLIENTREQUEST,self.me,'closeaccount %s'%self.id)
+        replymessage = self.server.sendWaitReply(self,clientmessage)
+        if replymessage.proposal == "SUCCESS":
             print "Request successful.."
-        elif replymessage.type == MSG_FAIL:
-            print "Request failed.." 
+        elif replymessage.proposal == "FAIL":
+            print "Request failed.."  
         
 '''main'''
 def main():

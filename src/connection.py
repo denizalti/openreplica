@@ -25,7 +25,6 @@ class Connection():
         return "Connection with Peer at addr: %s port: %d" % (self.addr, self.port)
     
     def receive(self):
-#        print "DEBUG: Connection.receive"
         try:
             returnstring = self.thesocket.recv(4)
             msg_length = struct.unpack("I", returnstring[0:4])[0]
@@ -43,7 +42,6 @@ class Connection():
             return None
     
     def send(self, msg):
-#        print "DEBUG: Connection.send"
         messagestr = pickle.dumps(msg)
         messagelength = struct.pack("I", len(messagestr))
         try:
