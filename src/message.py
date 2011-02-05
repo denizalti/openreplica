@@ -94,3 +94,14 @@ class PaxosMessage(Message):
                 temp += str(pvalue) + '\n'
         return temp
 
+class ClientMessage(Message):
+    def __init__(self,msgtype,myname,proposal=None):
+        Message.__init__(self, msgtype, myname)
+        self.proposal = proposal
+
+    def __str__(self):
+        temp = Message.__str__(self)
+        if self.type == MSG_HELOREPLY:
+            temp += '  proposal: %s' % self.proposal
+        return temp
+

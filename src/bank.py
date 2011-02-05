@@ -3,13 +3,13 @@ class Bank():
     def __init__(self):
         self.accounts = {}  # dictionary indexed by accountid storing accounts
 
-    def open(self,accountid):
+    def openaccount(self,accountid):
         if self.accounts.has_key(accountid):
             print "Account already exists.."
         else:
             self.accounts[accountid] = Account(accountid)
         
-    def close(self):
+    def closeaccount(self):
         if self.accounts.has_key(accountid):
             del self.accounts[accountid]
         else:

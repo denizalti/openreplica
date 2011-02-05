@@ -21,7 +21,9 @@ class Replica(Node):
         self.object = replicatedobject  # this is the state
         self.commandnumber = 1  # incremented upon performing an operation
         self.requests = {}
-        
+
+    # TODO: According to the paper the replica gets the Client identifier and sends the response to the Client
+    # Wouldn't this cause multiple responses to the Client?
     def msg_perform(self, conn, msg):
         self.requests[msg.commandnumber] = msg.proposal
         command = msg.proposal.split()
@@ -29,10 +31,13 @@ class Replica(Node):
         commandargs = command[1:]
         try:
             method = getattr(self.object, commandname)
-            result = method(commandargs)
+            givenresult = method(commandargs)
         except AttributeError:
             print "command not supported: %s" % (command)
-        replymsg = PaxosMessage(MSG_RESPONSE,self.me,commandnumber=msg.commandnumber,result=result)
+            replymsg = PaxosMessage(MSG_RESPONSE,self.me,commandnumber=msg.commandnumber,result="FAIL")
+            conn.send(replymsg)
+            return
+        replymsg = PaxosMessage(MSG_RESPONSE,self.me,commandnumber=msg.commandnumber,result=givenresult)
         conn.send(replymsg)
     
     def cmd_showobject(self, args):

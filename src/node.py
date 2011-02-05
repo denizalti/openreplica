@@ -21,6 +21,7 @@ from message import Message,PaxosMessage,HandshakeMessage,PValue,PValueSet
 parser = OptionParser(usage="usage: %prog -p port -b bootstrap -d delay")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
+parser.add_option("-i", "--id", action="store", dest="accountid", type="int", default=0, help="[optional] id for the account")
 (options, args) = parser.parse_args()
 
 # TIMEOUT THREAD
@@ -58,9 +59,12 @@ class Node():
             helomessage = HandshakeMessage(MSG_HELO, self.me)
             heloreply = bootpeer.sendWaitReply(self, helomessage)
             print "[%s] received %s" % (self, heloreply)
-
             bootpeer = heloreply.source
-            self.groups[bootpeer.type].add(bootpeer)
+            if self.type == NODE_CLIENT:
+                self.server = bootpeer
+            else:
+                self.groups[bootpeer.type].add(bootpeer)
+            
             for type,group in self.groups.iteritems():
                 group.union(heloreply.groups[type])
 
@@ -99,7 +103,10 @@ class Node():
         # XXX THIS IS WRONG!!!!
         # XXX we need consensus on who to add to which group
         # add the other peer to the right peer group
-        self.groups[msg.source.type].add(msg.source)
+        if msg.source.type == NODE_CLIENT:
+            self.clients.add(msg.source)
+        else:
+            self.groups[msg.source.type].add(msg.source)
         conn.send(replymsg)
 
     def msg_heloreply(self, conn, msg):

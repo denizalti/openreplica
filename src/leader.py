@@ -14,37 +14,39 @@ from communicationutils import scoutReply,commanderReply
 from connection import ConnectionPool
 from group import Group
 from peer import Peer
-from message import Message,PaxosMessage,HandshakeMessage,PValue,PValueSet
+from message import ClientMessage,Message,PaxosMessage,HandshakeMessage,PValue,PValueSet
 
 class Leader(Node):
     def __init__(self):
         Node.__init__(self, NODE_LEADER)
         # Synod Leader State
-        self.ballotnumber = (self.id,0)
+        self.ballotnumber = (0,self.id)
         self.pvalueset = PValueSet()
         # Condition Variable
         self.replyLock = Lock()
         self.replyCondition = Condition(self.replyLock)
         
     def incrementBallotNumber(self):
-        temp = (self.ballotnumber[0],self.ballotnumber[1]+1)
+        temp = (self.ballotnumber[0]+1,self.ballotnumber[1])
         self.ballotnumber = temp
         
     def getHighestCommandNumber(self):
-        if len(self.state) == 0:
-            return 1
-        else:
-            return max(k for k, v in self.state.iteritems() if v != 0)
+        # XXX
+        return 99
+#            return max(k for k, v in self.state.iteritems() if v != 0)
         
     def wait(self, delay):
         time.sleep(delay)
         
-    def msg_clientrequest(self, msg):
+    def msg_clientrequest(self, conn, msg):
         print "*** New Command ***"
         commandnumber = self.getHighestCommandNumber()
-        proposal = message.proposal
+        proposal = msg.proposal
         self.doCommand(commandnumber, proposal)
-
+        # XXX Right behavior should be implemented..
+        clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"SUCCESS")
+        conn.send(clientreply)
+        
     # Scout thread, whose job is to ...
     def scout(self,replyToLeader):
         print "[%s] scout" % self
