@@ -48,6 +48,12 @@ class PValue():
         self.commandnumber = commandnumber
         self.proposal = proposal
 
+    def id(self):
+        return "%s:%d:%s" % (str(self.ballotnumber),self.commandnumber,self.proposal)
+
+    def __hash__(self):
+        return self.id().__hash__()
+
     def __eq__(self, otherpvalue):
         return self.ballotnumber == otherpvalue.ballotnumber and \
             self.commandnumber == otherpvalue.commandnumber and \
@@ -86,7 +92,7 @@ class HandshakeMessage(Message):
         return temp
 
 class PaxosMessage(Message):
-    def __init__(self,msgtype, myname, ballotnumber,commandnumber=0,proposal=None,givenpvalueset=None):
+    def __init__(self,msgtype, myname, ballotnumber=0,commandnumber=0,proposal=None,givenpvalueset=None):
         Message.__init__(self, msgtype, myname)
         self.ballotnumber = ballotnumber
         self.commandnumber = commandnumber

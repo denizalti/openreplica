@@ -28,8 +28,8 @@ PEERLENGTH = 28
 ADDRLENGTH = 15
 
 # Command Index
-COMMANDNUMBER = 0
-COMMAND = 1
+#COMMANDNUMBER = 0
+#COMMAND = 1
 
 # integer infinity
 INFINITY = 10**100

@@ -18,10 +18,12 @@ from test import Test
 class Replica(Node):
     def __init__(self, replicatedobject):
         Node.__init__(self, NODE_REPLICA)
-        self.object = replicatedobject
+        self.object = replicatedobject  # this is the state
+        self.commandnumber = 1  # incremented upon performing an operation
+        self.requests = {}
         
     def msg_perform(self, msg):
-        self.state[message.commandnumber] = message.proposal
+        self.requests[message.commandnumber] = message.proposal
         command = msg.proposal.split()
         commandname = command[0]
         commandargs = command[1:]
