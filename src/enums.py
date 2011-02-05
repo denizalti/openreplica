@@ -12,8 +12,8 @@ MSG_ACCEPT, MSG_REJECT, MSG_PREPARE, MSG_PROPOSE, MSG_PERFORM, MSG_RESPONSE, \
     MSG_CLIENTREQUEST, MSG_CLIENTREPLY = range(11)
 
 # scout and commander return values
-SCOUT_NOREPLY, SCOUT_ADOPTED, SCOUT_BUSY, SCOUT_PREEMPTED = range(4)
-COMMANDER_CHOSEN, COMMANDER_BUSY, COMMANDER_PREEMPTED = range(4,7)
+LEADERMSG_NOREPLY, LEADERMSG_SCOUT_ADOPTED, LEADERMSG_SCOUT_BUSY, LEADERMSG_SCOUT_PREEMPTED, \
+LEADERMSG_COMMANDER_CHOSEN,LEADERMSG_COMMANDER_BUSY, LEADERMSG_COMMANDER_PREEMPTED = range(7)
 
 # node types 
 NODE_ACCEPTOR, NODE_LEADER, NODE_REPLICA, NODE_CLIENT = range(4)
@@ -30,7 +30,6 @@ def get_var_list(prefix):
     return [name for (value,name) in sorted(get_var_mappings(prefix).iteritems())]
 
 msg_names = get_var_list("MSG_")
-scout_names = get_var_list("SCOUT_")
-commander_names = get_var_list("COMMANDER_")
+leadermsg_names = get_var_list("LEADERMSG_")
 node_names = get_var_list("NODE_")
 
