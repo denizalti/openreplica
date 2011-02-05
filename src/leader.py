@@ -166,8 +166,10 @@ class Leader(Node):
                 elif replyFromCommander.type != SCOUT_NOREPLY:
                     print "There is a reply from Commander.."
                     if replyFromCommander.type == COMMANDER_CHOSEN:
+                        print "commander chosen.."
                         message = PaxosMessage(MSG_PERFORM,self.me,commandnumber=replyFromCommander.commandnumber,proposal=proposal)
                         self.groups[NODE_REPLICA].broadcast(self,message)
+                        print "broadcast done.."
                         self.incrementBallotNumber()
                         break
                     elif replyFromCommander.type == COMMANDER_PREEMPTED:
@@ -179,6 +181,7 @@ class Leader(Node):
                             continue
                 else:
                     print "[%s] shouldn't reach here.." % self
+        print "Returninggg!!!!!"
         return
    
     def cmd_command(self, args):
