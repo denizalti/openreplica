@@ -77,17 +77,18 @@ class HandshakeMessage(Message):
         return temp
 
 class PaxosMessage(Message):
-    def __init__(self,msgtype, myname, ballotnumber=0,commandnumber=0,proposal=None,givenpvalueset=None):
+    def __init__(self,msgtype, myname, ballotnumber=0,commandnumber=0,proposal=None,givenpvalueset=None,result=None):
         Message.__init__(self, msgtype, myname)
         self.ballotnumber = ballotnumber
         self.commandnumber = commandnumber
         self.proposal = proposal
         self.pvalueset = givenpvalueset
+        self.result = result
 
     def __str__(self):
         temp = Message.__str__(self)
-        temp += 'ballotnumber: %s commandnumber: %d proposal: %s pvalues: ' \
-            % (str(self.ballotnumber),self.commandnumber,self.proposal)
+        temp += 'ballotnumber: %s commandnumber: %d proposal: %s result: %s pvalues: ' \
+            % (str(self.ballotnumber),self.commandnumber,self.proposal,self.result)
         if self.pvalueset is not None:
             for pvalue in self.pvalueset:
                 temp += str(pvalue) + '\n'

@@ -101,9 +101,7 @@ class Leader(Node):
 
     def scoutChangeState(self, message, waitfor, replyToLeader):
         if message.type == MSG_ACCEPT:
-            print "Got an ACCEPT Message" 
             if message.ballotnumber == self.ballotnumber:
-                print "with the same ballotnumber.."
                 self.pvalueset = self.pvalueset.union(message.pvalueset)
                 waitfor -= 1
                 if waitfor < float(len(self.groups[NODE_ACCEPTOR]))/2:
@@ -121,7 +119,6 @@ class Leader(Node):
                     return
             # There is a higher ballotnumber
             else:
-                print "with another ballotnumber.."
                 with self.replyToLeader.replyLock:
                     self.replyToLeader.setType(SCOUT_PREEMPTED)
                     self.replyToLeader.setBallotnumber(self.ballotnumber)
@@ -131,9 +128,10 @@ class Leader(Node):
             print "[%s] scout received %s" % (self, message)
 
     def doCommand(self, commandnumber, proposal):
+        print "[%s] initiating command: %d:%s" % (self,commandnumber,proposal)
+        print "[%s] try with ballotnumber %s" % (self,str(self.ballotnumber))
         replyFromScout = scoutReply(self.replyLock,self.replyCondition)
         replyFromCommander = commanderReply(self.replyLock,self.replyCondition)
-        print "BALLOTNUMBER: ",self.ballotnumber
         chosenpvalue = PValue(ballotnumber=self.ballotnumber,commandnumber=commandnumber,proposal=proposal)
         scout_thread = Thread(target=self.scout,args=[replyFromScout])
         scout_thread.start()
@@ -142,8 +140,7 @@ class Leader(Node):
                 while replyFromScout.type == SCOUT_NOREPLY and replyFromCommander.type == SCOUT_NOREPLY:
                     self.replyCondition.wait()
                 if replyFromScout.type != SCOUT_NOREPLY:
-                    print "There is a reply from Scout.."
-                    print replyFromScout
+                    print "[%s] reply from scout %s" % (self,replyFromScout)
                     if replyFromScout.type == SCOUT_ADOPTED:
                         possiblepvalueset = PValueSet()
                         for pvalue in replyFromScout.pvalueset:
@@ -155,7 +152,6 @@ class Leader(Node):
                         replyFromScout = scoutReply(self.replyLock,self.replyCondition)
                         commander_thread = Thread(target=self.commander,args=[replyFromCommander,chosenpvalue])
                         commander_thread.start()
-                        print "Commander started.."
                         continue
                     elif replyFromScout.type == SCOUT_PREEMPTED:
                         if replyFromScout.ballotnumber > self.ballotnumber:
@@ -164,12 +160,10 @@ class Leader(Node):
                             scout = Scout(self.toPeer,self.acceptors,self.ballotnumber,replyFromScout)
                             scout.start()
                 elif replyFromCommander.type != SCOUT_NOREPLY:
-                    print "There is a reply from Commander.."
+                    print "[%s] reply from commander %s" % (self,replyFromCommander)
                     if replyFromCommander.type == COMMANDER_CHOSEN:
-                        print "commander chosen.."
                         message = PaxosMessage(MSG_PERFORM,self.me,commandnumber=replyFromCommander.commandnumber,proposal=proposal)
                         self.groups[NODE_REPLICA].broadcast(self,message)
-                        print "broadcast done.."
                         self.incrementBallotNumber()
                         break
                     elif replyFromCommander.type == COMMANDER_PREEMPTED:
@@ -181,7 +175,6 @@ class Leader(Node):
                             continue
                 else:
                     print "[%s] shouldn't reach here.." % self
-        print "Returninggg!!!!!"
         return
    
     def cmd_command(self, args):

@@ -29,9 +29,11 @@ class Replica(Node):
         commandargs = command[1:]
         try:
             method = getattr(self.object, commandname)
-            method(commandargs)
+            result = method(commandargs)
         except AttributeError:
             print "command not supported: %s" % (command)
+        replymsg = PaxosMessage(MSG_RESPONSE,self.me,commandnumber=msg.commandnumber,result=result)
+        conn.send(replymsg)
     
     def cmd_showobject(self, args):
         print self.object

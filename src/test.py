@@ -4,7 +4,11 @@ class Test():
         self.state = ""
 
     def append(self, args):
-        self.state += args[0]
+        try:
+            self.state += args[0]
+        except:
+            return 'FAIL'
+        return 'SUCCESS'
 
     def __str__(self):
         return self.state
