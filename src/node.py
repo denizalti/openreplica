@@ -91,7 +91,6 @@ class Node():
             try:
                 # collect the set of all sockets that we want to listen to
                 socketset = [self.socket]  # add the server socket
-                print self.connectionpool.poolbypeer
                 for peerid,conn in self.connectionpool.poolbypeer.iteritems():
                     socketset.append(conn.thesocket)
                 for s,timestamp in nascentset:
@@ -119,11 +118,10 @@ class Node():
         return
         
     def handleConnection(self, clientsock):
-        # XXX should look this up in the connection pool, no need to create a new object
-        connection = Connection(clientsock)
+        # look this up in the connection pool, no need to create a new object
+        connection = self.connectionpool.getConnectionBySocket(clientsock)
         message = connection.receive()
         print "[%s] got message %s" % (self.id, message)
-            
         mname = "msg_%s" % msg_names[message.type].lower()
         try:
             method = getattr(self, mname)

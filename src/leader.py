@@ -83,7 +83,7 @@ class Leader(Node):
 
             print prc.nresponses, prc.nquorum
             if prc.nresponses >= prc.nquorum:
-                print "suffiently many accepts on prepare"
+                print "[%s] suffiently many accepts on prepare" % (self,)
                 # choose a p-value out of the set encountered and collected so far
                 chosenpvalue = prc.possiblepvalueset.pickMaxBallotNumber()
                 # take this response collector out of the outstanding prepare set

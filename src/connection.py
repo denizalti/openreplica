@@ -5,6 +5,7 @@ import cPickle as pickle
 class ConnectionPool():
     def __init__(self):
         self.poolbypeer = {}
+        self.poolbysocket = {}
         
     def addConnectionToPeer(self, peer, conn):
         connectionkey = peer.id()
@@ -19,8 +20,17 @@ class ConnectionPool():
             thesocket.connect((peer.addr, peer.port))
             conn = Connection(thesocket)
             self.poolbypeer[connectionkey] = conn
+            self.poolbysocket[thesocket] = conn
             return conn
-            
+
+    def getConnectionBySocket(self, thesocket):
+        if self.poolbysocket.has_key(thesocket):
+            return self.poolbysocket[thesocket]
+        else:
+            conn = Connection(thesocket)
+            self.poolbysocket[thesocket] = conn
+            return conn
+
 class Connection():
     def __init__(self, socket):
         self.thesocket = socket
@@ -56,4 +66,3 @@ class Connection():
     def close(self):
         self.thesocket.close()
         self.thesocket = None
-        self.sd = None
