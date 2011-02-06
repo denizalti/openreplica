@@ -23,7 +23,7 @@ class ResponseCollector():
         self.proposal = proposal
         self.acceptors = acceptors
         self.ntotal = len(self.acceptors)
-        self.nquorum = math.ceil(float(self.ntotal)/2+1)
+        self.nquorum = min(math.ceil(float(self.ntotal)/2+1), self.ntotal)
 
         self.possiblepvalueset = PValueSet()
         self.possiblepvalueset.add(PValue(ballotnumber=self.ballotnumber,commandnumber=commandnumber,proposal=proposal))
@@ -67,63 +67,64 @@ class Leader(Node):
         print "[%s] did broadcast" % (self,)
 
     def msg_prepare_accept(self, conn, msg):
-        print "[%s] got an accept for ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, prc.nresponses, prc.ntotal)
         if self.outstandingprepares.has_key(msg.inresponseto):
             prc = self.outstandingprepares[msg.inresponseto]
+            print "[%s] got an accept for ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, prc.nresponses, prc.ntotal)
             prc.nresponses += 1
             if msg.ballotnumber > prc.ballotnumber:
                 print "!!!!!!!!!!!!!!!!! prc ballot number error, should not happen"
 
             prc.naccepts += 1
             # collect all the p-values from responses that have the same command number as me
-            for pvalue in msg.pvalueset:
-                if pvalue.commandnumber == prc.commandnumber:
-                    prc.possiblepvalueset.add(pvalue)
+            if msg.pvalueset is not None:
+                for pvalue in msg.pvalueset.pvalues:
+                    if pvalue.commandnumber == prc.commandnumber:
+                        prc.possiblepvalueset.add(pvalue)
 
-            if prc.nresponses > prc.nquorum and prc.nrejects == 0:
+            print prc.nresponses, prc.nquorum
+            if prc.nresponses >= prc.nquorum:
+                print "suffiently many accepts on prepare"
                 # choose a p-value out of the set encountered and collected so far
-                chosenpvalue = possiblepvalueset.pickMaxBallotNumber()
+                chosenpvalue = prc.possiblepvalueset.pickMaxBallotNumber()
                 # take this response collector out of the outstanding prepare set
                 del self.outstandingprepares[msg.inresponseto]
                 # create a new response collector for the PROPOSE
-                newprc = ResponseCollector(prc.acceptors, prc.ballotno)
-                self.outstandingproposes[myballotno] = newprc
-                propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotno,chosenpvalue.commandnumber,chosenpvalue.proposal)
+                newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, prc.commandnumber, prc.proposal)
+                self.outstandingproposes[prc.ballotnumber] = newprc
+                propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotnumber,commandnumber=chosenpvalue.commandnumber,proposal=chosenpvalue.proposal)
                 # send PROPOSE message
                 prc.acceptors.broadcast(self, propose)
         else:
             print "[%s] there is no response collector" % (self,)
 
     def msg_prepare_reject(self, conn, msg):
-        print "[%s] got a reject for ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, prc.nresponses, prc.ntotal)
         if self.outstandingprepares.has_key(msg.inresponseto):
             prc = self.outstandingprepares[msg.inresponseto]
-            prc.nresponses += 1
-            prc.nrejects += 1
+            print "[%s] got a reject for ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, prc.nresponses, prc.ntotal)
             # take this response collector out of the outstanding prepare set
             del self.outstandingprepares[msg.inresponseto]
             # increment the ballot number
-            self.incrementBallotnumber()
+            self.incrementBallotNumber()
             # retry the prepare
             doCommand(prc.commandnumber, prc.proposal)
         else:
             print "[%s] there is no response collector" % (self,)
 
     def msg_propose_accept(self, conn, msg):
-        print "[%s] got an accept for proposal ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, prc.nresponses, prc.ntotal)
         if self.outstandingproposes.has_key(msg.inresponseto):
             prc = self.outstandingproposes[msg.inresponseto]
+            print "[%s] got an accept for proposal ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, prc.nresponses, prc.ntotal)
             prc.nresponses += 1
             if msg.ballotnumber > prc.ballotnumber:
                 print "!!!!!!!!!!!!!!!!! should not happen"
             prc.naccepts += 1
-            if prc.nresponses > prc.nquorum and prc.nrejects == 0:
+            if prc.nresponses >= prc.nquorum:
                 # YAY, WE AGREE!
-                self.incrementBallotnumber()
+                self.incrementBallotNumber()
                 # take this response collector out of the outstanding propose set
                 del self.outstandingproposes[msg.inresponseto]
                 # now we can perform this action on the replicas
-                propose = PaxosMessage(MSG_PERFORM,self.me,prc.commandnumber,prc.proposal)
+                propose = PaxosMessage(MSG_PERFORM,self.me,commandnumber=prc.commandnumber,proposal=prc.proposal)
                 self.groups[NODE_REPLICA].broadcast(self, propose)
         else:
             print "[%s] there is no response collector" % (self,)

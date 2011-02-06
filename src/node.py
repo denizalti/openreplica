@@ -9,6 +9,7 @@ import os
 import time
 import random
 import socket
+import select
 
 from enums import *
 from utils import findOwnIP
@@ -27,7 +28,7 @@ parser.add_option("-i", "--id", action="store", dest="accountid", type="int", de
 # TIMEOUT THREAD
 class Node():
     def __init__(self, mytype, port=options.port, bootstrap=options.bootstrap):
-        self.addr = findOwnIP()
+        self.addr = '128.84.60.7' # XXX findOwnIP()
         self.port = port
         self.connectionpool = ConnectionPool()
         self.type = mytype
@@ -86,17 +87,49 @@ class Node():
         return returnstr
     
     def serverLoop(self):
+        # XXX add the socket with a timestamp so we can prune and close old entries here
+        nascentset = []  # set of sockets on which we have not received a HELO yet
         while self.alive:
             try:
-                clientsock,clientaddr = self.socket.accept()
-                print "[%s] accepted a connection from address %s" % (self,clientaddr)
-                # Start a Thread
-                Thread(target=self.handleConnection,args =[clientsock]).start()
+                # collect the set of all sockets that we want to listen to
+                socketset = [self.socket]  # add the server socket
+                print self.connectionpool.poolbypeer
+                for peerid,conn in self.connectionpool.poolbypeer.iteritems():
+                    socketset.append(conn.thesocket)
+                for s in nascentset:
+                    socketset.append(s)
+
+                inputready,outputready,exceptready = select.select(socketset,[],socketset) 
+                
+                for s in inputready:
+                    if s == self.socket:
+                        clientsock,clientaddr = self.socket.accept()
+                        print "[%s] accepted a connection from address %s" % (self,clientaddr)
+                        nascentset.append(clientsock)
+                    else:
+                        self.handleConnection(s)
             except KeyboardInterrupt, EOFError:
                 os._exit(0)
         self.socket.close()
         return
         
+    def handleConnection(self, clientsock):
+        # XXX should look this up in the connection pool, no need to create a new object
+        connection = Connection(clientsock)
+        message = connection.receive()
+        print "[%s] got message %s" % (self.id, message)
+            
+        mname = "msg_%s" % msg_names[message.type].lower()
+        try:
+            method = getattr(self, mname)
+        except AttributeError:
+            print "message not supported: %s" % (message)
+            return
+        method(connection, message)
+
+    #
+    # message handlers
+    #
     def msg_helo(self, conn, msg):
         print "[%s] got a helo message" % self
         replymsg = HandshakeMessage(MSG_HELOREPLY,self.me,self.groups)
@@ -107,6 +140,7 @@ class Node():
             self.clients.add(msg.source)
         else:
             self.groups[msg.source.type].add(msg.source)
+        self.connectionpool.addConnectionToPeer(msg.source, conn)
         conn.send(replymsg)
 
     def msg_heloreply(self, conn, msg):
@@ -116,22 +150,9 @@ class Node():
     def msg_bye(self, conn, msg):
         self.groups[msg.source.type].remove(msg.source)
 
-    def handleConnection(self, clientsock):
-#        print "[%s] server loop ..." % self
-        connection = Connection(clientsock)
-        while True:
-            message = connection.receive()
-            print "[%s] got message %s" % (self.id, message)
-            
-            mname = "msg_%s" % msg_names[message.type].lower()
-            try:
-                method = getattr(self, mname)
-            except AttributeError:
-                print "message not supported: %s" % (message)
-            method(connection, message)
-        clientsock.close()
-
+    #
     # shell commands generic to all nodes
+    #
     def cmd_help(self, args):
         print "Commands I support:"
         for attr in dir(self):

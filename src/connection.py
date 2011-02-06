@@ -6,6 +6,10 @@ class ConnectionPool():
     def __init__(self):
         self.poolbypeer = {}
         
+    def addConnectionToPeer(self, peer, conn):
+        connectionkey = peer.id()
+        self.poolbypeer[connectionkey] = conn
+        
     def getConnectionToPeer(self, peer):
         connectionkey = peer.id()
         if self.poolbypeer.has_key(connectionkey):

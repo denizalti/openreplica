@@ -15,11 +15,10 @@ class Peer():
     def sendWaitReply(self, sendernode, message):
         connection = sendernode.connectionpool.getConnectionToPeer(self)
         connection.send(message)
-        if message.type != MSG_BYE:
-            return connection.receive()
-        else:
+        if message.type == MSG_BYE:
             connection.close()
             return None
+        return connection.receive()
 
     def send(self, sendernode, message):
         connection = sendernode.connectionpool.getConnectionToPeer(self)
