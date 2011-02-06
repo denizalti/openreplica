@@ -18,7 +18,6 @@ from group import Group
 from peer import Peer
 from message import Message,PaxosMessage,HandshakeMessage,PValue,PValueSet
 
-
 parser = OptionParser(usage="usage: %prog -p port -b bootstrap -d delay")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
@@ -28,7 +27,7 @@ parser.add_option("-i", "--id", action="store", dest="accountid", type="int", de
 # TIMEOUT THREAD
 class Node():
     def __init__(self, mytype, port=options.port, bootstrap=options.bootstrap):
-        self.addr = '128.84.60.7' # XXX findOwnIP()
+        self.addr = findOwnIP()
         self.port = port
         self.connectionpool = ConnectionPool()
         self.type = mytype
@@ -87,7 +86,6 @@ class Node():
         return returnstr
     
     def serverLoop(self):
-        # XXX add the socket with a timestamp so we can prune and close old entries here
         nascentset = []  # set of sockets on which we have not received a HELO yet
         while self.alive:
             try:
@@ -96,8 +94,15 @@ class Node():
                 print self.connectionpool.poolbypeer
                 for peerid,conn in self.connectionpool.poolbypeer.iteritems():
                     socketset.append(conn.thesocket)
-                for s in nascentset:
-                    socketset.append(s)
+                for s,timestamp in nascentset:
+                    # prune and close old sockets that never got turned into connections
+                    if time.time() - timestamp > HELOTIMEOUT:
+                        # expired -- if it's not already in the set, it should be closed
+                        if s not in socketset:
+                            socketset.remove((s,timestamp))
+                            s.close()
+                    else:
+                        socketset.append(s)
 
                 inputready,outputready,exceptready = select.select(socketset,[],socketset) 
                 
@@ -105,7 +110,7 @@ class Node():
                     if s == self.socket:
                         clientsock,clientaddr = self.socket.accept()
                         print "[%s] accepted a connection from address %s" % (self,clientaddr)
-                        nascentset.append(clientsock)
+                        nascentset.append((clientsock,time.time()))
                     else:
                         self.handleConnection(s)
             except KeyboardInterrupt, EOFError:
