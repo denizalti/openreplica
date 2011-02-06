@@ -161,6 +161,7 @@ class Node():
                         method = getattr(self, mname)
                     except AttributeError:
                         print "command not supported"
+                        continue
                     method(input)
             except ( KeyboardInterrupt,EOFError ):
                 os._exit(0)

@@ -22,7 +22,7 @@ class Connection():
         self.thesocket = socket
     
     def __str__(self):
-        return "Connection with Peer at addr: %s port: %d" % (self.addr, self.port)
+        return "Connection with Peer at addr: %s port: %d" % (self.thesocket.getsockname())
     
     def receive(self):
         try:

@@ -46,13 +46,8 @@ class Replica(Node):
         print self.object
 
 def main():
-    theReplica = Replica(Bank())
+    theReplica = Replica(Test())
     theReplica.startservice()
 
 if __name__=='__main__':
     main()
-
-  
-
-
-    

@@ -25,20 +25,9 @@ class Group():
                 self.members.add(peer)
         
     def broadcast(self,sendernode,msg):
-#        print "[%s]: broadcasting message" % sendernode
-        replies = []
-        # XXX not very efficient, does not have a timeout
-        # need to send to everyone at the same time, then collect
-        # responses as they come back
-        for member in self.members:
-            reply = member.sendWaitReply(sendernode,msg)
-            replies.append(reply)
-        return replies
-    
-    def broadcastNoReply(self,msg):
 #        print "DEBUG: broadcasting message.."
         for member in self.members:
-            member.send(msg)
+            member.send(sendernode,msg)
 
     def __str__(self):
         returnstr = ''

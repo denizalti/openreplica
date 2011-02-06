@@ -3,7 +3,7 @@ class Bank():
     def __init__(self):
         self.accounts = {}  # dictionary indexed by accountid storing accounts
 
-    def cmd_openaccount(self,args)
+    def cmd_openaccount(self,args):
         accountid = args[0]
         if self.accounts.has_key(accountid):
             print "Account already exists.."

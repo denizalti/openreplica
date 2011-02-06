@@ -21,10 +21,9 @@ class Peer():
             connection.close()
             return None
 
-    def send(self, message):
-        connection = Connection(self)
+    def send(self, sendernode, message):
+        connection = sendernode.connectionpool.getConnectionToPeer(self)
         connection.send(message)
-        connection.close()
     
     def __hash__(self):
         return self.id().__hash__()
