@@ -134,7 +134,6 @@ class Node():
                 
                 for s in inputready:
                     if s == self.socket:
-                        print "SELF.SOCKET!"
                         clientsock,clientaddr = self.socket.accept()
                         print "[%s] accepted a connection from address %s" % (self,clientaddr)
                         nascentset.append((clientsock,time.time()))

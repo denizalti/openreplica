@@ -81,7 +81,7 @@ class Leader(Node):
         return max(k for k, v in self.requests.iteritems() if v != 0) if len(self.requests) > 0 else 1
         
     def msg_clientrequest(self, conn, msg):
-        """Handler for a CLIENTREQUEST
+        """Handler for a MSG_CLIENTREQUEST
         A new Paxos Protocol is initiated with the first available commandnumber
         the Leader knows of.
         """
@@ -94,7 +94,9 @@ class Leader(Node):
         conn.send(clientreply)
 
     def msg_response(self, conn, msg):
-        print "DONE DEAL!"
+        """Handler for MSG_RESPONSE"""
+        print "[%s] Received response from Replica" % (self,)
+        print msg.result
 
     def doCommand(self, commandnumber, proposal):
         """Do a command with the given commandnumber and proposal.
@@ -110,12 +112,11 @@ class Leader(Node):
         """
         myballotno = self.ballotnumber
         print "[%s] initiating command: %d:%s" % (self,commandnumber,proposal)
-        print "[%s] try with ballotnumber %s" % (self,str(myballotno))
+        print "[%s] with ballotnumber %s" % (self,str(myballotno))
         prepare = PaxosMessage(MSG_PREPARE,self.me,myballotno)
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], myballotno, commandnumber, proposal)
         self.outstandingprepares[myballotno] = prc
         prc.acceptors.broadcast(self, prepare)
-        print "Do command DONE!"
 
     def msg_prepare_accept(self, conn, msg):
         """Handler for MSG_PREPARE_ACCEPT
@@ -142,8 +143,7 @@ class Leader(Node):
             prc = self.outstandingprepares[msg.inresponseto]
             print "[%s] got an accept for ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, prc.nresponses, prc.ntotal)
             prc.nresponses += 1
-            if msg.ballotnumber > prc.ballotnumber:
-                print "!!!!!!!!!!!!!!!!! prc ballotnumber error, should not happen"
+            assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PREPARE_ACCEPT can't have non-matching ballotnumber" % self
 
             prc.naccepts += 1
             # collect all the p-values from responses that have the same commandnumber as me
@@ -213,8 +213,7 @@ class Leader(Node):
             prc = self.outstandingproposes[msg.inresponseto]
             print "[%s] got an accept for proposal ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, prc.nresponses, prc.ntotal)
             prc.nresponses += 1
-            if msg.ballotnumber > prc.ballotnumber:
-                print "!!!!!!!!!!!!!!!!! should not happen"
+            assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PROPOSE_ACCEPT can't have non-matching ballotnumber" % self
             prc.naccepts += 1
             if prc.nresponses >= prc.nquorum:
                 # YAY, WE AGREE!
