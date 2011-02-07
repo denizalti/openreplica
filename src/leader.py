@@ -9,11 +9,15 @@ import random
 import math
 
 from node import Node
+from replica import Replica
 from enums import *
 from connection import ConnectionPool
 from group import Group
 from peer import Peer
 from message import ClientMessage,Message,PaxosMessage,HandshakeMessage,PValue,PValueSet
+
+from test import Test
+from bank import Bank
 
 # Class used to collect responses to both PREPARE and PROPOSE messages
 class ResponseCollector():
@@ -48,7 +52,7 @@ class ResponseCollector():
         self.possiblepvalueset.add(PValue(ballotnumber=self.ballotnumber,commandnumber=commandnumber,proposal=proposal))
         self.nresponses = self.naccepts = self.rejects = 0
 
-class Leader(Node):
+class Leader(Node,Replica):
     """Leader extends a Node and keeps additional state about the Paxos Protocol and Commands in progress."""
     def __init__(self):
         """Initialize Leader
@@ -57,6 +61,7 @@ class Leader(Node):
         - ballotnumber: the highest ballotnumber Leader has used
         - pvalueset: the PValueSet for Leader, which encloses all
         (ballotnumber,commandnumber,proposal) triples Leader knows about
+        - object: the object that Leader is replicating (as it is a Replica too)
         - commandnumber: the highest commandnumber Leader knows about
         - outstandingprepares: ResponseCollector dictionary for MSG_PREPARE,
         indexed by ballotnumber
@@ -64,9 +69,10 @@ class Leader(Node):
         indexed by ballotnumber
         """
         Node.__init__(self, NODE_LEADER)
+        Replica.__init__(self, Test())
+        
         self.ballotnumber = (0,self.id)
         self.pvalueset = PValueSet()
-
         self.commandnumber = 1  # incremented upon performing an operation
         self.outstandingprepares = {}
         self.outstandingproposes = {}
@@ -207,7 +213,8 @@ class Leader(Node):
         -- update the ballotnumber (for use in the next PREPARE STAGE)
         -- remove the old ResponseCollector from the outstanding prepare set
         -- create MSG_PERFORM: message carries the chosen commandnumber and proposal.
-        -- broadcast MSG_PERFORM to all Replicas
+        -- broadcast MSG_PERFORM to all Replicas and Leaders
+        -- execute the command
         """
         if self.outstandingproposes.has_key(msg.inresponseto):
             prc = self.outstandingproposes[msg.inresponseto]
@@ -221,8 +228,10 @@ class Leader(Node):
                 # take this response collector out of the outstanding propose set
                 del self.outstandingproposes[msg.inresponseto]
                 # now we can perform this action on the replicas
-                propose = PaxosMessage(MSG_PERFORM,self.me,commandnumber=prc.commandnumber,proposal=prc.proposal)
-                self.groups[NODE_REPLICA].broadcast(self, propose)
+                perform = PaxosMessage(MSG_PERFORM,self.me,commandnumber=prc.commandnumber,proposal=prc.proposal)
+                self.groups[NODE_REPLICA].broadcast(self, perform)
+                self.groups[NODE_LEADER].broadcast(self, perform)
+                self.self_perform(perform)
         else:
             print "[%s] there is no response collector" % (self,)
 
@@ -250,6 +259,19 @@ class Leader(Node):
             doCommand(prc.commandnumber, prc.proposal)
         else:
             print "[%s] there is no response collector" % (self,)
+
+    def self_perform(self, msg):
+        """Performs the command in the given MSG_PERFORM"""
+        self.requests[msg.commandnumber] = msg.proposal
+        command = msg.proposal.split()
+        commandname = command[0]
+        commandargs = command[1:]
+        try:
+            method = getattr(self.object, commandname)
+            givenresult = method(commandargs)
+        except AttributeError:
+            print "command not supported: %s" % (command)
+            return
 
     def cmd_command(self, args):
         """Shell command [command]: Initiate a new command.

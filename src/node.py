@@ -93,7 +93,7 @@ class Node():
         
     def __str__(self):
         """Return Node information (addr:port)"""
-        return "%s:%d" % (self.addr, self.port)
+        return "%s  %s:%d" % (node_names[self.type], self.addr, self.port)
 
     def statestr(self):
         """Return the Peers Node knows of, i.e. connectivity state"""
@@ -203,8 +203,8 @@ class Node():
         self.alive = False
         byeMessage = Message(MSG_BYE,self.me)
         for type,group in self.groups.iteritems():
-            group.broadcast(self,byeMessage)
-        self.me.send(byeMessage)
+            group.broadcast(self, byeMessage)
+        self.me.send(self, byeMessage)
                     
     def cmd_state(self, args):
         """Shell command [state]: Prints connectivity state of the corresponding Node."""

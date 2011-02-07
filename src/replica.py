@@ -27,7 +27,6 @@ class Replica(Node):
         """
         Node.__init__(self, NODE_REPLICA)
         self.object = replicatedobject  # this is the state
-        self.commandnumber = 1  # incremented upon performing an operation
         self.requests = {}
 
     def msg_perform(self, conn, msg):
