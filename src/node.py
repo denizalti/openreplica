@@ -116,24 +116,25 @@ class Node():
             try:
                 # collect the set of all sockets that we want to listen to
                 socketset = [self.socket]  # add the server socket
-                for peerid,conn in self.connectionpool.poolbypeer.iteritems():
+                for conn in self.connectionpool.poolbypeer.itervalues():
                     socketset.append(conn.thesocket)
                 for s,timestamp in nascentset:
                     # prune and close old sockets that never got turned into connections
                     if time.time() - timestamp > HELOTIMEOUT:
                         # expired -- if it's not already in the set, it should be closed
                         if s not in socketset:
-                            socketset.remove((s,timestamp))
+                            nascentset.remove((s,timestamp))
                             s.close()
-                    else:
+                    elif s not in socketset:
+                        # check if it has been added before
                         socketset.append(s)
-
-                inputready,outputready,exceptready = select.select(socketset,[],socketset) 
+                        
+                assert len(socketset) == len(set(socketset)), "[%s] socketset has Duplicates." % self
+                inputready,outputready,exceptready = select.select(socketset,[],socketset)
                 
                 for s in inputready:
-                    # XXX is the time that we didn't receive a HELO yet the only time that
-                    # XXX this case holds?
                     if s == self.socket:
+                        print "SELF.SOCKET!"
                         clientsock,clientaddr = self.socket.accept()
                         print "[%s] accepted a connection from address %s" % (self,clientaddr)
                         nascentset.append((clientsock,time.time()))
@@ -161,9 +162,7 @@ class Node():
     # message handlers
     #
     def msg_helo(self, conn, msg):
-        """Handler for MSG_HELO
-        
-        """
+        """Handler for MSG_HELO"""
         print "[%s] got a helo message" % self
         replymsg = HandshakeMessage(MSG_HELOREPLY,self.me,self.groups)
         # XXX THIS IS WRONG!!!!
@@ -203,7 +202,7 @@ class Node():
     def cmd_exit(self, args):
         """Shell command [exit]: Changes the liveness state and send MSG_BYE to Peers.""" 
         self.alive = False
-        byeMessage = Message(MSG_BYE,source=self.me)
+        byeMessage = Message(MSG_BYE,self.me)
         for type,group in self.groups.iteritems():
             group.broadcast(self,byeMessage)
         self.me.send(byeMessage)

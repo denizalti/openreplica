@@ -19,7 +19,7 @@ LEADERMSG_COMMANDER_CHOSEN,LEADERMSG_COMMANDER_BUSY, LEADERMSG_COMMANDER_PREEMPT
 # node types 
 NODE_ACCEPTOR, NODE_LEADER, NODE_REPLICA, NODE_CLIENT = range(4)
 
-HELOTIMEOUT=30
+HELOTIMEOUT=5
 
 ###########################
 # code to convert enum variables to strings of different kinds

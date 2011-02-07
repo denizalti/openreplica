@@ -93,6 +93,9 @@ class Leader(Node):
         clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"SUCCESS")
         conn.send(clientreply)
 
+    def msg_response(self, conn, msg):
+        print "DONE DEAL!"
+
     def doCommand(self, commandnumber, proposal):
         """Do a command with the given commandnumber and proposal.
         A command is initiated by running a Paxos Protocol for the command.
@@ -112,6 +115,7 @@ class Leader(Node):
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], myballotno, commandnumber, proposal)
         self.outstandingprepares[myballotno] = prc
         prc.acceptors.broadcast(self, prepare)
+        print "Do command DONE!"
 
     def msg_prepare_accept(self, conn, msg):
         """Handler for MSG_PREPARE_ACCEPT
@@ -134,6 +138,7 @@ class Leader(Node):
         --- broadcast MSG_PROPOSE to the same Acceptor nodes from the PREPARE STAGE
         """
         if self.outstandingprepares.has_key(msg.inresponseto):
+            print "Found the key for the outstandingprepare %s" %str(msg.inresponseto)
             prc = self.outstandingprepares[msg.inresponseto]
             print "[%s] got an accept for ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, prc.nresponses, prc.ntotal)
             prc.nresponses += 1
