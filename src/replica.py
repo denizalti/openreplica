@@ -18,15 +18,30 @@ from test import Test
 from bank import Bank
 
 class Replica(Node):
+    """Replica receives MSG_PERFORM from Leaders and execute corresponding commands."""
     def __init__(self, replicatedobject):
+        """Initialize Replica
+
+        Replica State
+        - object: the object that Replica is replicating
+        - commandnumber: the highest commandnumber Replica knows about
+        - requests: received requests indexed by commandnumbers
+        """
         Node.__init__(self, NODE_REPLICA)
         self.object = replicatedobject  # this is the state
         self.commandnumber = 1  # incremented upon performing an operation
         self.requests = {}
 
-    # TODO: According to the paper the replica gets the Client identifier and sends the response to the Client
-    # Wouldn't this cause multiple responses to the Client?
     def msg_perform(self, conn, msg):
+        """Handler for MSG_PERFORM
+
+        Upon receiving MSG_PERFORM Replica updates its state and executes the
+        command in the request.
+        - Add the request to the requests dictionary
+        - Execute the command in the request on the replicated object
+        - create MSG_RESPONSE: message carries the commandnumber and the result of the command
+        - send MSG_RESPONSE to Leader
+        """
         self.requests[msg.commandnumber] = msg.proposal
         command = msg.proposal.split()
         commandname = command[0]
@@ -43,6 +58,7 @@ class Replica(Node):
         conn.send(replymsg)
     
     def cmd_showobject(self, args):
+        """Shell command [showobject]: Print Replicated Object information""" 
         print self.object
 
 def main():

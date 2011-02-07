@@ -26,7 +26,27 @@ parser.add_option("-i", "--id", action="store", dest="accountid", type="int", de
 
 # TIMEOUT THREAD
 class Node():
+    """Node encloses the basic Node behaviour and state that
+    are extended by Leaders, Acceptors or Replicas.
+    """ 
     def __init__(self, mytype, port=options.port, bootstrap=options.bootstrap):
+    """Initialize Node
+
+    Node State
+    - addr: hostname for Node, detected automatically
+    - port: port for Node, can be taken from the commandline (-p [port]) or
+    detected automatically by binding.
+    - socket: socket of Node
+    - connectionpool: ConnectionPool that keeps all Connections Node knows about
+    - type: type of the corresponding Node: NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA
+    - alive: liveness of Node
+    - me: Peer object that represents Node
+    - id: id for Node (addr:port)
+    - groups: other Peers in the system that Node knows about. Node.groups is indexed by the
+    corresponding node_name (NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA), which returns a Group
+    """
+
+        - Node finds an available port and opens a socket on that port.
         self.addr = findOwnIP()
         self.port = port
         self.connectionpool = ConnectionPool()
@@ -48,7 +68,6 @@ class Node():
         self.me = Peer(self.addr,self.port,self.type)
         self.id = self.me.id()
         self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_LEADER:Group(self.me)}
-        self.clients = Group(self.me)
 
         # connect to the bootstrap node
         print "[%s] starting up..." % self
@@ -60,15 +79,13 @@ class Node():
             heloreply = bootpeer.sendWaitReply(self, helomessage)
             print "[%s] received %s" % (self, heloreply)
             bootpeer = heloreply.source
-            if self.type == NODE_CLIENT:
-                self.server = bootpeer
-            else:
-                self.groups[bootpeer.type].add(bootpeer)
+            self.groups[bootpeer.type].add(bootpeer)
             
             for type,group in self.groups.iteritems():
                 group.union(heloreply.groups[type])
 
     def startservice(self):
+        """Start a server and a shell thread"""
         # Start a thread with the server which will start a thread for each request
         server_thread = Thread(target=self.serverLoop)
         server_thread.start()
@@ -77,16 +94,26 @@ class Node():
         input_thread.start()
         
     def __str__(self):
+        """Return Node information (addr:port)"""
         return "%s:%d" % (self.addr, self.port)
 
     def statestr(self):
+        """Return the Peers Node knows of, i.e. connectivity state"""
         returnstr = "state: "
         for type,group in self.groups.iteritems():
             returnstr += str(group)
         return returnstr
     
     def serverLoop(self):
-        nascentset = []  # set of sockets on which we have not received a HELO yet
+        """Serverloop that listens to multiple sockets and accepts connections.
+
+        Server State
+        - nascentset: set of sockets on which a MSG_HELO has not been received yet
+        - socketset: sockets the server waits on
+        - inputready: sockets that are ready for reading
+        - exceptready: sockets that are ready according to an *exceptional condition*
+        """
+        nascentset = []
         while self.alive:
             try:
                 # collect the set of all sockets that we want to listen to
@@ -106,6 +133,8 @@ class Node():
                 inputready,outputready,exceptready = select.select(socketset,[],socketset) 
                 
                 for s in inputready:
+                    # XXX is the time that we didn't receive a HELO yet the only time that
+                    # XXX this case holds?
                     if s == self.socket:
                         clientsock,clientaddr = self.socket.accept()
                         print "[%s] accepted a connection from address %s" % (self,clientaddr)
@@ -118,7 +147,7 @@ class Node():
         return
         
     def handleConnection(self, clientsock):
-        # look this up in the connection pool, no need to create a new object
+        """Receives a message and calls the corresponding message handler"""
         connection = self.connectionpool.getConnectionBySocket(clientsock)
         message = connection.receive()
         print "[%s] got message %s" % (self.id, message)
@@ -134,6 +163,9 @@ class Node():
     # message handlers
     #
     def msg_helo(self, conn, msg):
+        """Handler for MSG_HELO
+        
+        """
         print "[%s] got a helo message" % self
         replymsg = HandshakeMessage(MSG_HELOREPLY,self.me,self.groups)
         # XXX THIS IS WRONG!!!!
@@ -147,22 +179,31 @@ class Node():
         conn.send(replymsg)
 
     def msg_heloreply(self, conn, msg):
+        """Handler for MSG_HELOREPLY
+        Merges own Peer Groups with the ones in the MSG_HELOREPLY
+        """
         for type,group in self.groups.iteritems():
             group.mergeList(msg.groups[type])
 
     def msg_bye(self, conn, msg):
+        """Handler for MSG_BYE
+        Deletes the source of MSG_BYE from groups
+        """
         self.groups[msg.source.type].remove(msg.source)
 
     #
     # shell commands generic to all nodes
     #
     def cmd_help(self, args):
+        """Shell command [help]: Prints the commands that are supported
+        by the corresponding Node.""" 
         print "Commands I support:"
         for attr in dir(self):
             if attr.startswith("cmd_"):
                 print attr.replace("cmd_", "")
 
     def cmd_exit(self, args):
+        """Shell command [exit]: Changes the liveness state and send MSG_BYE to Peers.""" 
         self.alive = False
         byeMessage = Message(MSG_BYE,source=self.me)
         for type,group in self.groups.iteritems():
@@ -170,9 +211,13 @@ class Node():
         self.me.send(byeMessage)
                     
     def cmd_state(self, args):
+         """Shell command [state]: Prints connectivity state of the corresponding Node."""
         print "[%s] %s\n" % (self, self.statestr())
 
     def getInputs(self):
+        """Shellloop that accepts inputs from the command prompt and calls corresponding command
+        handlers.
+        """
         while self.alive:
             try:
                 input = raw_input("paxos-shell> ")

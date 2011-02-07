@@ -1,6 +1,6 @@
 '''
 @author: denizalti
-@note: The Client connects to a Leader and makes requests.
+@note: The Client
 @date: February 1, 2011
 '''
 import socket
@@ -21,7 +21,16 @@ parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="addres
 (options, args) = parser.parse_args()
 
 class Client():
+    """Client sends requests and receives responses"""
     def __init__(self, bootstrap):
+        """Initialize Client
+
+        Client State
+        - socket: socket of Client
+        - me: Peer instance of Client
+        - conn: Connection on Client's socket
+        - alive: liveness of Client
+        """
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         bootaddr,bootport = bootstrap.split(":")
@@ -29,11 +38,13 @@ class Client():
         myaddr = findOwnIP()
         myport = self.socket.getsockname()[1]
         self.me = Peer(myaddr,myport,NODE_CLIENT)
-        self.id = self.me.id()
         self.conn = Connection(self.socket)
         self.alive = True
         
     def clientloop(self):
+        """Accepts commands from the prompt and sends requests for the commands
+        and receives corresponding replies.
+        """
         while self.alive:
             try:
                 input = raw_input("client-shell> ")
