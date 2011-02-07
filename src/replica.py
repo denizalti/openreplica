@@ -8,12 +8,10 @@ from threading import Thread, Lock, Condition
 from node import Node
 from enums import *
 from utils import *
-from communicationutils import *
-from connection import Connection
+from connection import Connection,ConnectionPool
 from group import Group
 from peer import Peer
-from message import Message
-
+from message import Message,PaxosMessage,HandshakeMessage,PValue,PValueSet
 from test import Test
 from bank import Bank
 

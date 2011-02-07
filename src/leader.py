@@ -70,10 +70,10 @@ class Leader(Node):
         self.commandnumber = 1  # incremented upon performing an operation
         self.outstandingprepares = {}
         self.outstandingproposes = {}
-        
-    def incrementBallotNumber(self):
-        """Increment the numeric part of the ballotnumber."""
-        temp = (self.ballotnumber[0]+1,self.ballotnumber[1])
+
+    def updateBallotnumber(self,seedballotnumber):
+        """Update the ballotnumber with a higher value than given ballotnumber"""
+        temp = (seedballotnumber[0]+5,self.ballotnumber[1])
         self.ballotnumber = temp
         
     def getHighestCommandNumber(self):
@@ -174,7 +174,7 @@ class Leader(Node):
         State Updates:
         - kill the PREPARE STAGE that received a MSG_PREPARE_REJECT
         -- remove the old ResponseCollector from the outstanding prepare set
-        - increment the ballotnumber
+        - update the ballotnumber
         - call doCommand() to start a new PREPARE STAGE:
         """
         if self.outstandingprepares.has_key(msg.inresponseto):
@@ -182,8 +182,8 @@ class Leader(Node):
             print "[%s] got a reject for ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, prc.nresponses, prc.ntotal)
             # take this response collector out of the outstanding prepare set
             del self.outstandingprepares[msg.inresponseto]
-            # increment the ballot number
-            self.incrementBallotNumber()
+            # update the ballot number
+            self.updateBallotnumber(msg.ballotnumber)
             # retry the prepare
             doCommand(prc.commandnumber, prc.proposal)
         else:
@@ -199,7 +199,7 @@ class Leader(Node):
         State Updates:
         - nresponses and naccepts are incremented
         - if naccepts is greater than the quorum size, PROPOSE STAGE is successful.
-        -- increment the ballotnumber (for use in the next PREPARE STAGE)
+        -- update the ballotnumber (for use in the next PREPARE STAGE)
         -- remove the old ResponseCollector from the outstanding prepare set
         -- create MSG_PERFORM: message carries the chosen commandnumber and proposal.
         -- broadcast MSG_PERFORM to all Replicas
@@ -213,7 +213,7 @@ class Leader(Node):
             prc.naccepts += 1
             if prc.nresponses >= prc.nquorum:
                 # YAY, WE AGREE!
-                self.incrementBallotNumber()
+                self.updateBallotnumber(self.ballotnumber)
                 # take this response collector out of the outstanding propose set
                 del self.outstandingproposes[msg.inresponseto]
                 # now we can perform this action on the replicas
@@ -232,7 +232,7 @@ class Leader(Node):
         State Updates:
         - kill the PROPOSE STAGE that received a MSG_PROPOSE_REJECT
         -- remove the old ResponseCollector from the outstanding prepare set
-        - increment the ballotnumber
+        - update the ballotnumber
         - call doCommand() to start a new PREPARE STAGE:
         """
         if self.outstandingproposes.has_key(msg.inresponseto):
@@ -240,8 +240,8 @@ class Leader(Node):
             print "[%s] got a reject for proposal ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, prc.nresponses, prc.ntotal)
             # take this response collector out of the outstanding propose set
             del self.outstandingproposes[msg.inresponseto]
-            # increment the ballot number
-            self.incrementBallotnumber()
+            # update the ballot number
+            self.updateBallotnumber(msg.ballotnumber)
             # retry the prepare
             doCommand(prc.commandnumber, prc.proposal)
         else:

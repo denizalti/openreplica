@@ -69,7 +69,7 @@ class PValueSet():
         """Returns PValueSet information"""
         temp = ''
         for pvalue in self.pvalues:
-            temp += pvalue
+            temp += str(pvalue)
         return temp
 
 class PValue():
@@ -106,7 +106,7 @@ class PValue():
     
     def __str__(self):
         """Returns PValue information"""
-        return 'PValue((%d,%d),%d,%s)' % (self.ballotnumber[0],self.ballotnumber[1],self.commandnumber,self.proposal.strip("\x00"))
+        return 'PValue((%d,%s),%d,%s)' % (self.ballotnumber[0],self.ballotnumber[1],self.commandnumber,self.proposal.strip("\x00"))
 
 
 # HELO and HELOREPLY messages

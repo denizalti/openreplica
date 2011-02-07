@@ -30,23 +30,21 @@ class Node():
     are extended by Leaders, Acceptors or Replicas.
     """ 
     def __init__(self, mytype, port=options.port, bootstrap=options.bootstrap):
-    """Initialize Node
+        """Initialize Node
 
-    Node State
-    - addr: hostname for Node, detected automatically
-    - port: port for Node, can be taken from the commandline (-p [port]) or
-    detected automatically by binding.
-    - socket: socket of Node
-    - connectionpool: ConnectionPool that keeps all Connections Node knows about
-    - type: type of the corresponding Node: NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA
-    - alive: liveness of Node
-    - me: Peer object that represents Node
-    - id: id for Node (addr:port)
-    - groups: other Peers in the system that Node knows about. Node.groups is indexed by the
-    corresponding node_name (NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA), which returns a Group
-    """
-
-        - Node finds an available port and opens a socket on that port.
+        Node State
+        - addr: hostname for Node, detected automatically
+        - port: port for Node, can be taken from the commandline (-p [port]) or
+        detected automatically by binding.
+        - socket: socket of Node
+        - connectionpool: ConnectionPool that keeps all Connections Node knows about
+        - type: type of the corresponding Node: NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA
+        - alive: liveness of Node
+        - me: Peer object that represents Node
+        - id: id for Node (addr:port)
+        - groups: other Peers in the system that Node knows about. Node.groups is indexed by the
+        corresponding node_name (NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA), which returns a Group
+        """
         self.addr = findOwnIP()
         self.port = port
         self.connectionpool = ConnectionPool()
@@ -211,7 +209,7 @@ class Node():
         self.me.send(byeMessage)
                     
     def cmd_state(self, args):
-         """Shell command [state]: Prints connectivity state of the corresponding Node."""
+        """Shell command [state]: Prints connectivity state of the corresponding Node."""
         print "[%s] %s\n" % (self, self.statestr())
 
     def getInputs(self):
