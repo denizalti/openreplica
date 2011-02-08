@@ -1,0 +1,44 @@
+""" This file keeps the outstanding changes and thoughts
+we have about paxi.
+"""
+
+*** CHANGES TO THE CODE ***
+ResponseCollector   : 'received' keeps <peer:reply> mappings
+		      	       	  upon receiving a reply the Response Collector adds it to 'received'
+				  if a reply is coming for the second time it overwrites the old one
+				  the length of 'received' determines if quorum is reached or not
+
+Leader			: 'proposals' keeps <commandnumber:proposal> mappings with the 
+			  	   highest ballotnumber
+				   Leader updates proposals by pMax(possiblepvalueset)
+				   Leader goes over all proposals in this dictionary and sends a PROPOSE for each
+
+Replica			 : 'requests' keeps <commandnumber:commandstate> mappings
+			  	   'commandstate' can be Executed,Decided,Running,None
+				   		  - Executed: The command corresponding to the commandnumber has 
+						    	      	     been both decided and executed.
+						  - Decided: The command corresponding to the commandnumber has 
+						    	     	     been decided but it is not executed yet (probably due to an 
+								     outstanding command prior to this command.)
+						  - Running: The commandnumber is assigned to a command but the 
+						    	     	     result is not known yet.
+						  - None: The commandnumber has not been assigned to any command.
+			  	   'nextcommandnumber' keeps the commandnumber that should be used for the next proposal
+				   'lastexecuted' keeps the commandnumber that has been executed
+
+Node			 : Periodic Liveness Messages should be added: MSG_PING
+			   	   
+
+
+
+*** TO THINK ABOUT ***
+- Messages have 'at least one semantics'; at which points should we check if a message has been received before or not?
+- How should the Leader and Replica states be updated so commandnumber allocation is done apropriately.
+- Should Leaders extend Replicas? 
+- How to make Leader not reissue all previous commands
+    -- Leader can have the state that Replica has (especially if the Leader extends a Replica) and not reissue command in the
+         Executed (maybe even Decided) state.
+    -- Leader can receive periodic "state of the system" messages from Replicas
+- How will Leader Failure be handled.
+- How will the weak Leader election be done.
+
