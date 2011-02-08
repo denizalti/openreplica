@@ -34,29 +34,29 @@ class Acceptor(Node):
         than the highest ballotnumber Acceptor has ever received.
 
         Replies:
-        - MSG_ACCEPT carries the ballotnumber that is received and all pvalues
+        - MSG_PREPARE_ADOPTED carries the ballotnumber that is received and all pvalues
         accepted thus far.
-        - MSG_REJECT carries the highest ballotnumber Acceptor has seen and all
+        - MSG_PREPARE_PREEMPTED carries the highest ballotnumber Acceptor has seen and all
         pvalues accepted thus far.
         """
         if msg.ballotnumber > self.ballotnumber:
             print "[%s] prepare received with acceptable ballotnumber %s" % (self, str(msg.ballotnumber))
             self.ballotnumber = msg.ballotnumber
-            replymsg = PaxosMessage(MSG_PREPARE_ACCEPT,self.me,self.ballotnumber,msg.ballotnumber,givenpvalueset=self.accepted)
+            replymsg = PaxosMessage(MSG_PREPARE_ADOPTED,self.me,self.ballotnumber,msg.ballotnumber,givenpvalueset=self.accepted)
         else:
             print "[%s] prepare received with non-acceptable ballotnumber %s" % (self, str(msg.ballotnumber))
-            replymsg = PaxosMessage(MSG_PREPARE_REJECT,self.me,self.ballotnumber,msg.ballotnumber,givenpvalueset=self.accepted)
+            replymsg = PaxosMessage(MSG_PREPARE_PREEMPTED,self.me,self.ballotnumber,msg.ballotnumber,givenpvalueset=self.accepted)
         print "[%s] prepare responding to ballotnumber %s" % (self, str(msg.ballotnumber))
         conn.send(replymsg)
 
     def msg_propose(self, conn, msg):
-        """Handler for MSG_PREPARE.
+        """Handler for MSG_PROPOSE.
         MSG_PROPOSE is accepted only if it carries a ballotnumber greater
         than the highest ballotnumber Acceptor has received.
 
         Replies:
-        - MSG_ACCEPT carries the ballotnumber and the commandnumber that are received.
-        - MSG_REJECT carries the highest ballotnumber Acceptor has seen and the
+        - MSG_PROPOSE_ACCEPT carries the ballotnumber and the commandnumber that are received.
+        - MSG_PROPOSE_REJECT carries the highest ballotnumber Acceptor has seen and the
         commandnumber that is received.
         """
         if msg.ballotnumber >= self.ballotnumber:

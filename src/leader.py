@@ -38,13 +38,14 @@ class ResponseCollector():
         - naccepts: # accepts received thus far
         - nrejects: # rejects received thus far
 
-        - possiblepvalueset: Set of pvalues collected from Acceptor nodes
+        - possiblepvalueset: Set of pvalues collected from Acceptor
         with the matching commandnumber as the MSG
         """
         self.ballotnumber = ballotno
         self.commandnumber = commandnumber
         self.proposal = proposal
         self.acceptors = acceptors
+        
         self.ntotal = len(self.acceptors)
         self.nquorum = min(math.ceil(float(self.ntotal)/2+1), self.ntotal)
 
@@ -69,7 +70,6 @@ class Leader(Node,Replica):
         indexed by ballotnumber
         """
         Node.__init__(self, NODE_LEADER)
-        Replica.__init__(self, Test())
         
         self.ballotnumber = (0,self.id)
         self.pvalueset = PValueSet()
@@ -124,11 +124,11 @@ class Leader(Node,Replica):
         self.outstandingprepares[myballotno] = prc
         prc.acceptors.broadcast(self, prepare)
 
-    def msg_prepare_accept(self, conn, msg):
-        """Handler for MSG_PREPARE_ACCEPT
-        MSG_PREPARE_ACCEPT is handled only if it belongs to an outstanding MSG_PREPARE,
+    def msg_prepare_adopted(self, conn, msg):
+        """Handler for MSG_PREPARE_ADOPTED
+        MSG_PREPARE_ADOPTED is handled only if it belongs to an outstanding MSG_PREPARE,
         otherwise it is discarded.
-        When MSG_PREPARE_ACCEPT is received, the corresponding ResponseCollector is retrieved
+        When MSG_PREPARE_ADOPTED is received, the corresponding ResponseCollector is retrieved
         and its state is updated accordingly.
 
         State Updates:
@@ -149,7 +149,7 @@ class Leader(Node,Replica):
             prc = self.outstandingprepares[msg.inresponseto]
             print "[%s] got an accept for ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, prc.nresponses, prc.ntotal)
             prc.nresponses += 1
-            assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PREPARE_ACCEPT can't have non-matching ballotnumber" % self
+            assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PREPARE_ADOPTED can't have non-matching ballotnumber" % self
 
             prc.naccepts += 1
             # collect all the p-values from responses that have the same commandnumber as me
@@ -177,15 +177,15 @@ class Leader(Node,Replica):
         else:
             print "[%s] there is no response collector" % (self,)
 
-    def msg_prepare_reject(self, conn, msg):
-        """Handler for MSG_PREPARE_REJECT
-        MSG_PREPARE_REJECT is handled only if it belongs to an outstanding MSG_PREPARE,
+    def msg_prepare_preempted(self, conn, msg):
+        """Handler for MSG_PREPARE_PREEMPTED
+        MSG_PREPARE_PREEMPTED is handled only if it belongs to an outstanding MSG_PREPARE,
         otherwise it is discarded.
-        A MSG_PREPARE_REJECT causes the PREPARE STAGE to be unsuccessful, hence the current
+        A MSG_PREPARE_PREEMPTED causes the PREPARE STAGE to be unsuccessful, hence the current
         state is deleted and a ne PREPARE STAGE is initialized.
 
         State Updates:
-        - kill the PREPARE STAGE that received a MSG_PREPARE_REJECT
+        - kill the PREPARE STAGE that received a MSG_PREPARE_PREEMPTED
         -- remove the old ResponseCollector from the outstanding prepare set
         - update the ballotnumber
         - call doCommand() to start a new PREPARE STAGE:
@@ -261,19 +261,6 @@ class Leader(Node,Replica):
             doCommand(prc.commandnumber, prc.proposal)
         else:
             print "[%s] there is no response collector" % (self,)
-
-    def self_perform(self, msg):
-        """Performs the command in the given MSG_PERFORM"""
-        self.requests[msg.commandnumber] = msg.proposal
-        command = msg.proposal.split()
-        commandname = command[0]
-        commandargs = command[1:]
-        try:
-            method = getattr(self.object, commandname)
-            givenresult = method(commandargs)
-        except AttributeError:
-            print "command not supported: %s" % (command)
-            return
 
     def cmd_command(self, args):
         """Shell command [command]: Initiate a new command.

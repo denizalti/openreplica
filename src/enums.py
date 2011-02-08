@@ -7,7 +7,7 @@
 import enums
 
 # message types
-MSG_PREPARE, MSG_PREPARE_ACCEPT, MSG_PREPARE_REJECT, MSG_PROPOSE, MSG_PROPOSE_ACCEPT, MSG_PROPOSE_REJECT, \
+MSG_PREPARE, MSG_PREPARE_ADOPTED, MSG_PREPARE_PREEMPTED, MSG_PROPOSE, MSG_PROPOSE_ACCEPT, MSG_PROPOSE_REJECT, \
     MSG_HELO, MSG_HELOREPLY, MSG_BYE, \
     MSG_PERFORM, MSG_RESPONSE, \
     MSG_CLIENTREQUEST, MSG_CLIENTREPLY = range(13)
@@ -19,7 +19,14 @@ LEADERMSG_COMMANDER_CHOSEN,LEADERMSG_COMMANDER_BUSY, LEADERMSG_COMMANDER_PREEMPT
 # node types 
 NODE_ACCEPTOR, NODE_LEADER, NODE_REPLICA, NODE_CLIENT = range(4)
 
+# command states
+CMD_EXECUTED, CMD_DECIDED, CMD_RUNNING = range(3)
+
 HELOTIMEOUT=5
+
+# magic numbers
+COMMANDSTATE = 0
+COMMAND = 1
 
 ###########################
 # code to convert enum variables to strings of different kinds
@@ -35,4 +42,4 @@ def get_var_list(prefix):
 msg_names = get_var_list("MSG_")
 leadermsg_names = get_var_list("LEADERMSG_")
 node_names = get_var_list("NODE_")
-
+cmd_states = get_var_list("CMD_")

@@ -3,30 +3,20 @@ we have about paxi.
 """
 
 *** CHANGES TO THE CODE ***
-ResponseCollector   : 'received' keeps <peer:reply> mappings
+YYY				 : outstanding YYY
+				       
+ResponseCollector    : 'received' keeps <peer:reply> mappings
 		      	       	  upon receiving a reply the Response Collector adds it to 'received'
 				  if a reply is coming for the second time it overwrites the old one
 				  the length of 'received' determines if quorum is reached or not
 
-Leader			: 'proposals' keeps <commandnumber:proposal> mappings with the 
+Leader			  : 'proposals' keeps <commandnumber:proposal> mappings with the 
 			  	   highest ballotnumber
 				   Leader updates proposals by pMax(possiblepvalueset)
 				   Leader goes over all proposals in this dictionary and sends a PROPOSE for each
 
-Replica			 : 'requests' keeps <commandnumber:commandstate> mappings
-			  	   'commandstate' can be Executed,Decided,Running,None
-				   		  - Executed: The command corresponding to the commandnumber has 
-						    	      	     been both decided and executed.
-						  - Decided: The command corresponding to the commandnumber has 
-						    	     	     been decided but it is not executed yet (probably due to an 
-								     outstanding command prior to this command.)
-						  - Running: The commandnumber is assigned to a command but the 
-						    	     	     result is not known yet.
-						  - None: The commandnumber has not been assigned to any command.
-			  	   'nextcommandnumber' keeps the commandnumber that should be used for the next proposal
-				   'lastexecuted' keeps the commandnumber that has been executed
-
-Node			 : Periodic Liveness Messages should be added: MSG_PING
+Node			  : Periodic Liveness Messages should be added: MSG_PING
+Replica & enums	  : Magic Numbers added to enums for (COMMANDSTATE,COMMAND)
 			   	   
 
 
@@ -42,3 +32,23 @@ Node			 : Periodic Liveness Messages should be added: MSG_PING
 - How will Leader Failure be handled.
 - How will the weak Leader election be done.
 
+
+*** DONE ***
+Leader & Acceptor	 : The replies for PREPARE and PROPOSE should have different names:
+			       	       - MSG_PREPARE_ADOPTED
+				       - MSG_PREPARE_PREEMPTED
+				       - MSG_PROPOSE_ACCEPT
+				       - MSG_PROPOSE_REJECT
+
+Replica			 : 'requests' keeps <commandnumber:(commandstate,command/result)> mappings
+			  	   'commandstate' can be Executed,Decided,Running,None
+				   		  - Executed: The command corresponding to the commandnumber has 
+						    	      	     been both decided and executed.
+						  - Decided: The command corresponding to the commandnumber has 
+						    	     	     been decided but it is not executed yet (probably due to an 
+								     outstanding command prior to this command.)
+						  - Running: The commandnumber is assigned to a command but the 
+						    	     	     result is not known yet.
+						  - None: The commandnumber has not been assigned to any command.
+			  	   'nexttodecide' keeps the commandnumber that should be used for the next proposal
+				   'nexttoexecute' keeps the commandnumber that has been executed
