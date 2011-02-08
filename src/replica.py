@@ -45,12 +45,13 @@ class Replica(Node):
 
         Upon receiving MSG_PERFORM Replica updates its state as follows:
         - Add the command to the requests dictionary
-        - Execute the command (and any immediately following command in requests)
+        - Execute the command (and any consecutive command in requests)
         if it has the commandnumber matching nexttoexecute
               -- call the corresponding method from the replicated object
-              -- update requests: commandstate,result)
+              -- update requests: with the new state and result (commandstate,result)
               -- create MSG_RESPONSE: message carries the commandnumber and the result of the command
               -- send MSG_RESPONSE to Leader
+              -- increment nexttoexecute
         """
         self.requests[msg.commandnumber] = (CMD_DECIDED,msg.proposal)
         while self.requests.has_key(self.nexttoexecute) and self.requests[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
@@ -75,6 +76,7 @@ class Replica(Node):
         print self.object
 
     def cmd_info(self, args):
+        """Shell command [info]: Print Requests and Command to execute next"""
         print "Waiting for command #%d" % self.nexttoexecute
         print "Completed Requests:\n"
         for (commandnumber,command) in self.requests.iteritems():
