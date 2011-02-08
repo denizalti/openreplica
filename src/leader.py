@@ -49,7 +49,7 @@ class ResponseCollector():
         self.nquorum = min(math.ceil(float(self.ntotal)/2+1), self.ntotal)
 
         self.possiblepvalueset = PValueSet()
-        self.possiblepvalueset.add(PValue(ballotnumber=self.ballotnumber,commandnumber=commandnumber,proposal=proposal))
+#YYY        self.possiblepvalueset.add(PValue(ballotnumber=self.ballotnumber,commandnumber=commandnumber,proposal=proposal))
         self.nresponses = self.naccepts = self.rejects = 0
 
 class Leader(Node,Replica):
@@ -73,7 +73,7 @@ class Leader(Node,Replica):
         
         self.ballotnumber = (0,self.id)
         self.pvalueset = PValueSet()
-        self.commandnumber = 1  # incremented upon performing an operation
+        # YYY self.commandnumber = 1  # incremented upon performing an operation
         self.outstandingprepares = {}
         self.outstandingproposes = {}
 
@@ -155,13 +155,15 @@ class Leader(Node,Replica):
             # collect all the p-values from responses that have the same commandnumber as me
             if msg.pvalueset is not None:
                 for pvalue in msg.pvalueset.pvalues:
-                    if pvalue.commandnumber == prc.commandnumber:
-                        prc.possiblepvalueset.add(pvalue)
+                    # YYY if pvalue.commandnumber == prc.commandnumber:
+                    prc.possiblepvalueset.add(pvalue)
 
             print prc.nresponses, prc.nquorum
             if prc.naccepts >= prc.nquorum:
                 print "[%s] suffiently many accepts on prepare" % (self,)
                 # choose a p-value out of the set encountered and collected so far
+                # YYY this stuff needs to change...
+                pmaxset = prc.possiblepvalueset.pMax()
                 chosenpvalue = prc.possiblepvalueset.pickMaxBallotNumber()
                 # take the old response collector out of the outstanding prepare set
                 del self.outstandingprepares[msg.inresponseto]

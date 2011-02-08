@@ -61,6 +61,18 @@ class PValueSet():
                 maxballotnumberpvalue = pvalue
         return maxballotnumberpvalue
 
+    def pMax(self):
+        """Returns a  mapping from command numbers to prthe PValue in pvalues with the highest ballotnumber"""
+        commandnumbers = [pvalue.commandnumber for pvalue in self.pvalues]
+        pmaxresult = {}
+        maxballotnumberpvalue = PValue()
+        for c in commandnumbers:
+            for pvalue in self.pvalues:
+                if pvalue.commandnumber == c and pvalue.ballotnumber > maxballotnumberpvalue.ballotnumber:
+                    maxballotnumberpvalue = pvalue
+            pmaxresult[c] = maxballotnumberpvalue.proposal
+        return pmaxresult
+
     def __len__(self):
         """Returns the number of PValues in the PValueSet"""
         return len(self.pvalues)
