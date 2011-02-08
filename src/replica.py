@@ -27,6 +27,7 @@ class Replica(Node):
         """
         Node.__init__(self, NODE_REPLICA)
         self.object = replicatedobject  # this is the state
+        self.replicacommand = 1
         self.requests = {}
 
     def msg_perform(self, conn, msg):
@@ -40,20 +41,21 @@ class Replica(Node):
         - send MSG_RESPONSE to Leader
         """
         self.requests[msg.commandnumber] = msg.proposal
-        command = msg.proposal.split()
-        commandname = command[0]
-        commandargs = command[1:]
-        try:
-            method = getattr(self.object, commandname)
+
+        while self.requests.has_key(self.replicacommand):
+            proposal = self.requests[self.replicacommand]
+            command = proposal.split()
+            commandname = command[0]
+            commandargs = command[1:]
+            try:
+                method = getattr(self.object, commandname)
+            except AttributeError:
+                print "command not supported: %s" % (command)
             givenresult = method(commandargs)
-        except AttributeError:
-            print "command not supported: %s" % (command)
-            replymsg = PaxosMessage(MSG_RESPONSE,self.me,commandnumber=msg.commandnumber,result="FAIL")
+            replymsg = PaxosMessage(MSG_RESPONSE,self.me,commandnumber=self.replicacommand,result=givenresult)
             conn.send(replymsg)
-            return
-        replymsg = PaxosMessage(MSG_RESPONSE,self.me,commandnumber=msg.commandnumber,result=givenresult)
-        conn.send(replymsg)
-    
+            self.replicacommand += 1
+
     def cmd_showobject(self, args):
         """Shell command [showobject]: Print Replicated Object information""" 
         print self.object
