@@ -4,18 +4,10 @@ we have about paxi.
 
 *** CHANGES TO THE CODE ***
 Leader	       	   	 : commandnumber - how will it be updated
-				       
-ResponseCollector    : 'received' keeps <peer:reply> mappings
-		      	       	  upon receiving a reply the Response Collector adds it to 'received'
-				  if a reply is coming for the second time it overwrites the old one
-				  the length of 'received' determines if quorum is reached or not
+				      
+Node			  : Periodic Liveness Messages should be
+added: MSG_PING
 
-Leader			  : 'proposals' keeps <commandnumber:proposal> mappings with the 
-			  	   highest ballotnumber
-				   Leader updates proposals by pMax(possiblepvalueset)
-				   Leader goes over all proposals in this dictionary and sends a PROPOSE for each
-
-Node			  : Periodic Liveness Messages should be added: MSG_PING
 Replica & enums	  : Magic Numbers added to enums for (COMMANDSTATE,COMMAND)
 			   	   
 
@@ -52,3 +44,13 @@ Replica			 : 'requests' keeps <commandnumber:(commandstate,command/result)> mapp
 						  - None: The commandnumber has not been assigned to any command.
 			  	   'nexttodecide' keeps the commandnumber that should be used for the next proposal
 				   'nexttoexecute' keeps the commandnumber that has been executed
+
+ResponseCollector    : 'received' keeps <peer:reply> mappings
+		      	       	  upon receiving a reply the Response Collector adds it to 'received'
+				  if a reply is coming for the second time it overwrites the old one
+				  the length of 'received' determines if quorum is reached or not
+
+Leader			  : 'proposals' keeps <commandnumber:proposal> mappings with the 
+			  	   highest ballotnumber
+				   Leader updates proposals by pMax(possiblepvalueset)
+				   Leader goes over all proposals in this dictionary and sends a PROPOSE for each
