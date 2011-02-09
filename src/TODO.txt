@@ -5,16 +5,32 @@ we have about paxi.
 *** CHANGES TO THE CODE ***
 Leader	       	   	 : commandnumber - how will it be updated
 				      
-Node			  : Periodic Liveness Messages should be
-added: MSG_PING
+Node			 : Periodic Liveness Messages should be added: MSG_PING
+			   	   if we use the same socket for
+			   	   MSG_PING as we use for other types
+			   	   of messages the timeout will not be
+			   	   accurate as the MSG_PING may be
+			   	   delayed in select (due to a backlog)
 
-Replica & enums	  : Magic Numbers added to enums for (COMMANDSTATE,COMMAND)
+Replica & enums	  : Magic Numbers added to enums for
+(COMMANDSTATE,COMMAND)
+
+Message			 : Command class to keep (clientid, clientcommandnumber, command)
+			   	   triples. Will be used to prevent
+			   	   double assignment of commands
+
 			   	   
 
 
 
 *** TO THINK ABOUT ***
-- Messages have 'at least one semantics'; at which points should we check if a message has been received before or not?
+- Messages have 'at least one semantics'; at which points should we
+check if a message has been received before or not?
+      -- Replica should not execute a command that has been executed
+      before again.
+      -- Replica should not accept a command from a client and assume
+      that it is a new command if it's not. For this unique cid's
+      should be used and replica has to check the cid's.
 - How should the Leader and Replica states be updated so commandnumber allocation is done apropriately.
 - Should Leaders extend Replicas? 
 - How to make Leader not reissue all previous commands

@@ -8,13 +8,9 @@ import enums
 
 # message types
 MSG_PREPARE, MSG_PREPARE_ADOPTED, MSG_PREPARE_PREEMPTED, MSG_PROPOSE, MSG_PROPOSE_ACCEPT, MSG_PROPOSE_REJECT, \
-    MSG_HELO, MSG_HELOREPLY, MSG_BYE, \
+    MSG_HELO, MSG_HELOREPLY, MSG_BYE, MSG_PING, MSG_PINGREPLY, \
     MSG_PERFORM, MSG_RESPONSE, \
-    MSG_CLIENTREQUEST, MSG_CLIENTREPLY = range(13)
-
-# scout and commander return values
-LEADERMSG_NOREPLY, LEADERMSG_SCOUT_ADOPTED, LEADERMSG_SCOUT_BUSY, LEADERMSG_SCOUT_PREEMPTED, \
-LEADERMSG_COMMANDER_CHOSEN,LEADERMSG_COMMANDER_BUSY, LEADERMSG_COMMANDER_PREEMPTED = range(7)
+    MSG_CLIENTREQUEST, MSG_CLIENTREPLY = range(15)
 
 # node types 
 NODE_ACCEPTOR, NODE_LEADER, NODE_REPLICA, NODE_CLIENT = range(4)
@@ -22,7 +18,9 @@ NODE_ACCEPTOR, NODE_LEADER, NODE_REPLICA, NODE_CLIENT = range(4)
 # command states
 CMD_EXECUTED, CMD_DECIDED, CMD_RUNNING = range(3)
 
+# timeouts
 HELOTIMEOUT=5
+PINGTIMEOUT=10
 
 # magic numbers
 COMMANDSTATE = 0
@@ -33,13 +31,14 @@ COMMAND = 1
 
 # convert a set of enums with a given prefix into a dictionary
 def get_var_mappings(prefix):
+    """Returns a dictionary with <enumvalue, enumname> mappings"""
     return dict([(getattr(enums,varname),varname.replace(prefix, "", 1)) for varname in dir(enums) if varname.startswith(prefix)]) 
 
 # convert a set of enums with a given prefix into a list
 def get_var_list(prefix):
+    """Returns a list of enumnames"""
     return [name for (value,name) in sorted(get_var_mappings(prefix).iteritems())]
 
 msg_names = get_var_list("MSG_")
-leadermsg_names = get_var_list("LEADERMSG_")
 node_names = get_var_list("NODE_")
 cmd_states = get_var_list("CMD_")

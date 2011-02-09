@@ -5,6 +5,7 @@
 '''
 from optparse import OptionParser
 from threading import Thread, Lock, Condition
+from time import sleep
 import os
 import time
 import random
@@ -83,17 +84,20 @@ class Node():
                 group.union(heloreply.groups[type])
 
     def startservice(self):
-        """Start a server and a shell thread"""
+        """Start a server, a shell and a ping thread"""
         # Start a thread with the server which will start a thread for each request
         server_thread = Thread(target=self.serverLoop)
         server_thread.start()
         # Start a thread that waits for inputs
         input_thread = Thread(target=self.getInputs)
         input_thread.start()
+        # Start a thread that pings neighbors
+        #ping_thread = Thread(target=self.ping)
+        #ping_thread.start()
         
     def __str__(self):
         """Return Node information (addr:port)"""
-        return "%s  %s:%d" % (node_names[self.type], self.addr, self.port)
+        return "%s  %s:%d  %s" % (node_names[self.type], self.addr, self.port, str(self.socket))
 
     def statestr(self):
         """Return the Peers Node knows of, i.e. connectivity state"""
@@ -130,6 +134,7 @@ class Node():
                         socketset.append(s)
                         
                 assert len(socketset) == len(set(socketset)), "[%s] socketset has Duplicates." % self
+                print "Socket Set:", socketset
                 inputready,outputready,exceptready = select.select(socketset,[],socketset)
                 
                 for s in inputready:
@@ -187,6 +192,12 @@ class Node():
         """
         self.groups[msg.source.type].remove(msg.source)
 
+    def msg_ping(self, conn, msg):
+        """Handler for MSG_PING
+        Replies to indicate liveness of Node
+        """
+        pass
+
     #
     # shell commands generic to all nodes
     #
@@ -231,4 +242,17 @@ class Node():
             except ( KeyboardInterrupt,EOFError ):
                 os._exit(0)
         return
-                    
+
+"""    def sendping(self):
+        pingmsg = HandshakeMessage(MSG_PING,self.me)
+        for group in self.groups.itervalues():
+            for peer in group:
+                peer.send(self, self.me, pingmsg)
+                XXX delay = self.receiveping(pingsocket,PINGTIMEOUT,...) # Should include a select with a timeout
+        connection = sendernode.connectionpool.getConnectionToPeer(self)
+        connection.send(message)
+
+        my_socket.close()
+        return delay
+"""                    
+    

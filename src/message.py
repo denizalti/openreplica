@@ -166,3 +166,36 @@ class ClientMessage(Message):
             temp += '  reply: %s' % self.proposal
         return temp
 
+class Command():
+    """Command encloses a clientid, clientcommandnumber and command"""
+    def __init__(self,clientid=(0,0),clientcommandnumber=0,command="",serialpvalue=None):
+        """Initialize PValue
+
+        PValue State
+        - ballotnumber: ballotnumber for the PValue
+        - commandnumber: commandnumber for the PValue
+        - proposal: proposal for the PValue
+        """
+        self.ballotnumber = ballotnumber
+        self.commandnumber = commandnumber
+        self.proposal = proposal
+
+    def id(self):
+        """Returns the id (ballotnumber:commandnumber:proposal) of the PValue"""
+        return "%s:%d:%s" % (str(self.ballotnumber),self.commandnumber,self.proposal)
+
+    def __hash__(self):
+        """Returns the hashed id"""
+        return self.id().__hash__()
+
+    def __eq__(self, otherpvalue):
+        """Equality function for two PValues.
+        Returns True if given PValue is equal to PValue, False otherwise.
+        """
+        return self.ballotnumber == otherpvalue.ballotnumber and \
+            self.commandnumber == otherpvalue.commandnumber and \
+            self.proposal == otherpvalue.proposal
+    
+    def __str__(self):
+        """Returns PValue information"""
+        return 'PValue((%d,%s),%d,%s)' % (self.ballotnumber[0],self.ballotnumber[1],self.commandnumber,self.proposal.strip("\x00"))
