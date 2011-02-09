@@ -44,7 +44,7 @@ class Replica(Node):
         """Handler for MSG_PERFORM
 
         Upon receiving MSG_PERFORM Replica updates its state as follows:
-        - Add the command to the requests dictionary
+        - Add the command to the requests dictionary if it's not already there
         - Execute the command (and any consecutive command in requests)
         if it has the commandnumber matching nexttoexecute
               -- call the corresponding method from the replicated object
@@ -53,7 +53,9 @@ class Replica(Node):
               -- send MSG_RESPONSE to Leader
               -- increment nexttoexecute
         """
-        self.requests[msg.commandnumber] = (CMD_DECIDED,msg.proposal)
+        if not self.requests.has_key(msg.commandnumber):
+            self.requests[msg.commandnumber] = (CMD_DECIDED,msg.proposal)
+                         
         while self.requests.has_key(self.nexttoexecute) and self.requests[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
             print "[%s] Executing command %d." % (self, self.nexttoexecute)
             command = self.requests[self.nexttoexecute][COMMAND] # magic number 

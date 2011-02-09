@@ -24,7 +24,7 @@ class ResponseCollector():
     """ResponseCollector keeps the state related to both MSG_PREPARE and
     MSG_PROPOSE.
     """
-    def __init__(self, acceptors, ballotno, commandnumber, proposal):
+    def __init__(self, acceptors, ballotnumber, commandnumber, proposal):
         """Initialize ResponseCollector
 
         ResponseCollector State
@@ -32,26 +32,20 @@ class ResponseCollector():
         - commandnumber: commandnumber for the corresponding MSG
         - proposal: proposal for the corresponding MSG
         - acceptors: Group of Acceptor nodes for the corresponding MSG
+        - received: dictionary that keeps <peer:reply> mappings
         - ntotal: # Acceptor nodes for the corresponding MSG
         - nquorum: # ACCEPTs needed for success
-        - nresponses: # responses received thus far
-        - naccepts: # accepts received thus far
-        - nrejects: # rejects received thus far
-
-        - possiblepvalueset: Set of pvalues collected from Acceptor
-        with the matching commandnumber as the MSG
+        - possiblepvalueset: Set of pvalues collected from Acceptors
         """
-        self.ballotnumber = ballotno
+        self.ballotnumber = ballotnumber
         self.commandnumber = commandnumber
         self.proposal = proposal
         self.acceptors = acceptors
-        
+        self.received = {}
         self.ntotal = len(self.acceptors)
         self.nquorum = min(math.ceil(float(self.ntotal)/2+1), self.ntotal)
-
         self.possiblepvalueset = PValueSet()
-#YYY        self.possiblepvalueset.add(PValue(ballotnumber=self.ballotnumber,commandnumber=commandnumber,proposal=proposal))
-        self.nresponses = self.naccepts = self.rejects = 0
+        self.possiblepvalueset.add(PValue(self.ballotnumber, self.commandnumber, self.proposal))
 
 class Leader(Node,Replica):
     """Leader extends a Node and keeps additional state about the Paxos Protocol and Commands in progress."""
@@ -79,7 +73,7 @@ class Leader(Node,Replica):
 
     def updateBallotnumber(self,seedballotnumber):
         """Update the ballotnumber with a higher value than given ballotnumber"""
-        temp = (seedballotnumber[0]+5,self.ballotnumber[1])
+        temp = (seedballotnumber[0]+1,self.ballotnumber[1])
         self.ballotnumber = temp
         
     def getHighestCommandNumber(self):
@@ -116,12 +110,12 @@ class Leader(Node,Replica):
         -- add the ResponseCollector to the outstanding prepare set
         -- broadcast MSG_PREPARE to Acceptor nodes
         """
-        myballotno = self.ballotnumber
+        recentballotnumber = self.ballotnumber
         print "[%s] initiating command: %d:%s" % (self,commandnumber,proposal)
-        print "[%s] with ballotnumber %s" % (self,str(myballotno))
-        prepare = PaxosMessage(MSG_PREPARE,self.me,myballotno)
-        prc = ResponseCollector(self.groups[NODE_ACCEPTOR], myballotno, commandnumber, proposal)
-        self.outstandingprepares[myballotno] = prc
+        print "[%s] with ballotnumber %s" % (self,str(recentballotnumber))
+        prepare = PaxosMessage(MSG_PREPARE,self.me,recentballotnumber)
+        prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, commandnumber, proposal)
+        self.outstandingprepares[recentballotnumber] = prc
         prc.acceptors.broadcast(self, prepare)
 
     def msg_prepare_adopted(self, conn, msg):
@@ -132,48 +126,46 @@ class Leader(Node,Replica):
         and its state is updated accordingly.
 
         State Updates:
-        - nresponses and naccepts are incremented
+        - message is added to the received dictionary
         - the pvalue with the ResponseCollector's commandnumber is added to the possiblepvalueset
         - if naccepts is greater than the quorum size PREPARE STAGE is successful.
         -- Start the PROPOSE STAGE:
-        --- choose the pvalue that has to be proposed (to avoid multiple proposals for one commandnumber)
+        --- create the pvalueset with highest ballotnumbers for distinctive commandnumbers
         --- remove the old ResponseCollector from the outstanding prepare set
-        --- create ResponseCollector object for PROPOSE STAGE: ResponseCollector keeps
+        --- run the PROPOSE STAGE for each pvalue in the above pvalueset
+        ---- create ResponseCollector object for PROPOSE STAGE: ResponseCollector keeps
         the state related to MSG_PROPOSE
-        --- add the new ResponseCollector to the outstanding propose set
-        --- create MSG_PROPOSE: message carries the corresponding ballotnumber, commandnumber and the proposal
-        --- broadcast MSG_PROPOSE to the same Acceptor nodes from the PREPARE STAGE
+        ---- add the new ResponseCollector to the outstanding propose set
+        ---- create MSG_PROPOSE: message carries the corresponding ballotnumber, commandnumber and the proposal
+        ---- broadcast MSG_PROPOSE to the same Acceptor nodes from the PREPARE STAGE
         """
         if self.outstandingprepares.has_key(msg.inresponseto):
             print "Found the key for the outstandingprepare %s" %str(msg.inresponseto)
             prc = self.outstandingprepares[msg.inresponseto]
-            print "[%s] got an accept for ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, prc.nresponses, prc.ntotal)
-            prc.nresponses += 1
+            prc.received[msg.source] = msg
+            print "[%s] got an accept for ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal)
             assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PREPARE_ADOPTED can't have non-matching ballotnumber" % self
-
-            prc.naccepts += 1
-            # collect all the p-values from responses that have the same commandnumber as me
+            # collect all the p-values from the response
             if msg.pvalueset is not None:
                 for pvalue in msg.pvalueset.pvalues:
-                    # YYY if pvalue.commandnumber == prc.commandnumber:
                     prc.possiblepvalueset.add(pvalue)
 
-            print prc.nresponses, prc.nquorum
-            if prc.naccepts >= prc.nquorum:
+            if len(prc.received) >= prc.nquorum:
                 print "[%s] suffiently many accepts on prepare" % (self,)
-                # choose a p-value out of the set encountered and collected so far
-                # YYY this stuff needs to change...
+                # choose pvalues with distinctive commandnumbers and highest ballotnumbers
+                # out of the set encountered and collected so far
                 pmaxset = prc.possiblepvalueset.pMax()
-                chosenpvalue = prc.possiblepvalueset.pickMaxBallotNumber()
+                # YYY chosenpvalue = prc.possiblepvalueset.pickMaxBallotNumber()
                 # take the old response collector out of the outstanding prepare set
                 del self.outstandingprepares[msg.inresponseto]
-                # create a new response collector for the PROPOSE
-                newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, prc.commandnumber, prc.proposal)
-                # add the new response collector to the outstanding propose set
-                self.outstandingproposes[prc.ballotnumber] = newprc
-                # create and send PROPOSE message
-                propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotnumber,commandnumber=chosenpvalue.commandnumber,proposal=chosenpvalue.proposal)
-                prc.acceptors.broadcast(self, propose)
+                for (pmaxcommandnumber,pmaxproposal) in pmaxset.iteritems():
+                    # create a new response collector for the PROPOSE
+                    newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, prc.commandnumber, prc.proposal)
+                    # add the new response collector to the outstanding propose set
+                    self.outstandingproposes[pmaxcommandnumber] = newprc
+                    # create and send PROPOSE message
+                    propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotnumber,commandnumber=pmaxcommandnumber,proposal=pmaxproposal)
+                    newprc.acceptors.broadcast(self, propose)
         else:
             print "[%s] there is no response collector" % (self,)
 
@@ -192,13 +184,13 @@ class Leader(Node,Replica):
         """
         if self.outstandingprepares.has_key(msg.inresponseto):
             prc = self.outstandingprepares[msg.inresponseto]
-            print "[%s] got a reject for ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, prc.nresponses, prc.ntotal)
+            print "[%s] got a reject for ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal)
             # take this response collector out of the outstanding prepare set
             del self.outstandingprepares[msg.inresponseto]
             # update the ballot number
             self.updateBallotnumber(msg.ballotnumber)
             # retry the prepare
-            doCommand(prc.commandnumber, prc.proposal)
+            self.doCommand(prc.commandnumber, prc.proposal)
         else:
             print "[%s] there is no response collector" % (self,)
 
@@ -210,32 +202,30 @@ class Leader(Node,Replica):
         and its state is updated accordingly.
 
         State Updates:
-        - nresponses and naccepts are incremented
-        - if naccepts is greater than the quorum size, PROPOSE STAGE is successful.
+        - message is added to the received dictionary
+        - if length of received is greater than the quorum size, PROPOSE STAGE is successful.
         -- update the ballotnumber (for use in the next PREPARE STAGE)
         -- remove the old ResponseCollector from the outstanding prepare set
         -- create MSG_PERFORM: message carries the chosen commandnumber and proposal.
         -- broadcast MSG_PERFORM to all Replicas and Leaders
         -- execute the command
         """
-        if self.outstandingproposes.has_key(msg.inresponseto):
-            prc = self.outstandingproposes[msg.inresponseto]
-            print "[%s] got an accept for proposal ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, prc.nresponses, prc.ntotal)
-            prc.nresponses += 1
+        if self.outstandingproposes.has_key(msg.commandnumber):
+            prc = self.outstandingproposes[msg.commandnumber]
+            print "[%s] got an accept for proposal ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal)
+            prc.received[msg.source] = msg
             assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PROPOSE_ACCEPT can't have non-matching ballotnumber" % self
-            prc.naccepts += 1
-            if prc.nresponses >= prc.nquorum:
+            if len(prc.received) >= prc.nquorum:
                 # YAY, WE AGREE!
                 self.updateBallotnumber(self.ballotnumber)
                 # take this response collector out of the outstanding propose set
-                del self.outstandingproposes[msg.inresponseto]
+                del self.outstandingproposes[msg.commandnumber]
                 # now we can perform this action on the replicas
                 perform = PaxosMessage(MSG_PERFORM,self.me,commandnumber=prc.commandnumber,proposal=prc.proposal)
                 self.groups[NODE_REPLICA].broadcast(self, perform)
                 self.groups[NODE_LEADER].broadcast(self, perform)
-                self.self_perform(perform)
         else:
-            print "[%s] there is no response collector" % (self,)
+            print "[%s] there is no response collector for %s" % (self,str(msg.inresponseto))
 
     def msg_propose_reject(self, conn, msg):
         """Handler for MSG_PROPOSE_REJECT
@@ -250,17 +240,17 @@ class Leader(Node,Replica):
         - update the ballotnumber
         - call doCommand() to start a new PREPARE STAGE:
         """
-        if self.outstandingproposes.has_key(msg.inresponseto):
-            prc = self.outstandingproposes[msg.inresponseto]
-            print "[%s] got a reject for proposal ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, prc.nresponses, prc.ntotal)
+        if self.outstandingproposes.has_key(msg.commandnumber):
+            prc = self.outstandingproposes[msg.commandnumber]
+            print "[%s] got a reject for proposal ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal)
             # take this response collector out of the outstanding propose set
-            del self.outstandingproposes[msg.inresponseto]
+            del self.outstandingproposes[msg.commandnumber]
             # update the ballot number
             self.updateBallotnumber(msg.ballotnumber)
             # retry the prepare
-            doCommand(prc.commandnumber, prc.proposal)
+            self.doCommand(prc.commandnumber, prc.proposal)
         else:
-            print "[%s] there is no response collector" % (self,)
+            print "[%s] there is no response collector for %s" % (self,str(msg.inresponseto))
 
     def cmd_command(self, args):
         """Shell command [command]: Initiate a new command.

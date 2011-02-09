@@ -3,7 +3,7 @@ we have about paxi.
 """
 
 *** CHANGES TO THE CODE ***
-YYY				 : outstanding YYY
+Leader	       	   	 : commandnumber - how will it be updated
 				       
 ResponseCollector    : 'received' keeps <peer:reply> mappings
 		      	       	  upon receiving a reply the Response Collector adds it to 'received'

@@ -39,6 +39,13 @@ class Group():
         for peer in othergroup.members:
             if peer != self.owner:
                 self.members.add(peer)
+
+    def toDict(self):
+        """Returns a dictionary indexed by Peers"""
+        peerdict = {}
+        for member in self.members:
+            peerdict[member] = None
+        return peerdict
         
     def broadcast(self,sendernode,msg):
         """Broadcasts the given message to the members of the Group"""
