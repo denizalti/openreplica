@@ -47,7 +47,7 @@ class Acceptor(Node):
             print "[%s] prepare received with non-acceptable ballotnumber %s" % (self, str(msg.ballotnumber))
             replymsg = PaxosMessage(MSG_PREPARE_PREEMPTED,self.me,self.ballotnumber,msg.ballotnumber,givenpvalueset=self.accepted)
         print "[%s] prepare responding to ballotnumber %s" % (self, str(msg.ballotnumber))
-        conn.send(replymsg)
+        self.send(replymsg,peer=msg.source)
 
     def msg_propose(self, conn, msg):
         """Handler for MSG_PROPOSE.
@@ -68,7 +68,7 @@ class Acceptor(Node):
         else:
             print "[%s] propose received with non-acceptable ballotnumber %s" % (self, str(msg.ballotnumber))
             replymsg = PaxosMessage(MSG_PROPOSE_REJECT,self.me,self.ballotnumber,msg.ballotnumber,newpvalue.commandnumber)
-        conn.send(replymsg)
+        self.send(replymsg,peer=msg.source)
 
     def cmd_paxos(self, args):
         """Shell command [paxos]: Print the paxos state of the Acceptor.""" 

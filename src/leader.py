@@ -91,7 +91,7 @@ class Leader(Node,Replica):
         self.doCommand(commandnumber, proposal)
         # XXX Right behavior should be implemented...
         clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"SUCCESS")
-        conn.send(clientreply)
+        self.send(clientreply,peer=msg.source)
 
     def msg_response(self, conn, msg):
         """Handler for MSG_RESPONSE"""
@@ -108,7 +108,7 @@ class Leader(Node,Replica):
         -- create ResponseCollector object for PREPARE STAGE: ResponseCollector keeps
         the state related to MSG_PREPARE
         -- add the ResponseCollector to the outstanding prepare set
-        -- broadcast MSG_PREPARE to Acceptor nodes
+        -- send MSG_PREPARE to Acceptor nodes
         """
         recentballotnumber = self.ballotnumber
         print "[%s] initiating command: %d:%s" % (self,commandnumber,proposal)
@@ -116,7 +116,7 @@ class Leader(Node,Replica):
         prepare = PaxosMessage(MSG_PREPARE,self.me,recentballotnumber)
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, commandnumber, proposal)
         self.outstandingprepares[recentballotnumber] = prc
-        prc.acceptors.broadcast(self, prepare)
+        self.send(prepare, group=prc.acceptors)
 
     def msg_prepare_adopted(self, conn, msg):
         """Handler for MSG_PREPARE_ADOPTED
@@ -137,7 +137,7 @@ class Leader(Node,Replica):
         the state related to MSG_PROPOSE
         ---- add the new ResponseCollector to the outstanding propose set
         ---- create MSG_PROPOSE: message carries the corresponding ballotnumber, commandnumber and the proposal
-        ---- broadcast MSG_PROPOSE to the same Acceptor nodes from the PREPARE STAGE
+        ---- send MSG_PROPOSE to the same Acceptor nodes from the PREPARE STAGE
         """
         if self.outstandingprepares.has_key(msg.inresponseto):
             print "Found the key for the outstandingprepare %s" %str(msg.inresponseto)
@@ -165,7 +165,7 @@ class Leader(Node,Replica):
                     self.outstandingproposes[pmaxcommandnumber] = newprc
                     # create and send PROPOSE message
                     propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotnumber,commandnumber=pmaxcommandnumber,proposal=pmaxproposal)
-                    newprc.acceptors.broadcast(self, propose)
+                    self.send(propose,group=newprc.acceptors)
         else:
             print "[%s] there is no response collector" % (self,)
 
@@ -207,7 +207,7 @@ class Leader(Node,Replica):
         -- update the ballotnumber (for use in the next PREPARE STAGE)
         -- remove the old ResponseCollector from the outstanding prepare set
         -- create MSG_PERFORM: message carries the chosen commandnumber and proposal.
-        -- broadcast MSG_PERFORM to all Replicas and Leaders
+        -- send MSG_PERFORM to all Replicas and Leaders
         -- execute the command
         """
         if self.outstandingproposes.has_key(msg.commandnumber):
@@ -222,8 +222,8 @@ class Leader(Node,Replica):
                 del self.outstandingproposes[msg.commandnumber]
                 # now we can perform this action on the replicas
                 perform = PaxosMessage(MSG_PERFORM,self.me,commandnumber=prc.commandnumber,proposal=prc.proposal)
-                self.groups[NODE_REPLICA].broadcast(self, perform)
-                self.groups[NODE_LEADER].broadcast(self, perform)
+                self.send(perform, group=self.groups[NODE_REPLICA])
+                self.send(perform, group=self.groups[NODE_LEADER])
         else:
             print "[%s] there is no response collector for %s" % (self,str(msg.inresponseto))
 

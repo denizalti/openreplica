@@ -77,7 +77,7 @@ class Node():
             bootaddr,bootport = bootstrap.split(":")
             bootpeer = Peer(bootaddr,int(bootport))
             helomessage = HandshakeMessage(MSG_HELO, self.me)
-            bootpeer.send(self, helomessage)
+            self.send(helomessage, peer=bootpeer)
 
     def startservice(self):
         """Start a server, a shell and a ping thread"""
@@ -97,16 +97,16 @@ class Node():
 
     def statestr(self):
         """Return the Peers Node knows of, i.e. connectivity state"""
-        returnstr = "state: "
+        returnstr = "state:\n"
         for type,group in self.groups.iteritems():
             returnstr += str(group)
         return returnstr
 
     def outstandingmsgstr(self):
         """Return the dictionary of outstandingmessages"""
-        returnstr = "outstandingmessages: "
-        for messageid,messageinfo in self.outstandingmessages.iteritems():
-            returnstr += "%d: %s" % messageid,str(messageinfo)
+        returnstr = "outstandingmessages:\n"
+        for messageinfo in self.outstandingmessages.itervalues():
+            returnstr += "%s\n" % str(messageinfo)
         return returnstr
     
     def serverLoop(self):
@@ -157,8 +157,9 @@ class Node():
         message = connection.receive()
         print "[%s] got message %s" % (self.id, message)
         if message.type == MSG_ACK:
-            self.outstandingmessages[message.ackid].timestamp = time.time()
-            self.outstandingmessages[message.ackid].messagestate = ACK_ACKED
+            with self.outstandingmessages_lock:
+                self.outstandingmessages[message.ackid].timestamp = time.time()
+                self.outstandingmessages[message.ackid].messagestate = ACK_ACKED
         else:
             connection.send(AckMessage(MSG_ACK,self.me,message.id))
             mname = "msg_%s" % msg_names[message.type].lower()
@@ -181,7 +182,7 @@ class Node():
         # XXX add the other peer to the right peer group
         self.groups[msg.source.type].add(msg.source)
         self.connectionpool.addConnectionToPeer(msg.source, conn)
-        conn.send(replymsg)
+        self.send(replymsg, peer=msg.source)
 
     def msg_heloreply(self, conn, msg):
         """Handler for MSG_HELOREPLY
@@ -210,10 +211,10 @@ class Node():
     def cmd_exit(self, args):
         """Shell command [exit]: Changes the liveness state and send MSG_BYE to Peers.""" 
         self.alive = False
-        byeMessage = Message(MSG_BYE,self.me)
-        for type,group in self.groups.iteritems():
-            group.broadcast(self, byeMessage)
-        self.me.send(self, byeMessage)
+        byemessage = Message(MSG_BYE,self.me)
+        for type,nodegroup in self.groups.iteritems():
+            self.send(byemessage, group=nodegroup)
+        self.send(byemessage, peer=self)
                     
     def cmd_state(self, args):
         """Shell command [state]: Prints connectivity state of the corresponding Node."""
@@ -241,3 +242,21 @@ class Node():
                 os._exit(0)
         return            
     
+
+    # There are 3 basic send types: peer.send, conn.send and group.send
+    # def __init__(self, message, destination, messagestate=ACK_NOTACKED, timestamp=0):
+    def send(self, message, peer=None, group=None):
+        if peer:
+            connection = self.connectionpool.getConnectionToPeer(peer)
+            connection.send(message)
+            msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
+            with self.outstandingmessages_lock:
+                self.outstandingmessages[message.id] = msginfo
+        elif group:
+            for peer in group.members:
+                connection = self.connectionpool.getConnectionToPeer(peer)
+                connection.send(message)
+                msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
+                with self.outstandingmessages_lock:
+                    self.outstandingmessages[message.id] = msginfo
+         

@@ -70,7 +70,7 @@ class Replica(Node):
             givenresult = method(commandargs)
             self.requests[self.nexttoexecute] = (CMD_EXECUTED,givenresult)
             replymsg = PaxosMessage(MSG_RESPONSE,self.me,commandnumber=self.nexttoexecute,result=givenresult)
-            conn.send(replymsg)
+            self.send(replymsg,peer=msg.source)
             self.nexttoexecute += 1
 
     def cmd_showobject(self, args):

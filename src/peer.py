@@ -26,11 +26,6 @@ class Peer():
     def id(self):
         """Returns the id (addr:port) of the Peer"""
         return "%s:%d" % (self.addr,self.port)
-
-    def send(self, sendernode, message):
-        """Sends a given message to Peer"""
-        connection = sendernode.connectionpool.getConnectionToPeer(self)
-        connection.send(message)
     
     def __hash__(self):
         """Returns the hashed id"""

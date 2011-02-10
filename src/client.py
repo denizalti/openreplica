@@ -56,6 +56,7 @@ class Client():
                     command = Command(self.me.id, self.clientcommandnumber, self.input)
                     cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
                     self.conn.send(cm)
+                    # ACK messages..
                     reply = self.conn.receive()
                     print reply
             except ( KeyboardInterrupt,EOFError ):
