@@ -9,6 +9,8 @@ from enums import *
 from utils import *
 from peer import *
 
+msgidpool = 0
+
 class Message():
     """Message encloses the basic state that is shared
     by all types of messages in the system.
@@ -20,8 +22,12 @@ class Message():
         - type: type of message (see enums.py)
         - source: Peer instance of the source
         """
+        global msgidpool
         self.type = msgtype
         self.source = myname
+        if msgtype != MSG_ACK:
+            self.id = msgidpool
+            msgidpool += 1
 
     def __str__(self):
         """Return Message information"""
@@ -118,7 +124,7 @@ class PValue():
     
     def __str__(self):
         """Returns PValue information"""
-        return 'PValue((%d,%s),%d,%s)' % (self.ballotnumber[0],self.ballotnumber[1],self.commandnumber,self.proposal.strip("\x00"))
+        return 'PValue(%s,%d,%s)' % (str(self.ballotnumber),self.commandnumber,self.proposal)
 
 
 # HELO and HELOREPLY messages
@@ -156,46 +162,44 @@ class PaxosMessage(Message):
 class ClientMessage(Message):
     def __init__(self,msgtype,myname,command=None):
         Message.__init__(self, msgtype, myname)
-        self.proposal = command
+        self.command = command
 
     def __str__(self):
         temp = Message.__str__(self)
         if self.type == MSG_CLIENTREQUEST:
-            temp += '  request: %s' % self.proposal
+            temp += '  request: %s' % str(self.command)
         elif self.type == MSG_CLIENTREPLY:
-            temp += '  reply: %s' % self.proposal
+            temp += '  reply: %s' % str(self.command)
         return temp
+
+class AckMessage(Message):
+    def __init__(self,msgtype,myname,ackid):
+        Message.__init__(self, msgtype, myname)
+        self.ackid = ackid
 
 class Command():
     """Command encloses a clientid, clientcommandnumber and command"""
     def __init__(self,clientid=(0,0),clientcommandnumber=0,command="",serialpvalue=None):
-        """Initialize PValue
+        """Initialize Command
 
-        PValue State
-        - ballotnumber: ballotnumber for the PValue
-        - commandnumber: commandnumber for the PValue
-        - proposal: proposal for the PValue
+        Command State
+        - clientid: unique id for the Client
+        - clientcommandnumber: unique id for the command, specific to Client
+                               doesn't affect paxos commandnumber
+        - command: command to be executed
         """
-        self.ballotnumber = ballotnumber
-        self.commandnumber = commandnumber
-        self.proposal = proposal
+        self.clientid = clientid
+        self.clientcommandnumber = clientcommandnumber
+        self.command = command
 
-    def id(self):
-        """Returns the id (ballotnumber:commandnumber:proposal) of the PValue"""
-        return "%s:%d:%s" % (str(self.ballotnumber),self.commandnumber,self.proposal)
-
-    def __hash__(self):
-        """Returns the hashed id"""
-        return self.id().__hash__()
-
-    def __eq__(self, otherpvalue):
-        """Equality function for two PValues.
-        Returns True if given PValue is equal to PValue, False otherwise.
+    def __eq__(self, othercommand):
+        """Equality function for two Commands.
+        Returns True if given Command is equal to Command, False otherwise.
         """
-        return self.ballotnumber == otherpvalue.ballotnumber and \
-            self.commandnumber == otherpvalue.commandnumber and \
-            self.proposal == otherpvalue.proposal
+        return self.clientid == othercommand.clientid and \
+            self.clientcommandnumber == othercommand.clientcommandnumber and \
+            self.command == othercommand.command
     
     def __str__(self):
-        """Returns PValue information"""
-        return 'PValue((%d,%s),%d,%s)' % (self.ballotnumber[0],self.ballotnumber[1],self.commandnumber,self.proposal.strip("\x00"))
+        """Returns Command information"""
+        return 'Command(%d,%d,%s)' % (self.clientid,self.clientcommandnumber,self.command)

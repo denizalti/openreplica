@@ -5,7 +5,7 @@
 '''
 from optparse import OptionParser
 from threading import Thread, Lock, Condition
-from time import sleep
+from time import sleep,time
 import os
 import time
 import random
@@ -17,7 +17,7 @@ from utils import findOwnIP
 from connection import ConnectionPool,Connection
 from group import Group
 from peer import Peer
-from message import Message,PaxosMessage,HandshakeMessage,PValue,PValueSet
+from message import Message,PaxosMessage,HandshakeMessage,AckMessage,PValue,PValueSet
 
 parser = OptionParser(usage="usage: %prog -p port -b bootstrap -d delay")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
@@ -51,6 +51,7 @@ class Node():
         self.connectionpool = ConnectionPool()
         self.type = mytype
         self.alive = True
+        self.outstandingmessages = {}
 
         # create server socket and bind to a port
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -75,13 +76,7 @@ class Node():
             bootaddr,bootport = bootstrap.split(":")
             bootpeer = Peer(bootaddr,int(bootport))
             helomessage = HandshakeMessage(MSG_HELO, self.me)
-            heloreply = bootpeer.sendWaitReply(self, helomessage)
-            print "[%s] received %s" % (self, heloreply)
-            bootpeer = heloreply.source
-            self.groups[bootpeer.type].add(bootpeer)
-            
-            for type,group in self.groups.iteritems():
-                group.union(heloreply.groups[type])
+            bootpeer.send(self, helomessage)
 
     def startservice(self):
         """Start a server, a shell and a ping thread"""
@@ -97,7 +92,7 @@ class Node():
         
     def __str__(self):
         """Return Node information (addr:port)"""
-        return "%s  %s:%d  %s" % (node_names[self.type], self.addr, self.port, str(self.socket))
+        return "%s  %s:%d" % (node_names[self.type], self.addr, self.port)
 
     def statestr(self):
         """Return the Peers Node knows of, i.e. connectivity state"""
@@ -134,7 +129,6 @@ class Node():
                         socketset.append(s)
                         
                 assert len(socketset) == len(set(socketset)), "[%s] socketset has Duplicates." % self
-                print "Socket Set:", socketset
                 inputready,outputready,exceptready = select.select(socketset,[],socketset)
                 
                 for s in inputready:
@@ -154,13 +148,17 @@ class Node():
         connection = self.connectionpool.getConnectionBySocket(clientsock)
         message = connection.receive()
         print "[%s] got message %s" % (self.id, message)
-        mname = "msg_%s" % msg_names[message.type].lower()
-        try:
-            method = getattr(self, mname)
-        except AttributeError:
-            print "message not supported: %s" % (message)
-            return
-        method(connection, message)
+        if message.type == MSG_ACK:
+            self.outstandingmessages[message] = (ACKED, time.time)
+        else:
+            connection.send(AckMessage(MSG_ACK,self.me,message.id))
+            mname = "msg_%s" % msg_names[message.type].lower()
+            try:
+                method = getattr(self, mname)
+            except AttributeError:
+                print "message not supported: %s" % (message)
+                return
+            method(connection, message)
 
     #
     # message handlers
@@ -171,11 +169,8 @@ class Node():
         replymsg = HandshakeMessage(MSG_HELOREPLY,self.me,self.groups)
         # XXX THIS IS WRONG!!!!
         # XXX we need consensus on who to add to which group
-        # add the other peer to the right peer group
-        if msg.source.type == NODE_CLIENT:
-            self.clients.add(msg.source)
-        else:
-            self.groups[msg.source.type].add(msg.source)
+        # XXX add the other peer to the right peer group
+        self.groups[msg.source.type].add(msg.source)
         self.connectionpool.addConnectionToPeer(msg.source, conn)
         conn.send(replymsg)
 
@@ -183,21 +178,15 @@ class Node():
         """Handler for MSG_HELOREPLY
         Merges own Peer Groups with the ones in the MSG_HELOREPLY
         """
+        self.groups[msg.source.type].add(msg.source)
         for type,group in self.groups.iteritems():
-            group.mergeList(msg.groups[type])
+            group.union(msg.groups[type])
 
     def msg_bye(self, conn, msg):
         """Handler for MSG_BYE
         Deletes the source of MSG_BYE from groups
         """
         self.groups[msg.source.type].remove(msg.source)
-
-    def msg_ping(self, conn, msg):
-        """Handler for MSG_PING
-        Replies to indicate liveness of Node
-        """
-        pass
-
     #
     # shell commands generic to all nodes
     #
@@ -241,18 +230,5 @@ class Node():
                     method(input)
             except ( KeyboardInterrupt,EOFError ):
                 os._exit(0)
-        return
-
-"""    def sendping(self):
-        pingmsg = HandshakeMessage(MSG_PING,self.me)
-        for group in self.groups.itervalues():
-            for peer in group:
-                peer.send(self, self.me, pingmsg)
-                XXX delay = self.receiveping(pingsocket,PINGTIMEOUT,...) # Should include a select with a timeout
-        connection = sendernode.connectionpool.getConnectionToPeer(self)
-        connection.send(message)
-
-        my_socket.close()
-        return delay
-"""                    
+        return            
     

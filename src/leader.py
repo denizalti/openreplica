@@ -14,7 +14,7 @@ from enums import *
 from connection import ConnectionPool
 from group import Group
 from peer import Peer
-from message import ClientMessage,Message,PaxosMessage,HandshakeMessage,PValue,PValueSet
+from message import ClientMessage,Message,PaxosMessage,HandshakeMessage,AckMessage,PValue,PValueSet
 
 from test import Test
 from bank import Bank
@@ -155,7 +155,7 @@ class Leader(Node,Replica):
                 # choose pvalues with distinctive commandnumbers and highest ballotnumbers
                 # out of the set encountered and collected so far
                 pmaxset = prc.possiblepvalueset.pMax()
-                # YYY chosenpvalue = prc.possiblepvalueset.pickMaxBallotNumber()
+                # YYY 
                 # take the old response collector out of the outstanding prepare set
                 del self.outstandingprepares[msg.inresponseto]
                 for (pmaxcommandnumber,pmaxproposal) in pmaxset.iteritems():

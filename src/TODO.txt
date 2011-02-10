@@ -19,9 +19,12 @@ Message			 : Command class to keep (clientid, clientcommandnumber, command)
 			   	   triples. Will be used to prevent
 			   	   double assignment of commands
 
-			   	   
+Replica		         : Replica receives ClientRequests, assigns a
+			   	   commandnumber and forwards them to
+			   	   the Leader (which Leader?)
 
-
+Leader		         : global proposals and xor this with the
+pmaxset before sending commands 
 
 *** TO THINK ABOUT ***
 - Messages have 'at least one semantics'; at which points should we

@@ -14,7 +14,7 @@ from communicationutils import scoutReply,commanderReply
 from connection import ConnectionPool, Connection
 from group import Group
 from peer import Peer
-from message import ClientMessage,Message,PaxosMessage,HandshakeMessage,PValue,PValueSet
+from message import ClientMessage,Message,PaxosMessage,HandshakeMessage,AckMessage,PValue,PValueSet
 
 parser = OptionParser(usage="usage: %prog -b bootstrap")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
@@ -40,6 +40,7 @@ class Client():
         self.me = Peer(myaddr,myport,NODE_CLIENT)
         self.conn = Connection(self.socket)
         self.alive = True
+        self.clientcommandnumber = 1
         
     def clientloop(self):
         """Accepts commands from the prompt and sends requests for the commands
@@ -51,7 +52,9 @@ class Client():
                 if len(input) == 0:
                     continue
                 else:
-                    cm = ClientMessage(MSG_CLIENTREQUEST, self.me, input)
+                    # XXX How will the Client assign commandnumbers?
+                    command = Command(self.me.id, self.clientcommandnumber, self.input)
+                    cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
                     self.conn.send(cm)
                     reply = self.conn.receive()
                     print reply

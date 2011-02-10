@@ -11,7 +11,7 @@ from utils import *
 from connection import Connection,ConnectionPool
 from group import Group
 from peer import Peer
-from message import Message,PaxosMessage,HandshakeMessage,PValue,PValueSet
+from message import Message,PaxosMessage,HandshakeMessage,AckMessage,PValue,PValueSet
 from test import Test
 from bank import Bank
 
