@@ -17,7 +17,7 @@ from utils import findOwnIP
 from connection import ConnectionPool,Connection
 from group import Group
 from peer import Peer
-from message import Message,PaxosMessage,HandshakeMessage,AckMessage,PValue,PValueSet
+from message import Message,PaxosMessage,HandshakeMessage,AckMessage,PValue,PValueSet,MessageInfo
 
 parser = OptionParser(usage="usage: %prog -p port -b bootstrap -d delay")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
@@ -51,7 +51,8 @@ class Node():
         self.connectionpool = ConnectionPool()
         self.type = mytype
         self.alive = True
-        self.outstandingmessages = {}
+        self.outstandingmessages_lock = Lock()
+        self.outstandingmessages = {} # keeps <messageid:messageinfo> mappings as <MessageID:MessageInfo> objects
 
         # create server socket and bind to a port
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -99,6 +100,13 @@ class Node():
         returnstr = "state: "
         for type,group in self.groups.iteritems():
             returnstr += str(group)
+        return returnstr
+
+    def outstandingmsgstr(self):
+        """Return the dictionary of outstandingmessages"""
+        returnstr = "outstandingmessages: "
+        for messageid,messageinfo in self.outstandingmessages.iteritems():
+            returnstr += "%d: %s" % messageid,str(messageinfo)
         return returnstr
     
     def serverLoop(self):
@@ -149,7 +157,8 @@ class Node():
         message = connection.receive()
         print "[%s] got message %s" % (self.id, message)
         if message.type == MSG_ACK:
-            self.outstandingmessages[message] = (ACKED, time.time)
+            self.outstandingmessages[message.ackid].timestamp = time.time()
+            self.outstandingmessages[message.ackid].messagestate = ACK_ACKED
         else:
             connection.send(AckMessage(MSG_ACK,self.me,message.id))
             mname = "msg_%s" % msg_names[message.type].lower()
@@ -208,7 +217,7 @@ class Node():
                     
     def cmd_state(self, args):
         """Shell command [state]: Prints connectivity state of the corresponding Node."""
-        print "[%s] %s\n" % (self, self.statestr())
+        print "[%s]\n%s\n%s\n" % (self, self.statestr(), self.outstandingmsgstr())
 
     def getInputs(self):
         """Shellloop that accepts inputs from the command prompt and calls corresponding command

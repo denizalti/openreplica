@@ -19,6 +19,9 @@ NODE_ACCEPTOR, NODE_LEADER, NODE_REPLICA, NODE_CLIENT = range(4)
 # command states
 CMD_EXECUTED, CMD_DECIDED, CMD_RUNNING = range(3)
 
+# message states
+ACK_NOTACKED, ACK_ACKED = range(2)
+
 # timeouts
 HELOTIMEOUT=5
 PINGTIMEOUT=10
@@ -27,9 +30,7 @@ PINGTIMEOUT=10
 COMMANDSTATE = 0
 COMMAND = 1
 
-# ack-nack
-NOTACKEDYET = 0
-ACKED = 1
+
 
 ###########################
 # code to convert enum variables to strings of different kinds
@@ -47,3 +48,4 @@ def get_var_list(prefix):
 msg_names = get_var_list("MSG_")
 node_names = get_var_list("NODE_")
 cmd_states = get_var_list("CMD_")
+msg_states = get_var_list("ACK_")

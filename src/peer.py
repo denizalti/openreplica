@@ -27,17 +27,6 @@ class Peer():
         """Returns the id (addr:port) of the Peer"""
         return "%s:%d" % (self.addr,self.port)
 
-    def sendWaitReply(self, sendernode, message):
-        """Sends a given message to Peer and waits for a reply.
-        The reply is returned.
-        """
-        connection = sendernode.connectionpool.getConnectionToPeer(self)
-        connection.send(message)
-        if message.type == MSG_BYE:
-            connection.close()
-            return None
-        return connection.receive()
-
     def send(self, sendernode, message):
         """Sends a given message to Peer"""
         connection = sendernode.connectionpool.getConnectionToPeer(self)

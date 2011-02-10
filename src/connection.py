@@ -72,7 +72,7 @@ class Connection():
             return None
     
     def send(self, msg):
-        """pickle and send a message on yje Connection"""
+        """pickle and send a message on the Connection"""
         messagestr = pickle.dumps(msg)
         messagelength = struct.pack("I", len(messagestr))
         try:

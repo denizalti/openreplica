@@ -203,3 +203,22 @@ class Command():
     def __str__(self):
         """Returns Command information"""
         return 'Command(%d,%d,%s)' % (self.clientid,self.clientcommandnumber,self.command)
+
+class MessageInfo():
+    """MessageState encloses a message, destination, messagestate and timestamp"""
+    def __init__(self, message, destination, messagestate=ACK_NOTACKED, timestamp=0):
+        """Initialize MessageInfo
+
+        MessageInfo State
+        - message: Message object
+        - destination: destination of the message
+        - messagestate: indicates if the message has been ACKed or not [NOTACKEDYET | ACKED]
+        - timestamp: timestamp for the last action
+        """
+        self.message = message
+        self.destination = destination
+        self.messagestate = messagestate
+        self.timestamp = timestamp
+
+    def __str__(self):
+        return "%d: [%s] %s %.2f" % (self.message.id, self.destination, msg_states[self.messagestate], self.timestamp)
