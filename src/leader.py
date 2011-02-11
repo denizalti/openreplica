@@ -95,7 +95,7 @@ class Leader(Node):
 
     def msg_response(self, conn, msg):
         """Handler for MSG_RESPONSE"""
-        print "[%s] Received response from Replica" % (self,)
+        print "[%s] Received response from Replica" % self
         print msg.result
 
     def doCommand(self, commandnumber, proposal):
@@ -152,7 +152,7 @@ class Leader(Node):
                     prc.possiblepvalueset.add(pvalue)
 
             if len(prc.received) >= prc.nquorum:
-                print "[%s] suffiently many accepts on prepare" % (self,)
+                print "[%s] suffiently many accepts on prepare" % self
                 # choose pvalues with distinctive commandnumbers and highest ballotnumbers
                 pmaxset = prc.possiblepvalueset.pmax()
                 for commandnumber,proposal in pmaxset.iteritems():
@@ -165,7 +165,7 @@ class Leader(Node):
                     propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotnumber,commandnumber=chosencommandnumber,proposal=chosenproposal)
                     self.send(propose,group=newprc.acceptors)
         else:
-            print "[%s] there is no response collector" % (self,)
+            print "[%s] there is no response collector" % self
 
     def msg_prepare_preempted(self, conn, msg):
         """Handler for MSG_PREPARE_PREEMPTED
@@ -190,7 +190,7 @@ class Leader(Node):
             # retry the prepare
             self.doCommand(prc.commandnumber, prc.proposal)
         else:
-            print "[%s] there is no response collector" % (self,)
+            print "[%s] there is no response collector" % self
 
     def msg_propose_accept(self, conn, msg):
         """Handler for MSG_PROPOSE_ACCEPT

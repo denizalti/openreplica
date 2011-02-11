@@ -4,10 +4,10 @@
 @date: February 1, 2011
 '''
 from threading import Thread, Lock, Condition
+import time
 
 from node import Node
 from enums import *
-from utils import *
 from connection import Connection,ConnectionPool
 from group import Group
 from peer import Peer

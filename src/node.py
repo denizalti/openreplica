@@ -4,7 +4,7 @@
 @date: February 1, 2011
 '''
 from optparse import OptionParser
-from threading import Thread, Lock, Condition
+from threading import Thread, Lock, Condition, Timer
 from time import sleep,time
 import os
 import time
@@ -88,8 +88,8 @@ class Node():
         input_thread = Thread(target=self.get_inputs)
         input_thread.start()
         # Start a thread that pings neighbors
-        #ping_thread = Thread(target=self.ping)
-        #ping_thread.start()
+        timer_thread = Timer(60.0, self.periodic)
+        timer_thread.start()
         
     def __str__(self):
         """Return Node information (addr:port)"""
@@ -161,6 +161,7 @@ class Node():
                 self.outstandingmessages[message.ackid].timestamp = time.time()
                 self.outstandingmessages[message.ackid].messagestate = ACK_ACKED
         else:
+            time.sleep(90)
             connection.send(AckMessage(MSG_ACK,self.me,message.id))
             mname = "msg_%s" % msg_names[message.type].lower()
             try:
@@ -219,6 +220,34 @@ class Node():
     def cmd_state(self, args):
         """Shell command [state]: Prints connectivity state of the corresponding Node."""
         print "[%s]\n%s\n%s\n" % (self, self.statestr(), self.outstandingmsgstr())
+
+    def periodic(self):
+        """timer function that is responsible for periodic state maintenance
+        
+        - goes through outstanding messages and resends messages that are older than
+          ACKTIMEOUT and are NOTACKED yet.
+        - sends MSG_HELO message to peers that it has not heard within LIVENESSTIMEOUT
+        """
+        checkliveness = set()
+        for group in self.groups.itervalues():
+            checkliveness.union(group.members)
+        print "****************************************************"
+        print checkliveness
+        with self.outstandingmessages_lock:
+            for id, messageinfo in self.outstandingmessages.iteritems():
+                now = time.time()
+                if messageinfo.messagestate == ACK_NOTACKED and (messageinfo.timestamp + ACKTIMEOUT) < now:
+                    self.send(messageinfo.message, peer=messageinfo.destination) #resend NOTACKED message
+                    messageinfo.timestamp = time.time()
+                elif messageinfo.messagestate == ACK_ACKED and (messageinfo.timestamp + PINGTIMEOUT) < now \
+                         and messageinfo.destination in checkliveness:
+                    checkliveness.remove(messageinfo.destination)
+                    
+            for pingpeer in checkliveness:
+                print "Sending PING to %s" % pingpeer
+                helomessage = HandshakeMessage(MSG_HELO, self.me)
+                self.send(helomessage, peer=pingpeer)
+          
 
     def get_inputs(self):
         """Shellloop that accepts inputs from the command prompt and calls corresponding command
