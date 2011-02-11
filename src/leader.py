@@ -47,7 +47,7 @@ class ResponseCollector():
         self.possiblepvalueset = PValueSet()
         self.possiblepvalueset.add(PValue(self.ballotnumber, self.commandnumber, self.proposal))
 
-class Leader(Node,Replica):
+class Leader(Node):
     """Leader extends a Node and keeps additional state about the Paxos Protocol and Commands in progress."""
     def __init__(self):
         """Initialize Leader
@@ -67,7 +67,7 @@ class Leader(Node,Replica):
         
         self.ballotnumber = (0,self.id)
         self.pvalueset = PValueSet()
-        # YYY self.commandnumber = 1  # incremented upon performing an operation
+        self.proposals = {}
         self.outstandingprepares = {}
         self.outstandingproposes = {}
 
@@ -131,8 +131,9 @@ class Leader(Node,Replica):
         - if naccepts is greater than the quorum size PREPARE STAGE is successful.
         -- Start the PROPOSE STAGE:
         --- create the pvalueset with highest ballotnumbers for distinctive commandnumbers
+        --- update own proposals dictionary according to pmax dictionary
         --- remove the old ResponseCollector from the outstanding prepare set
-        --- run the PROPOSE STAGE for each pvalue in the above pvalueset
+        --- run the PROPOSE STAGE for each pvalue in proposals dictionary
         ---- create ResponseCollector object for PROPOSE STAGE: ResponseCollector keeps
         the state related to MSG_PROPOSE
         ---- add the new ResponseCollector to the outstanding propose set
@@ -153,18 +154,15 @@ class Leader(Node,Replica):
             if len(prc.received) >= prc.nquorum:
                 print "[%s] suffiently many accepts on prepare" % (self,)
                 # choose pvalues with distinctive commandnumbers and highest ballotnumbers
-                # out of the set encountered and collected so far
-                pmaxset = prc.possiblepvalueset.pMax()
-                # YYY 
-                # take the old response collector out of the outstanding prepare set
+                pmaxset = prc.possiblepvalueset.pmax()
+                for commandnumber,proposal in pmaxset.iteritems():
+                    self.proposals[commandnumber] = proposal
                 del self.outstandingprepares[msg.inresponseto]
-                for (pmaxcommandnumber,pmaxproposal) in pmaxset.iteritems():
-                    # create a new response collector for the PROPOSE
-                    newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, prc.commandnumber, prc.proposal)
-                    # add the new response collector to the outstanding propose set
-                    self.outstandingproposes[pmaxcommandnumber] = newprc
-                    # create and send PROPOSE message
-                    propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotnumber,commandnumber=pmaxcommandnumber,proposal=pmaxproposal)
+                # PROPOSE for each proposal in proposals
+                for chosencommandnumber,chosenproposal in self.proposals.iteritems():
+                    newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, chosencommandnumber, chosenproposal)
+                    self.outstandingproposes[chosencommandnumber] = newprc
+                    propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotnumber,commandnumber=chosencommandnumber,proposal=chosenproposal)
                     self.send(propose,group=newprc.acceptors)
         else:
             print "[%s] there is no response collector" % (self,)

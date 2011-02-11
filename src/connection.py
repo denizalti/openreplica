@@ -10,12 +10,12 @@ class ConnectionPool():
         self.poolbypeer = {}
         self.poolbysocket = {}
         
-    def addConnectionToPeer(self, peer, conn):
+    def add_connection_to_peer(self, peer, conn):
         """Adds a Connection to the ConnectionPool by its Peer"""
         connectionkey = peer.id()
         self.poolbypeer[connectionkey] = conn
         
-    def getConnectionToPeer(self, peer):
+    def get_connection_to_peer(self, peer):
         """Returns a Connection given corresponding Peer.
         A new Connection is created and added to the
         ConnectionPool if it doesn't exist.
@@ -31,7 +31,7 @@ class ConnectionPool():
             self.poolbysocket[thesocket] = conn
             return conn
 
-    def getConnectionBySocket(self, thesocket):
+    def get_connection_by_socket(self, thesocket):
         """Returns a Connection given corresponding socket.
         A new Connection is created and added to the
         ConnectionPool if it doesn't exist.

@@ -59,15 +59,7 @@ class PValueSet():
         """Unionizes the pvalues of given PValueSet with the pvalues of the PValueSet"""
         return self.pvalues | otherpvalueset.pvalues
 
-    def pickMaxBallotNumber(self):
-        """Returns the PValue in pvalues with the highest ballotnumber"""
-        maxballotnumberpvalue = PValue()
-        for pvalue in self.pvalues:
-            if pvalue.ballotnumber > maxballotnumberpvalue.ballotnumber:
-                maxballotnumberpvalue = pvalue
-        return maxballotnumberpvalue
-
-    def pMax(self):
+    def pmax(self):
         """Returns a  mapping from command numbers to proposals with the highest ballotnumbers"""
         commandnumbers = [pvalue.commandnumber for pvalue in self.pvalues]
         pmaxresult = {}

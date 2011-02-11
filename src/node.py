@@ -82,10 +82,10 @@ class Node():
     def startservice(self):
         """Start a server, a shell and a ping thread"""
         # Start a thread with the server which will start a thread for each request
-        server_thread = Thread(target=self.serverLoop)
+        server_thread = Thread(target=self.server_loop)
         server_thread.start()
         # Start a thread that waits for inputs
-        input_thread = Thread(target=self.getInputs)
+        input_thread = Thread(target=self.get_inputs)
         input_thread.start()
         # Start a thread that pings neighbors
         #ping_thread = Thread(target=self.ping)
@@ -109,7 +109,7 @@ class Node():
             returnstr += "%s\n" % str(messageinfo)
         return returnstr
     
-    def serverLoop(self):
+    def server_loop(self):
         """Serverloop that listens to multiple sockets and accepts connections.
 
         Server State
@@ -145,15 +145,15 @@ class Node():
                         print "[%s] accepted a connection from address %s" % (self,clientaddr)
                         nascentset.append((clientsock,time.time()))
                     else:
-                        self.handleConnection(s)
+                        self.handle_connection(s)
             except KeyboardInterrupt, EOFError:
                 os._exit(0)
         self.socket.close()
         return
         
-    def handleConnection(self, clientsock):
+    def handle_connection(self, clientsock):
         """Receives a message and calls the corresponding message handler"""
-        connection = self.connectionpool.getConnectionBySocket(clientsock)
+        connection = self.connectionpool.get_connection_by_socket(clientsock)
         message = connection.receive()
         print "[%s] got message %s" % (self.id, message)
         if message.type == MSG_ACK:
@@ -181,7 +181,7 @@ class Node():
         # XXX we need consensus on who to add to which group
         # XXX add the other peer to the right peer group
         self.groups[msg.source.type].add(msg.source)
-        self.connectionpool.addConnectionToPeer(msg.source, conn)
+        self.connectionpool.add_connection_to_peer(msg.source, conn)
         self.send(replymsg, peer=msg.source)
 
     def msg_heloreply(self, conn, msg):
@@ -220,7 +220,7 @@ class Node():
         """Shell command [state]: Prints connectivity state of the corresponding Node."""
         print "[%s]\n%s\n%s\n" % (self, self.statestr(), self.outstandingmsgstr())
 
-    def getInputs(self):
+    def get_inputs(self):
         """Shellloop that accepts inputs from the command prompt and calls corresponding command
         handlers.
         """
@@ -242,19 +242,18 @@ class Node():
                 os._exit(0)
         return            
     
-
     # There are 3 basic send types: peer.send, conn.send and group.send
     # def __init__(self, message, destination, messagestate=ACK_NOTACKED, timestamp=0):
     def send(self, message, peer=None, group=None):
         if peer:
-            connection = self.connectionpool.getConnectionToPeer(peer)
+            connection = self.connectionpool.get_connection_to_peer(peer)
             connection.send(message)
             msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
             with self.outstandingmessages_lock:
                 self.outstandingmessages[message.id] = msginfo
         elif group:
             for peer in group.members:
-                connection = self.connectionpool.getConnectionToPeer(peer)
+                connection = self.connectionpool.get_connection_to_peer(peer)
                 connection.send(message)
                 msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
                 with self.outstandingmessages_lock:
