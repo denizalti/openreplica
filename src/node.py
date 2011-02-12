@@ -161,7 +161,6 @@ class Node():
                 self.outstandingmessages[message.ackid].timestamp = time.time()
                 self.outstandingmessages[message.ackid].messagestate = ACK_ACKED
         else:
-            time.sleep(90)
             connection.send(AckMessage(MSG_ACK,self.me,message.id))
             mname = "msg_%s" % msg_names[message.type].lower()
             try:
@@ -231,15 +230,13 @@ class Node():
         checkliveness = set()
         for group in self.groups.itervalues():
             checkliveness.union(group.members)
-        print "****************************************************"
-        print checkliveness
         with self.outstandingmessages_lock:
             for id, messageinfo in self.outstandingmessages.iteritems():
                 now = time.time()
                 if messageinfo.messagestate == ACK_NOTACKED and (messageinfo.timestamp + ACKTIMEOUT) < now:
                     self.send(messageinfo.message, peer=messageinfo.destination) #resend NOTACKED message
                     messageinfo.timestamp = time.time()
-                elif messageinfo.messagestate == ACK_ACKED and (messageinfo.timestamp + PINGTIMEOUT) < now \
+                elif messageinfo.messagestate == ACK_ACKED and (messageinfo.timestamp + LIVENESSTIMEOUT) < now \
                          and messageinfo.destination in checkliveness:
                     checkliveness.remove(messageinfo.destination)
                     

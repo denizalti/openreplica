@@ -5,10 +5,6 @@ we have about paxi.
 *** CHANGES TO THE CODE ***
 Replica & enums	  : Magic Numbers added to enums for (COMMANDSTATE,COMMAND)
 
-Replica		         : Replica receives ClientRequests, assigns a
-			   	   commandnumber and forwards them to
-			   	   the Leader (which Leader?)
-
 
 
 *** TO THINK ABOUT ***

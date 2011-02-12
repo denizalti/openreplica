@@ -4,17 +4,16 @@
 @date: February 1, 2011
 '''
 import socket
-
 from optparse import OptionParser
 from threading import Thread, Lock, Condition
+
 from node import Node
 from enums import *
 from utils import findOwnIP
-from communicationutils import scoutReply,commanderReply
 from connection import ConnectionPool, Connection
 from group import Group
 from peer import Peer
-from message import ClientMessage,Message,PaxosMessage,HandshakeMessage,AckMessage,PValue,PValueSet
+from message import ClientMessage,Message,PaxosMessage,HandshakeMessage,AckMessage,PValue,PValueSet, Command
 
 parser = OptionParser(usage="usage: %prog -b bootstrap")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
@@ -48,15 +47,15 @@ class Client():
         """
         while self.alive:
             try:
-                input = raw_input("client-shell> ")
-                if len(input) == 0:
+                shellinput = raw_input("client-shell> ")
+                if len(shellinput) == 0:
                     continue
                 else:
-                    command = Command(self.me.id, self.clientcommandnumber, self.input)
+                    command = Command(self.me.id, self.clientcommandnumber, shellinput)
                     cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
                     self.conn.send(cm)
-                    # ACK messages..
                     reply = self.conn.receive()
+                    conn.send(AckMessage(MSG_ACK,self.me,reply.id))
                     print reply
             except ( KeyboardInterrupt,EOFError ):
                 os._exit(0)
