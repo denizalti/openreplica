@@ -52,7 +52,6 @@ class Client():
                 if len(input) == 0:
                     continue
                 else:
-                    # XXX How will the Client assign commandnumbers?
                     command = Command(self.me.id, self.clientcommandnumber, self.input)
                     cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
                     self.conn.send(cm)
