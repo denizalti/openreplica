@@ -171,7 +171,7 @@ class AckMessage(Message):
 
 class Command():
     """Command encloses a clientid, clientcommandnumber and command"""
-    def __init__(self,clientid=(0,0),clientcommandnumber=0,command="",serialpvalue=None):
+    def __init__(self,clientid=(0,0),clientcommandnumber=0,command=""):
         """Initialize Command
 
         Command State
@@ -194,7 +194,7 @@ class Command():
     
     def __str__(self):
         """Returns Command information"""
-        return 'Command(%d,%d,%s)' % (self.clientid,self.clientcommandnumber,self.command)
+        return 'Command(%s,%d,%s)' % (str(self.clientid),self.clientcommandnumber,self.command)
 
 class MessageInfo():
     """MessageState encloses a message, destination, messagestate and timestamp"""

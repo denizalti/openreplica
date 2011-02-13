@@ -83,7 +83,59 @@ class Replica(Node):
         print "Completed Requests:\n"
         for (commandnumber,command) in self.requests.iteritems():
             print "%d:\t%s\t%s\n" %  (commandnumber, command[COMMAND], cmd_states[command[COMMANDSTATE]])
+
+# LEADER STATE
+    def become_leader():
+        """Initialize Leader
+
+        Leader State
+        - ballotnumber: the highest ballotnumber Leader has used
+        - pvalueset: the PValueSet for Leader, which encloses all
+        (ballotnumber,commandnumber,proposal) triples Leader knows about
+        - object: the object that Leader is replicating (as it is a Replica too)
+        - commandnumber: the highest commandnumber Leader knows about
+        - outstandingprepares: ResponseCollector dictionary for MSG_PREPARE,
+        indexed by ballotnumber
+        - outstandingproposes: ResponseCollector dictionary for MSG_PROPOSE,
+        indexed by ballotnumber
+        """
+        self.type = NODE_LEADER
+        self.ballotnumber = (0,self.id)
+        self.proposals = {}
+        self.outstandingprepares = {}
+        self.outstandingproposes = {}
+        self.receivedclientrequests = {} # indexed by (clientid,clientcommandnumber)
+
+    def update_ballotnumber(self,seedballotnumber):
+        """Update the ballotnumber with a higher value than given ballotnumber"""
+        temp = (seedballotnumber[0]+1,self.ballotnumber[1])
+        self.ballotnumber = temp
         
+    def get_highest_commandnumber(self):
+        """Return the highest Commandnumber the Leader knows of."""
+        temp = self.nexttodecide
+        self.nexttodecide += 1
+        return temp
+
+     def msg_clientrequest(self, conn, msg):
+        """Handler for a MSG_CLIENTREQUEST
+        A new Paxos Protocol is initiated with the first available commandnumber
+        the Leader knows of.
+        """
+        if self.receivedclientrequests.has_key((msg.command.clientid,msg.command.clientcommandnumber)):
+            print "[%s] Client Request handled before.. Request discarded.." % self
+        else:
+            self.receivedclientrequests[(msg.command.clientid,msg.command.clientcommandnumber)] = msg.command.command
+            print "[%s] Initiating a New Command" % self
+            commandnumber = self.get_highest_commandnumber()
+            proposal = msg.command.command
+            self.do_command(commandnumber, proposal)
+
+    def msg_response(self, conn, msg):
+        """Handler for MSG_RESPONSE"""
+        print "[%s] Received response from Replica" % self
+        clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,msg.result)
+        self.send(clientreply,peer=msg.source)
 
 def main():
     theReplica = Replica(Test())

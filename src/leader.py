@@ -71,14 +71,14 @@ class Leader(Node):
         self.outstandingprepares = {}
         self.outstandingproposes = {}
 
-    def updateBallotnumber(self,seedballotnumber):
+    def update_ballotnumber(self,seedballotnumber):
         """Update the ballotnumber with a higher value than given ballotnumber"""
         temp = (seedballotnumber[0]+1,self.ballotnumber[1])
         self.ballotnumber = temp
         
-    def getHighestCommandNumber(self):
+    def get_highest_commandnumber(self):
         """Return the highest Commandnumber the Leader knows of."""
-        return max(k for k, v in self.requests.iteritems() if v != 0) if len(self.requests) > 0 else 1
+        return max(k for k, v in self.proposals.iteritems() if v != 0) if len(self.proposals) > 0 else 1
         
     def msg_clientrequest(self, conn, msg):
         """Handler for a MSG_CLIENTREQUEST
@@ -86,9 +86,9 @@ class Leader(Node):
         the Leader knows of.
         """
         print "[%s] Initiating a New Command" % self
-        commandnumber = self.getHighestCommandNumber()
-        proposal = msg.proposal
-        self.doCommand(commandnumber, proposal)
+        commandnumber = self.get_highest_commandnumber()
+        proposal = msg.command
+        self.do_command(commandnumber, proposal)
         # XXX Right behavior should be implemented...
         clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"SUCCESS")
         self.send(clientreply,peer=msg.source)
@@ -98,7 +98,7 @@ class Leader(Node):
         print "[%s] Received response from Replica" % self
         print msg.result
 
-    def doCommand(self, commandnumber, proposal):
+    def do_command(self, commandnumber, proposal):
         """Do a command with the given commandnumber and proposal.
         A command is initiated by running a Paxos Protocol for the command.
 
@@ -178,7 +178,7 @@ class Leader(Node):
         - kill the PREPARE STAGE that received a MSG_PREPARE_PREEMPTED
         -- remove the old ResponseCollector from the outstanding prepare set
         - update the ballotnumber
-        - call doCommand() to start a new PREPARE STAGE:
+        - call do_command() to start a new PREPARE STAGE:
         """
         if self.outstandingprepares.has_key(msg.inresponseto):
             prc = self.outstandingprepares[msg.inresponseto]
@@ -186,9 +186,9 @@ class Leader(Node):
             # take this response collector out of the outstanding prepare set
             del self.outstandingprepares[msg.inresponseto]
             # update the ballot number
-            self.updateBallotnumber(msg.ballotnumber)
+            self.update_ballotnumber(msg.ballotnumber)
             # retry the prepare
-            self.doCommand(prc.commandnumber, prc.proposal)
+            self.do_command(prc.commandnumber, prc.proposal)
         else:
             print "[%s] there is no response collector" % self
 
@@ -215,7 +215,7 @@ class Leader(Node):
             assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PROPOSE_ACCEPT can't have non-matching ballotnumber" % self
             if len(prc.received) >= prc.nquorum:
                 # YAY, WE AGREE!
-                self.updateBallotnumber(self.ballotnumber)
+                self.update_ballotnumber(self.ballotnumber)
                 # take this response collector out of the outstanding propose set
                 del self.outstandingproposes[msg.commandnumber]
                 # now we can perform this action on the replicas
@@ -236,7 +236,7 @@ class Leader(Node):
         - kill the PROPOSE STAGE that received a MSG_PROPOSE_REJECT
         -- remove the old ResponseCollector from the outstanding prepare set
         - update the ballotnumber
-        - call doCommand() to start a new PREPARE STAGE:
+        - call do_command() to start a new PREPARE STAGE:
         """
         if self.outstandingproposes.has_key(msg.commandnumber):
             prc = self.outstandingproposes[msg.commandnumber]
@@ -244,18 +244,18 @@ class Leader(Node):
             # take this response collector out of the outstanding propose set
             del self.outstandingproposes[msg.commandnumber]
             # update the ballot number
-            self.updateBallotnumber(msg.ballotnumber)
+            self.update_ballotnumber(msg.ballotnumber)
             # retry the prepare
-            self.doCommand(prc.commandnumber, prc.proposal)
+            self.do_command(prc.commandnumber, prc.proposal)
         else:
             print "[%s] there is no response collector for %s" % (self,str(msg.inresponseto))
 
     def cmd_command(self, args):
         """Shell command [command]: Initiate a new command.
-        This function calls doCommand() with inputs from the Shell.""" 
+        This function calls do_command() with inputs from the Shell.""" 
         commandnumber = args[1]
         proposal = ' '.join(args[2:])
-        self.doCommand(int(commandnumber), proposal)
+        self.do_command(int(commandnumber), proposal)
                     
 def main():
     theLeader = Leader()

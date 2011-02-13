@@ -51,12 +51,16 @@ class Client():
                 if len(shellinput) == 0:
                     continue
                 else:
-                    command = Command(self.me.id, self.clientcommandnumber, shellinput)
+                    command = Command(self.me.id(), self.clientcommandnumber, shellinput)
+                    print command
                     cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
                     self.conn.send(cm)
                     reply = self.conn.receive()
-                    conn.send(AckMessage(MSG_ACK,self.me,reply.id))
-                    print reply
+                    while reply:
+                        if reply.type != MSG_ACK:
+                            self.conn.send(AckMessage(MSG_ACK,self.me,reply.id))
+                        print reply
+                        reply = self.conn.receive()
             except ( KeyboardInterrupt,EOFError ):
                 os._exit(0)
         return
