@@ -5,6 +5,7 @@ we have about paxi.
 *** CHANGES TO THE CODE ***
 Replica & enums	  : Magic Numbers added to enums for (COMMANDSTATE,COMMAND)
 
+Replica		  : Commands should be carried in a way that the last replica/leader that gets the command should be able to respond to the client.
 
 
 *** TO THINK ABOUT ***
