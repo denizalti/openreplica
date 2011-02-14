@@ -107,6 +107,7 @@ class Node():
         returnstr = "outstandingmessages:\n"
         for messageinfo in self.outstandingmessages.itervalues():
             returnstr += "%s\n" % str(messageinfo)
+        returnstr += "\n"+str(self.connectionpool)
         return returnstr
     
     def server_loop(self):
@@ -177,9 +178,6 @@ class Node():
         """Handler for MSG_HELO"""
         print "[%s] got a helo message" % self
         replymsg = HandshakeMessage(MSG_HELOREPLY,self.me,self.groups)
-        # XXX THIS IS WRONG!!!!
-        # XXX we need consensus on who to add to which group
-        # XXX add the other peer to the right peer group
         self.groups[msg.source.type].add(msg.source)
         self.connectionpool.add_connection_to_peer(msg.source, conn)
         self.send(replymsg, peer=msg.source)
@@ -190,7 +188,7 @@ class Node():
         """
         self.groups[msg.source.type].add(msg.source)
         for type,group in self.groups.iteritems():
-            group.union(msg.groups[type])
+            group = group.union(msg.groups[type])
 
     def msg_bye(self, conn, msg):
         """Handler for MSG_BYE
@@ -228,8 +226,8 @@ class Node():
         - sends MSG_HELO message to peers that it has not heard within LIVENESSTIMEOUT
         """
         checkliveness = set()
-        for group in self.groups.itervalues():
-            checkliveness.union(group.members)
+        for type,group in self.groups.iteritems():
+            checkliveness = checkliveness.union(group.members)
         with self.outstandingmessages_lock:
             for id, messageinfo in self.outstandingmessages.iteritems():
                 now = time.time()

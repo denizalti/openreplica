@@ -171,11 +171,11 @@ class AckMessage(Message):
 
 class Command():
     """Command encloses a clientid, clientcommandnumber and command"""
-    def __init__(self,clientid=(0,0),clientcommandnumber=0,command=""):
+    def __init__(self,clientid='',clientcommandnumber=0,command=""):
         """Initialize Command
 
         Command State
-        - clientid: unique id for the Client
+        - client
         - clientcommandnumber: unique id for the command, specific to Client
                                doesn't affect paxos commandnumber
         - command: command to be executed

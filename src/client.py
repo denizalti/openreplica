@@ -52,9 +52,10 @@ class Client():
                     continue
                 else:
                     command = Command(self.me.id(), self.clientcommandnumber, shellinput)
-                    print command
                     cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
                     self.conn.send(cm)
+                    print "Client Message sent:", cm
+                    self.clientcommandnumber += 1
                     reply = self.conn.receive()
                     while reply:
                         if reply.type != MSG_ACK:

@@ -164,6 +164,7 @@ class Replica(Node):
         self.outstandingprepares = {}
         self.outstandingproposes = {}
         self.receivedclientrequests = {} # indexed by (clientid,clientcommandnumber)
+        self.clientconnections = {}
 
     def update_ballotnumber(self,seedballotnumber):
         """Update the ballotnumber with a higher value than given ballotnumber"""
@@ -181,14 +182,20 @@ class Replica(Node):
         A new Paxos Protocol is initiated with the first available commandnumber
         the Leader knows of.
         """
-        if self.receivedclientrequests.has_key((msg.command.clientid,msg.command.clientcommandnumber)):
-            print "[%s] Client Request handled before.. Request discarded.." % self
-        else:
-            self.receivedclientrequests[(msg.command.clientid,msg.command.clientcommandnumber)] = msg.command.command
-            print "[%s] Initiating a New Command" % self
-            commandnumber = self.get_highest_commandnumber()
-            proposal = msg.command.command
+        try:
+            if self.receivedclientrequests.has_key((msg.command.clientid,msg.command.clientcommandnumber)):
+                print "[%s] Client Request handled before.. Request discarded.." % self
+            else:
+                self.clientconnections[msg.source.id()] = conn
+                self.receivedclientrequests[(msg.command.clientid,msg.command.clientcommandnumber)] = msg.command.command
+                print "[%s] Initiating a New Command" % self
+                commandnumber = self.get_highest_commandnumber()
+                proposal = msg.command.command
             self.do_command(commandnumber, proposal)
+        except AttributeError:
+            print "[%s] Not a Leader.. Request rejected.." % self
+            clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED")
+            self.send(clientreply,peer=msg.source)
 
     def msg_response(self, conn, msg):
         """Handler for MSG_RESPONSE"""
@@ -361,6 +368,11 @@ class Replica(Node):
     def cmd_goleader(self, args):
         """Shell command [goleader]: Start Leader state""" 
         self.become_leader()
+
+    def cmd_clients(self,args):
+        """Prints Client Connections"""
+        for id, conn in self.clientconnections.iteritems():
+            print id, "  :  ", conn
 
 def main():
     theReplica = Replica(Test())

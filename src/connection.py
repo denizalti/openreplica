@@ -43,6 +43,17 @@ class ConnectionPool():
             self.poolbysocket[thesocket] = conn
             return conn
 
+    def __str__(self):
+        """Returns ConnectionPool information"""
+        temp = "Connection to Peers:\n"
+        for peer,conn in self.poolbypeer.iteritems():
+            temp += str(peer)+"\n"
+        temp += "Connection to Sockets:\n"
+        for socket,conn in self.poolbypeer.iteritems():
+            temp += str(socket)+"\n"
+        return temp
+        
+
 class Connection():
     """Connection encloses the socket and send/receive functions for a connection."""
     def __init__(self, socket):

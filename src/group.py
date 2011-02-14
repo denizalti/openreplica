@@ -37,8 +37,7 @@ class Group():
     def union(self,othergroup):
         """Unionizes the members of given Group with the members of the Group"""
         for peer in othergroup.members:
-            if peer != self.owner:
-                self.members.add(peer)
+            self.add(peer)
 
     def __str__(self):
         """Returns Group information"""

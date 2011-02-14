@@ -7,9 +7,13 @@ Replica & enums	  : Magic Numbers added to enums for (COMMANDSTATE,COMMAND)
 
 Replica		  : Commands should be carried in a way that the last replica/leader that gets the command should be able to respond to the client.
 
+Leader		  : The Client Connections should be indexed by the clientid? Or maybe we should put the peer in the ClientMessage
+
+Node		  : Have to keep a log about Neighbor behavior to decide it's time to remove a peer from the list when it doesn't answer PING messages.
+
 
 *** TO THINK ABOUT ***
-- How should the Leader and Replica states be updated so commandnumber allocation is done apropriately.
+- How should the Leader and Replica states be updated so commandnumber allocation is done appropriately.
 - Should Leaders extend Replicas? 
 - How to make Leader not reissue all previous commands
     -- Leader can have the state that Replica has (especially if the Leader extends a Replica) and not reissue command in the
