@@ -5,38 +5,51 @@ we have about paxi.
 *** CHANGES TO THE CODE ***
 Replica & enums	  : Magic Numbers added to enums for (COMMANDSTATE,COMMAND)
 
-Replica		  : Commands should be carried in a way that the last replica/leader that gets the command should be able to respond to the client.
+Replica		    	  : Commands should be carried in a way that
+			    	    the last replica/leader that gets
+			    	    the command should be able to
+			    	    respond to the client.
 
-Leader		  : The Client Connections should be indexed by the clientid? Or maybe we should put the peer in the ClientMessage
 
-Node		  : Have to keep a log about Neighbor behavior to decide it's time to remove a peer from the list when it doesn't answer PING messages.
+Node		  	  : Have to keep a log about Neighbor behavior
+			    	    to decide it's time to remove a
+			    	    peer from the list when it doesn't
+			    	    answer PING messages.
+
+
 
 
 *** TO THINK ABOUT ***
-- How should the Leader and Replica states be updated so commandnumber allocation is done appropriately.
-- Should Leaders extend Replicas? 
+- How should the Leader and Replica states be updated so commandnumber
+allocation is done appropriately.
 - How to make Leader not reissue all previous commands
-    -- Leader can have the state that Replica has (especially if the Leader extends a Replica) and not reissue command in the
-         Executed (maybe even Decided) state.
-    -- Leader can receive periodic "state of the system" messages from Replicas
+    -- Leader can have the state that Replica has (especially if the
+    Leader extends a Replica) and not reissue command in the Executed
+    (maybe even Decided) state.
+    -- Leader can receive periodic "state of the system" messages from
+    Replicas
 - How will Leader Failure be handled.
 - How will the weak Leader election be done.
 
 
 *** DONE ***
-Leader & Acceptor	 : The replies for PREPARE and PROPOSE should have different names:
+Leader & Acceptor	 : The replies for PREPARE and PROPOSE should
+       	 		       	   have different names:
 			       	       - MSG_PREPARE_ADOPTED
 				       - MSG_PREPARE_PREEMPTED
 				       - MSG_PROPOSE_ACCEPT
 				       - MSG_PROPOSE_REJECT
 
-Replica			 : 'requests' keeps <commandnumber:(commandstate,command/result)> mappings
+Replica			 : 'requests' keeps
+			           <commandnumber:(commandstate,command/result)> mappings
 			  	   'commandstate' can be Executed,Decided,Running,None
-				   		  - Executed: The command corresponding to the commandnumber has 
-						    	      	     been both decided and executed.
-						  - Decided: The command corresponding to the commandnumber has 
-						    	     	     been decided but it is not executed yet (probably due to an 
-								     outstanding command prior to this command.)
+				   		  - Executed: The command corresponding to the
+			           		    	      	     commandnumber has been both decided
+			                                             and executed.
+						  - Decided: The command corresponding to the commandnumber
+						    	     	     has been decided but it is not executed
+			           				     yet (probably due to an outstanding
+			           				     command prior to this command.)
 						  - Running: The commandnumber is assigned to a command but the 
 						    	     	     result is not known yet.
 						  - None: The commandnumber has not been assigned to any command.

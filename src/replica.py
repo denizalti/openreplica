@@ -216,14 +216,17 @@ class Replica(Node):
         -- add the ResponseCollector to the outstanding prepare set
         -- send MSG_PREPARE to Acceptor nodes
         """
-        recentballotnumber = self.ballotnumber
-        print "[%s] initiating command: %d:%s" % (self,commandnumber,proposal)
-        print "[%s] with ballotnumber %s" % (self,str(recentballotnumber))
-        prepare = PaxosMessage(MSG_PREPARE,self.me,recentballotnumber)
-        prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, commandnumber, proposal)
-        self.outstandingprepares[recentballotnumber] = prc
-        self.send(prepare, group=prc.acceptors)
-
+        try: 
+            recentballotnumber = self.ballotnumber
+            print "[%s] initiating command: %d:%s" % (self,commandnumber,proposal)
+            print "[%s] with ballotnumber %s" % (self,str(recentballotnumber))
+            prepare = PaxosMessage(MSG_PREPARE,self.me,recentballotnumber)
+            prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, commandnumber, proposal)
+            self.outstandingprepares[recentballotnumber] = prc
+            self.send(prepare, group=prc.acceptors)
+        except AttributeError:
+            print "Not a Leader.."
+            
     def msg_prepare_adopted(self, conn, msg):
         """Handler for MSG_PREPARE_ADOPTED
         MSG_PREPARE_ADOPTED is handled only if it belongs to an outstanding MSG_PREPARE,
@@ -360,10 +363,13 @@ class Replica(Node):
     # Debug Methods
     def cmd_command(self, args):
         """Shell command [command]: Initiate a new command.
-        This function calls do_command() with inputs from the Shell.""" 
-        commandnumber = args[1]
-        proposal = ' '.join(args[2:])
-        self.do_command(int(commandnumber), proposal)
+        This function calls do_command() with inputs from the Shell."""
+        try:
+            commandnumber = args[1]
+            proposal = ' '.join(args[2:])
+            self.do_command(int(commandnumber), proposal)
+        except IndexError:
+            print "command expects 2 arguments.."
 
     def cmd_goleader(self, args):
         """Shell command [goleader]: Start Leader state""" 
@@ -375,7 +381,7 @@ class Replica(Node):
             print id, "  :  ", conn
 
 def main():
-    theReplica = Replica(Test())
+    theReplica = Replica(Bank())
     theReplica.startservice()
 
 if __name__=='__main__':
