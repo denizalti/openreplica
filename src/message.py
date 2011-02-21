@@ -86,7 +86,7 @@ class PValue():
     """PValue encloses a ballotnumber, commandnumber and proposal.
     PValue is used to keep Paxos state in Acceptor and Leader nodes.
     """
-    def __init__(self,ballotnumber=(0,0),commandnumber=0,proposal="",serialpvalue=None):
+    def __init__(self,ballotnumber=(0,0),commandnumber=0,proposal=None,serialpvalue=None):
         """Initialize PValue
 
         PValue State

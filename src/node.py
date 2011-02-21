@@ -156,7 +156,7 @@ class Node():
         """Receives a message and calls the corresponding message handler"""
         connection = self.connectionpool.get_connection_by_socket(clientsock)
         message = connection.receive()
-        print "[%s] got message %s" % (self.id, message)
+        print "[%s] got message %s" % (self, message)
         if message.type == MSG_ACK:
             with self.outstandingmessages_lock:
                 self.outstandingmessages[message.ackid].timestamp = time.time()
@@ -176,7 +176,6 @@ class Node():
     #
     def msg_helo(self, conn, msg):
         """Handler for MSG_HELO"""
-        print "[%s] got a helo message" % self
         replymsg = HandshakeMessage(MSG_HELOREPLY,self.me,self.groups)
         self.groups[msg.source.type].add(msg.source)
         self.connectionpool.add_connection_to_peer(msg.source, conn)
@@ -237,11 +236,12 @@ class Node():
                 elif messageinfo.messagestate == ACK_ACKED and (messageinfo.timestamp + LIVENESSTIMEOUT) < now \
                          and messageinfo.destination in checkliveness:
                     checkliveness.remove(messageinfo.destination)
-                    
-            for pingpeer in checkliveness:
-                print "Sending PING to %s" % pingpeer
-                helomessage = HandshakeMessage(MSG_HELO, self.me)
-                self.send(helomessage, peer=pingpeer)
+
+            #print "Checking liveness for:", checkliveness
+            #for pingpeer in checkliveness:
+            #    print "Sending PING to %s" % pingpeer
+            #    helomessage = HandshakeMessage(MSG_HELO, self.me)
+            #    self.send(helomessage, peer=pingpeer)
           
 
     def get_inputs(self):
@@ -272,6 +272,7 @@ class Node():
         if peer:
             connection = self.connectionpool.get_connection_to_peer(peer)
             connection.send(message)
+            print "[%s] Sent message to %s" % (self, peer)
             msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
             with self.outstandingmessages_lock:
                 self.outstandingmessages[message.id] = msginfo

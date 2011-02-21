@@ -13,7 +13,7 @@ from enums import *
 from connection import Connection, ConnectionPool
 from group import Group
 from peer import Peer
-from message import Message, PaxosMessage, HandshakeMessage, AckMessage, PValue, PValueSet, ClientMessage
+from message import Message, PaxosMessage, HandshakeMessage, AckMessage, PValue, PValueSet, ClientMessage, Command
 from test import Test
 from bank import Bank
 
@@ -89,7 +89,7 @@ class Replica(Node):
         while self.requests.has_key(self.nexttoexecute) and self.requests[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
             print "[%s] Executing command %d." % (self, self.nexttoexecute)
             command = self.requests[self.nexttoexecute][COMMAND] # magic number 
-            commandlist = command.split()
+            commandlist = command.command.split()
             commandname = commandlist[0]
             commandargs = commandlist[1:]
             try:
@@ -120,7 +120,7 @@ class Replica(Node):
         while self.requests.has_key(self.nexttoexecute) and self.requests[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
             print "[%s] Executing command %d." % (self, self.nexttoexecute)
             command = self.requests[self.nexttoexecute][COMMAND] # magic number 
-            commandlist = command.split()
+            commandlist = command.command.split()
             commandname = commandlist[0]
             commandargs = commandlist[1:]
             try:
@@ -367,7 +367,8 @@ class Replica(Node):
         try:
             commandnumber = args[1]
             proposal = ' '.join(args[2:])
-            self.do_command(int(commandnumber), proposal)
+            cmdproposal = Command(clientid='Test', command=proposal)
+            self.do_command(int(commandnumber), cmdproposal)
         except IndexError:
             print "command expects 2 arguments.."
 
