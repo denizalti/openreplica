@@ -5,16 +5,12 @@ we have about paxi.
 *** CHANGES TO THE CODE ***
 Replica & enums	  : Magic Numbers added to enums for (COMMANDSTATE,COMMAND)
 
-Replica		    	  : Commands should be carried in a way that
-			    	    the last replica/leader that gets
-			    	    the command should be able to
-			    	    respond to the client.
-
-
 Node		  	  : Have to keep a log about Neighbor behavior
 			    	    to decide it's time to remove a
 			    	    peer from the list when it doesn't
 			    	    answer PING messages.
+
+Node		         : Connections work two ways
 
 
 
@@ -87,3 +83,8 @@ Leader		         : As messages may be received multiple times the ResponseCollec
                                    multiple replies are discarded for right behavior. 
    
 Leader		         : global proposals and xor this with the pmaxset before sending commands 
+
+Replica		    	  : Commands should be carried in a way that
+			    	    the last replica/leader that gets
+			    	    the command should be able to
+			    	    respond to the client.

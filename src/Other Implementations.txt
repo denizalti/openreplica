@@ -1,0 +1,37 @@
+** Toy Paxos (Python)
+[http://the-paper-trail.org/blog/?p=190]
+
+    - Leader and Acceptor are implemented
+    - PaxosLeader listens for proposals from external clients and 
+    runs the protocol with whichever PaxosAcceptors are currently
+    correct/connected
+
+    - If a leader fails, another leader will take over once it realises. 
+    If clients fail, the protcol will still run until more than half have 
+    failed.
+
+    - Heartbeats are used to do weak Leader Election.
+
+    - GarbageCollection: If a proposal is accepted it is removed.
+
+    - Leader & Acceptor run following a state machine.
+
+** Lib Paxos (C)
+[http://libpaxos.sourceforge.net/]
+    - 5 Different Implementations:
+      		  -- RingPaxos: a high-throughput implementation based on IP-Mmulticast
+		  -- libPaxos2 : libPaxos with leader election and various protocol optimizations
+		  -- libPaxos   : basic implementation
+		  -- fastPaxos : fast paxos algorithm
+		  -- erlangPxs : simulator written in Erlang
+
+      --- fastPaxos
+      	  - disk writes to keep state
+
+
+** pyPaxos (Python)
+[http://evanjones.ca/model-checking-paxos.html]
+    - basic paxos algorithm
+    - algorithm tested by model checking
+    - brute force testing using orderings
+      	    - employing different partial orders
