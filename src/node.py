@@ -237,11 +237,11 @@ class Node():
                          and messageinfo.destination in checkliveness:
                     checkliveness.remove(messageinfo.destination)
 
-            #print "Checking liveness for:", checkliveness
-            #for pingpeer in checkliveness:
-            #    print "Sending PING to %s" % pingpeer
-            #    helomessage = HandshakeMessage(MSG_HELO, self.me)
-            #    self.send(helomessage, peer=pingpeer)
+            print "Checking liveness for:", checkliveness
+            for pingpeer in checkliveness:
+                print "Sending PING to %s" % pingpeer
+                helomessage = HandshakeMessage(MSG_HELO, self.me)
+                self.send(helomessage, peer=pingpeer)
           
 
     def get_inputs(self):
@@ -271,6 +271,7 @@ class Node():
     def send(self, message, peer=None, group=None):
         if peer:
             connection = self.connectionpool.get_connection_to_peer(peer)
+            print "Peer: %s\nConnection: %s" % (peer,connection)
             connection.send(message)
             print "[%s] Sent message to %s" % (self, peer)
             msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
