@@ -62,7 +62,7 @@ class Connection():
     
     def __str__(self):
         """Return Connection information"""
-        return "Connection with Peer at addr: %s port: %d" % (self.thesocket.getsockname())
+        return "Connection to Peer at addr: %s port: %d" % (self.thesocket.getpeername())
     
     def receive(self):
         """receive a message on the Connection"""

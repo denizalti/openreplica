@@ -7,6 +7,7 @@ from threading import Thread
 from random import randint
 
 from enums import *
+from utils import *
 from node import Node
 from connection import ConnectionPool
 from group import Group
@@ -40,13 +41,13 @@ class Acceptor(Node):
         pvalues accepted thus far.
         """
         if msg.ballotnumber > self.ballotnumber:
-            print "[%s] prepare received with acceptable ballotnumber %s" % (self, str(msg.ballotnumber))
+            logger("prepare received with acceptable ballotnumber %s" % str(msg.ballotnumber))
             self.ballotnumber = msg.ballotnumber
             replymsg = PaxosMessage(MSG_PREPARE_ADOPTED,self.me,self.ballotnumber,msg.ballotnumber,givenpvalueset=self.accepted)
         else:
-            print "[%s] prepare received with non-acceptable ballotnumber %s" % (self, str(msg.ballotnumber))
+            logger("prepare received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))
             replymsg = PaxosMessage(MSG_PREPARE_PREEMPTED,self.me,self.ballotnumber,msg.ballotnumber,givenpvalueset=self.accepted)
-        print "[%s] prepare responding to ballotnumber %s" % (self, str(msg.ballotnumber))
+        logger("prepare responding to ballotnumber %s" % str(msg.ballotnumber))
         self.send(replymsg,peer=msg.source)
 
     def msg_propose(self, conn, msg):
@@ -60,13 +61,13 @@ class Acceptor(Node):
         commandnumber that is received.
         """
         if msg.ballotnumber >= self.ballotnumber:
-            print "[%s] propose received with acceptable ballotnumber %s" % (self, str(msg.ballotnumber))
+            logger("propose received with acceptable ballotnumber %s" % str(msg.ballotnumber))
             self.ballotnumber = msg.ballotnumber
             newpvalue = PValue(msg.ballotnumber,msg.commandnumber,msg.proposal)
             self.accepted.add(newpvalue)
             replymsg = PaxosMessage(MSG_PROPOSE_ACCEPT,self.me,self.ballotnumber,msg.ballotnumber,newpvalue.commandnumber)
         else:
-            print "[%s] propose received with non-acceptable ballotnumber %s" % (self, str(msg.ballotnumber))
+            logger("propose received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))
             replymsg = PaxosMessage(MSG_PROPOSE_REJECT,self.me,self.ballotnumber,msg.ballotnumber,newpvalue.commandnumber)
         self.send(replymsg,peer=msg.source)
 

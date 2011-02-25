@@ -4,7 +4,7 @@
 @date: February 1, 2011
 '''
 from optparse import OptionParser
-from threading import Thread, Lock, Condition, Timer
+from threading import Thread, RLock, Lock, Condition, Timer
 from time import sleep,time
 import os
 import time
@@ -13,7 +13,7 @@ import socket
 import select
 
 from enums import *
-from utils import findOwnIP
+from utils import *
 from connection import ConnectionPool,Connection
 from group import Group
 from peer import Peer
@@ -51,7 +51,7 @@ class Node():
         self.connectionpool = ConnectionPool()
         self.type = mytype
         self.alive = True
-        self.outstandingmessages_lock = Lock()
+        self.outstandingmessages_lock = RLock()
         self.outstandingmessages = {} # keeps <messageid:messageinfo> mappings as <MessageID:MessageInfo> objects
 
         # create server socket and bind to a port
@@ -68,12 +68,13 @@ class Node():
         # initialize empty groups
         self.me = Peer(self.addr,self.port,self.type)
         self.id = self.me.id()
+        setlogprefix(self.id)
+        logger("I'm alive.")
         self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_LEADER:Group(self.me)}
 
         # connect to the bootstrap node
-        print "[%s] starting up..." % self
         if bootstrap:
-            print "[%s] connecting to %s" % (self,bootstrap)
+            logger("connecting to %s" % bootstrap)
             bootaddr,bootport = bootstrap.split(":")
             bootpeer = Peer(bootaddr,int(bootport))
             helomessage = HandshakeMessage(MSG_HELO, self.me)
@@ -143,7 +144,7 @@ class Node():
                 for s in inputready:
                     if s == self.socket:
                         clientsock,clientaddr = self.socket.accept()
-                        print "[%s] accepted a connection from address %s" % (self,clientaddr)
+                        logger("accepted a connection from address %s" % str(clientaddr))
                         nascentset.append((clientsock,time.time()))
                     else:
                         self.handle_connection(s)
@@ -156,7 +157,7 @@ class Node():
         """Receives a message and calls the corresponding message handler"""
         connection = self.connectionpool.get_connection_by_socket(clientsock)
         message = connection.receive()
-        print "[%s] got message %s" % (self, message)
+        logger("got message %s" % message)
         if message.type == MSG_ACK:
             with self.outstandingmessages_lock:
                 self.outstandingmessages[message.ackid].timestamp = time.time()
@@ -167,7 +168,7 @@ class Node():
             try:
                 method = getattr(self, mname)
             except AttributeError:
-                print "message not supported: %s" % (message)
+                logger("message not supported: %s" % message)
                 return
             method(connection, message)
 
@@ -178,7 +179,7 @@ class Node():
         """Handler for MSG_HELO"""
         replymsg = HandshakeMessage(MSG_HELOREPLY,self.me,self.groups)
         self.groups[msg.source.type].add(msg.source)
-        self.connectionpool.add_connection_to_peer(msg.source, conn)
+        self.connectionpool.add_connection_to_peer(msg.source,conn)
         self.send(replymsg, peer=msg.source)
 
     def msg_heloreply(self, conn, msg):
@@ -215,7 +216,7 @@ class Node():
                     
     def cmd_state(self, args):
         """Shell command [state]: Prints connectivity state of the corresponding Node."""
-        print "[%s]\n%s\n%s\n" % (self, self.statestr(), self.outstandingmsgstr())
+        logger("\n%s\n%s\n" % (self.statestr(), self.outstandingmsgstr()))
 
     def periodic(self):
         """timer function that is responsible for periodic state maintenance
@@ -236,12 +237,12 @@ class Node():
                 elif messageinfo.messagestate == ACK_ACKED and (messageinfo.timestamp + LIVENESSTIMEOUT) < now \
                          and messageinfo.destination in checkliveness:
                     checkliveness.remove(messageinfo.destination)
+        logger("Periodic Resend Done!")
 
-            print "Checking liveness for:", checkliveness
-            for pingpeer in checkliveness:
-                print "Sending PING to %s" % pingpeer
-                helomessage = HandshakeMessage(MSG_HELO, self.me)
-                self.send(helomessage, peer=pingpeer)
+        for pingpeer in checkliveness:
+            logger("Sending PING to %s" % pingpeer)
+            helomessage = HandshakeMessage(MSG_HELO, self.me)
+            self.send(helomessage, peer=pingpeer)
           
 
     def get_inputs(self):
@@ -271,9 +272,8 @@ class Node():
     def send(self, message, peer=None, group=None):
         if peer:
             connection = self.connectionpool.get_connection_to_peer(peer)
-            print "Peer: %s\nConnection: %s" % (peer,connection)
             connection.send(message)
-            print "[%s] Sent message to %s" % (self, peer)
+            logger("Sent message to %s" % peer)
             msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
             with self.outstandingmessages_lock:
                 self.outstandingmessages[message.id] = msginfo

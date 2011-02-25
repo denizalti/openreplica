@@ -10,6 +10,7 @@ import math
 
 from node import Node
 from enums import *
+from utils import *
 from connection import Connection, ConnectionPool
 from group import Group
 from peer import Peer
@@ -87,7 +88,7 @@ class Replica(Node):
             self.requests[msg.commandnumber] = (CMD_DECIDED,msg.proposal)
                          
         while self.requests.has_key(self.nexttoexecute) and self.requests[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
-            print "[%s] Executing command %d." % (self, self.nexttoexecute)
+            logger("Executing command %d." % self.nexttoexecute)
             command = self.requests[self.nexttoexecute][COMMAND] # magic number 
             commandlist = command.command.split()
             commandname = commandlist[0]
@@ -118,7 +119,7 @@ class Replica(Node):
             self.requests[msg.commandnumber] = (CMD_DECIDED,msg.proposal)
                          
         while self.requests.has_key(self.nexttoexecute) and self.requests[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
-            print "[%s] Executing command %d." % (self, self.nexttoexecute)
+            logger("Executing command %d." % self.nexttoexecute)
             command = self.requests[self.nexttoexecute][COMMAND] # magic number 
             commandlist = command.command.split()
             commandname = commandlist[0]
@@ -184,22 +185,22 @@ class Replica(Node):
         """
         try:
             if self.receivedclientrequests.has_key((msg.command.clientid,msg.command.clientcommandnumber)):
-                print "[%s] Client Request handled before.. Request discarded.." % self
+                logger("Client Request handled before.. Request discarded..")
             else:
                 self.clientconnections[msg.source.id()] = conn
                 self.receivedclientrequests[(msg.command.clientid,msg.command.clientcommandnumber)] = msg.command.command
-                print "[%s] Initiating a New Command" % self
+                logger("Initiating a New Command")
                 commandnumber = self.get_highest_commandnumber()
                 proposal = msg.command.command
             self.do_command(commandnumber, proposal)
         except AttributeError:
-            print "[%s] Not a Leader.. Request rejected.." % self
+            logger("Not a Leader.. Request rejected..")
             clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED")
             self.send(clientreply,peer=msg.source)
 
     def msg_response(self, conn, msg):
         """Handler for MSG_RESPONSE"""
-        print "[%s] Received response from Replica" % self
+        logger("Received response from Replica")
         clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,msg.result)
         # self.send(clientreply,peer=CLIENT) # XXX
 
@@ -218,8 +219,8 @@ class Replica(Node):
         """
         try: 
             recentballotnumber = self.ballotnumber
-            print "[%s] initiating command: %d:%s" % (self,commandnumber,proposal)
-            print "[%s] with ballotnumber %s" % (self,str(recentballotnumber))
+            logger("initiating command: %d:%s" % (commandnumber,proposal))
+            logger("with ballotnumber %s" % str(recentballotnumber))
             prepare = PaxosMessage(MSG_PREPARE,self.me,recentballotnumber)
             prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, commandnumber, proposal)
             self.outstandingprepares[recentballotnumber] = prc
@@ -250,10 +251,9 @@ class Replica(Node):
         ---- send MSG_PROPOSE to the same Acceptor nodes from the PREPARE STAGE
         """
         if self.outstandingprepares.has_key(msg.inresponseto):
-            print "Found the key for the outstandingprepare %s" %str(msg.inresponseto)
             prc = self.outstandingprepares[msg.inresponseto]
             prc.received[msg.source] = msg
-            print "[%s] got an accept for ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal)
+            logger("got an accept for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
             assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PREPARE_ADOPTED can't have non-matching ballotnumber" % self
             # collect all the p-values from the response
             if msg.pvalueset is not None:
@@ -261,7 +261,7 @@ class Replica(Node):
                     prc.possiblepvalueset.add(pvalue)
 
             if len(prc.received) >= prc.nquorum:
-                print "[%s] suffiently many accepts on prepare" % self
+                logger("suffiently many accepts on prepare!")
                 # choose pvalues with distinctive commandnumbers and highest ballotnumbers
                 pmaxset = prc.possiblepvalueset.pmax()
                 for commandnumber,proposal in pmaxset.iteritems():
@@ -274,7 +274,7 @@ class Replica(Node):
                     propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotnumber,commandnumber=chosencommandnumber,proposal=chosenproposal)
                     self.send(propose,group=newprc.acceptors)
         else:
-            print "[%s] there is no response collector" % self
+            logger("there is no response collector")
 
     def msg_prepare_preempted(self, conn, msg):
         """Handler for MSG_PREPARE_PREEMPTED
@@ -291,7 +291,7 @@ class Replica(Node):
         """
         if self.outstandingprepares.has_key(msg.inresponseto):
             prc = self.outstandingprepares[msg.inresponseto]
-            print "[%s] got a reject for ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal)
+            logger("got a reject for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
             # take this response collector out of the outstanding prepare set
             del self.outstandingprepares[msg.inresponseto]
             # update the ballot number
@@ -299,7 +299,7 @@ class Replica(Node):
             # retry the prepare
             self.do_command(prc.commandnumber, prc.proposal)
         else:
-            print "[%s] there is no response collector" % self
+            logger("there is no response collector")
 
     def msg_propose_accept(self, conn, msg):
         """Handler for MSG_PROPOSE_ACCEPT
@@ -319,7 +319,7 @@ class Replica(Node):
         """
         if self.outstandingproposes.has_key(msg.commandnumber):
             prc = self.outstandingproposes[msg.commandnumber]
-            print "[%s] got an accept for proposal ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal)
+            logger("got an accept for proposal ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
             prc.received[msg.source] = msg
             assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PROPOSE_ACCEPT can't have non-matching ballotnumber" % self
             if len(prc.received) >= prc.nquorum:
@@ -333,7 +333,7 @@ class Replica(Node):
                 self.send(performmessage, group=self.groups[NODE_LEADER])
                 self.perform(performmessage)
         else:
-            print "[%s] there is no response collector for %s" % (self,str(msg.inresponseto))
+            logger("there is no response collector for %s" % str(msg.inresponseto))
 
     def msg_propose_reject(self, conn, msg):
         """Handler for MSG_PROPOSE_REJECT
@@ -350,7 +350,7 @@ class Replica(Node):
         """
         if self.outstandingproposes.has_key(msg.commandnumber):
             prc = self.outstandingproposes[msg.commandnumber]
-            print "[%s] got a reject for proposal ballotno %s commandno %s proposal %s with %d out of %d" % (self, prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal)
+            logger("got a reject for proposal ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
             # take this response collector out of the outstanding propose set
             del self.outstandingproposes[msg.commandnumber]
             # update the ballot number
@@ -358,7 +358,7 @@ class Replica(Node):
             # retry the prepare
             self.do_command(prc.commandnumber, prc.proposal)
         else:
-            print "[%s] there is no response collector for %s" % (self,str(msg.inresponseto))
+            logger("there is no response collector for %s" % str(msg.inresponseto))
 
     # Debug Methods
     def cmd_command(self, args):
