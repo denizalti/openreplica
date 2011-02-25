@@ -1,4 +1,5 @@
-class Bank():
+
+class Block():
     def __init__(self):
         self.accounts = {}  # dictionary indexed by accountid storing accounts
 
