@@ -33,6 +33,7 @@ class ConnectionPool():
             for connkey,conn in self.poolbypeer.iteritems():
                 if conn == daconn:
                     del self.poolbypeer[connkey]
+                    break
             del self.poolbysocket[daconn.thesocket]
             daconn.close()
         else:
