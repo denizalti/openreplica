@@ -31,7 +31,10 @@ class Message():
 
     def __str__(self):
         """Return Message information"""
-        return 'Message: %s src %s' % (msg_names[self.type],self.source)
+        if self.type != MSG_ACK:
+            return 'Message#%d: %s src %s' % (self.id,msg_names[self.type],self.source)
+        else:
+            return 'AckMessage#%d: %s src %s' % (self.ackid,msg_names[self.type],self.source)
 
 class PValueSet():
     """PValueSet encloses a set of pvalues and supports corresponding
@@ -152,12 +155,14 @@ class PaxosMessage(Message):
         return temp
 
 class ClientMessage(Message):
-    def __init__(self,msgtype,myname,command=None):
+    def __init__(self,msgtype,myname,command=None,inresponseto=0):
         Message.__init__(self, msgtype, myname)
         self.command = command
+        self.inresponseto = inresponseto # command number this reply is in response to
 
     def __str__(self):
         temp = Message.__str__(self)
+        temp += '  inresponseto: %d' % self.inresponseto
         if self.type == MSG_CLIENTREQUEST:
             temp += '  request: %s' % str(self.command)
         elif self.type == MSG_CLIENTREPLY:
@@ -170,8 +175,8 @@ class AckMessage(Message):
         self.ackid = ackid
 
 class Command():
-    """Command encloses a clientid, clientcommandnumber and command"""
-    def __init__(self,clientid='',clientcommandnumber=0,command=""):
+    """Command encloses a client, clientcommandnumber and command"""
+    def __init__(self,client=None,clientcommandnumber=0,command=""):
         """Initialize Command
 
         Command State
@@ -180,7 +185,7 @@ class Command():
                                doesn't affect paxos commandnumber
         - command: command to be executed
         """
-        self.clientid = clientid
+        self.client = client
         self.clientcommandnumber = clientcommandnumber
         self.command = command
 
@@ -188,13 +193,13 @@ class Command():
         """Equality function for two Commands.
         Returns True if given Command is equal to Command, False otherwise.
         """
-        return self.clientid == othercommand.clientid and \
+        return self.client == othercommand.client and \
             self.clientcommandnumber == othercommand.clientcommandnumber and \
             self.command == othercommand.command
     
     def __str__(self):
         """Returns Command information"""
-        return 'Command(%s,%d,%s)' % (str(self.clientid),self.clientcommandnumber,self.command)
+        return 'Command(%s,%d,%s)' % (str(self.client),self.clientcommandnumber,self.command)
 
 class MessageInfo():
     """MessageState encloses a message, destination, messagestate and timestamp"""

@@ -39,6 +39,10 @@ class Group():
         for peer in othergroup.members:
             self.add(peer)
 
+    def __iter__(self):
+        for peer in self.members:
+            yield peer
+
     def __str__(self):
         """Returns Group information"""
         returnstr = ''

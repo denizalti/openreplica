@@ -71,6 +71,32 @@ class Replica(Node):
         self.nexttoexecute = 1
         self.requests = {}
 
+    def execcore(self, conn, msg, slotno, dometaonly=False):
+        command = self.requests[slotno][COMMAND] # magic number 
+        commandlist = command.command.split()
+        commandname = commandlist[0]
+        commandargs = commandlist[1:]
+        try:
+            if commandname in METACOMMANDS:
+                if dometaonly:
+                    method = getattr(self, commandname)
+                else:
+                    self.requests[slotno] = (CMD_EXECUTED,'')
+                    return
+            else:
+                if dometaonly:
+                    return
+                else:
+                    method = getattr(self.object, commandname)
+        except AttributeError:
+            print "command not supported: %s" % (command)
+            givenresult = 'COMMAND NOT SUPPORTED'
+        givenresult = method(commandargs)
+        self.requests[slotno] = (CMD_EXECUTED,givenresult)
+        if commandname not in METACOMMANDS:
+            replymsg = PaxosMessage(MSG_RESPONSE,self.me,commandnumber=self.nexttoexecute,result=givenresult)
+            self.send(replymsg,peer=msg.source)
+
     def msg_perform(self, conn, msg):
         """Handler for MSG_PERFORM
 
@@ -89,20 +115,22 @@ class Replica(Node):
                          
         while self.requests.has_key(self.nexttoexecute) and self.requests[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
             logger("Executing command %d." % self.nexttoexecute)
-            command = self.requests[self.nexttoexecute][COMMAND] # magic number 
-            commandlist = command.command.split()
-            commandname = commandlist[0]
-            commandargs = commandlist[1:]
-            try:
-                method = getattr(self.object, commandname)
-            except AttributeError:
-                print "command not supported: %s" % (command)
-                givenresult = 'COMMAND NOT SUPPORTED'
-            givenresult = method(commandargs)
-            self.requests[self.nexttoexecute] = (CMD_EXECUTED,givenresult)
-            replymsg = PaxosMessage(MSG_RESPONSE,self.me,commandnumber=self.nexttoexecute,result=givenresult)
-            self.send(replymsg,peer=msg.source)
+            
+            # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
+            if self.nexttoexecute >= WINDOW:
+                self.execcore(conn, msg, self.nexttoexecute - WINDOW, True)
+
+            self.execcore(conn, msg, self.nexttoexecute)
             self.nexttoexecute += 1
+
+    def add_acceptor(self, args):
+        pass
+    def del_acceptor(self, args):
+        pass
+    def add_replica(self, args):
+        pass
+    def del_replica(self, args):
+        pass
 
     def perform(self, msg):
         """Function to handle local perform operations. Used if the replica is also a leader.
@@ -133,6 +161,11 @@ class Replica(Node):
             self.requests[self.nexttoexecute] = (CMD_EXECUTED,givenresult)
             self.nexttoexecute += 1
 
+            # if this client contacted me for this operation, return him the response
+            clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,givenresult, command.clientcommandnumber)
+            clientconn = self.clientpool.get_connection_by_peer(command.client)
+            clientconn.send(clientreply)
+
     def cmd_showobject(self, args):
         """Shell command [showobject]: Print Replicated Object information""" 
         print self.object
@@ -159,13 +192,36 @@ class Replica(Node):
         - outstandingproposes: ResponseCollector dictionary for MSG_PROPOSE,
         indexed by ballotnumber
         """
-        self.type = NODE_LEADER
-        self.ballotnumber = (0,self.id)
-        self.proposals = {}
-        self.outstandingprepares = {}
-        self.outstandingproposes = {}
-        self.receivedclientrequests = {} # indexed by (clientid,clientcommandnumber)
-        self.clientconnections = {}
+        if self.type != NODE_LEADER:
+            self.type = NODE_LEADER
+            self.ballotnumber = (0,self.id)
+            self.proposals = {}
+            self.outstandingprepares = {}
+            self.outstandingproposes = {}
+            self.receivedclientrequests = {} # indexed by (client,clientcommandnumber)
+            self.clientpool = ConnectionPool()
+            
+    def unbecome_leader(self):
+        """Stop being a leader"""
+        # fail-stop tolerance, coupled with retries in the client, mean that a 
+        # leader can at any time discard all of its internal state and the protocol
+        # will still work correctly.
+        self.type = NODE_REPLICA
+
+    def check_leader_promotion(self):
+        minpeer = None
+        for peer in self.groups[NODE_LEADER]:
+            if minpeer is None or peer < minpeer:
+                minpeer = peer
+        for peer in self.groups[NODE_REPLICA]:
+            if minpeer is None or peer < minpeer:
+                minpeer = peer
+        if minpeer is None or self.me < minpeer:
+            # i need to step up and become a leader
+            self.become_leader()
+        elif self.type == NODE_LEADER:
+            # there is someone else who should act as a leader
+            self.unbecome_leader()
 
     def update_ballotnumber(self,seedballotnumber):
         """Update the ballotnumber with a higher value than given ballotnumber"""
@@ -183,20 +239,22 @@ class Replica(Node):
         A new Paxos Protocol is initiated with the first available commandnumber
         the Leader knows of.
         """
-        try:
-            if self.receivedclientrequests.has_key((msg.command.clientid,msg.command.clientcommandnumber)):
-                logger("Client Request handled before.. Request discarded..")
+        self.check_leader_promotion()
+        if self.type == NODE_LEADER:
+            if self.receivedclientrequests.has_key((msg.command.client,msg.command.clientcommandnumber)):
+                logger("XXX Client Request handled before.. Request discarded..")
+                # XXX if this request was handled before, re-send the previous response to the client
             else:
-                self.clientconnections[msg.source.id()] = conn
-                self.receivedclientrequests[(msg.command.clientid,msg.command.clientcommandnumber)] = msg.command.command
+                self.clientpool.add_connection_to_peer(msg.source, conn)
+                self.receivedclientrequests[(msg.command.client,msg.command.clientcommandnumber)] = msg.command
                 logger("Initiating a New Command")
                 commandnumber = self.get_highest_commandnumber()
-                proposal = msg.command.command
-            self.do_command(commandnumber, proposal)
-        except AttributeError:
+                proposal = msg.command
+                self.do_command(commandnumber, proposal)
+        else:
             logger("Not a Leader.. Request rejected..")
-            clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED")
-            self.send(clientreply,peer=msg.source)
+            clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED",msg.command.clientcommandnumber)
+            conn.send(clientreply)
 
     def msg_response(self, conn, msg):
         """Handler for MSG_RESPONSE"""
@@ -217,7 +275,7 @@ class Replica(Node):
         -- add the ResponseCollector to the outstanding prepare set
         -- send MSG_PREPARE to Acceptor nodes
         """
-        try: 
+        if self.type == NODE_LEADER:
             recentballotnumber = self.ballotnumber
             logger("initiating command: %d:%s" % (commandnumber,proposal))
             logger("with ballotnumber %s" % str(recentballotnumber))
@@ -225,7 +283,7 @@ class Replica(Node):
             prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, commandnumber, proposal)
             self.outstandingprepares[recentballotnumber] = prc
             self.send(prepare, group=prc.acceptors)
-        except AttributeError:
+        else:
             print "Not a Leader.."
             
     def msg_prepare_adopted(self, conn, msg):
@@ -367,7 +425,7 @@ class Replica(Node):
         try:
             commandnumber = args[1]
             proposal = ' '.join(args[2:])
-            cmdproposal = Command(clientid='Test', command=proposal)
+            cmdproposal = Command(client='Test', command=proposal)
             self.do_command(int(commandnumber), cmdproposal)
         except IndexError:
             print "command expects 2 arguments.."
@@ -378,8 +436,7 @@ class Replica(Node):
 
     def cmd_clients(self,args):
         """Prints Client Connections"""
-        for id, conn in self.clientconnections.iteritems():
-            print id, "  :  ", conn
+        print self.clientpool
 
 def main():
     theReplica = Replica(Bank())

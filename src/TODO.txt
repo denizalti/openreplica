@@ -1,23 +1,18 @@
-""" This file keeps the outstanding changes and thoughts
-we have about paxi.
-"""
+""" This file keeps the outstanding changes and thoughts we have about paxi. """
 
 *** CHANGES TO THE CODE ***
-Replica & enums	  : Magic Numbers added to enums for (COMMANDSTATE,COMMAND)
-
-Node		  	  : Have to keep a log about Neighbor behavior
-			    	    to decide it's time to remove a
-			    	    peer from the list when it doesn't
-			    	    answer PING messages.
-
-Node		         : Connections work two ways
-
-
-
+- if a client re-sends a request, re-return the same old response
+- do not let the commands get past the edge of the window
+- configuration change meta-events
+- keep leader active, skip over the prepare phase
+- save state to disk
+- weak leader election with adaptive timeouts
+- failure monitoring and local failure detection
+- automatically take non-responsive peers out of the configuration
 
 *** TO THINK ABOUT ***
 - How should the Leader and Replica states be updated so commandnumber
-allocation is done appropriately.
+  allocation is done appropriately.
 - How to make Leader not reissue all previous commands
     -- Leader can have the state that Replica has (especially if the
     Leader extends a Replica) and not reissue command in the Executed
@@ -29,6 +24,13 @@ allocation is done appropriately.
 
 
 *** DONE ***
+- execute meta commands when the window has passed
+- automatic leader promotion
+- client should time out if a request takes too long
+- client commands get numbered by the leader
+- client loop cleaned up, performs re-sends correctly, matches responses
+- node does not deal with short reads
+- commands are kept in (COMMANDSTATE,COMMAND) tuples
 Leader & Acceptor	 : The replies for PREPARE and PROPOSE should
        	 		       	   have different names:
 			       	       - MSG_PREPARE_ADOPTED

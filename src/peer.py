@@ -15,7 +15,7 @@ class Peer():
         """Initialize Peer
 
         Peer State
-        - type: type of Peer (NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA)
+        - type: type of Peer (NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA | NODE_CLIENT)
         - port: port of Peer
         - addr: hostname of Peer
         """

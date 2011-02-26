@@ -31,7 +31,10 @@ LIVENESSTIMEOUT = 60
 COMMANDSTATE = 0
 COMMAND = 1
 
+CLIENTRESENDTIMEOUT = 10
 
+METACOMMANDS = set(["add_acceptor", "del_acceptor", "add_replica", "del_replica"])
+WINDOW = 3
 
 ###########################
 # code to convert enum variables to strings of different kinds

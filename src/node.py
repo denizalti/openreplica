@@ -126,7 +126,16 @@ class Node():
                 # collect the set of all sockets that we want to listen to
                 socketset = [self.socket]  # add the server socket
                 for conn in self.connectionpool.poolbypeer.itervalues():
-                    socketset.append(conn.thesocket)
+                    sock = conn.thesocket
+                    if sock is not None:
+                        socketset.append(sock)
+                try:
+                    for conn in self.clientpool.poolbypeer.itervalues():
+                        sock = conn.thesocket
+                        if sock is not None:
+                            socketset.append(sock)
+                except AttributeError:
+                    pass
                 for s,timestamp in nascentset:
                     # prune and close old sockets that never got turned into connections
                     if time.time() - timestamp > HELOTIMEOUT:
@@ -141,13 +150,24 @@ class Node():
                 assert len(socketset) == len(set(socketset)), "[%s] socketset has Duplicates." % self
                 inputready,outputready,exceptready = select.select(socketset,[],socketset)
                 
+                for s in exceptready:
+                    print "EXCEPTION ", s
                 for s in inputready:
                     if s == self.socket:
                         clientsock,clientaddr = self.socket.accept()
                         logger("accepted a connection from address %s" % str(clientaddr))
                         nascentset.append((clientsock,time.time()))
+                        success = True
                     else:
-                        self.handle_connection(s)
+                        success = self.handle_connection(s)
+                    if not success:
+                        # s is closed, take it out of nascentset and connection pool
+                        for sock,timestamp in nascentset:
+                            if sock == s:
+                                nascentset.remove((s,timestamp))
+                        self.connectionpool.del_connection_by_socket(s)
+                        s.close()  
+
             except KeyboardInterrupt, EOFError:
                 os._exit(0)
         self.socket.close()
@@ -158,6 +178,8 @@ class Node():
         connection = self.connectionpool.get_connection_by_socket(clientsock)
         message = connection.receive()
         logger("got message %s" % message)
+        if message == None:
+            return False
         if message.type == MSG_ACK:
             with self.outstandingmessages_lock:
                 self.outstandingmessages[message.ackid].timestamp = time.time()
@@ -169,9 +191,9 @@ class Node():
                 method = getattr(self, mname)
             except AttributeError:
                 logger("message not supported: %s" % message)
-                return
+                return False
             method(connection, message)
-
+        return True
     #
     # message handlers
     #
@@ -271,7 +293,7 @@ class Node():
     # def __init__(self, message, destination, messagestate=ACK_NOTACKED, timestamp=0):
     def send(self, message, peer=None, group=None):
         if peer:
-            connection = self.connectionpool.get_connection_to_peer(peer)
+            connection = self.connectionpool.get_connection_by_peer(peer)
             connection.send(message)
             logger("Sent message to %s" % peer)
             msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
@@ -279,7 +301,7 @@ class Node():
                 self.outstandingmessages[message.id] = msginfo
         elif group:
             for peer in group.members:
-                connection = self.connectionpool.get_connection_to_peer(peer)
+                connection = self.connectionpool.get_connection_by_peer(peer)
                 connection.send(message)
                 msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
                 with self.outstandingmessages_lock:

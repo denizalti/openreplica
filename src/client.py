@@ -14,6 +14,8 @@ from connection import ConnectionPool, Connection
 from group import Group
 from peer import Peer
 from message import ClientMessage,Message,PaxosMessage,HandshakeMessage,AckMessage,PValue,PValueSet, Command
+import os
+import time
 
 parser = OptionParser(usage="usage: %prog -b bootstrap")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
@@ -51,17 +53,32 @@ class Client():
                 if len(shellinput) == 0:
                     continue
                 else:
-                    command = Command(self.me.id(), self.clientcommandnumber, shellinput)
-                    cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
-                    self.conn.send(cm)
-                    print "Client Message sent:", cm
+                    mynumber = self.clientcommandnumber
                     self.clientcommandnumber += 1
-                    reply = self.conn.receive()
-                    while reply:
-                        if reply.type != MSG_ACK:
-                            self.conn.send(AckMessage(MSG_ACK,self.me,reply.id))
-                        print reply
+                    
+                    command = Command(self.me, mynumber, shellinput)
+                    cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
+                    acked = False
+                    replied = False
+                    print "Client Message about to be sent:", cm
+                    starttime = time.time()
+                    self.conn.settimeout(CLIENTRESENDTIMEOUT)
+
+                    while not acked or not replied:
+                        if not acked:
+                            self.conn.send(cm)
                         reply = self.conn.receive()
+                        print "---------------------->", reply
+                        if time.time() - starttime > CLIENTRESENDTIMEOUT:
+                            print "bootstrap node failed to respond in time"
+                            break
+                        if reply is None:
+                            print "receive returned None"
+                            break
+                        acked = acked or (reply and reply.type == MSG_ACK and reply.ackid == cm.id)
+                        if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
+                            replied = True
+                            print reply
             except ( KeyboardInterrupt,EOFError ):
                 os._exit(0)
         return

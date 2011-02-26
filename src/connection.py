@@ -15,7 +15,30 @@ class ConnectionPool():
         connectionkey = peer.id()
         self.poolbypeer[connectionkey] = conn
         
-    def get_connection_to_peer(self, peer):
+    def del_connection_by_peer(self, peer):
+        """ Deletes a Connection from the ConnectionPool by its Peer"""
+        connectionkey = peer.id()
+        if self.poolbypeer.has_key(connectionkey):
+            conn = self.poolbypeer[connectionkey]
+            del self.poolbypeer[connectionkey]
+            del self.poolbysocket[conn.thesocket]
+            conn.close()
+        else:
+            print "trying to delete a non-existent connection from the conn pool"
+
+    def del_connection_by_socket(self, thesocket):
+        """ Deletes a Connection from the ConnectionPool by its Peer"""
+        if self.poolbysocket.has_key(thesocket):
+            daconn = self.poolbysocket[thesocket]
+            for connkey,conn in self.poolbypeer.iteritems():
+                if conn == daconn:
+                    del self.poolbypeer[connkey]
+            del self.poolbysocket[daconn.thesocket]
+            daconn.close()
+        else:
+            print "trying to delete a non-existent socket from the conn pool"
+
+    def get_connection_by_peer(self, peer):
         """Returns a Connection given corresponding Peer.
         A new Connection is created and added to the
         ConnectionPool if it doesn't exist.
@@ -68,6 +91,9 @@ class Connection():
         """receive a message on the Connection"""
         try:
             returnstring = self.thesocket.recv(4)
+            if len(returnstring) < 4:
+                print "receive too short"
+                return None
             msg_length = struct.unpack("I", returnstring[0:4])[0]
             msgstr = ''
             while len(msgstr) != msg_length:
@@ -91,6 +117,9 @@ class Connection():
         except IOError as inst:
             print "Send Error: ", inst
     
+    def settimeout(self, timeout):
+        self.thesocket.settimeout(timeout)
+
     def close(self):
         """Close the Connection"""
         self.thesocket.close()
