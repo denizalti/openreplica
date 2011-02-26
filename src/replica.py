@@ -71,7 +71,7 @@ class Replica(Node):
         self.nexttoexecute = 1
         self.requests = {}
 
-    def execcore(self, conn, msg, slotno, dometaonly=False):
+    def performcore(self, msg, slotno, dometaonly=False):
         command = self.requests[slotno][COMMAND] # magic number 
         commandlist = command.command.split()
         commandname = commandlist[0]
@@ -94,34 +94,38 @@ class Replica(Node):
         givenresult = method(commandargs)
         self.requests[slotno] = (CMD_EXECUTED,givenresult)
         if commandname not in METACOMMANDS:
-            replymsg = PaxosMessage(MSG_RESPONSE,self.me,commandnumber=self.nexttoexecute,result=givenresult)
-            self.send(replymsg,peer=msg.source)
+            # if this client contacted me for this operation, return him the response
+            # XXX this check is incorrect, only checks if I'm a leader, not if he contacted me
+            if self.type == NODE_LEADER:
+                clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,givenresult, command.clientcommandnumber)
+                clientconn = self.clientpool.get_connection_by_peer(command.client)
+                clientconn.send(clientreply)
+            else:
+                # i ama replica that was contacted by a leader, return the response to him
+                # XXX not clear if this is necessary
+                replymsg = PaxosMessage(MSG_RESPONSE,self.me,commandnumber=self.nexttoexecute,result=givenresult)
+                self.send(replymsg,peer=msg.source)
 
-    def msg_perform(self, conn, msg):
-        """Handler for MSG_PERFORM
-
-        Upon receiving MSG_PERFORM Replica updates its state as follows:
-        - Add the command to the requests dictionary if it's not already there
-        - Execute the command (and any consecutive command in requests)
-        if it has the commandnumber matching nexttoexecute
-              -- call the corresponding method from the replicated object
-              -- update requests: with the new state and result (commandstate,result)
-              -- create MSG_RESPONSE: message carries the commandnumber and the result of the command
-              -- send MSG_RESPONSE to Leader
-              -- increment nexttoexecute
+    def perform(self, msg):
+        """Function to handle local perform operations. 
         """
         if not self.requests.has_key(msg.commandnumber):
             self.requests[msg.commandnumber] = (CMD_DECIDED,msg.proposal)
-                         
+
         while self.requests.has_key(self.nexttoexecute) and self.requests[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
             logger("Executing command %d." % self.nexttoexecute)
             
             # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
-            if self.nexttoexecute >= WINDOW:
-                self.execcore(conn, msg, self.nexttoexecute - WINDOW, True)
+            if self.nexttoexecute > WINDOW:
+                self.performcore(msg, self.nexttoexecute - WINDOW, True)
 
-            self.execcore(conn, msg, self.nexttoexecute)
+            self.performcore(msg, self.nexttoexecute)
             self.nexttoexecute += 1
+
+    def msg_perform(self, conn, msg):
+        """Handler for MSG_PERFORM
+        """
+        self.perform(msg)
 
     def add_acceptor(self, args):
         pass
@@ -131,40 +135,6 @@ class Replica(Node):
         pass
     def del_replica(self, args):
         pass
-
-    def perform(self, msg):
-        """Function to handle local perform operations. Used if the replica is also a leader.
-
-        The state is updated as follows:
-        - Add the command to the requests dictionary if it's not already there
-        - Execute the command (and any consecutive command in requests)
-        if it has the commandnumber matching nexttoexecute
-              -- call the corresponding method from the replicated object
-              -- update requests: with the new state and result (commandstate,result)
-              -- increment nexttoexecute
-        """
-        if not self.requests.has_key(msg.commandnumber):
-            self.requests[msg.commandnumber] = (CMD_DECIDED,msg.proposal)
-                         
-        while self.requests.has_key(self.nexttoexecute) and self.requests[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
-            logger("Executing command %d." % self.nexttoexecute)
-            command = self.requests[self.nexttoexecute][COMMAND] # magic number 
-            commandlist = command.command.split()
-            commandname = commandlist[0]
-            commandargs = commandlist[1:]
-            try:
-                method = getattr(self.object, commandname)
-            except AttributeError:
-                print "command not supported: %s" % (command)
-                givenresult = 'COMMAND NOT SUPPORTED'
-            givenresult = method(commandargs)
-            self.requests[self.nexttoexecute] = (CMD_EXECUTED,givenresult)
-            self.nexttoexecute += 1
-
-            # if this client contacted me for this operation, return him the response
-            clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,givenresult, command.clientcommandnumber)
-            clientconn = self.clientpool.get_connection_by_peer(command.client)
-            clientconn.send(clientreply)
 
     def cmd_showobject(self, args):
         """Shell command [showobject]: Print Replicated Object information""" 
