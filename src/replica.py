@@ -72,7 +72,8 @@ class Replica(Node):
         self.requests = {}
 
     def performcore(self, msg, slotno, dometaonly=False):
-        command = self.requests[slotno][COMMAND] # magic number 
+        print "------------- CHECKING %d ----> %s" % (slotno, self.requests[slotno])
+        command = self.requests[slotno][COMMAND]
         commandlist = command.command.split()
         commandname = commandlist[0]
         commandargs = commandlist[1:]
@@ -92,7 +93,8 @@ class Replica(Node):
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
         givenresult = method(commandargs)
-        self.requests[slotno] = (CMD_EXECUTED,givenresult)
+        cmdstatus, cmd = self.requests[slotno]
+        self.requests[slotno] = (CMD_EXECUTED, cmd, givenresult)
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response
             # XXX this check is incorrect, only checks if I'm a leader, not if he contacted me
