@@ -1,5 +1,10 @@
 """ This file keeps the outstanding changes and thoughts we have about paxi. """
 
+*** THINGS TO LOOK INTO ***
+- there are lots of results returned in pvalues
+- ballot numbers seem to have gaps in them
+- should "nexttodecide" be reset to 1 when a node stops being a leader?
+
 *** CHANGES TO THE CODE ***
 - if a client re-sends a request, re-return the same old response
 - do not let the commands get past the edge of the window
@@ -9,6 +14,8 @@
 - weak leader election with adaptive timeouts
 - failure monitoring and local failure detection
 - automatically take non-responsive peers out of the configuration
+- garbage collect commands that all replicas have seen
+- new replica should inherit state from a live replica
 
 *** TO THINK ABOUT ***
 - How should the Leader and Replica states be updated so commandnumber
@@ -21,7 +28,6 @@
     Replicas
 - How will Leader Failure be handled.
 - How will the weak Leader election be done.
-
 
 *** DONE ***
 - execute meta commands when the window has passed
