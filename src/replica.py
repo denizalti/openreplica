@@ -125,8 +125,7 @@ class Replica(Node):
             self.nexttoexecute += 1
 
     def msg_perform(self, conn, msg):
-        """Handler for MSG_PERFORM
-        """
+        """Handler for MSG_PERFORM"""
         self.perform(msg)
 
     def add_acceptor(self, args):
@@ -214,8 +213,11 @@ class Replica(Node):
         self.check_leader_promotion()
         if self.type == NODE_LEADER:
             if self.receivedclientrequests.has_key((msg.command.client,msg.command.clientcommandnumber)):
-                logger("XXX Client Request handled before.. Request discarded..")
-                # XXX if this request was handled before, re-send the previous response to the client
+                logger("Client Request handled before.. Resending result..")
+                for (commandnumber,command) in self.requests.iteritems():
+                    if command[COMMAND] == msg.command:
+                        clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,command[COMMANDRESULT],msg.command.clientcommandnumber)
+                        conn.send(clientreply)
             else:
                 self.clientpool.add_connection_to_peer(msg.source, conn)
                 self.receivedclientrequests[(msg.command.client,msg.command.clientcommandnumber)] = msg.command

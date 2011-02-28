@@ -6,7 +6,7 @@
 - should "nexttodecide" be reset to 1 when a node stops being a leader?
 
 *** CHANGES TO THE CODE ***
-- if a client re-sends a request, re-return the same old response
+
 - do not let the commands get past the edge of the window
 - configuration change meta-events
 - keep leader active, skip over the prepare phase
@@ -30,6 +30,7 @@
 - How will the weak Leader election be done.
 
 *** DONE ***
+- if a client re-sends a request, re-return the same old response
 - execute meta commands when the window has passed
 - automatic leader promotion
 - client should time out if a request takes too long
