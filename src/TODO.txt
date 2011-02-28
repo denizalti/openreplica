@@ -2,7 +2,6 @@
 
 *** THINGS TO LOOK INTO ***
 - there are lots of results returned in pvalues
-- ballot numbers seem to have gaps in them
 - should "nexttodecide" be reset to 1 when a node stops being a leader?
 
 *** CHANGES TO THE CODE ***
@@ -30,6 +29,7 @@
 - How will the weak Leader election be done.
 
 *** DONE ***
+- ballot numbers seem to have gaps in them
 - if a client re-sends a request, re-return the same old response
 - execute meta commands when the window has passed
 - automatic leader promotion
