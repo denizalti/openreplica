@@ -55,7 +55,7 @@ class Replica(Node):
         - object: the object that Replica is replicating
         - nexttodecide: the commandnumber that should be used for the next proposal
 	- nexttoexecute: the commandnumber that relica is waiting for to execute
-        - requests: received requests as <commandnumber:(commandstate,command|result)> mappings
+        - requests: received requests as <commandnumber:(commandstate,command,commandresult)> mappings
 		       - 'commandstate' can be CMD_EXECUTED, CMD_DECIDED, CMD_RUNNING
                        		-- CMD_EXECUTED: The command corresponding to the commandnumber has 
                                 		 been both decided and executed.
@@ -206,6 +206,14 @@ class Replica(Node):
         temp = self.nexttodecide
         self.nexttodecide += 1
         return temp
+
+    def get_highest_commandnumber_from_proposals(self):
+        maxcommandnumber = 0
+        for commandnumber,proposal in self.proposals.iteritems():
+            if commandnumber > maxcommandnumber:
+                maxcommandnumber = commandnumber
+        self.nexttodecide = maxcommandnumber+1
+        return self.nexttodecide
 
     def msg_clientrequest(self, conn, msg):
         """Handler for a MSG_CLIENTREQUEST
