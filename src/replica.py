@@ -189,15 +189,16 @@ class Replica(Node):
                 minpeer = peer
         if minpeer is None or self.me < minpeer:
             # i need to step up and become a leader
+            logger("Becoming a Leader")
             self.become_leader()
         elif self.type == NODE_LEADER:
             # there is someone else who should act as a leader
+            logger("Unbecoming a Leader")
             self.unbecome_leader()
 
     def update_ballotnumber(self,seedballotnumber):
         """Update the ballotnumber with a higher value than given ballotnumber"""
         temp = (seedballotnumber[0]+1,self.ballotnumber[1])
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX: ", temp 
         self.ballotnumber = temp
         
     def get_highest_commandnumber(self):
@@ -225,7 +226,7 @@ class Replica(Node):
                 logger("Initiating a New Command")
                 commandnumber = self.get_highest_commandnumber()
                 proposal = msg.command
-                self.do_command(commandnumber, proposal)
+                self.do_command_propose(commandnumber, proposal)
         else:
             logger("Not a Leader.. Request rejected..")
             clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED",msg.command.clientcommandnumber)
@@ -238,26 +239,49 @@ class Replica(Node):
         # self.send(clientreply,peer=CLIENT) # XXX
 
      # Paxos Methods
-    def do_command(self, initialcommandnumber, initialproposal):
-        """Do a command with the given commandnumber and proposal.
+    def do_command_propose(self, givencommandnumber, givenproposal):
+        """Propose a command with the given commandnumber and proposal.
+        A command is proposed by running the PROPOSE stage of Paxos Protocol for the command.
+
+        State Updates:
+        - Start the PROPOSE STAGE:
+        -- create MSG_PROPOSE: message carries the corresponding ballotnumber, commandnumber and proposal
+        -- create ResponseCollector object for PROPOSE STAGE: ResponseCollector keeps
+        the state related to MSG_PROPOSE
+        -- add the ResponseCollector to the outstanding propose set
+        -- send MSG_PROPOSE to Acceptor nodes
+        """
+        if self.type == NODE_LEADER:
+            recentballotnumber = self.ballotnumber
+            logger("proposing command: %d:%s" % (givencommandnumber,givenproposal))
+            logger("with ballotnumber %s" % str(recentballotnumber))
+            prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, givencommandnumber, givenproposal)
+            self.outstandingproposes[givencommandnumber] = prc
+            propose = PaxosMessage(MSG_PROPOSE,self.me,recentballotnumber,commandnumber=givencommandnumber,proposal=givenproposal)
+            self.send(propose,group=prc.acceptors)
+        else:
+            print "Not a Leader.."
+
+    def do_command_prepare(self, givencommandnumber, givenproposal):
+        """Prepare a command with the given commandnumber and proposal.
         A command is initiated by running a Paxos Protocol for the command.
 
         State Updates:
-        - Start the PREPARE STAGE:
-        -- create MSG_PREPARE: message carries the corresponding ballotnumber Then a new
+        - Start from the PREPARE STAGE:
+        -- create MSG_PREPARE: message carries the corresponding ballotnumber
         -- create ResponseCollector object for PREPARE STAGE: ResponseCollector keeps
         the state related to MSG_PREPARE
         -- add the ResponseCollector to the outstanding prepare set
         -- send MSG_PREPARE to Acceptor nodes
         """
         if self.type == NODE_LEADER:
-            recentballotnumber = self.ballotnumber
-            logger("initiating command: %d:%s" % (initialcommandnumber,initialproposal))
-            logger("with ballotnumber %s" % str(recentballotnumber))
-            prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, initialcommandnumber, initialproposal)
-            self.outstandingproposes[initialcommandnumber] = prc
-            propose = PaxosMessage(MSG_PROPOSE,self.me,recentballotnumber,commandnumber=initialcommandnumber,proposal=initialproposal)
-            self.send(propose,group=prc.acceptors)
+            newballotnumber = self.ballotnumber
+            logger("preparing command: %d:%s" % (givencommandnumber, givenproposal))
+            logger("with ballotnumber %s" % str(newballotnumber))
+            prc = ResponseCollector(self.groups[NODE_ACCEPTOR], newballotnumber, givencommandnumber, givenproposal)
+            self.outstandingprepares[newballotnumber] = prc
+            prepare = PaxosMessage(MSG_PREPARE,self.me,newballotnumber)
+            self.send(prepare,group=prc.acceptors)
         else:
             print "Not a Leader.."
             
@@ -302,6 +326,7 @@ class Replica(Node):
                 del self.outstandingprepares[msg.inresponseto]
                 # PROPOSE for each proposal in proposals
                 for chosencommandnumber,chosenproposal in self.proposals.iteritems():
+                    print "Sending PROPOSE for %d, %s" % (chosencommandnumber, chosenproposal)
                     newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, chosencommandnumber, chosenproposal)
                     self.outstandingproposes[chosencommandnumber] = newprc
                     propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotnumber,commandnumber=chosencommandnumber,proposal=chosenproposal)
@@ -320,7 +345,7 @@ class Replica(Node):
         - kill the PREPARE STAGE that received a MSG_PREPARE_PREEMPTED
         -- remove the old ResponseCollector from the outstanding prepare set
         - update the ballotnumber
-        - call do_command() to start a new PREPARE STAGE:
+        - call do_command_prepare() to start a new PREPARE STAGE:
         """
         if self.outstandingprepares.has_key(msg.inresponseto):
             prc = self.outstandingprepares[msg.inresponseto]
@@ -330,7 +355,7 @@ class Replica(Node):
             # update the ballot number
             self.update_ballotnumber(msg.ballotnumber)
             # retry the prepare
-            self.do_command(prc.commandnumber, prc.proposal)
+            self.do_command_prepare(prc.commandnumber, prc.proposal)
         else:
             logger("there is no response collector")
 
@@ -377,7 +402,7 @@ class Replica(Node):
         - kill the PROPOSE STAGE that received a MSG_PROPOSE_REJECT
         -- remove the old ResponseCollector from the outstanding prepare set
         - update the ballotnumber
-        - call do_command() to start a new PREPARE STAGE:
+        - call do_command_prepare() to start a new PREPARE STAGE:
         """
         if self.outstandingproposes.has_key(msg.commandnumber):
             prc = self.outstandingproposes[msg.commandnumber]
@@ -387,19 +412,19 @@ class Replica(Node):
             # update the ballot number
             self.update_ballotnumber(msg.ballotnumber)
             # retry the prepare
-            self.do_command(prc.commandnumber, prc.proposal)
+            self.do_command_prepare(prc.commandnumber, prc.proposal)
         else:
             logger("there is no response collector for %s" % str(msg.inresponseto))
 
     # Debug Methods
     def cmd_command(self, args):
         """Shell command [command]: Initiate a new command.
-        This function calls do_command() with inputs from the Shell."""
+        This function calls do_command_propose() with inputs from the Shell."""
         try:
             commandnumber = args[1]
             proposal = ' '.join(args[2:])
             cmdproposal = Command(client='Test', command=proposal)
-            self.do_command(int(commandnumber), cmdproposal)
+            self.do_command_propose(int(commandnumber), cmdproposal)
         except IndexError:
             print "command expects 2 arguments.."
 

@@ -1,10 +1,18 @@
-""" This file keeps the outstanding changes and thoughts we have about paxi. """
+""" This file keeps the outstanding changes and thoughts we have about
+paxi. """
+
+*** FIRST TO FIX ***
+- pmax doesn't work properly, when a new replica joins in, can make
+the system agree on an existing commandnumber
 
 *** THINGS TO LOOK INTO ***
 - there are lots of results returned in pvalues
 - should "nexttodecide" be reset to 1 when a node stops being a leader?
 
 *** CHANGES TO THE CODE ***
+- check_leader_promotion has to take into account if the chosen leader
+is ready to become a leader
+- new replica should inherit state from a live replica
 - do not let the commands get past the edge of the window
 - configuration change meta-events
 - save state to disk
@@ -12,7 +20,6 @@
 - failure monitoring and local failure detection
 - automatically take non-responsive peers out of the configuration
 - garbage collect commands that all replicas have seen
-- new replica should inherit state from a live replica
 
 *** TO THINK ABOUT ***
 - How should the Leader and Replica states be updated so commandnumber
