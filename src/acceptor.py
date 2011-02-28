@@ -68,7 +68,7 @@ class Acceptor(Node):
             replymsg = PaxosMessage(MSG_PROPOSE_ACCEPT,self.me,self.ballotnumber,msg.ballotnumber,newpvalue.commandnumber)
         else:
             logger("propose received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))
-            replymsg = PaxosMessage(MSG_PROPOSE_REJECT,self.me,self.ballotnumber,msg.ballotnumber,newpvalue.commandnumber)
+            replymsg = PaxosMessage(MSG_PROPOSE_REJECT,self.me,self.ballotnumber,msg.ballotnumber,msg.commandnumber)
         self.send(replymsg,peer=msg.source)
 
     def cmd_paxos(self, args):

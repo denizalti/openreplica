@@ -238,7 +238,7 @@ class Replica(Node):
         # self.send(clientreply,peer=CLIENT) # XXX
 
      # Paxos Methods
-    def do_command(self, commandnumber, proposal):
+    def do_command(self, initialcommandnumber, initialproposal):
         """Do a command with the given commandnumber and proposal.
         A command is initiated by running a Paxos Protocol for the command.
 
@@ -252,12 +252,12 @@ class Replica(Node):
         """
         if self.type == NODE_LEADER:
             recentballotnumber = self.ballotnumber
-            logger("initiating command: %d:%s" % (commandnumber,proposal))
+            logger("initiating command: %d:%s" % (initialcommandnumber,initialproposal))
             logger("with ballotnumber %s" % str(recentballotnumber))
-            prepare = PaxosMessage(MSG_PREPARE,self.me,recentballotnumber)
-            prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, commandnumber, proposal)
-            self.outstandingprepares[recentballotnumber] = prc
-            self.send(prepare, group=prc.acceptors)
+            prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, initialcommandnumber, initialproposal)
+            self.outstandingproposes[initialcommandnumber] = prc
+            propose = PaxosMessage(MSG_PROPOSE,self.me,recentballotnumber,commandnumber=initialcommandnumber,proposal=initialproposal)
+            self.send(propose,group=prc.acceptors)
         else:
             print "Not a Leader.."
             
@@ -344,7 +344,6 @@ class Replica(Node):
         State Updates:
         - message is added to the received dictionary
         - if length of received is greater than the quorum size, PROPOSE STAGE is successful.
-        -- update the ballotnumber (for use in the next PREPARE STAGE)
         -- remove the old ResponseCollector from the outstanding prepare set
         -- create MSG_PERFORM: message carries the chosen commandnumber and proposal.
         -- send MSG_PERFORM to all Replicas and Leaders
