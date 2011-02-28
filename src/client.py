@@ -54,7 +54,7 @@ class Client():
                     continue
                 else:
                     mynumber = self.clientcommandnumber
-                    #self.clientcommandnumber += 1
+                    self.clientcommandnumber += 1
                     
                     command = Command(self.me, mynumber, shellinput)
                     cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)

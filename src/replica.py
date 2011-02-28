@@ -197,6 +197,7 @@ class Replica(Node):
     def update_ballotnumber(self,seedballotnumber):
         """Update the ballotnumber with a higher value than given ballotnumber"""
         temp = (seedballotnumber[0]+1,self.ballotnumber[1])
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX: ", temp 
         self.ballotnumber = temp
         
     def get_highest_commandnumber(self):
@@ -356,7 +357,6 @@ class Replica(Node):
             assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PROPOSE_ACCEPT can't have non-matching ballotnumber" % self
             if len(prc.received) >= prc.nquorum:
                 # YAY, WE AGREE!
-                self.update_ballotnumber(self.ballotnumber)
                 # take this response collector out of the outstanding propose set
                 del self.outstandingproposes[msg.commandnumber]
                 # now we can perform this action on the replicas
