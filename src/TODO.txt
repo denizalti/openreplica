@@ -2,7 +2,7 @@
 paxi. """
 
 *** FIRST TO FIX ***
-- pmax doesn't work properly, when a new replica joins in, can make
+- when a new replica joins in, can make
 the system agree on an existing commandnumber
 
 *** THINGS TO LOOK INTO ***
@@ -34,6 +34,7 @@ is ready to become a leader
 - How will the weak Leader election be done.
 
 *** DONE ***
+- pmax doesn't work properly
 - keep leader active, skip over the prepare phase
 - ballot numbers seem to have gaps in them
 - if a client re-sends a request, re-return the same old response

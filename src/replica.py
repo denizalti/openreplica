@@ -44,7 +44,7 @@ class ResponseCollector():
         self.ntotal = len(self.acceptors)
         self.nquorum = min(math.ceil(float(self.ntotal)/2+1), self.ntotal)
         self.possiblepvalueset = PValueSet()
-        self.possiblepvalueset.add(PValue(self.ballotnumber, self.commandnumber, self.proposal))
+        #self.possiblepvalueset.add(PValue(self.ballotnumber, self.commandnumber, self.proposal))
 
 class Replica(Node):
     """Replica receives MSG_PERFORM from Leaders and execute corresponding commands."""
@@ -321,7 +321,9 @@ class Replica(Node):
                 logger("suffiently many accepts on prepare!")
                 # choose pvalues with distinctive commandnumbers and highest ballotnumbers
                 pmaxset = prc.possiblepvalueset.pmax()
+                print "PMAX SET:"
                 for commandnumber,proposal in pmaxset.iteritems():
+                    print "%d: %s" % (commandnumber, proposal)
                     self.proposals[commandnumber] = proposal
                 del self.outstandingprepares[msg.inresponseto]
                 # PROPOSE for each proposal in proposals
