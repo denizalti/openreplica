@@ -4,6 +4,7 @@
 @date: February 1, 2011
 '''
 from threading import Thread, Lock, Condition
+import operator
 import time
 import random
 import math
@@ -208,6 +209,9 @@ class Replica(Node):
         return temp
 
     def get_highest_commandnumber_from_proposals(self):
+        """Returns the highest commandnumber according to the
+        mappings in proposals
+        """
         maxcommandnumber = 0
         for commandnumber,proposal in self.proposals.iteritems():
             if commandnumber > maxcommandnumber:
@@ -215,6 +219,15 @@ class Replica(Node):
         self.nexttodecide = maxcommandnumber+1
         return self.nexttodecide
 
+    def find_gap_in_proposals(self):
+        """Returns the first gap in the proposals dictionary"""
+        commandgap = 1
+        sorted_proposals = sorted(self.proposals.iteritems(), key=operator.itemgetter(0))
+        for commandnumber,proposal in sorted_proposals.iteritems():
+            if commandnumber == (commandgap + 1):
+                commandgap = commandnumber
+        return commandgap
+    
     def msg_clientrequest(self, conn, msg):
         """Handler for a MSG_CLIENTREQUEST
         A new Paxos Protocol is initiated with the first available commandnumber
@@ -246,7 +259,7 @@ class Replica(Node):
         clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,msg.result)
         # self.send(clientreply,peer=CLIENT) # XXX
 
-     # Paxos Methods
+    # Paxos Methods
     def do_command_propose(self, givencommandnumber, givenproposal):
         """Propose a command with the given commandnumber and proposal.
         A command is proposed by running the PROPOSE stage of Paxos Protocol for the command.
