@@ -221,11 +221,11 @@ class Replica(Node):
     def find_gap_in_proposals(self):
         """Returns the first gap in the proposals dictionary"""
         commandgap = 1
-        sorted_proposals = sorted(self.proposals.iteritems(), key=operator.itemgetter(0))
-        for commandnumber,proposal in sorted_proposals.iteritems():
+        sorted_commandnumbers = sorted(self.proposals.iteritems(), key=operator.itemgetter(0))
+        for commandnumber,proposal in sorted_commandnumbers:
             if commandnumber == (commandgap + 1):
                 commandgap = commandnumber
-        return commandgap
+        return commandgap+1
     
     def msg_clientrequest(self, conn, msg):
         """Handler for a MSG_CLIENTREQUEST
@@ -271,6 +271,7 @@ class Replica(Node):
         -- add the ResponseCollector to the outstanding propose set
         -- send MSG_PROPOSE to Acceptor nodes
         """
+        print "~~~~~~~~ Trying PROPOSE %s with commandnumber %d" % (givenproposal, givencommandnumber)
         if self.type == NODE_LEADER:
             recentballotnumber = self.ballotnumber
             logger("proposing command: %d:%s" % (givencommandnumber,givenproposal))
@@ -349,7 +350,8 @@ class Replica(Node):
                     print "%d: %s" % (commandnumber, proposal)
                 # If the commandnumber we were planning to use is in the proposals
                 # we should try the next one
-                newcommandnumber = self.get_highest_commandnumber()
+                newcommandnumber = self.find_gap_in_proposals()
+                print "XXXX NEWCOMMANDNUMBER: ", newcommandnumber
                 self.do_command_propose(newcommandnumber, prc.proposal)
                 del self.outstandingprepares[msg.inresponseto]
                 # PROPOSE for each proposal in proposals
