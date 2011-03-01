@@ -97,17 +97,22 @@ class Replica(Node):
         cmdstatus, cmd = self.requests[slotno]
         self.requests[slotno] = (CMD_EXECUTED, cmd, givenresult)
         if commandname not in METACOMMANDS:
-            # if this client contacted me for this operation, return him the response
-            # XXX this check is incorrect, only checks if I'm a leader, not if he contacted me
-            if self.type == NODE_LEADER:
+            # if this client contacted me for this operation, return him the response 
+            if self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
                 clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,givenresult, command.clientcommandnumber)
+                print "ClientPool: ", self.clientpool
+                print "Client: ", command.client
                 clientconn = self.clientpool.get_connection_by_peer(command.client)
+                print "BEFORE SEND.."
                 clientconn.send(clientreply)
+                print "AFTER SEND.."
             else:
-                # i ama replica that was contacted by a leader, return the response to him
+                # i am a replica that was contacted by a leader, return the response to him
                 # XXX not clear if this is necessary
                 replymsg = PaxosMessage(MSG_RESPONSE,self.me,commandnumber=self.nexttoexecute,result=givenresult)
+                print "SENDING IN ELSE"
                 self.send(replymsg,peer=msg.source)
+                print "DONE"
 
     def perform(self, msg):
         """Function to handle local perform operations. 
@@ -201,7 +206,7 @@ class Replica(Node):
         """Update the ballotnumber with a higher value than given ballotnumber"""
         temp = (seedballotnumber[0]+1,self.ballotnumber[1])
         self.ballotnumber = temp
-        
+
     def get_highest_commandnumber(self):
         """Return the highest Commandnumber the Leader knows of."""
         temp = self.nexttodecide
@@ -342,10 +347,16 @@ class Replica(Node):
                 logger("suffiently many accepts on prepare!")
                 # choose pvalues with distinctive commandnumbers and highest ballotnumbers
                 pmaxset = prc.possiblepvalueset.pmax()
-                print "PMAX SET:"
                 for commandnumber,proposal in pmaxset.iteritems():
                     print "%d: %s" % (commandnumber, proposal)
                     self.proposals[commandnumber] = proposal
+                print "PROPOSALS:"
+                for commandnumber, proposal in self.proposals.iteritems():
+                    print "%d: %s" % (commandnumber, proposal)
+                # If the commandnumber we were planning to use is in the proposals
+                # we should try the next one
+                newcommandnumber = self.get_highest_commandnumber()
+                self.do_command_propose(newcommandnumber, prc.proposal)
                 del self.outstandingprepares[msg.inresponseto]
                 # PROPOSE for each proposal in proposals
                 for chosencommandnumber,chosenproposal in self.proposals.iteritems():

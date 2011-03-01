@@ -6,7 +6,10 @@ paxi. """
 
 *** THINGS TO LOOK INTO ***
 - there are lots of results returned in pvalues
-- should "nexttodecide" be reset to 1 when a node stops being a leader?
+- should "nexttodecide" be reset to 1 when a node stops being a
+leader?
+- when a replica becomes a leader and gets old state, it doesn't have
+the necessary connections to clients to resend messages 
 - we need a better way of keeping track of commandnumbers
   -- Now we have the following variables related to commandnumber :
      --- nexttoexecute: this is safe, only updated when the next
@@ -17,7 +20,6 @@ paxi. """
      that is received
      --- requests: keeps
      <commandnumber:(commandstate,command,commandresult)>
-
      --- proposals: keeps <commandnumber:proposal> mappings that
      *might* get accepted
 
@@ -46,6 +48,7 @@ is ready to become a leader
 - How will the weak Leader election be done.
 
 *** DONE ***
+- leader responds to a client only if the client is in its clientpool
 - pmax doesn't work properly
 - keep leader active, skip over the prepare phase
 - ballot numbers seem to have gaps in them
