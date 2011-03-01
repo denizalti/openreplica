@@ -100,19 +100,13 @@ class Replica(Node):
             # if this client contacted me for this operation, return him the response 
             if self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
                 clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,givenresult, command.clientcommandnumber)
-                print "ClientPool: ", self.clientpool
-                print "Client: ", command.client
                 clientconn = self.clientpool.get_connection_by_peer(command.client)
-                print "BEFORE SEND.."
                 clientconn.send(clientreply)
-                print "AFTER SEND.."
             else:
                 # i am a replica that was contacted by a leader, return the response to him
                 # XXX not clear if this is necessary
                 replymsg = PaxosMessage(MSG_RESPONSE,self.me,commandnumber=self.nexttoexecute,result=givenresult)
-                print "SENDING IN ELSE"
                 self.send(replymsg,peer=msg.source)
-                print "DONE"
 
     def perform(self, msg):
         """Function to handle local perform operations. 
