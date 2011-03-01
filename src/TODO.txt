@@ -2,26 +2,11 @@
 paxi. """
 
 *** FIRST TO FIX ***
-- when a new replica joins in, can make the system agree on an existing commandnumber
 
 *** THINGS TO LOOK INTO ***
 - there are lots of results returned in pvalues
 - should "nexttodecide" be reset to 1 when a node stops being a
 leader?
-- when a replica becomes a leader and gets old state, it doesn't have
-the necessary connections to clients to resend messages 
-- we need a better way of keeping track of commandnumbers
-  -- Now we have the following variables related to commandnumber :
-     --- nexttoexecute: this is safe, only updated when the next
-     command in row is executed
-     --- nexttodecide: this is *not* safe, every replica keeps this
-     but they are actually not aware of what is going on in the system
-     at any point, this should be updated with every perform message
-     that is received
-     --- requests: keeps
-     <commandnumber:(commandstate,command,commandresult)>
-     --- proposals: keeps <commandnumber:proposal> mappings that
-     *might* get accepted
 
 *** CHANGES TO THE CODE ***
 - check_leader_promotion has to take into account if the chosen leader
@@ -36,6 +21,8 @@ is ready to become a leader
 - garbage collect commands that all replicas have seen
 
 *** TO THINK ABOUT ***
+- when a new replica joins in, can make the system agree on an existing commandnumber
+- replica only sends message to a client it has connection to
 - How should the Leader and Replica states be updated so commandnumber
   allocation is done appropriately.
 - How to make Leader not reissue all previous commands

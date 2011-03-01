@@ -351,7 +351,6 @@ class Replica(Node):
                 # If the commandnumber we were planning to use is in the proposals
                 # we should try the next one
                 newcommandnumber = self.find_gap_in_proposals()
-                print "XXXX NEWCOMMANDNUMBER: ", newcommandnumber
                 self.do_command_propose(newcommandnumber, prc.proposal)
                 del self.outstandingprepares[msg.inresponseto]
                 # PROPOSE for each proposal in proposals
