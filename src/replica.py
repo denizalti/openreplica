@@ -70,15 +70,11 @@ class Replica(Node):
         self.proposals = {}
 
     def performcore(self, msg, slotno, dometaonly=False):
-        print "SlotNo: %d Command: %s Meta: %s" % (slotno, self.decisions[slotno], dometaonly)
+        print "---> SlotNo: %d Command: %s Meta: %s" % (slotno, self.decisions[slotno], dometaonly)
         command = self.decisions[slotno][COMMAND]
         commandlist = command.command.split()
         commandname = commandlist[0]
         commandargs = commandlist[1:]
-        print "############################################"
-        print "Commandname: ", commandname
-        print "Commandargs: ", commandargs
-        print "############################################"
         try:
             if commandname in METACOMMANDS:
                 if dometaonly:

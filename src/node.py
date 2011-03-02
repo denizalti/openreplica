@@ -17,7 +17,7 @@ from utils import *
 from connection import ConnectionPool,Connection
 from group import Group
 from peer import Peer
-from message import Message,PaxosMessage,HandshakeMessage,AckMessage,PValue,PValueSet,MessageInfo
+from message import Message,PaxosMessage,HandshakeMessage,AckMessage,PValue,PValueSet,MessageInfo,Command
 
 parser = OptionParser(usage="usage: %prog -p port -b bootstrap -d delay")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
@@ -202,6 +202,11 @@ class Node():
         replymsg = HandshakeMessage(MSG_HELOREPLY,self.me,self.groups)
         self.groups[msg.source.type].add(msg.source)
         self.connectionpool.add_connection_to_peer(msg.source,conn)
+        if msg.source.type == NODE_ACCEPTOR:
+            metacommand = Command(command="add_acceptor %s" %msg.source.id())
+        elif msg.source.type == NODE_REPLICA:
+            metacommand = Command(command="add_replica %s" %msg.source.id())
+        self.do_command_propose(metacommand)
         self.send(replymsg, peer=msg.source)
 
     def msg_heloreply(self, conn, msg):
