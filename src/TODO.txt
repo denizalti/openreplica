@@ -11,7 +11,7 @@ instead
 leader?
 
 *** CHANGES TO THE CODE ***
-- proposals keep things that are running
+- proposals keep things that have been proposed by a particular leader
 - to find an eligible commandnumber look at *both* proposals and
 decisions
 - if a decision overwrites something in my proposals then i'll propose

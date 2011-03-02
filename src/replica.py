@@ -63,12 +63,14 @@ class Replica(Node):
 				-- CMD_DECIDED: The command corresponding to the commandnumber has 
                                 		 been decided but it is not executed yet (probably due to an 
 						 outstanding command prior to this command.)
+        - proposals: <commandnumber:command> mappings that the replica has made in the past
         """
         Node.__init__(self, NODE_REPLICA)
         self.object = replicatedobject
         self.nexttodecide = 1
         self.nexttoexecute = 1
         self.decisions = {}
+        self.proposals = {}
 
     def performcore(self, msg, slotno, dometaonly=False):
         print "------------- CHECKING %d ----> %s" % (slotno, self.decisions[slotno])
@@ -165,7 +167,6 @@ class Replica(Node):
         if self.type != NODE_LEADER:
             self.type = NODE_LEADER
             self.ballotnumber = (0,self.id)
-            self.proposals = {}
             self.outstandingprepares = {}
             self.outstandingproposes = {}
             self.receivedclientrequests = {} # indexed by (client,clientcommandnumber)
@@ -245,9 +246,8 @@ class Replica(Node):
                 self.clientpool.add_connection_to_peer(msg.source, conn)
                 self.receivedclientrequests[(msg.command.client,msg.command.clientcommandnumber)] = msg.command
                 logger("Initiating a New Command")
-                commandnumber = self.find_gap_in_proposals()
                 proposal = msg.command
-                self.do_command_propose(commandnumber, proposal)
+                self.do_command_propose(proposal)
         else:
             logger("Not a Leader.. Request rejected..")
             clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED",msg.command.clientcommandnumber)
@@ -260,7 +260,7 @@ class Replica(Node):
         # self.send(clientreply,peer=CLIENT) # XXX
 
     # Paxos Methods
-    def do_command_propose(self, givencommandnumber, givenproposal):
+    def do_command_propose(self, givenproposal):
         """Propose a command with the given commandnumber and proposal.
         A command is proposed by running the PROPOSE stage of Paxos Protocol for the command.
 
@@ -272,9 +272,9 @@ class Replica(Node):
         -- add the ResponseCollector to the outstanding propose set
         -- send MSG_PROPOSE to Acceptor nodes
         """
-        print "~~~~~~~~ Trying PROPOSE %s with commandnumber %d" % (givenproposal, givencommandnumber)
         if self.type == NODE_LEADER:
             recentballotnumber = self.ballotnumber
+            givencommandnumber = self.find_gap_in_proposals()
             logger("proposing command: %d:%s" % (givencommandnumber,givenproposal))
             logger("with ballotnumber %s" % str(recentballotnumber))
             prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, givencommandnumber, givenproposal)
@@ -284,7 +284,7 @@ class Replica(Node):
         else:
             print "Not a Leader.."
 
-    def do_command_prepare(self, givencommandnumber, givenproposal):
+    def do_command_prepare(self, givenproposal):
         """Prepare a command with the given commandnumber and proposal.
         A command is initiated by running a Paxos Protocol for the command.
 
@@ -298,6 +298,7 @@ class Replica(Node):
         """
         if self.type == NODE_LEADER:
             newballotnumber = self.ballotnumber
+            givencommandnumber = self.find_gap_in_proposals()
             logger("preparing command: %d:%s" % (givencommandnumber, givenproposal))
             logger("with ballotnumber %s" % str(newballotnumber))
             prc = ResponseCollector(self.groups[NODE_ACCEPTOR], newballotnumber, givencommandnumber, givenproposal)
@@ -347,8 +348,7 @@ class Replica(Node):
                     self.proposals[commandnumber] = proposal
                 # If the commandnumber we were planning to use is in the proposals
                 # we should try the next one
-                newcommandnumber = self.find_gap_in_proposals()
-                self.do_command_propose(newcommandnumber, prc.proposal)
+                # XXX
                 del self.outstandingprepares[msg.inresponseto]
                 # PROPOSE for each proposal in proposals
                 for chosencommandnumber,chosenproposal in self.proposals.iteritems():
@@ -381,7 +381,7 @@ class Replica(Node):
             # update the ballot number
             self.update_ballotnumber(msg.ballotnumber)
             # retry the prepare
-            self.do_command_prepare(prc.commandnumber, prc.proposal)
+            self.do_command_prepare(prc.proposal)
         else:
             logger("there is no response collector")
 
@@ -439,7 +439,7 @@ class Replica(Node):
             # update the ballot number
             self.update_ballotnumber(msg.ballotnumber)
             # retry the prepare
-            self.do_command_prepare(prc.commandnumber, prc.proposal)
+            self.do_command_prepare(prc.proposal)
         else:
             logger("there is no response collector for %s" % str(msg.inresponseto))
 
@@ -448,12 +448,11 @@ class Replica(Node):
         """Shell command [command]: Initiate a new command.
         This function calls do_command_propose() with inputs from the Shell."""
         try:
-            commandnumber = args[1]
-            proposal = ' '.join(args[2:])
+            proposal = ' '.join(args[1:])
             cmdproposal = Command(client='Test', command=proposal)
-            self.do_command_propose(int(commandnumber), cmdproposal)
+            self.do_command_propose(cmdproposal)
         except IndexError:
-            print "command expects 2 arguments.."
+            print "command expects only one command"
 
     def cmd_goleader(self, args):
         """Shell command [goleader]: Start Leader state""" 
