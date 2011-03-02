@@ -45,7 +45,6 @@ class ResponseCollector():
         self.ntotal = len(self.acceptors)
         self.nquorum = min(math.ceil(float(self.ntotal)/2+1), self.ntotal)
         self.possiblepvalueset = PValueSet()
-        #self.possiblepvalueset.add(PValue(self.ballotnumber, self.commandnumber, self.proposal))
 
 class Replica(Node):
     """Replica receives MSG_PERFORM from Leaders and execute corresponding commands."""
@@ -54,7 +53,6 @@ class Replica(Node):
 
         Replica State
         - object: the object that Replica is replicating
-        - nexttodecide: the commandnumber that should be used for the next proposal
 	- nexttoexecute: the commandnumber that relica is waiting for to execute
         - decisions: received requests as <commandnumber:(commandstate,command,commandresult)> mappings
 		       - 'commandstate' can be CMD_EXECUTED, CMD_DECIDED
@@ -63,11 +61,10 @@ class Replica(Node):
 				-- CMD_DECIDED: The command corresponding to the commandnumber has 
                                 		 been decided but it is not executed yet (probably due to an 
 						 outstanding command prior to this command.)
-        - proposals: <commandnumber:command> mappings that the replica has made in the past
+        - outstandingproposals: <commandnumber:command> mappings that the replica has made in the past
         """
         Node.__init__(self, NODE_REPLICA)
         self.object = replicatedobject
-        self.nexttodecide = 1
         self.nexttoexecute = 1
         self.decisions = {}
         self.proposals = {}
@@ -113,6 +110,9 @@ class Replica(Node):
         """
         if not self.decisions.has_key(msg.commandnumber):
             self.decisions[msg.commandnumber] = (CMD_DECIDED,msg.proposal)
+        if self.proposals.has_key(msg.commandnumber) and self.decisions[msg.commandnumber][1] != self.proposals[msg.commandnumber]:
+            print "--> This shouldn't happen as we should have caught this during PMAX"
+            self.do_command_propose(self.proposals[msg.commandnumber])
 
         while self.decisions.has_key(self.nexttoexecute) and self.decisions[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
             logger("Executing command %d." % self.nexttoexecute)
@@ -144,7 +144,6 @@ class Replica(Node):
     def cmd_info(self, args):
         """Shell command [info]: Print Requests and Command to execute next"""
         print "Waiting to execute #%d" % self.nexttoexecute
-        print "Waiting to decide #%d" % self.nexttodecide
         print "Decisions:\n"
         for (commandnumber,command) in self.decisions.iteritems():
             print "%d:\t%s\t%s\n" %  (commandnumber, command[COMMAND], cmd_states[command[COMMANDSTATE]])
@@ -202,28 +201,11 @@ class Replica(Node):
         temp = (seedballotnumber[0]+1,self.ballotnumber[1])
         self.ballotnumber = temp
 
-    def get_highest_commandnumber(self):
-        """Return the highest Commandnumber the Leader knows of."""
-        temp = self.nexttodecide
-        self.nexttodecide += 1
-        return temp
-
-    def get_highest_commandnumber_from_proposals(self):
-        """Returns the highest commandnumber according to the
-        mappings in proposals
-        """
-        maxcommandnumber = 0
-        for commandnumber,proposal in self.proposals.iteritems():
-            if commandnumber > maxcommandnumber:
-                maxcommandnumber = commandnumber
-        self.nexttodecide = maxcommandnumber+1
-        return self.nexttodecide
-
-    def find_gap_in_proposals(self):
+    def find_commandnumber(self):
         """Returns the first gap in the proposals dictionary"""
         commandgap = 1
-        sorted_by_commandnumbers = sorted(self.proposals.iteritems(), key=operator.itemgetter(0))
-        print "XXX", sorted_by_commandnumbers
+        proposals = dict(self.proposals.items() + self.decisions.items())
+        sorted_by_commandnumbers = sorted(proposals.iteritems(), key=operator.itemgetter(0))
         for commandnumber,proposal in sorted_by_commandnumbers:
             if commandgap == commandnumber:
                 commandgap = commandnumber+1
@@ -274,7 +256,7 @@ class Replica(Node):
         """
         if self.type == NODE_LEADER:
             recentballotnumber = self.ballotnumber
-            givencommandnumber = self.find_gap_in_proposals()
+            givencommandnumber = self.find_commandnumber()
             logger("proposing command: %d:%s" % (givencommandnumber,givenproposal))
             logger("with ballotnumber %s" % str(recentballotnumber))
             prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, givencommandnumber, givenproposal)
@@ -298,7 +280,7 @@ class Replica(Node):
         """
         if self.type == NODE_LEADER:
             newballotnumber = self.ballotnumber
-            givencommandnumber = self.find_gap_in_proposals()
+            givencommandnumber = self.find_commandnumber()
             logger("preparing command: %d:%s" % (givencommandnumber, givenproposal))
             logger("with ballotnumber %s" % str(newballotnumber))
             prc = ResponseCollector(self.groups[NODE_ACCEPTOR], newballotnumber, givencommandnumber, givenproposal)
@@ -348,7 +330,7 @@ class Replica(Node):
                     self.proposals[commandnumber] = proposal
                 # If the commandnumber we were planning to use is in the proposals
                 # we should try the next one
-                # XXX
+                self.do_command_propose(prc.proposal)
                 del self.outstandingprepares[msg.inresponseto]
                 # PROPOSE for each proposal in proposals
                 for chosencommandnumber,chosenproposal in self.proposals.iteritems():

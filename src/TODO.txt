@@ -11,11 +11,8 @@ instead
 leader?
 
 *** CHANGES TO THE CODE ***
-- proposals keep things that have been proposed by a particular leader
 - to find an eligible commandnumber look at *both* proposals and
 decisions
-- if a decision overwrites something in my proposals then i'll propose
-it again!, which means it will get another commandnumber
 
 - check_leader_promotion has to take into account if the chosen leader
 is ready to become a leader
@@ -29,6 +26,9 @@ is ready to become a leader
 - garbage collect commands that all replicas have seen
 
 *** TO THINK ABOUT ***
+- if during PROPOSE we find out that our proposal is being overwritten
+we propose it again (with a new commandnumber)
+- proposals keep things that have been proposed by a particular replica
 - requests should be decisions
 - when a new replica joins in, can make the system agree on an existing commandnumber
 - replica only sends message to a client it has connection to
