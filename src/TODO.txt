@@ -2,18 +2,8 @@
 paxi. """
 
 *** THINGS TO LOOK INTO ***
-- should we really keep a nexttodecide: can get the gap from proposals
-instead
-	-- is nexttodecide a state that a replica should keep?
-	-- not really
-- there are lots of results returned in pvalues
-- should "nexttodecide" be reset to 1 when a node stops being a
-leader?
 
 *** CHANGES TO THE CODE ***
-- to find an eligible commandnumber look at *both* proposals and
-decisions
-
 - check_leader_promotion has to take into account if the chosen leader
 is ready to become a leader
 - new replica should inherit state from a live replica
@@ -26,12 +16,6 @@ is ready to become a leader
 - garbage collect commands that all replicas have seen
 
 *** TO THINK ABOUT ***
-- if during PROPOSE we find out that our proposal is being overwritten
-we propose it again (with a new commandnumber)
-- proposals keep things that have been proposed by a particular replica
-- requests should be decisions
-- when a new replica joins in, can make the system agree on an existing commandnumber
-- replica only sends message to a client it has connection to
 - How should the Leader and Replica states be updated so commandnumber
   allocation is done appropriately.
 - How to make Leader not reissue all previous commands
@@ -44,6 +28,16 @@ we propose it again (with a new commandnumber)
 - How will the weak Leader election be done.
 
 *** DONE ***
+- nexttodecide is removed
+- to find an eligible commandnumber look at *both* proposals and
+decisions
+- proposals keep things that have been proposed by a particular replica
+- requests should be decisions
+- when a new replica joins in, can make the system agree on an existing commandnumber
+- replica only sends message to a client it has connection to
+- if during PROPOSE we find out that our proposal is being overwritten
+we propose it again (with a new commandnumber)
+- there are lots of results returned in pvalues
 - leader responds to a client only if the client is in its clientpool
 - pmax doesn't work properly
 - keep leader active, skip over the prepare phase
