@@ -83,6 +83,7 @@ class Replica(Node):
             if commandname in METACOMMANDS:
                 if dometaonly:
                     method = getattr(self, commandname)
+                    givenresult = method(commandargs)
                 else:
                     tempcommand = (CMD_EXECUTED,self.decisions[slotno][COMMAND])
                     print "TEMP: ", tempcommand
@@ -93,10 +94,10 @@ class Replica(Node):
                     return
                 else:
                     method = getattr(self.object, commandname)
+                    givenresult = method(commandargs)
         except AttributeError:
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
-        givenresult = method(commandargs)
         cmdstatus, cmd = self.decisions[slotno]
         self.decisions[slotno] = (CMD_EXECUTED, cmd, givenresult)
         if commandname not in METACOMMANDS:
