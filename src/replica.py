@@ -129,13 +129,25 @@ class Replica(Node):
         self.perform(msg)
 
     def add_acceptor(self, args):
-        pass
+        # args keep addr:port
+        args = args.split(":")
+        acceptor = Peer(args[0],int(args[1]),NODE_ACCEPTOR)
+        self.groups[NODE_ACCEPTOR].add(acceptor)
+        
     def del_acceptor(self, args):
-        pass
+        args = args.split(":")
+        acceptor = Peer(args[0],int(args[1]),NODE_REPLICA)
+        self.groups[NODE_ACCEPTOR].remove(acceptor)
+    
     def add_replica(self, args):
-        pass
+        args = args.split(":")
+        replica = Peer(args[0],int(args[1]),NODE_REPLICA)
+        self.groups[NODE_REPLICA].add(replica)
+        
     def del_replica(self, args):
-        pass
+        args = args.split(":")
+        replica = Peer(args[0],int(args[1]),NODE_REPLICA)
+        self.groups[NODE_REPLICA].remove(replica)
 
     def cmd_showobject(self, args):
         """Shell command [showobject]: Print Replicated Object information""" 
@@ -431,7 +443,7 @@ class Replica(Node):
         This function calls do_command_propose() with inputs from the Shell."""
         try:
             proposal = ' '.join(args[1:])
-            cmdproposal = Command(client='Test', command=proposal)
+            cmdproposal = Command(client=Peer('1.1.1.1',1000), command=proposal)
             self.do_command_propose(cmdproposal)
         except IndexError:
             print "command expects only one command"
