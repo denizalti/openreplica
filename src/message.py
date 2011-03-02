@@ -58,6 +58,17 @@ class PValueSet():
         if pvalue not in self.pvalues:
             self.pvalues.add(pvalue)
 
+    def add_highest(self,pvalue):
+        """Adds given PValue to the PValueSet overwriting matching
+        (commandnumber,proposal) if it exists
+        """
+        self.pvalues.add(pvalue)
+        for oldpvalue in self.pvalues:
+            if pvalue.commandnumber == oldpvalue.commandnumber and pvalue.proposal == oldpvalue.proposal:
+                if pvalue.ballotnumber > oldpvalue.ballotnumber:
+                    self.pvalues.remove(oldpvalue)
+                    break
+                    
     def union(self,otherpvalueset):
         """Unionizes the pvalues of given PValueSet with the pvalues of the PValueSet"""
         return self.pvalues | otherpvalueset.pvalues
@@ -84,7 +95,7 @@ class PValueSet():
         """Returns PValueSet information"""
         temp = ''
         for pvalue in self.pvalues:
-            temp += str(pvalue)
+            temp += str(pvalue)+"\n"
         return temp
 
 class PValue():

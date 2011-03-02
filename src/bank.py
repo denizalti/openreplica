@@ -2,7 +2,7 @@ class Bank():
     def __init__(self):
         self.accounts = {}  # dictionary indexed by accountid storing accounts
 
-    def openaccount(self, args):
+    def open(self, args):
         accountid = args[0]
         if self.accounts.has_key(accountid):
             return "FAILURE"
@@ -10,7 +10,7 @@ class Bank():
             self.accounts[accountid] = Account(accountid)
             return "ACCT %s OPENED" % accountid
         
-    def closeaccount(self, args):
+    def close(self, args):
         accountid = args[0]
         if self.accounts.has_key(accountid):
             del self.accounts[accountid]

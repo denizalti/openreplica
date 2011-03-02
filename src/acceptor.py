@@ -64,7 +64,7 @@ class Acceptor(Node):
             logger("propose received with acceptable ballotnumber %s" % str(msg.ballotnumber))
             self.ballotnumber = msg.ballotnumber
             newpvalue = PValue(msg.ballotnumber,msg.commandnumber,msg.proposal)
-            self.accepted.add(newpvalue)
+            self.accepted.add_highest(newpvalue)
             replymsg = PaxosMessage(MSG_PROPOSE_ACCEPT,self.me,self.ballotnumber,msg.ballotnumber,newpvalue.commandnumber)
         else:
             logger("propose received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))
@@ -72,7 +72,7 @@ class Acceptor(Node):
         self.send(replymsg,peer=msg.source)
 
     def cmd_paxos(self, args):
-        """Shell command [paxos]: Print the paxos state of the Acceptor.""" 
+        """Shell command [paxos]: Print the paxos state of the Acceptor."""
         print self.accepted
         
 def main():
