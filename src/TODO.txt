@@ -1,14 +1,22 @@
 """ This file keeps the outstanding changes and thoughts we have about
 paxi. """
 
-*** FIRST TO FIX ***
-
 *** THINGS TO LOOK INTO ***
+- should we really keep a nexttodecide: can get the gap from proposals
+instead
+	-- is nexttodecide a state that a replica should keep?
+	-- not really
 - there are lots of results returned in pvalues
 - should "nexttodecide" be reset to 1 when a node stops being a
 leader?
 
 *** CHANGES TO THE CODE ***
+- proposals keep things that are running
+- to find an eligible commandnumber look at *both* proposals and
+decisions
+- if a decision overwrites something in my proposals then i'll propose
+it again!, which means it will get another commandnumber
+
 - check_leader_promotion has to take into account if the chosen leader
 is ready to become a leader
 - new replica should inherit state from a live replica
@@ -21,6 +29,7 @@ is ready to become a leader
 - garbage collect commands that all replicas have seen
 
 *** TO THINK ABOUT ***
+- requests should be decisions
 - when a new replica joins in, can make the system agree on an existing commandnumber
 - replica only sends message to a client it has connection to
 - How should the Leader and Replica states be updated so commandnumber

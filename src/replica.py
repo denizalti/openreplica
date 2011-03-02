@@ -56,25 +56,23 @@ class Replica(Node):
         - object: the object that Replica is replicating
         - nexttodecide: the commandnumber that should be used for the next proposal
 	- nexttoexecute: the commandnumber that relica is waiting for to execute
-        - requests: received requests as <commandnumber:(commandstate,command,commandresult)> mappings
-		       - 'commandstate' can be CMD_EXECUTED, CMD_DECIDED, CMD_RUNNING
+        - decisions: received requests as <commandnumber:(commandstate,command,commandresult)> mappings
+		       - 'commandstate' can be CMD_EXECUTED, CMD_DECIDED
                        		-- CMD_EXECUTED: The command corresponding to the commandnumber has 
                                 		 been both decided and executed.
 				-- CMD_DECIDED: The command corresponding to the commandnumber has 
                                 		 been decided but it is not executed yet (probably due to an 
 						 outstanding command prior to this command.)
-				-- CMD_RUNNING: The commandnumber is assigned to a command but the 
-					         result is not known yet.
         """
         Node.__init__(self, NODE_REPLICA)
         self.object = replicatedobject
         self.nexttodecide = 1
         self.nexttoexecute = 1
-        self.requests = {}
+        self.decisions = {}
 
     def performcore(self, msg, slotno, dometaonly=False):
-        print "------------- CHECKING %d ----> %s" % (slotno, self.requests[slotno])
-        command = self.requests[slotno][COMMAND]
+        print "------------- CHECKING %d ----> %s" % (slotno, self.decisions[slotno])
+        command = self.decisions[slotno][COMMAND]
         commandlist = command.command.split()
         commandname = commandlist[0]
         commandargs = commandlist[1:]
@@ -83,7 +81,7 @@ class Replica(Node):
                 if dometaonly:
                     method = getattr(self, commandname)
                 else:
-                    self.requests[slotno] = (CMD_EXECUTED,'')
+                    self.decisions[slotno] = (CMD_EXECUTED,'')
                     return
             else:
                 if dometaonly:
@@ -94,8 +92,8 @@ class Replica(Node):
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
         givenresult = method(commandargs)
-        cmdstatus, cmd = self.requests[slotno]
-        self.requests[slotno] = (CMD_EXECUTED, cmd, givenresult)
+        cmdstatus, cmd = self.decisions[slotno]
+        self.decisions[slotno] = (CMD_EXECUTED, cmd, givenresult)
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
             if self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
@@ -111,10 +109,10 @@ class Replica(Node):
     def perform(self, msg):
         """Function to handle local perform operations. 
         """
-        if not self.requests.has_key(msg.commandnumber):
-            self.requests[msg.commandnumber] = (CMD_DECIDED,msg.proposal)
+        if not self.decisions.has_key(msg.commandnumber):
+            self.decisions[msg.commandnumber] = (CMD_DECIDED,msg.proposal)
 
-        while self.requests.has_key(self.nexttoexecute) and self.requests[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
+        while self.decisions.has_key(self.nexttoexecute) and self.decisions[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
             logger("Executing command %d." % self.nexttoexecute)
             
             # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
@@ -143,9 +141,10 @@ class Replica(Node):
 
     def cmd_info(self, args):
         """Shell command [info]: Print Requests and Command to execute next"""
-        print "Waiting for command #%d" % self.nexttoexecute
-        print "Completed Requests:\n"
-        for (commandnumber,command) in self.requests.iteritems():
+        print "Waiting to execute #%d" % self.nexttoexecute
+        print "Waiting to decide #%d" % self.nexttodecide
+        print "Decisions:\n"
+        for (commandnumber,command) in self.decisions.iteritems():
             print "%d:\t%s\t%s\n" %  (commandnumber, command[COMMAND], cmd_states[command[COMMANDSTATE]])
 
 # LEADER STATE
@@ -189,8 +188,9 @@ class Replica(Node):
                 minpeer = peer
         if minpeer is None or self.me < minpeer:
             # i need to step up and become a leader
-            logger("Becoming a Leader")
-            self.become_leader()
+            if self.type != NODE_LEADER:
+                logger("Becoming a Leader")
+                self.become_leader()
         elif self.type == NODE_LEADER:
             # there is someone else who should act as a leader
             logger("Unbecoming a Leader")
@@ -221,11 +221,12 @@ class Replica(Node):
     def find_gap_in_proposals(self):
         """Returns the first gap in the proposals dictionary"""
         commandgap = 1
-        sorted_commandnumbers = sorted(self.proposals.iteritems(), key=operator.itemgetter(0))
-        for commandnumber,proposal in sorted_commandnumbers:
-            if commandnumber == (commandgap + 1):
-                commandgap = commandnumber
-        return commandgap+1
+        sorted_by_commandnumbers = sorted(self.proposals.iteritems(), key=operator.itemgetter(0))
+        print "XXX", sorted_by_commandnumbers
+        for commandnumber,proposal in sorted_by_commandnumbers:
+            if commandgap == commandnumber:
+                commandgap = commandnumber+1
+        return commandgap
     
     def msg_clientrequest(self, conn, msg):
         """Handler for a MSG_CLIENTREQUEST
@@ -236,7 +237,7 @@ class Replica(Node):
         if self.type == NODE_LEADER:
             if self.receivedclientrequests.has_key((msg.command.client,msg.command.clientcommandnumber)):
                 logger("Client Request handled before.. Resending result..")
-                for (commandnumber,command) in self.requests.iteritems():
+                for (commandnumber,command) in self.decisions.iteritems():
                     if command[COMMAND] == msg.command:
                         clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,command[COMMANDRESULT],msg.command.clientcommandnumber)
                         conn.send(clientreply)
@@ -244,7 +245,7 @@ class Replica(Node):
                 self.clientpool.add_connection_to_peer(msg.source, conn)
                 self.receivedclientrequests[(msg.command.client,msg.command.clientcommandnumber)] = msg.command
                 logger("Initiating a New Command")
-                commandnumber = self.get_highest_commandnumber()
+                commandnumber = self.find_gap_in_proposals()
                 proposal = msg.command
                 self.do_command_propose(commandnumber, proposal)
         else:
@@ -343,11 +344,7 @@ class Replica(Node):
                 # choose pvalues with distinctive commandnumbers and highest ballotnumbers
                 pmaxset = prc.possiblepvalueset.pmax()
                 for commandnumber,proposal in pmaxset.iteritems():
-                    print "%d: %s" % (commandnumber, proposal)
                     self.proposals[commandnumber] = proposal
-                print "PROPOSALS:"
-                for commandnumber, proposal in self.proposals.iteritems():
-                    print "%d: %s" % (commandnumber, proposal)
                 # If the commandnumber we were planning to use is in the proposals
                 # we should try the next one
                 newcommandnumber = self.find_gap_in_proposals()
@@ -411,6 +408,7 @@ class Replica(Node):
             if len(prc.received) >= prc.nquorum:
                 # YAY, WE AGREE!
                 # take this response collector out of the outstanding propose set
+                self.proposals[prc.commandnumber] = prc.proposal
                 del self.outstandingproposes[msg.commandnumber]
                 # now we can perform this action on the replicas
                 performmessage = PaxosMessage(MSG_PERFORM,self.me,commandnumber=prc.commandnumber,proposal=prc.proposal)

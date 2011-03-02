@@ -17,7 +17,7 @@ MSG_ACK, \
 NODE_ACCEPTOR, NODE_LEADER, NODE_REPLICA, NODE_CLIENT = range(4)
 
 # command states
-CMD_EXECUTED, CMD_DECIDED, CMD_RUNNING = range(3)
+CMD_EXECUTED, CMD_DECIDED = range(2)
 
 # message states
 ACK_NOTACKED, ACK_ACKED = range(2)
