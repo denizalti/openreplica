@@ -70,17 +70,23 @@ class Replica(Node):
         self.proposals = {}
 
     def performcore(self, msg, slotno, dometaonly=False):
-        print "------------- CHECKING %d ----> %s" % (slotno, self.decisions[slotno])
+        print "SlotNo: %d Command: %s Meta: %s" % (slotno, self.decisions[slotno], dometaonly)
         command = self.decisions[slotno][COMMAND]
         commandlist = command.command.split()
         commandname = commandlist[0]
         commandargs = commandlist[1:]
+        print "############################################"
+        print "Commandname: ", commandname
+        print "Commandargs: ", commandargs
+        print "############################################"
         try:
             if commandname in METACOMMANDS:
                 if dometaonly:
                     method = getattr(self, commandname)
                 else:
-                    self.decisions[slotno] = (CMD_EXECUTED,'')
+                    tempcommand = (CMD_EXECUTED,self.decisions[slotno][COMMAND])
+                    print "TEMP: ", tempcommand
+                    self.decisions[slotno] = tempcommand
                     return
             else:
                 if dometaonly:
@@ -130,22 +136,22 @@ class Replica(Node):
 
     def add_acceptor(self, args):
         # args keep addr:port
-        args = args.split(":")
+        args = args[0].split(":")
         acceptor = Peer(args[0],int(args[1]),NODE_ACCEPTOR)
         self.groups[NODE_ACCEPTOR].add(acceptor)
         
     def del_acceptor(self, args):
-        args = args.split(":")
+        args = args[0].split(":")
         acceptor = Peer(args[0],int(args[1]),NODE_REPLICA)
         self.groups[NODE_ACCEPTOR].remove(acceptor)
     
     def add_replica(self, args):
-        args = args.split(":")
+        args = args[0].split(":")
         replica = Peer(args[0],int(args[1]),NODE_REPLICA)
         self.groups[NODE_REPLICA].add(replica)
         
     def del_replica(self, args):
-        args = args.split(":")
+        args = args[0].split(":")
         replica = Peer(args[0],int(args[1]),NODE_REPLICA)
         self.groups[NODE_REPLICA].remove(replica)
 
