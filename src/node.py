@@ -11,6 +11,7 @@ import time
 import random
 import socket
 import select
+import copy
 
 from enums import *
 from utils import *
@@ -25,7 +26,8 @@ parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="addres
 parser.add_option("-i", "--id", action="store", dest="accountid", type="int", default=0, help="[optional] id for the account")
 (options, args) = parser.parse_args()
 
-# TIMEOUT THREAD
+DO_PERIODIC_PINGS=False
+
 class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
@@ -89,7 +91,7 @@ class Node():
         input_thread = Thread(target=self.get_inputs)
         input_thread.start()
         # Start a thread that pings neighbors
-        timer_thread = Timer(60.0, self.periodic)
+        timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
         timer_thread.start()
         
     def __str__(self):
@@ -101,14 +103,17 @@ class Node():
         returnstr = "state:\n"
         for type,group in self.groups.iteritems():
             returnstr += str(group)
+        returnstr += "\nPending:\n"
+        for cno,proposal in self.pendingcommands.iteritems():
+            returnstr += "command#%d: %s" % (cno, proposal)
         return returnstr
 
     def outstandingmsgstr(self):
         """Return the dictionary of outstandingmessages"""
-        returnstr = "outstandingmessages:\n"
-        for messageinfo in self.outstandingmessages.itervalues():
-            returnstr += "%s\n" % str(messageinfo)
-        returnstr += "\n"+str(self.connectionpool)
+        returnstr = "outstandingmessages: time now is %s\n" % str(time.time())
+        with self.outstandingmessages_lock:
+            for messageid,messageinfo in self.outstandingmessages.iteritems():
+                returnstr += "[%s] %s\n" % (str(messageid),str(messageinfo))
         return returnstr
     
     def server_loop(self):
@@ -177,14 +182,25 @@ class Node():
         """Receives a message and calls the corresponding message handler"""
         connection = self.connectionpool.get_connection_by_socket(clientsock)
         message = connection.receive()
-        logger("got message %s" % message)
+
+
         if message == None:
             return False
         if message.type == MSG_ACK:
             with self.outstandingmessages_lock:
-                self.outstandingmessages[message.ackid].timestamp = time.time()
-                self.outstandingmessages[message.ackid].messagestate = ACK_ACKED
+                ackid = "%s+%d" % (self.me.id(), message.ackid)
+                print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+                print "YYYYYYYYYYYYYYYYYYY got ack message ", ackid, message
+                print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+                if self.outstandingmessages.has_key(ackid):
+                    logger("deleting outstanding message %s" % ackid)
+                    del self.outstandingmessages[ackid]
+                else:
+                    logger("acked message %s not in outstanding messages" % ackid)
         else:
+            print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+            print "YYYYYYYYYYYYYYYYYYY got message (about to ack) ", message.fullid(), message
+            print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
             connection.send(AckMessage(MSG_ACK,self.me,message.id))
             mname = "msg_%s" % msg_names[message.type].lower()
             try:
@@ -198,24 +214,9 @@ class Node():
     # message handlers
     #
     def msg_helo(self, conn, msg):
-        """Handler for MSG_HELO"""
-        replymsg = HandshakeMessage(MSG_HELOREPLY,self.me,self.groups)
+        """Add the other peer into the connection pool and group"""
         self.groups[msg.source.type].add(msg.source)
         self.connectionpool.add_connection_to_peer(msg.source,conn)
-        if msg.source.type == NODE_ACCEPTOR:
-            metacommand = Command(command="add_acceptor %s" %msg.source.id())
-        elif msg.source.type == NODE_REPLICA:
-            metacommand = Command(command="add_replica %s" %msg.source.id())
-        self.do_command_propose(metacommand)
-        self.send(replymsg, peer=msg.source)
-
-    def msg_heloreply(self, conn, msg):
-        """Handler for MSG_HELOREPLY
-        Merges own Peer Groups with the ones in the MSG_HELOREPLY
-        """
-        self.groups[msg.source.type].add(msg.source)
-        for type,group in self.groups.iteritems():
-            group = group.union(msg.groups[type])
 
     def msg_bye(self, conn, msg):
         """Handler for MSG_BYE
@@ -252,25 +253,39 @@ class Node():
           ACKTIMEOUT and are NOTACKED yet.
         - sends MSG_HELO message to peers that it has not heard within LIVENESSTIMEOUT
         """
-        checkliveness = set()
-        for type,group in self.groups.iteritems():
-            checkliveness = checkliveness.union(group.members)
-        with self.outstandingmessages_lock:
-            for id, messageinfo in self.outstandingmessages.iteritems():
-                now = time.time()
-                if messageinfo.messagestate == ACK_NOTACKED and (messageinfo.timestamp + ACKTIMEOUT) < now:
-                    self.send(messageinfo.message, peer=messageinfo.destination) #resend NOTACKED message
-                    messageinfo.timestamp = time.time()
-                elif messageinfo.messagestate == ACK_ACKED and (messageinfo.timestamp + LIVENESSTIMEOUT) < now \
-                         and messageinfo.destination in checkliveness:
-                    checkliveness.remove(messageinfo.destination)
-        logger("Periodic Resend Done!")
+        while True:
+            if DO_PERIODIC_PINGS:
+                checkliveness = set()
+                for type,group in self.groups.iteritems():
+                    checkliveness = checkliveness.union(group.members)
 
-        for pingpeer in checkliveness:
-            logger("Sending PING to %s" % pingpeer)
-            helomessage = HandshakeMessage(MSG_HELO, self.me)
-            self.send(helomessage, peer=pingpeer)
-          
+            try:
+                with self.outstandingmessages_lock:
+                    for id, messageinfo in self.outstandingmessages.iteritems():
+                        now = time.time()
+                        if messageinfo.messagestate == ACK_NOTACKED and (messageinfo.timestamp + ACKTIMEOUT) < now:
+                            #resend NOTACKED message
+                            logger("re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
+                            self.send(messageinfo.message, peer=messageinfo.destination, isresend=True)
+                            messageinfo.timestamp = time.time()
+                        elif DO_PERIODIC_PINGS and messageinfo.messagestate == ACK_ACKED and \
+                                (messageinfo.timestamp + LIVENESSTIMEOUT) < now and \
+                                messageinfo.destination in checkliveness:
+                            checkliveness.remove(messageinfo.destination)
+            except Exception as ec:
+                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                print ec
+                if DO_PERIODIC_PINGS:
+                    for pingpeer in checkliveness:
+                        logger("Sending PING to %s" % pingpeer)
+                        helomessage = HandshakeMessage(MSG_HELO, self.me)
+                        self.send(helomessage, peer=pingpeer)
+
+            time.sleep(ACKTIMEOUT/5)
 
     def get_inputs(self):
         """Shellloop that accepts inputs from the command prompt and calls corresponding command
@@ -290,25 +305,35 @@ class Node():
                         print "command not supported"
                         continue
                     method(input)
-            except ( KeyboardInterrupt,EOFError ):
+            except (KeyboardInterrupt,):
                 os._exit(0)
+            except (EOFError,):
+                return
         return            
     
     # There are 3 basic send types: peer.send, conn.send and group.send
     # def __init__(self, message, destination, messagestate=ACK_NOTACKED, timestamp=0):
-    def send(self, message, peer=None, group=None):
+    def send(self, message, peer=None, group=None, isresend=False):
         if peer:
             connection = self.connectionpool.get_connection_by_peer(peer)
-            connection.send(message)
-            logger("Sent message to %s" % peer)
-            msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
-            with self.outstandingmessages_lock:
-                self.outstandingmessages[message.id] = msginfo
-        elif group:
-            for peer in group.members:
-                connection = self.connectionpool.get_connection_by_peer(peer)
-                connection.send(message)
+            logger("Sending message to %s" % peer) 
+            print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+            print "YYYYYYYYYYYYYYYYYYY", message.fullid()
+            print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+            if not isresend:
                 msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
                 with self.outstandingmessages_lock:
-                    self.outstandingmessages[message.id] = msginfo
+                    self.outstandingmessages[message.fullid()] = msginfo
+            connection.send(message)
+        elif group:
+            assert not isresend, "performing a resend to a group"
+            for peer in group.members:
+                logger("Sending message to %s" % peer)
+                connection = self.connectionpool.get_connection_by_peer(peer)
+                with self.outstandingmessages_lock:
+                    msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
+                    self.outstandingmessages[message.fullid()] = msginfo
+                connection.send(message)
+                message = copy.copy(message)
+                message.assignuniqueid()
          

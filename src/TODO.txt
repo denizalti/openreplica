@@ -8,7 +8,6 @@ paxi. """
 is ready to become a leader
 - new replica should inherit state from a live replica
 - do not let the commands get past the edge of the window
-- configuration change meta-events
 - save state to disk
 - weak leader election with adaptive timeouts
 - failure monitoring and local failure detection
@@ -28,6 +27,7 @@ is ready to become a leader
 - How will the weak Leader election be done.
 
 *** DONE ***
+- configuration change meta-events
 - nexttodecide is removed
 - to find an eligible commandnumber look at *both* proposals and
 decisions

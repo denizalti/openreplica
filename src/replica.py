@@ -62,35 +62,40 @@ class Replica(Node):
                                 		 been decided but it is not executed yet (probably due to an 
 						 outstanding command prior to this command.)
         - outstandingproposals: <commandnumber:command> mappings that the replica has made in the past
+        - pendingcommands: Set of unissiued commands that are waiting for the window to roll over to be issued
         """
         Node.__init__(self, NODE_REPLICA)
         self.object = replicatedobject
         self.nexttoexecute = 1
         self.decisions = {}
         self.proposals = {}
+        self.pendingcommands = {}
 
     def performcore(self, msg, slotno, dometaonly=False):
-        print "---> SlotNo: %d Command: %s Meta: %s" % (slotno, self.decisions[slotno], dometaonly)
+        print "---> SlotNo: %d Command: %s DoMetaOnly: %s" % (slotno, self.decisions[slotno], dometaonly)
         command = self.decisions[slotno][COMMAND]
         commandlist = command.command.split()
         commandname = commandlist[0]
         commandargs = commandlist[1:]
+        ismeta=(commandname in METACOMMANDS)
         try:
-            if commandname in METACOMMANDS:
-                if dometaonly:
-                    method = getattr(self, commandname)
-                    givenresult = method(commandargs)
-                else:
-                    tempcommand = (CMD_EXECUTED,self.decisions[slotno][COMMAND])
-                    print "TEMP: ", tempcommand
-                    self.decisions[slotno] = tempcommand
-                    return
-            else:
-                if dometaonly:
-                    return
-                else:
-                    method = getattr(self.object, commandname)
-                    givenresult = method(commandargs)
+            if dometaonly and ismeta:
+                # execute a metacommand when the window has expired
+                method = getattr(self, commandname)
+                givenresult = method(commandargs)
+            elif dometaonly and not ismeta:
+                return
+            elif not dometaonly and ismeta:
+                # meta command, but the window has not passed yet, 
+                # so just mark it as executed without actually executing it
+                # the real execution will take place when the window has expired
+                tempcommand = (CMD_EXECUTED,self.decisions[slotno][COMMAND])
+                self.decisions[slotno] = tempcommand
+                return
+            elif not dometaonly and not ismeta:
+                # this is the workhorse case that executes most normal commands
+                method = getattr(self.object, commandname)
+                givenresult = method(commandargs)
         except AttributeError:
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
@@ -102,11 +107,6 @@ class Replica(Node):
                 clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,givenresult, command.clientcommandnumber)
                 clientconn = self.clientpool.get_connection_by_peer(command.client)
                 clientconn.send(clientreply)
-            else:
-                # i am a replica that was contacted by a leader, return the response to him
-                # XXX not clear if this is necessary
-                replymsg = PaxosMessage(MSG_RESPONSE,self.me,commandnumber=self.nexttoexecute,result=givenresult)
-                self.send(replymsg,peer=msg.source)
 
     def perform(self, msg):
         """Function to handle local perform operations. 
@@ -126,6 +126,13 @@ class Replica(Node):
 
             self.performcore(msg, self.nexttoexecute)
             self.nexttoexecute += 1
+            # the window just got bumped by one
+            # check if there are pending commands, and issue one of them
+            self.issue_pending_command(self.nexttoexecute)
+            
+    def issue_pending_command(self, candidatecommandno):
+        if self.pendingcommands.has_key(candidatecommandno):
+            self.do_command_propose_frompending(candidatecommandno)
 
     def msg_perform(self, conn, msg):
         """Handler for MSG_PERFORM"""
@@ -217,38 +224,50 @@ class Replica(Node):
         self.ballotnumber = temp
 
     def find_commandnumber(self):
-        """Returns the first gap in the proposals dictionary"""
+        """Returns the first gap in the proposals dictionary or the item following """
         commandgap = 1
-        proposals = dict(self.proposals.items() + self.decisions.items())
-        sorted_by_commandnumbers = sorted(proposals.iteritems(), key=operator.itemgetter(0))
-        for commandnumber,proposal in sorted_by_commandnumbers:
-            if commandgap == commandnumber:
-                commandgap = commandnumber+1
+        proposals = set(self.proposals.keys() + self.decisions.keys())
+        while commandgap <= len(proposals):
+            if commandgap in proposals:
+                commandgap += 1
+            else:
+                return commandgap
         return commandgap
     
+
+    def handle_client_command(self, givencommand):
+        if self.receivedclientrequests.has_key((givencommand.client,givencommand.clientcommandnumber)):
+            logger("Client Request handled before.. Resending result..")
+            for (commandnumber,command) in self.decisions.iteritems():
+                if command[COMMAND] == givencommand:
+                    clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,command[COMMANDRESULT],givencommand.clientcommandnumber)
+                    conn = self.get_connection_by_peer(givencommand.client)
+                    if conn is not None:
+                        conn.send(clientreply)
+        else:
+            self.receivedclientrequests[(givencommand.client,givencommand.clientcommandnumber)] = givencommand
+            logger("Initiating a New Command")
+            proposal = givencommand
+            self.do_command_propose(proposal)
+
     def msg_clientrequest(self, conn, msg):
         """Handler for a MSG_CLIENTREQUEST
         A new Paxos Protocol is initiated with the first available commandnumber
         the Leader knows of.
         """
         self.check_leader_promotion()
-        if self.type == NODE_LEADER:
-            if self.receivedclientrequests.has_key((msg.command.client,msg.command.clientcommandnumber)):
-                logger("Client Request handled before.. Resending result..")
-                for (commandnumber,command) in self.decisions.iteritems():
-                    if command[COMMAND] == msg.command:
-                        clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,command[COMMANDRESULT],msg.command.clientcommandnumber)
-                        conn.send(clientreply)
-            else:
-                self.clientpool.add_connection_to_peer(msg.source, conn)
-                self.receivedclientrequests[(msg.command.client,msg.command.clientcommandnumber)] = msg.command
-                logger("Initiating a New Command")
-                proposal = msg.command
-                self.do_command_propose(proposal)
-        else:
+        if self.type != NODE_LEADER:
             logger("Not a Leader.. Request rejected..")
             clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED",msg.command.clientcommandnumber)
             conn.send(clientreply)
+            return
+        
+        self.clientpool.add_connection_to_peer(msg.source, conn)
+        self.handle_client_command(msg.command)
+
+    def msg_clientreply(self, conn, msg):
+        """This only occurs in response to commands initiated by the shell"""
+        print "==================>", msg
 
     def msg_response(self, conn, msg):
         """Handler for MSG_RESPONSE"""
@@ -256,33 +275,47 @@ class Replica(Node):
         clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,msg.result)
         # self.send(clientreply,peer=CLIENT) # XXX
 
+    def do_command_propose_frompending(self, givencommandnumber):
+        givenproposal = self.pendingcommands[givencommandnumber]
+        del self.pendingcommands[givencommandnumber]
+        recentballotnumber = self.ballotnumber
+        logger("proposing command: %d:%s" % (givencommandnumber,givenproposal))
+        logger("with ballotnumber %s" % str(recentballotnumber))
+        logger("and %d acceptors" % len(self.groups[NODE_ACCEPTOR]))
+        prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, givencommandnumber, givenproposal)
+        self.outstandingproposes[givencommandnumber] = prc
+        propose = PaxosMessage(MSG_PROPOSE,self.me,recentballotnumber,commandnumber=givencommandnumber,proposal=givenproposal)
+        self.send(propose,group=prc.acceptors)
+        
     # Paxos Methods
     def do_command_propose(self, givenproposal):
-        """Propose a command with the given commandnumber and proposal.
+        """Propose a command with the given commandnumber and proposal. Stage p2a.
         A command is proposed by running the PROPOSE stage of Paxos Protocol for the command.
-
-        State Updates:
-        - Start the PROPOSE STAGE:
-        -- create MSG_PROPOSE: message carries the corresponding ballotnumber, commandnumber and proposal
-        -- create ResponseCollector object for PROPOSE STAGE: ResponseCollector keeps
-        the state related to MSG_PROPOSE
-        -- add the ResponseCollector to the outstanding propose set
-        -- send MSG_PROPOSE to Acceptor nodes
         """
-        if self.type == NODE_LEADER:
-            recentballotnumber = self.ballotnumber
-            givencommandnumber = self.find_commandnumber()
-            logger("proposing command: %d:%s" % (givencommandnumber,givenproposal))
-            logger("with ballotnumber %s" % str(recentballotnumber))
-            prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, givencommandnumber, givenproposal)
-            self.outstandingproposes[givencommandnumber] = prc
-            propose = PaxosMessage(MSG_PROPOSE,self.me,recentballotnumber,commandnumber=givencommandnumber,proposal=givenproposal)
-            self.send(propose,group=prc.acceptors)
-        else:
+        if self.type != NODE_LEADER:
             print "Not a Leader.."
+            return
+
+        givencommandnumber = self.find_commandnumber()
+        self.pendingcommands[givencommandnumber] = givenproposal
+        # if we're too far in the future, i.e. past window, do not issue the command
+        if givencommandnumber - self.nexttoexecute >= WINDOW:
+            return
+        self.do_command_propose_frompending(givencommandnumber)
+            
+    def do_command_prepare_frompending(self, givencommandnumber):
+        givenproposal = self.pendingcommands[givencommandnumber]
+        del self.pendingcommands[givencommandnumber]
+        newballotnumber = self.ballotnumber
+        logger("preparing command: %d:%s" % (givencommandnumber, givenproposal))
+        logger("with ballotnumber %s" % str(newballotnumber))
+        prc = ResponseCollector(self.groups[NODE_ACCEPTOR], newballotnumber, givencommandnumber, givenproposal)
+        self.outstandingprepares[newballotnumber] = prc
+        prepare = PaxosMessage(MSG_PREPARE,self.me,newballotnumber)
+        self.send(prepare,group=prc.acceptors)
 
     def do_command_prepare(self, givenproposal):
-        """Prepare a command with the given commandnumber and proposal.
+        """Prepare a command with the given commandnumber and proposal. Stage p1a.
         A command is initiated by running a Paxos Protocol for the command.
 
         State Updates:
@@ -293,17 +326,16 @@ class Replica(Node):
         -- add the ResponseCollector to the outstanding prepare set
         -- send MSG_PREPARE to Acceptor nodes
         """
-        if self.type == NODE_LEADER:
-            newballotnumber = self.ballotnumber
-            givencommandnumber = self.find_commandnumber()
-            logger("preparing command: %d:%s" % (givencommandnumber, givenproposal))
-            logger("with ballotnumber %s" % str(newballotnumber))
-            prc = ResponseCollector(self.groups[NODE_ACCEPTOR], newballotnumber, givencommandnumber, givenproposal)
-            self.outstandingprepares[newballotnumber] = prc
-            prepare = PaxosMessage(MSG_PREPARE,self.me,newballotnumber)
-            self.send(prepare,group=prc.acceptors)
-        else:
+        if self.type != NODE_LEADER:
             print "Not a Leader.."
+            return
+
+        givencommandnumber = self.find_commandnumber()
+        self.pendingcommands[givencommandnumber] = givenproposal
+        # if we're too far in the future, i.e. past window, do not issue the command
+        if givencommmandnumber - self.nexttoexecute >= WINDOW:
+            return
+        self.do_command_prepare_frompending(givencommandnumber)
             
     def msg_prepare_adopted(self, conn, msg):
         """Handler for MSG_PREPARE_ADOPTED
@@ -413,7 +445,7 @@ class Replica(Node):
                 self.send(performmessage, group=self.groups[NODE_LEADER])
                 self.perform(performmessage)
         else:
-            logger("there is no response collector for %s" % str(msg.inresponseto))
+            logger("there is no response collector for %s cmdno:%d" % (str(msg.inresponseto), msg.commandnumber))
 
     def msg_propose_reject(self, conn, msg):
         """Handler for MSG_PROPOSE_REJECT
@@ -446,8 +478,8 @@ class Replica(Node):
         This function calls do_command_propose() with inputs from the Shell."""
         try:
             proposal = ' '.join(args[1:])
-            cmdproposal = Command(client=Peer('1.1.1.1',1000), command=proposal)
-            self.do_command_propose(cmdproposal)
+            cmdproposal = Command(client=self.me, clientcommandnumber=random.randint(1,10000000), command=proposal)
+            self.handle_client_command(cmdproposal)
         except IndexError:
             print "command expects only one command"
 

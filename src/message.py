@@ -3,13 +3,14 @@
 @note: Message, PValueSet, PValue
 @date: February 1, 2011
 """
-
 import struct
 from enums import *
 from utils import *
 from peer import *
+from threading import Lock
 
 msgidpool = 0
+msgidpool_lock=Lock()
 
 class Message():
     """Message encloses the basic state that is shared
@@ -22,12 +23,23 @@ class Message():
         - type: type of message (see enums.py)
         - source: Peer instance of the source
         """
-        global msgidpool
         self.type = msgtype
         self.source = myname
-        if msgtype != MSG_ACK:
-            self.id = msgidpool
-            msgidpool += 1
+        self.assignuniqueid()
+
+    def assignuniqueid(self):
+        """Assign a new unique id to this message"""
+        global msgidpool
+        global msgidpool_lock
+
+        with msgidpool_lock:
+            if self.type != MSG_ACK:
+                self.id = msgidpool
+                msgidpool += 1
+        return self
+
+    def fullid(self):
+        return "%s+%d" % (self.source.id(), self.id)
 
     def __str__(self):
         """Return Message information"""

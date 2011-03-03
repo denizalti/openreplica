@@ -1,6 +1,10 @@
 import socket
 import struct
 import cPickle as pickle
+import random
+
+DEBUG=True
+DROPRATE=0.3
 
 class ConnectionPool():
     """ConnectionPool keeps the connections that a certain Node knows of.
@@ -111,6 +115,9 @@ class Connection():
     
     def send(self, msg):
         """pickle and send a message on the Connection"""
+        if DEBUG and random.random() <= DROPRATE:
+            print "dropping message..."
+            return
         messagestr = pickle.dumps(msg)
         messagelength = struct.pack("I", len(messagestr))
         try:

@@ -24,7 +24,7 @@ ACK_NOTACKED, ACK_ACKED = range(2)
 
 # timeouts
 HELOTIMEOUT = 5
-ACKTIMEOUT = 30
+ACKTIMEOUT = 10
 LIVENESSTIMEOUT = 60
 
 # magic numbers
