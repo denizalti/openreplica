@@ -175,6 +175,7 @@ class Replica(Node):
         """Initialize Leader
 
         Leader State
+        - active: indicates if the Leader has a *good* ballotnumber
         - ballotnumber: the highest ballotnumber Leader has used
         - pvalueset: the PValueSet for Leader, which encloses all
         (ballotnumber,commandnumber,proposal) triples Leader knows about
@@ -187,6 +188,7 @@ class Replica(Node):
         """
         if self.type != NODE_LEADER:
             self.type = NODE_LEADER
+            self.active = False
             self.ballotnumber = (0,self.id)
             self.outstandingprepares = {}
             self.outstandingproposes = {}
@@ -248,7 +250,10 @@ class Replica(Node):
             self.receivedclientrequests[(givencommand.client,givencommand.clientcommandnumber)] = givencommand
             logger("Initiating a New Command")
             proposal = givencommand
-            self.do_command_propose(proposal)
+            if self.active:
+                self.do_command_propose(proposal)
+            else:
+                self.do_command_prepare(proposal)
 
     def msg_clientrequest(self, conn, msg):
         """Handler for a MSG_CLIENTREQUEST
@@ -333,7 +338,7 @@ class Replica(Node):
         givencommandnumber = self.find_commandnumber()
         self.pendingcommands[givencommandnumber] = givenproposal
         # if we're too far in the future, i.e. past window, do not issue the command
-        if givencommmandnumber - self.nexttoexecute >= WINDOW:
+        if givencommandnumber - self.nexttoexecute >= WINDOW:
             return
         self.do_command_prepare_frompending(givencommandnumber)
             
@@ -386,6 +391,8 @@ class Replica(Node):
                     self.outstandingproposes[chosencommandnumber] = newprc
                     propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotnumber,commandnumber=chosencommandnumber,proposal=chosenproposal)
                     self.send(propose,group=newprc.acceptors)
+                # become active
+                self.active = True
         else:
             logger("there is no response collector")
 
@@ -407,6 +414,8 @@ class Replica(Node):
             logger("got a reject for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
             # take this response collector out of the outstanding prepare set
             del self.outstandingprepares[msg.inresponseto]
+            # become inactive
+            self.active = False
             # update the ballot number
             self.update_ballotnumber(msg.ballotnumber)
             # retry the prepare
@@ -431,11 +440,11 @@ class Replica(Node):
         """
         if self.outstandingproposes.has_key(msg.commandnumber):
             prc = self.outstandingproposes[msg.commandnumber]
-            logger("got an accept for proposal ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
             prc.received[msg.source] = msg
+            logger("got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
             assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PROPOSE_ACCEPT can't have non-matching ballotnumber" % self
             if len(prc.received) >= prc.nquorum:
-                # YAY, WE AGREE!
+                logger("WE AGREE!")
                 # take this response collector out of the outstanding propose set
                 self.proposals[prc.commandnumber] = prc.proposal
                 del self.outstandingproposes[msg.commandnumber]
@@ -462,9 +471,11 @@ class Replica(Node):
         """
         if self.outstandingproposes.has_key(msg.commandnumber):
             prc = self.outstandingproposes[msg.commandnumber]
-            logger("got a reject for proposal ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
+            logger("got a reject for proposal ballotno %s commandno %s proposal %s still %d out of %d accepts" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
             # take this response collector out of the outstanding propose set
             del self.outstandingproposes[msg.commandnumber]
+            # become inactive
+            self.active = False
             # update the ballot number
             self.update_ballotnumber(msg.ballotnumber)
             # retry the prepare

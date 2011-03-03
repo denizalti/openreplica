@@ -146,6 +146,7 @@ class Node():
                     if time.time() - timestamp > HELOTIMEOUT:
                         # expired -- if it's not already in the set, it should be closed
                         if s not in socketset:
+                            logger("Removing %s from the nascentset" % s)
                             nascentset.remove((s,timestamp))
                             s.close()
                     elif s not in socketset:
@@ -169,6 +170,7 @@ class Node():
                         # s is closed, take it out of nascentset and connection pool
                         for sock,timestamp in nascentset:
                             if sock == s:
+                                logger("Removing %s from the nascentset" % s)
                                 nascentset.remove((s,timestamp))
                         self.connectionpool.del_connection_by_socket(s)
                         s.close()  
@@ -182,8 +184,6 @@ class Node():
         """Receives a message and calls the corresponding message handler"""
         connection = self.connectionpool.get_connection_by_socket(clientsock)
         message = connection.receive()
-
-
         if message == None:
             return False
         if message.type == MSG_ACK:
