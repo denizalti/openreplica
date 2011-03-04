@@ -189,18 +189,14 @@ class Node():
         if message.type == MSG_ACK:
             with self.outstandingmessages_lock:
                 ackid = "%s+%d" % (self.me.id(), message.ackid)
-                print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
-                print "YYYYYYYYYYYYYYYYYYY got ack message ", ackid, message
-                print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+                logger("got ack message %s" % ackid)
                 if self.outstandingmessages.has_key(ackid):
                     logger("deleting outstanding message %s" % ackid)
                     del self.outstandingmessages[ackid]
                 else:
                     logger("acked message %s not in outstanding messages" % ackid)
         else:
-            print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
-            print "YYYYYYYYYYYYYYYYYYY got message (about to ack) ", message.fullid(), message
-            print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+            logger("got message (about to ack) %s" % message.fullid())
             connection.send(AckMessage(MSG_ACK,self.me,message.id))
             mname = "msg_%s" % msg_names[message.type].lower()
             try:
@@ -273,17 +269,13 @@ class Node():
                                 messageinfo.destination in checkliveness:
                             checkliveness.remove(messageinfo.destination)
             except Exception as ec:
-                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                print ec
-                if DO_PERIODIC_PINGS:
-                    for pingpeer in checkliveness:
-                        logger("Sending PING to %s" % pingpeer)
-                        helomessage = HandshakeMessage(MSG_HELO, self.me)
-                        self.send(helomessage, peer=pingpeer)
+                logger("Exception in Resend: %s" % ec)
+                
+            if DO_PERIODIC_PINGS:
+                for pingpeer in checkliveness:
+                    logger("Sending PING to %s" % pingpeer)
+                    helomessage = HandshakeMessage(MSG_HELO, self.me)
+                    self.send(helomessage, peer=pingpeer)
 
             time.sleep(ACKTIMEOUT/5)
 
@@ -316,10 +308,7 @@ class Node():
     def send(self, message, peer=None, group=None, isresend=False):
         if peer:
             connection = self.connectionpool.get_connection_by_peer(peer)
-            logger("Sending message to %s" % peer) 
-            print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
-            print "YYYYYYYYYYYYYYYYYYY", message.fullid()
-            print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+            logger("Sending message %s to %s" % (message.fullid(), peer))
             if not isresend:
                 msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
                 with self.outstandingmessages_lock:

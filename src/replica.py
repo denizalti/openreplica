@@ -235,20 +235,31 @@ class Replica(Node):
             else:
                 return commandgap
         return commandgap
-    
 
     def handle_client_command(self, givencommand):
         if self.receivedclientrequests.has_key((givencommand.client,givencommand.clientcommandnumber)):
-            logger("Client Request handled before.. Resending result..")
+            logger("client request received before")
+            resultsent = False
+            # Check if the request has been executed
             for (commandnumber,command) in self.decisions.iteritems():
                 if command[COMMAND] == givencommand:
                     clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,command[COMMANDRESULT],givencommand.clientcommandnumber)
                     conn = self.get_connection_by_peer(givencommand.client)
                     if conn is not None:
                         conn.send(clientreply)
+                    resultsent = True
+                    break
+            # If request not executed yet, send REQUEST IN PROGRESS
+            if not resultsent:
+                clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REQUEST IN PROGRESS",givencommand.clientcommandnumber)
+                conn = self.get_connection_by_peer(givencommand.client)
+                if conn is not None:
+                    conn.send(clientreply)
+                
         else:
             self.receivedclientrequests[(givencommand.client,givencommand.clientcommandnumber)] = givencommand
             logger("Initiating a New Command")
+            logger("Leader is active: %s" % self.active)
             proposal = givencommand
             if self.active:
                 self.do_command_propose(proposal)
@@ -284,7 +295,7 @@ class Replica(Node):
         givenproposal = self.pendingcommands[givencommandnumber]
         del self.pendingcommands[givencommandnumber]
         recentballotnumber = self.ballotnumber
-        logger("proposing command: %d:%s" % (givencommandnumber,givenproposal))
+        logger("2 proposing command: %d:%s" % (givencommandnumber,givenproposal))
         logger("with ballotnumber %s" % str(recentballotnumber))
         logger("and %d acceptors" % len(self.groups[NODE_ACCEPTOR]))
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, givencommandnumber, givenproposal)
@@ -312,7 +323,7 @@ class Replica(Node):
         givenproposal = self.pendingcommands[givencommandnumber]
         del self.pendingcommands[givencommandnumber]
         newballotnumber = self.ballotnumber
-        logger("preparing command: %d:%s" % (givencommandnumber, givenproposal))
+        logger("1 preparing command: %d:%s" % (givencommandnumber, givenproposal))
         logger("with ballotnumber %s" % str(newballotnumber))
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], newballotnumber, givencommandnumber, givenproposal)
         self.outstandingprepares[newballotnumber] = prc
