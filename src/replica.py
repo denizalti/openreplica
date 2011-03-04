@@ -70,6 +70,7 @@ class Replica(Node):
         self.decisions = {}
         self.proposals = {}
         self.pendingcommands = {}
+        self.commandnumber_lock = Lock()
 
     def performcore(self, msg, slotno, dometaonly=False):
         print "---> SlotNo: %d Command: %s DoMetaOnly: %s" % (slotno, self.decisions[slotno], dometaonly)
@@ -228,7 +229,12 @@ class Replica(Node):
     def find_commandnumber(self):
         """Returns the first gap in the proposals dictionary or the item following """
         commandgap = 1
-        proposals = set(self.proposals.keys() + self.decisions.keys())
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        print "Proposals: %s" % self.proposals
+        print "Decisions: %s" % self.decisions
+        print "PendingCommands: %s" % self.pendingcommands
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        proposals = set(self.proposals.keys() + self.decisions.keys() + self.pendingcommands.keys())
         while commandgap <= len(proposals):
             if commandgap in proposals:
                 commandgap += 1
@@ -254,8 +260,7 @@ class Replica(Node):
                 clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REQUEST IN PROGRESS",givencommand.clientcommandnumber)
                 conn = self.get_connection_by_peer(givencommand.client)
                 if conn is not None:
-                    conn.send(clientreply)
-                
+                    conn.send(clientreply)    
         else:
             self.receivedclientrequests[(givencommand.client,givencommand.clientcommandnumber)] = givencommand
             logger("Initiating a New Command")
@@ -293,7 +298,9 @@ class Replica(Node):
 
     def do_command_propose_frompending(self, givencommandnumber):
         givenproposal = self.pendingcommands[givencommandnumber]
-        del self.pendingcommands[givencommandnumber]
+        with self.commandnumber_lock:
+            del self.pendingcommands[givencommandnumber]
+            self.proposals[givencommandnumber] = givenproposal
         recentballotnumber = self.ballotnumber
         logger("2 proposing command: %d:%s" % (givencommandnumber,givenproposal))
         logger("with ballotnumber %s" % str(recentballotnumber))
@@ -314,6 +321,7 @@ class Replica(Node):
 
         givencommandnumber = self.find_commandnumber()
         self.pendingcommands[givencommandnumber] = givenproposal
+        print "PendingCommands: %s" % self.pendingcommands
         # if we're too far in the future, i.e. past window, do not issue the command
         if givencommandnumber - self.nexttoexecute >= WINDOW:
             return
@@ -321,7 +329,9 @@ class Replica(Node):
             
     def do_command_prepare_frompending(self, givencommandnumber):
         givenproposal = self.pendingcommands[givencommandnumber]
-        del self.pendingcommands[givencommandnumber]
+        with self.commandnumber_lock:
+            del self.pendingcommands[givencommandnumber]
+            self.proposals[givencommandnumber] = givenproposal
         newballotnumber = self.ballotnumber
         logger("1 preparing command: %d:%s" % (givencommandnumber, givenproposal))
         logger("with ballotnumber %s" % str(newballotnumber))
@@ -348,6 +358,7 @@ class Replica(Node):
 
         givencommandnumber = self.find_commandnumber()
         self.pendingcommands[givencommandnumber] = givenproposal
+        print "PendingCommands: %s" % self.pendingcommands
         # if we're too far in the future, i.e. past window, do not issue the command
         if givencommandnumber - self.nexttoexecute >= WINDOW:
             return
@@ -391,9 +402,10 @@ class Replica(Node):
                 pmaxset = prc.possiblepvalueset.pmax()
                 for commandnumber,proposal in pmaxset.iteritems():
                     self.proposals[commandnumber] = proposal
-                # If the commandnumber we were planning to use is in the proposals
-                # we should try the next one
-                self.do_command_propose(prc.proposal)
+                # If the commandnumber we were planning to use is overwritten
+                # we should try proposing with a new commandnumber
+                if self.proposals[prc.commandnumber] != prc.proposal:
+                    self.do_command_propose(prc.proposal)
                 del self.outstandingprepares[msg.inresponseto]
                 # PROPOSE for each proposal in proposals
                 for chosencommandnumber,chosenproposal in self.proposals.iteritems():
