@@ -27,6 +27,7 @@ class Acceptor(Node):
         """
         Node.__init__(self, NODE_ACCEPTOR)
         self.ballotnumber = (0,0)
+        self.last_accept_msg_id = -1
         self.accepted = PValueSet()
         
     def msg_prepare(self, conn, msg):
@@ -40,9 +41,10 @@ class Acceptor(Node):
         - MSG_PREPARE_PREEMPTED carries the highest ballotnumber Acceptor has seen and all
         pvalues accepted thus far.
         """
-        if msg.ballotnumber > self.ballotnumber:
+        if msg.ballotnumber > self.ballotnumber or (msg.ballotnumber == self.ballotnumber and msg.fullid() == self.last_accept_msg_id):
             logger("prepare received with acceptable ballotnumber %s" % str(msg.ballotnumber))
             self.ballotnumber = msg.ballotnumber
+            self.last_accept_msg_id = msg.fullid()
             replymsg = PaxosMessage(MSG_PREPARE_ADOPTED,self.me,self.ballotnumber,msg.ballotnumber,givenpvalueset=self.accepted)
         else:
             logger("prepare received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))

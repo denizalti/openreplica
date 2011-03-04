@@ -55,6 +55,7 @@ class Node():
         self.alive = True
         self.outstandingmessages_lock = RLock()
         self.outstandingmessages = {} # keeps <messageid:messageinfo> mappings as <MessageID:MessageInfo> objects
+        self.lock = Lock()
 
         # create server socket and bind to a port
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -204,7 +205,8 @@ class Node():
             except AttributeError:
                 logger("message not supported: %s" % message)
                 return False
-            method(connection, message)
+            with self.lock:
+                method(connection, message)
         return True
     #
     # message handlers
@@ -296,7 +298,8 @@ class Node():
                     except AttributeError:
                         print "command not supported"
                         continue
-                    method(input)
+                    with self.lock:
+                        method(input)
             except (KeyboardInterrupt,):
                 os._exit(0)
             except (EOFError,):

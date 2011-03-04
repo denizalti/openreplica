@@ -70,7 +70,6 @@ class Replica(Node):
         self.decisions = {}
         self.proposals = {}
         self.pendingcommands = {}
-        self.commandnumber_lock = Lock()
 
     def performcore(self, msg, slotno, dometaonly=False):
         print "---> SlotNo: %d Command: %s DoMetaOnly: %s" % (slotno, self.decisions[slotno], dometaonly)
@@ -298,9 +297,8 @@ class Replica(Node):
 
     def do_command_propose_frompending(self, givencommandnumber):
         givenproposal = self.pendingcommands[givencommandnumber]
-        with self.commandnumber_lock:
-            del self.pendingcommands[givencommandnumber]
-            self.proposals[givencommandnumber] = givenproposal
+        self.proposals[givencommandnumber] = givenproposal
+        del self.pendingcommands[givencommandnumber]
         recentballotnumber = self.ballotnumber
         logger("2 proposing command: %d:%s" % (givencommandnumber,givenproposal))
         logger("with ballotnumber %s" % str(recentballotnumber))
@@ -329,9 +327,8 @@ class Replica(Node):
             
     def do_command_prepare_frompending(self, givencommandnumber):
         givenproposal = self.pendingcommands[givencommandnumber]
-        with self.commandnumber_lock:
-            del self.pendingcommands[givencommandnumber]
-            self.proposals[givencommandnumber] = givenproposal
+        self.proposals[givencommandnumber] = givenproposal
+        del self.pendingcommands[givencommandnumber]
         newballotnumber = self.ballotnumber
         logger("1 preparing command: %d:%s" % (givencommandnumber, givenproposal))
         logger("with ballotnumber %s" % str(newballotnumber))
@@ -398,6 +395,7 @@ class Replica(Node):
 
             if len(prc.received) >= prc.nquorum:
                 logger("suffiently many accepts on prepare!")
+                del self.outstandingprepares[msg.inresponseto]
                 # choose pvalues with distinctive commandnumbers and highest ballotnumbers
                 pmaxset = prc.possiblepvalueset.pmax()
                 for commandnumber,proposal in pmaxset.iteritems():
@@ -406,7 +404,6 @@ class Replica(Node):
                 # we should try proposing with a new commandnumber
                 if self.proposals[prc.commandnumber] != prc.proposal:
                     self.do_command_propose(prc.proposal)
-                del self.outstandingprepares[msg.inresponseto]
                 # PROPOSE for each proposal in proposals
                 for chosencommandnumber,chosenproposal in self.proposals.iteritems():
                     print "Sending PROPOSE for %d, %s" % (chosencommandnumber, chosenproposal)
