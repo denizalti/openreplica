@@ -41,11 +41,15 @@ class Acceptor(Node):
         - MSG_PREPARE_PREEMPTED carries the highest ballotnumber Acceptor has seen and all
         pvalues accepted thus far.
         """
-        if msg.ballotnumber > self.ballotnumber or (msg.ballotnumber == self.ballotnumber and msg.fullid() == self.last_accept_msg_id):
+        # this ballot should be strictly higher than previous ballots we have accepted,
+        if msg.ballotnumber > self.ballotnumber:
             logger("prepare received with acceptable ballotnumber %s" % str(msg.ballotnumber))
             self.ballotnumber = msg.ballotnumber
             self.last_accept_msg_id = msg.fullid()
             replymsg = PaxosMessage(MSG_PREPARE_ADOPTED,self.me,self.ballotnumber,msg.ballotnumber,givenpvalueset=self.accepted)
+        # or else it should be a precise duplicate of the last request, in which case we do nothing
+        elif msg.ballotnumber == self.ballotnumber and msg.fullid() == self.last_accept_msg_id:
+            pass
         else:
             logger("prepare received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))
             replymsg = PaxosMessage(MSG_PREPARE_PREEMPTED,self.me,self.ballotnumber,msg.ballotnumber,givenpvalueset=self.accepted)
