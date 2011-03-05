@@ -49,7 +49,7 @@ class Acceptor(Node):
             replymsg = PaxosMessage(MSG_PREPARE_ADOPTED,self.me,self.ballotnumber,msg.ballotnumber,givenpvalueset=self.accepted)
         # or else it should be a precise duplicate of the last request, in which case we do nothing
         elif msg.ballotnumber == self.ballotnumber and msg.fullid() == self.last_accept_msg_id:
-            pass
+            return
         else:
             logger("prepare received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))
             replymsg = PaxosMessage(MSG_PREPARE_PREEMPTED,self.me,self.ballotnumber,msg.ballotnumber,givenpvalueset=self.accepted)
