@@ -114,7 +114,6 @@ class Replica(Node):
         if not self.decisions.has_key(msg.commandnumber):
             self.decisions[msg.commandnumber] = (CMD_DECIDED,msg.proposal)
         if self.proposals.has_key(msg.commandnumber) and self.decisions[msg.commandnumber][1] != self.proposals[msg.commandnumber]:
-            print "--> This shouldn't happen as we should have caught this during PMAX"
             self.do_command_propose(self.proposals[msg.commandnumber])
 
         while self.decisions.has_key(self.nexttoexecute) and self.decisions[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
@@ -168,7 +167,7 @@ class Replica(Node):
         print "Waiting to execute #%d" % self.nexttoexecute
         print "Decisions:\n"
         for (commandnumber,command) in self.decisions.iteritems():
-            print "%d:\t%s\t%s\n" %  (commandnumber, command[COMMAND], cmd_states[command[COMMANDSTATE]])
+            print "%d:\t%s\t%s\t%s\n" %  (commandnumber, command[COMMAND], command[COMMANDRESULT], cmd_states[command[COMMANDSTATE]])
 
 # LEADER STATE
     def become_leader(self):
@@ -228,11 +227,6 @@ class Replica(Node):
     def find_commandnumber(self):
         """Returns the first gap in the proposals dictionary or the item following """
         commandgap = 1
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-        print "Proposals: %s" % self.proposals
-        print "Decisions: %s" % self.decisions
-        print "PendingCommands: %s" % self.pendingcommands
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         proposals = set(self.proposals.keys() + self.decisions.keys() + self.pendingcommands.keys())
         while commandgap <= len(proposals):
             if commandgap in proposals:
@@ -242,6 +236,10 @@ class Replica(Node):
         return commandgap
 
     def handle_client_command(self, givencommand):
+        if self.type != NODE_LEADER:
+            print "Not a Leader.."
+            return
+        
         if self.receivedclientrequests.has_key((givencommand.client,givencommand.clientcommandnumber)):
             logger("client request received before")
             resultsent = False
@@ -319,7 +317,6 @@ class Replica(Node):
 
         givencommandnumber = self.find_commandnumber()
         self.pendingcommands[givencommandnumber] = givenproposal
-        print "PendingCommands: %s" % self.pendingcommands
         # if we're too far in the future, i.e. past window, do not issue the command
         if givencommandnumber - self.nexttoexecute >= WINDOW:
             return
@@ -355,7 +352,6 @@ class Replica(Node):
 
         givencommandnumber = self.find_commandnumber()
         self.pendingcommands[givencommandnumber] = givenproposal
-        print "PendingCommands: %s" % self.pendingcommands
         # if we're too far in the future, i.e. past window, do not issue the command
         if givencommandnumber - self.nexttoexecute >= WINDOW:
             return
