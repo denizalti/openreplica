@@ -50,6 +50,7 @@ class Client():
         while self.alive:
             try:
                 shellinput = raw_input("client-shell> ")
+                print shellinput
                 if len(shellinput) == 0:
                     continue
                 else:

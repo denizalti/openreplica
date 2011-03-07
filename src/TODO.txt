@@ -4,6 +4,12 @@ paxi. """
 *** THINGS TO LOOK INTO ***
 
 *** CHANGES TO THE CODE ***
+- when feeding in multiple requests to a client, client has to make
+sure that all requests get ACKed. It shouldn't skip over a request
+when it times out.
+- as Client doesn't send a HELO message to the Leader the nascentset
+update has to happen in another way, otherwise the connection gets
+lost
 - check_leader_promotion has to take into account if the chosen leader
 is ready to become a leader
 - new replica should inherit state from a live replica

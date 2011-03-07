@@ -247,7 +247,7 @@ class Replica(Node):
             for (commandnumber,command) in self.decisions.iteritems():
                 if command[COMMAND] == givencommand:
                     clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,command[COMMANDRESULT],givencommand.clientcommandnumber)
-                    conn = self.get_connection_by_peer(givencommand.client)
+                    conn = self.clientpool.get_connection_by_peer(givencommand.client)
                     if conn is not None:
                         conn.send(clientreply)
                     resultsent = True
@@ -255,7 +255,7 @@ class Replica(Node):
             # If request not executed yet, send REQUEST IN PROGRESS
             if not resultsent:
                 clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REQUEST IN PROGRESS",givencommand.clientcommandnumber)
-                conn = self.get_connection_by_peer(givencommand.client)
+                conn = self.clientpool.get_connection_by_peer(givencommand.client)
                 if conn is not None:
                     conn.send(clientreply)    
         else:
@@ -519,7 +519,7 @@ class Replica(Node):
         print self.clientpool
 
 def main():
-    theReplica = Replica(Bank())
+    theReplica = Replica(Test())
     theReplica.startservice()
 
 if __name__=='__main__':

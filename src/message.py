@@ -96,7 +96,6 @@ class PValueSet():
                 if pvalue.commandnumber == c and pvalue.ballotnumber > maxballotnumberpvalue.ballotnumber:
                     maxballotnumberpvalue = pvalue
             pmaxresult[c] = maxballotnumberpvalue.proposal
-            print pmaxresult
         return pmaxresult
 
     def __len__(self):

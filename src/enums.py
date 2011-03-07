@@ -32,7 +32,7 @@ COMMANDSTATE = 0
 COMMAND = 1
 COMMANDRESULT = 2
 
-CLIENTRESENDTIMEOUT = 10
+CLIENTRESENDTIMEOUT = 30
 
 METACOMMANDS = set(["add_acceptor", "del_acceptor", "add_replica", "del_replica"])
 WINDOW = 3
