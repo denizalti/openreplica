@@ -137,6 +137,22 @@ class Replica(Node):
         """Handler for MSG_PERFORM"""
         self.perform(msg)
 
+    def msg_heloreply(self, conn, msg):
+        """Add the acceptors and send helo to replicas"""
+        if msg.source.type == NODE_ACCEPTOR:
+            return
+        
+        self.groups[msg.source.type].add(msg.source)
+        self.connectionpool.add_connection_to_peer(msg.source,conn)
+        for acceptor in msg.groups[NODE_ACCEPTOR]:
+            self.groups[NODE_ACCEPTOR].add(acceptor)
+        for replica in msg.groups[NODE_REPLICA]:
+            if replica == self.me or self.groups[NODE_REPLICA].haspeer(replica):
+                pass
+            else:
+                helomessage = HandshakeMessage(MSG_HELO, self.me)
+                self.send(helomessage, peer=replica)
+
     def add_acceptor(self, args):
         # args keep addr:port
         args = args[0].split(":")
@@ -201,7 +217,7 @@ class Replica(Node):
         # will still work correctly.
         self.type = NODE_REPLICA
 
-    def check_leader_promotion(self):
+    def find_leader(self):
         minpeer = None
         for peer in self.groups[NODE_LEADER]:
             if minpeer is None or peer < minpeer:
@@ -209,6 +225,10 @@ class Replica(Node):
         for peer in self.groups[NODE_REPLICA]:
             if minpeer is None or peer < minpeer:
                 minpeer = peer
+        return minpeer
+
+    def check_leader_promotion(self):
+        minpeer = self.find_leader()
         if minpeer is None or self.me < minpeer:
             # i need to step up and become a leader
             if self.type != NODE_LEADER:

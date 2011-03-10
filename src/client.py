@@ -48,38 +48,32 @@ class Client():
         and receives corresponding replies.
         """
         while self.alive:
+            inputcount = 0
             try:
                 shellinput = raw_input("client-shell> ")
-                print shellinput
                 if len(shellinput) == 0:
                     continue
                 else:
+                    inputcount += 1
                     mynumber = self.clientcommandnumber
                     self.clientcommandnumber += 1
                     
                     command = Command(self.me, mynumber, shellinput)
                     cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
-                    acked = False
                     replied = False
                     print "Client Message about to be sent:", cm
                     starttime = time.time()
                     self.conn.settimeout(CLIENTRESENDTIMEOUT)
 
-                    while not acked or not replied:
-                        if not acked:
-                            self.conn.send(cm)
+                    while not replied:
+                        print inputcount, "REPLIED: " if replied else "NOTREPLIED"
+                        self.conn.send(cm)
                         reply = self.conn.receive()
                         print "---------------------->", reply
                         if time.time() - starttime > CLIENTRESENDTIMEOUT:
                             print "bootstrap node failed to respond in time"
-                            break
-                        if reply is None:
-                            print "receive returned None"
-                            break
-                        acked = acked or (reply and reply.type == MSG_ACK and reply.ackid == cm.id)
                         if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                             replied = True
-                            print reply
             except ( KeyboardInterrupt,EOFError ):
                 os._exit(0)
         return

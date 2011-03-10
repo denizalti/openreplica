@@ -39,6 +39,9 @@ class Group():
         for peer in othergroup.members:
             self.add(peer)
 
+    def haspeer(self,peer):
+        return peer in self.members
+
     def __iter__(self):
         for peer in self.members:
             yield peer

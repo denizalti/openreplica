@@ -4,18 +4,11 @@ paxi. """
 *** THINGS TO LOOK INTO ***
 
 *** CHANGES TO THE CODE ***
-- when feeding in multiple requests to a client, client has to make
-sure that all requests get ACKed. It shouldn't skip over a request
-when it times out.
-- as Client doesn't send a HELO message to the Leader the nascentset
-update has to happen in another way, otherwise the connection gets
-lost
 - check_leader_promotion has to take into account if the chosen leader
 is ready to become a leader
+- adaptive timeout for leader loop - LONGTIMEOUT/SHORTTIMEOUT
 - new replica should inherit state from a live replica
 - save state to disk
-- weak leader election with adaptive timeouts
-- failure monitoring and local failure detection
 - garbage collect commands that all replicas have seen
 
 *** TO THINK ABOUT ***
@@ -31,6 +24,16 @@ is ready to become a leader
 - How will the weak Leader election be done.
 
 *** DONE ***
+- new replica inherits connection state from live replica
+  -- new replica sends helo to replicas it received from the bootstrap
+  -- bootstrap shares acceptor set with a new replica (upon join)
+- everyone pings the leader (failure monitoring and local failure detection)
+- as Client doesn't send a HELO message to the Leader the nascentset
+update has to happen in another way, otherwise the connection gets
+lost
+- when feeding in multiple requests to a client, client has to make
+sure that all requests get replied. It shouldn't skip over a request
+when it times out.
 - multiple performs for the same command do not get
 executed more than once
 - NOT TO BE DONE: automatically take non-responsive peers out of the configuration

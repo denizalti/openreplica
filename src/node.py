@@ -147,9 +147,6 @@ class Node():
                     if time.time() - timestamp > HELOTIMEOUT:
                         # expired -- if it's not already in the set, it should be closed
                         if s not in socketset:
-                            print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                            print "THE SOCKET EXPIRED!"
-                            print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                             logger("Removing %s from the nascentset" % s)
                             nascentset.remove((s,timestamp))
                             s.close()
@@ -174,10 +171,6 @@ class Node():
                         # s is closed, take it out of nascentset and connection pool
                         for sock,timestamp in nascentset:
                             if sock == s:
-                                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                                print "SOCKET IS CLOSED!"
-                                print self.clientpool
-                                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                                 logger("Removing %s from the nascentset" % s)
                                 nascentset.remove((s,timestamp))
                         self.connectionpool.del_connection_by_socket(s)
@@ -205,7 +198,8 @@ class Node():
                     logger("acked message %s not in outstanding messages" % ackid)
         else:
             logger("got message (about to ack) %s" % message.fullid())
-            connection.send(AckMessage(MSG_ACK,self.me,message.id))
+            if message.type != MSG_CLIENTREQUEST:
+                connection.send(AckMessage(MSG_ACK,self.me,message.id))
             mname = "msg_%s" % msg_names[message.type].lower()
             try:
                 method = getattr(self, mname)
@@ -222,6 +216,8 @@ class Node():
         """Add the other peer into the connection pool and group"""
         self.groups[msg.source.type].add(msg.source)
         self.connectionpool.add_connection_to_peer(msg.source,conn)
+        heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, self.groups)
+        self.send(heloreplymessage, peer=msg.source)
 
     def msg_bye(self, conn, msg):
         """Handler for MSG_BYE
@@ -283,6 +279,14 @@ class Node():
             if DO_PERIODIC_PINGS:
                 for pingpeer in checkliveness:
                     logger("Sending PING to %s" % pingpeer)
+                    helomessage = HandshakeMessage(MSG_HELO, self.me)
+                    self.send(helomessage, peer=pingpeer)
+
+            if self.type == NODE_REPLICA or self.type == NODE_LEADER:
+                currentleader = self.find_leader()
+                #print "XXXX: ", currentleader
+                if currentleader != None and currentleader != self.me:
+                    logger("Sending PING to %s" % currentleader)
                     helomessage = HandshakeMessage(MSG_HELO, self.me)
                     self.send(helomessage, peer=pingpeer)
 
