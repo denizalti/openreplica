@@ -70,6 +70,7 @@ class Replica(Node):
         self.decisions = {}
         self.proposals = {}
         self.pendingcommands = {}
+        self.stateuptodate = False
 
     def performcore(self, msg, slotno, dometaonly=False):
         print "---> SlotNo: %d Command: %s DoMetaOnly: %s" % (slotno, self.decisions[slotno], dometaonly)
@@ -137,11 +138,13 @@ class Replica(Node):
         """Handler for MSG_PERFORM"""
         self.perform(msg)
 
+        if not self.stateuptodate:
+            updatemessage = UpdateMessage(MSG_UPDATE, self.me)
+            currentleader = self.find_leader()
+            self.send(updatemessage, peer=currentleader)
+
     def msg_heloreply(self, conn, msg):
         """Add the acceptors and send helo to replicas"""
-        if msg.source.type == NODE_ACCEPTOR:
-            return
-        
         self.groups[msg.source.type].add(msg.source)
         self.connectionpool.add_connection_to_peer(msg.source,conn)
         for acceptor in msg.groups[NODE_ACCEPTOR]:
@@ -152,6 +155,17 @@ class Replica(Node):
             else:
                 helomessage = HandshakeMessage(MSG_HELO, self.me)
                 self.send(helomessage, peer=replica)
+
+    def msg_update(self, conn, msg):
+        """Reply to update message asking for decisions"""
+        updatereplymessage = UpdateMessage(MSG_UPDATEREPLY, self.me, self.decisions)
+        self.send(updatereplymessage, peer=msg.source)
+
+    def msg_updatereply(self, conn, msg):
+        """Merge decisions received with local decisions"""
+        tempdecisions = dict(msg.decisions, **self.decisions)
+        self.decisions = tempdecisions
+        self.stateuptodate = True
 
     def add_acceptor(self, args):
         # args keep addr:port

@@ -145,8 +145,6 @@ class PValue():
         """Returns PValue information"""
         return 'PValue(%s,%d,%s)' % (str(self.ballotnumber),self.commandnumber,self.proposal)
 
-
-# HELO and HELOREPLY messages
 class HandshakeMessage(Message):
     def __init__(self,msgtype,myname,groups=None):
         Message.__init__(self, msgtype, myname)
@@ -157,6 +155,18 @@ class HandshakeMessage(Message):
         temp = Message.__str__(self)
         if self.type == MSG_HELOREPLY:
             temp += ' groups %s' % self.groups
+        return temp
+
+class UpdateMessage(Message):
+    def __init__(self,msgtype,myname,decisions=None):
+        Message.__init__(self, msgtype, myname)
+        if decisions != None:
+            self.decisions = decisions
+
+    def __str__(self):
+        temp = Message.__str__(self)
+        if self.type == MSG_UPDATEREPLY:
+            temp += ' decisions %s' % self.decisions
         return temp
 
 class PaxosMessage(Message):

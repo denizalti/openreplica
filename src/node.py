@@ -82,6 +82,8 @@ class Node():
             bootpeer = Peer(bootaddr,int(bootport))
             helomessage = HandshakeMessage(MSG_HELO, self.me)
             self.send(helomessage, peer=bootpeer)
+        elif self.type == NODE_REPLICA:
+            self.stateuptodate = True
 
     def startservice(self):
         """Start a server, a shell and a ping thread"""
