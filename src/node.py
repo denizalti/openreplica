@@ -82,8 +82,11 @@ class Node():
             bootpeer = Peer(bootaddr,int(bootport))
             helomessage = HandshakeMessage(MSG_HELO, self.me)
             self.send(helomessage, peer=bootpeer)
+            if self.type == self.type == NODE_REPLICA:
+                self.readyreplicas.append(bootpeer)
         elif self.type == NODE_REPLICA:
             self.stateuptodate = True
+            self.readyreplicas.append(self.me)
 
     def startservice(self):
         """Start a server, a shell and a ping thread"""
@@ -106,6 +109,10 @@ class Node():
         returnstr = "state:\n"
         for type,group in self.groups.iteritems():
             returnstr += str(group)
+        if self.type == NODE_REPLICA or self.type == NODE_LEADER:
+            returnstr += "\nreadyreplicas:\n"
+            for replica in self.readyreplicas:
+                returnstr += str(replica)+"\n"
         returnstr += "\nPending:\n"
         for cno,proposal in self.pendingcommands.iteritems():
             returnstr += "command#%d: %s" % (cno, proposal)
@@ -218,8 +225,9 @@ class Node():
         """Add the other peer into the connection pool and group"""
         self.groups[msg.source.type].add(msg.source)
         self.connectionpool.add_connection_to_peer(msg.source,conn)
-        heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, self.groups)
-        self.send(heloreplymessage, peer=msg.source)
+        if msg.source.type == NODE_REPLICA or msg.source.type == NODE_LEADER:
+            heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, self.groups)
+            self.send(heloreplymessage, peer=msg.source)
 
     def msg_bye(self, conn, msg):
         """Handler for MSG_BYE

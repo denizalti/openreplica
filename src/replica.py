@@ -15,7 +15,7 @@ from utils import *
 from connection import Connection, ConnectionPool
 from group import Group
 from peer import Peer
-from message import Message, PaxosMessage, HandshakeMessage, AckMessage, PValue, PValueSet, ClientMessage, Command
+from message import Message, PaxosMessage, HandshakeMessage, AckMessage, PValue, PValueSet, ClientMessage, Command, UpdateMessage
 from test import Test
 from bank import Bank
 
@@ -64,6 +64,7 @@ class Replica(Node):
         - outstandingproposals: <commandnumber:command> mappings that the replica has made in the past
         - pendingcommands: Set of unissiued commands that are waiting for the window to roll over to be issued
         """
+        self.readyreplicas = []
         Node.__init__(self, NODE_REPLICA)
         self.object = replicatedobject
         self.nexttoexecute = 1
@@ -71,6 +72,7 @@ class Replica(Node):
         self.proposals = {}
         self.pendingcommands = {}
         self.stateuptodate = False
+        
 
     def performcore(self, msg, slotno, dometaonly=False):
         print "---> SlotNo: %d Command: %s DoMetaOnly: %s" % (slotno, self.decisions[slotno], dometaonly)
@@ -136,11 +138,13 @@ class Replica(Node):
 
     def msg_perform(self, conn, msg):
         """Handler for MSG_PERFORM"""
+        print "Received PERFORM Message.."
         self.perform(msg)
-
+        
         if not self.stateuptodate:
             updatemessage = UpdateMessage(MSG_UPDATE, self.me)
             currentleader = self.find_leader()
+            print "Sending Update Message to ", currentleader
             self.send(updatemessage, peer=currentleader)
 
     def msg_heloreply(self, conn, msg):
@@ -150,9 +154,7 @@ class Replica(Node):
         for acceptor in msg.groups[NODE_ACCEPTOR]:
             self.groups[NODE_ACCEPTOR].add(acceptor)
         for replica in msg.groups[NODE_REPLICA]:
-            if replica == self.me or self.groups[NODE_REPLICA].haspeer(replica):
-                pass
-            else:
+            if replica != self.me and not self.groups[NODE_REPLICA].haspeer(replica):
                 helomessage = HandshakeMessage(MSG_HELO, self.me)
                 self.send(helomessage, peer=replica)
 
@@ -163,9 +165,22 @@ class Replica(Node):
 
     def msg_updatereply(self, conn, msg):
         """Merge decisions received with local decisions"""
-        tempdecisions = dict(msg.decisions, **self.decisions)
-        self.decisions = tempdecisions
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        print "Decisions from the Message: ", msg.decisions
+        print "Local Decisions: ", self.decisions
+        self.decisions.update(msg.decisions)
+        print "Merged Decisions: ", self.decisions
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         self.stateuptodate = True
+        if self.me not in self.readyreplicas:
+            self.readyreplicas.append(self.me)
+        for replica in self.groups[NODE_REPLICA]:
+            readymessage = UpdateMessage(MSG_READY, self.me)
+            self.send(readymessage, peer=replica)
+
+    def msg_ready(self, conn, msg):
+        if msg.source not in self.readyreplicas:
+            self.readyreplicas.append(msg.source)
 
     def add_acceptor(self, args):
         # args keep addr:port
@@ -233,18 +248,15 @@ class Replica(Node):
 
     def find_leader(self):
         minpeer = None
-        for peer in self.groups[NODE_LEADER]:
-            if minpeer is None or peer < minpeer:
-                minpeer = peer
-        for peer in self.groups[NODE_REPLICA]:
+        for peer in self.readyreplicas:
             if minpeer is None or peer < minpeer:
                 minpeer = peer
         return minpeer
 
     def check_leader_promotion(self):
-        minpeer = self.find_leader()
-        if minpeer is None or self.me < minpeer:
-            # i need to step up and become a leader
+        chosenleader = self.find_leader()
+        if self.me == chosenleader:
+            # i need to become a leader
             if self.type != NODE_LEADER:
                 logger("Becoming a Leader")
                 self.become_leader()

@@ -4,8 +4,6 @@ paxi. """
 *** THINGS TO LOOK INTO ***
 
 *** CHANGES TO THE CODE ***
-- check_leader_promotion has to take into account if the chosen leader
-is ready to become a leader
 - adaptive timeout for leader loop - LONGTIMEOUT/SHORTTIMEOUT
 - save state to disk
 - garbage collect commands that all replicas have seen
@@ -23,6 +21,8 @@ is ready to become a leader
 - How will the weak Leader election be done.
 
 *** DONE ***
+- check_leader_promotion has to take into account if the chosen leader
+is ready to become a leader
 - new replica should inherit state from a live replica
 - new replica inherits connection state from live replica
   -- new replica sends helo to replicas it received from the bootstrap
