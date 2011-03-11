@@ -3,7 +3,7 @@
 @note: The Replica keeps an object and responds to Perform messages received from the Leader.
 @date: February 1, 2011
 '''
-from threading import Thread, Lock, Condition
+from threading import Thread, Lock, Condition, Timer
 import operator
 import time
 import random
@@ -72,7 +72,11 @@ class Replica(Node):
         self.proposals = {}
         self.pendingcommands = {}
         self.stateuptodate = False
-        
+
+    def startservice(self):
+        Node.startservice(self)
+        leaderping_thread = Timer(LIVENESSTIMEOUT, self.ping_leader)
+        leaderping_thread.start()
 
     def performcore(self, msg, slotno, dometaonly=False):
         print "---> SlotNo: %d Command: %s DoMetaOnly: %s" % (slotno, self.decisions[slotno], dometaonly)
@@ -165,12 +169,7 @@ class Replica(Node):
 
     def msg_updatereply(self, conn, msg):
         """Merge decisions received with local decisions"""
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-        print "Decisions from the Message: ", msg.decisions
-        print "Local Decisions: ", self.decisions
         self.decisions.update(msg.decisions)
-        print "Merged Decisions: ", self.decisions
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         self.stateuptodate = True
         if self.me not in self.readyreplicas:
             self.readyreplicas.append(self.me)
@@ -544,6 +543,16 @@ class Replica(Node):
             self.do_command_prepare(prc.proposal)
         else:
             logger("there is no response collector for %s" % str(msg.inresponseto))
+
+    def ping_leader(self):
+        while True:
+            currentleader = self.find_leader()
+            if currentleader != self.me:
+                logger("Sending PING to %s" % currentleader)
+                helomessage = HandshakeMessage(MSG_HELO, self.me)
+                self.send(helomessage, peer=currentleader)
+
+            time.sleep(LIVENESSTIMEOUT)
 
     # Debug Methods
     def cmd_command(self, args):

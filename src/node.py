@@ -79,7 +79,7 @@ class Node():
         if bootstrap:
             logger("connecting to %s" % bootstrap)
             bootaddr,bootport = bootstrap.split(":")
-            bootpeer = Peer(bootaddr,int(bootport))
+            bootpeer = Peer(bootaddr,int(bootport), NODE_REPLICA)
             helomessage = HandshakeMessage(MSG_HELO, self.me)
             self.send(helomessage, peer=bootpeer)
             if self.type == self.type == NODE_REPLICA:
@@ -289,14 +289,6 @@ class Node():
             if DO_PERIODIC_PINGS:
                 for pingpeer in checkliveness:
                     logger("Sending PING to %s" % pingpeer)
-                    helomessage = HandshakeMessage(MSG_HELO, self.me)
-                    self.send(helomessage, peer=pingpeer)
-
-            if self.type == NODE_REPLICA or self.type == NODE_LEADER:
-                currentleader = self.find_leader()
-                #print "XXXX: ", currentleader
-                if currentleader != None and currentleader != self.me:
-                    logger("Sending PING to %s" % currentleader)
                     helomessage = HandshakeMessage(MSG_HELO, self.me)
                     self.send(helomessage, peer=pingpeer)
 
