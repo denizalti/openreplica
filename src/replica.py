@@ -550,7 +550,11 @@ class Replica(Node):
             if currentleader != self.me:
                 logger("Sending PING to %s" % currentleader)
                 helomessage = HandshakeMessage(MSG_HELO, self.me)
-                self.send(helomessage, peer=currentleader)
+                try:
+                    self.send(helomessage, peer=currentleader)
+                except:
+                    logger("removing current leader from the readylist")
+                    self.readyreplicas.remove(currentleader)
 
             time.sleep(LIVENESSTIMEOUT)
 
