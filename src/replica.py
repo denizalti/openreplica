@@ -3,7 +3,7 @@
 @note: The Replica keeps an object and responds to Perform messages received from the Leader.
 @date: February 1, 2011
 '''
-from threading import Thread, Lock, Condition, Timer
+from threading import Thread, Lock, Condition, Timer, Event
 import operator
 import time
 import random
@@ -18,6 +18,8 @@ from peer import Peer
 from message import Message, PaxosMessage, HandshakeMessage, AckMessage, PValue, PValueSet, ClientMessage, Command, UpdateMessage
 from test import Test
 from bank import Bank
+
+backoff_event = Event()
 
 # Class used to collect responses to both PREPARE and PROPOSE messages
 class ResponseCollector():
@@ -237,6 +239,11 @@ class Replica(Node):
             self.outstandingproposes = {}
             self.receivedclientrequests = {} # indexed by (client,clientcommandnumber)
             self.clientpool = ConnectionPool()
+            self.backoff = 0
+            backoff_thread = Thread(target=self.update_backoff)
+            backoff_event.clear()
+            backoff_thread.start()
+            
             
     def unbecome_leader(self):
         """Stop being a leader"""
@@ -244,7 +251,13 @@ class Replica(Node):
         # leader can at any time discard all of its internal state and the protocol
         # will still work correctly.
         self.type = NODE_REPLICA
+        backoff_event.set()
 
+    def update_backoff(self):
+        while not backoff_event.isSet():
+            self.backoff = self.backoff/2
+            backoff_event.wait(BACKOFFDECREASETIMEOUT)
+            
     def find_leader(self):
         minpeer = None
         for peer in self.readyreplicas:
@@ -473,12 +486,16 @@ class Replica(Node):
         if self.outstandingprepares.has_key(msg.inresponseto):
             prc = self.outstandingprepares[msg.inresponseto]
             logger("got a reject for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
+            leader_causing_reject = prc.ballotnumber[BALLOTNODE]
+            self.backoff += BACKOFFINCREASE
             # take this response collector out of the outstanding prepare set
             del self.outstandingprepares[msg.inresponseto]
             # become inactive
             self.active = False
             # update the ballot number
             self.update_ballotnumber(msg.ballotnumber)
+            # backoff
+            time.sleep(self.backoff)
             # retry the prepare
             self.do_command_prepare(prc.proposal)
         else:
