@@ -73,7 +73,6 @@ class Replica(Node):
         self.decisions = {}
         self.proposals = {}
         self.pendingcommands = {}
-        self.stateuptodate = False
 
     def startservice(self):
         Node.startservice(self)
@@ -269,7 +268,7 @@ class Replica(Node):
     def find_leader(self):
         minpeer = None
         for peer in self.readyreplicas:
-            if minpeer is None or peer < minpeer:
+            if minpeer == None or peer < minpeer:
                 minpeer = peer
         return minpeer
 
@@ -339,15 +338,23 @@ class Replica(Node):
         A new Paxos Protocol is initiated with the first available commandnumber
         the Leader knows of.
         """
-        self.check_leader_promotion()
-        if self.type != NODE_LEADER:
-            logger("Not a Leader.. Request rejected..")
+#        self.check_leader_promotion()
+#        if self.type != NODE_LEADER:
+#            logger("Not a Leader.. Request rejected..")
+#            clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED",msg.command.clientcommandnumber)
+#            conn.send(clientreply)
+#            return
+        if self.type != NODE_LEADER and self.stateuptodate:
+            self.become_leader()
+            self.clientpool.add_connection_to_peer(msg.source, conn)
+            self.handle_client_command(msg.command)
+        elif self.type == NODE_LEADER:
+            self.clientpool.add_connection_to_peer(msg.source, conn)
+            self.handle_client_command(msg.command)
+        else:
+            logger("Can't become a leader")
             clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED",msg.command.clientcommandnumber)
             conn.send(clientreply)
-            return
-        
-        self.clientpool.add_connection_to_peer(msg.source, conn)
-        self.handle_client_command(msg.command)
 
     def msg_clientreply(self, conn, msg):
         """This only occurs in response to commands initiated by the shell"""

@@ -74,7 +74,6 @@ class Node():
         setlogprefix(self.id)
         logger("I'm alive.")
         self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_LEADER:Group(self.me)}
-
         # connect to the bootstrap node
         if bootstrap:
             logger("connecting to %s" % bootstrap)
@@ -82,7 +81,8 @@ class Node():
             bootpeer = Peer(bootaddr,int(bootport), NODE_REPLICA)
             helomessage = HandshakeMessage(MSG_HELO, self.me)
             self.send(helomessage, peer=bootpeer)
-            if self.type == self.type == NODE_REPLICA:
+            if self.type == NODE_REPLICA:
+                self.stateuptodate = False
                 self.readyreplicas.append(bootpeer)
         elif self.type == NODE_REPLICA:
             self.stateuptodate = True
