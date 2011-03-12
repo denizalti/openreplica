@@ -244,7 +244,6 @@ class Replica(Node):
             backoff_event.clear()
             backoff_thread.start()
             
-            
     def unbecome_leader(self):
         """Stop being a leader"""
         # fail-stop tolerance, coupled with retries in the client, mean that a 
@@ -257,6 +256,13 @@ class Replica(Node):
         while not backoff_event.isSet():
             self.backoff = self.backoff/2
             backoff_event.wait(BACKOFFDECREASETIMEOUT)
+
+    def detect_colliding_leader(self,givenpvalueset):
+        maxballotnumber = (0,"")
+        for pvalue in givenpvalueset:
+            if pvalue.ballotnumber > maxballotnumber:
+                maxballotnumber = pvalue.ballotnumber
+        return maxballotnumber[BALLOTNODE]
             
     def find_leader(self):
         minpeer = None
@@ -486,7 +492,7 @@ class Replica(Node):
         if self.outstandingprepares.has_key(msg.inresponseto):
             prc = self.outstandingprepares[msg.inresponseto]
             logger("got a reject for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
-            leader_causing_reject = prc.ballotnumber[BALLOTNODE]
+            leader_causing_reject = self.detect_colliding_leader(msg.pvalueset)
             self.backoff += BACKOFFINCREASE
             # take this response collector out of the outstanding prepare set
             del self.outstandingprepares[msg.inresponseto]
