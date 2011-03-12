@@ -262,7 +262,9 @@ class Replica(Node):
         for pvalue in givenpvalueset:
             if pvalue.ballotnumber > maxballotnumber:
                 maxballotnumber = pvalue.ballotnumber
-        return maxballotnumber[BALLOTNODE]
+        otherleader_addr,otherleader_port = maxballotnumber[BALLOTNODE].split(":")
+        otherleader = Peer(otherleader_addr, int(otherleader_port), NODE_LEADER)
+        return otherleader
             
     def find_leader(self):
         minpeer = None
@@ -285,7 +287,7 @@ class Replica(Node):
 
     def update_ballotnumber(self,seedballotnumber):
         """Update the ballotnumber with a higher value than given ballotnumber"""
-        temp = (seedballotnumber[0]+1,self.ballotnumber[1])
+        temp = (seedballotnumber[BALLOTNO]+1,self.ballotnumber[BALLOTNODE])
         self.ballotnumber = temp
 
     def find_commandnumber(self):
