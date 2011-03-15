@@ -265,7 +265,7 @@ class Replica(Node):
         if givenpvalueset == None:
             return
         maxballotnumber = (0,"")
-        for pvalue in givenpvalueset:
+        for pvalue in givenpvalueset.pvalues:
             if pvalue.ballotnumber > maxballotnumber:
                 maxballotnumber = pvalue.ballotnumber
         otherleader_addr,otherleader_port = maxballotnumber[BALLOTNODE].split(":")
