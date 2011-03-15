@@ -230,6 +230,14 @@ class Command():
         return self.client == othercommand.client and \
             self.clientcommandnumber == othercommand.clientcommandnumber and \
             self.command == othercommand.command
+
+    def __ne__(self, othercommand):
+        """Non-equality function for two Commands.
+        Returns True if given Command is not equal to Command, False otherwise.
+        """
+        return self.client != othercommand.client or \
+            self.clientcommandnumber != othercommand.clientcommandnumber or \
+            self.command != othercommand.command
     
     def __str__(self):
         """Returns Command information"""

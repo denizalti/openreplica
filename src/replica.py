@@ -121,7 +121,14 @@ class Replica(Node):
         """
         if not self.decisions.has_key(msg.commandnumber):
             self.decisions[msg.commandnumber] = (CMD_DECIDED,msg.proposal)
+        print "*************************************************"
+        print "Proposals: ", self.proposals
+        print "Decisions: ", self.decisions
+        print "*************************************************"
         if self.proposals.has_key(msg.commandnumber) and self.decisions[msg.commandnumber][1] != self.proposals[msg.commandnumber]:
+            print "PROPOSING AGAIN"
+            print self.decisions[msg.commandnumber][1]
+            print self.proposals[msg.commandnumber]
             self.do_command_propose(self.proposals[msg.commandnumber])
 
         while self.decisions.has_key(self.nexttoexecute) and self.decisions[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
@@ -389,6 +396,9 @@ class Replica(Node):
             return
 
         givencommandnumber = self.find_commandnumber()
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        print "PROPOSING: ", givencommandnumber
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         self.pendingcommands[givencommandnumber] = givenproposal
         # if we're too far in the future, i.e. past window, do not issue the command
         if givencommandnumber - self.nexttoexecute >= WINDOW:
@@ -424,6 +434,9 @@ class Replica(Node):
             return
 
         givencommandnumber = self.find_commandnumber()
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        print "PREPARING: ", givencommandnumber
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         self.pendingcommands[givencommandnumber] = givenproposal
         # if we're too far in the future, i.e. past window, do not issue the command
         if givencommandnumber - self.nexttoexecute >= WINDOW:
@@ -472,9 +485,17 @@ class Replica(Node):
                 # If the commandnumber we were planning to use is overwritten
                 # we should try proposing with a new commandnumber
                 if self.proposals[prc.commandnumber] != prc.proposal:
+                    print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+                    print "Proposals: ", self.proposals
+                    print "CMD: ", prc.commandnumber
+                    print "PROPOSAL: ", prc.proposal
+                    print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
                     self.do_command_propose(prc.proposal)
-                # PROPOSE for each proposal in proposals
                 for chosencommandnumber,chosenproposal in self.proposals.iteritems():
+                    print "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"
+                    print "CMD: ", chosencommandnumber
+                    print "PROPOSAL: ", chosenproposal
+                    print "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"
                     print "Sending PROPOSE for %d, %s" % (chosencommandnumber, chosenproposal)
                     newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, chosencommandnumber, chosenproposal)
                     self.outstandingproposes[chosencommandnumber] = newprc

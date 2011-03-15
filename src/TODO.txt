@@ -4,7 +4,6 @@ paxi. """
 *** THINGS TO LOOK INTO ***
 
 *** CHANGES TO THE CODE ***
-- adaptive timeout for leader loop - LONGTIMEOUT/SHORTTIMEOUT
 - save state to disk
 - garbage collect commands that all replicas have seen
 
@@ -21,6 +20,7 @@ paxi. """
 - How will the weak Leader election be done.
 
 *** DONE ***
+- adaptive timeout for leader loop - LONGTIMEOUT/SHORTTIMEOUT
 - check_leader_promotion has to take into account if the chosen leader
 is ready to become a leader
 - new replica should inherit state from a live replica
