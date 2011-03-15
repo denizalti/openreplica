@@ -112,6 +112,9 @@ class Replica(Node):
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
             if self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
+                print "Clientpool: ", self.clientpool
+                print "ClientID: ", command.client.id()
+                print "Sending REPLY to CLIENT"
                 clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,givenresult, command.clientcommandnumber)
                 clientconn = self.clientpool.get_connection_by_peer(command.client)
                 clientconn.send(clientreply)
@@ -121,14 +124,7 @@ class Replica(Node):
         """
         if not self.decisions.has_key(msg.commandnumber):
             self.decisions[msg.commandnumber] = (CMD_DECIDED,msg.proposal)
-        print "*************************************************"
-        print "Proposals: ", self.proposals
-        print "Decisions: ", self.decisions
-        print "*************************************************"
         if self.proposals.has_key(msg.commandnumber) and self.decisions[msg.commandnumber][1] != self.proposals[msg.commandnumber]:
-            print "PROPOSING AGAIN"
-            print self.decisions[msg.commandnumber][1]
-            print self.proposals[msg.commandnumber]
             self.do_command_propose(self.proposals[msg.commandnumber])
 
         while self.decisions.has_key(self.nexttoexecute) and self.decisions[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
@@ -264,6 +260,8 @@ class Replica(Node):
             backoff_event.wait(BACKOFFDECREASETIMEOUT)
 
     def detect_colliding_leader(self,givenpvalueset):
+        if givenpvalueset == None:
+            return
         maxballotnumber = (0,"")
         for pvalue in givenpvalueset:
             if pvalue.ballotnumber > maxballotnumber:
@@ -299,6 +297,11 @@ class Replica(Node):
     def find_commandnumber(self):
         """Returns the first gap in the proposals dictionary or the item following """
         commandgap = 1
+        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
+        print "PROPOSALS: ", self.proposals
+        print "DECISIONS: ", self.decisions
+        print "PENDING: ", self.pendingcommands
+        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
         proposals = set(self.proposals.keys() + self.decisions.keys() + self.pendingcommands.keys())
         while commandgap <= len(proposals):
             if commandgap in proposals:
@@ -532,6 +535,8 @@ class Replica(Node):
             self.update_ballotnumber(msg.ballotnumber)
             # backoff
             time.sleep(self.backoff)
+            #remove the proposal from proposals
+            del self.proposals[msg.commandnumber]
             # retry the prepare
             self.do_command_prepare(prc.proposal)
         else:
@@ -592,6 +597,8 @@ class Replica(Node):
             self.active = False
             # update the ballot number
             self.update_ballotnumber(msg.ballotnumber)
+            #remove the proposal from proposals
+            del self.proposals[msg.commandnumber]
             # retry the prepare
             self.do_command_prepare(prc.proposal)
         else:
