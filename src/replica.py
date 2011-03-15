@@ -161,6 +161,8 @@ class Replica(Node):
         self.connectionpool.add_connection_to_peer(msg.source,conn)
         for acceptor in msg.groups[NODE_ACCEPTOR]:
             self.groups[NODE_ACCEPTOR].add(acceptor)
+            helomessage = HandshakeMessage(MSG_HELO, self.me)
+            self.send(helomessage, peer=acceptor)
         for replica in msg.groups[NODE_REPLICA]:
             if replica != self.me and not self.groups[NODE_REPLICA].haspeer(replica):
                 helomessage = HandshakeMessage(MSG_HELO, self.me)
