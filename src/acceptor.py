@@ -46,13 +46,13 @@ class Acceptor(Node):
             logger("prepare received with acceptable ballotnumber %s" % str(msg.ballotnumber))
             self.ballotnumber = msg.ballotnumber
             self.last_accept_msg_id = msg.fullid()
-            replymsg = PaxosMessage(MSG_PREPARE_ADOPTED,self.me,self.ballotnumber,msg.ballotnumber,givenpvalueset=self.accepted)
+            replymsg = PaxosMessage(MSG_PREPARE_ADOPTED,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,givenpvalueset=self.accepted)
         # or else it should be a precise duplicate of the last request, in which case we do nothing
         elif msg.ballotnumber == self.ballotnumber and msg.fullid() == self.last_accept_msg_id:
             return
         else:
             logger("prepare received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))
-            replymsg = PaxosMessage(MSG_PREPARE_PREEMPTED,self.me,self.ballotnumber,msg.ballotnumber,givenpvalueset=self.accepted)
+            replymsg = PaxosMessage(MSG_PREPARE_PREEMPTED,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,givenpvalueset=self.accepted)
         logger("prepare responding to ballotnumber %s" % str(msg.ballotnumber))
         self.send(replymsg,peer=msg.source)
 
@@ -71,10 +71,10 @@ class Acceptor(Node):
             self.ballotnumber = msg.ballotnumber
             newpvalue = PValue(msg.ballotnumber,msg.commandnumber,msg.proposal)
             self.accepted.add_highest(newpvalue)
-            replymsg = PaxosMessage(MSG_PROPOSE_ACCEPT,self.me,self.ballotnumber,msg.ballotnumber,msg.commandnumber)
+            replymsg = PaxosMessage(MSG_PROPOSE_ACCEPT,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,commandnumber=msg.commandnumber)
         else:
             logger("propose received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))
-            replymsg = PaxosMessage(MSG_PROPOSE_REJECT,self.me,self.ballotnumber,msg.ballotnumber,msg.commandnumber)
+            replymsg = PaxosMessage(MSG_PROPOSE_REJECT,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,commandnumber=msg.commandnumber)
         self.send(replymsg,peer=msg.source)
 
     def cmd_paxos(self, args):

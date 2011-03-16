@@ -538,6 +538,7 @@ class Replica(Node):
             # backoff
             time.sleep(self.backoff)
             #remove the proposal from proposals
+            print self.proposals
             del self.proposals[msg.commandnumber]
             # retry the prepare
             self.do_command_prepare(prc.proposal)
@@ -563,6 +564,9 @@ class Replica(Node):
             prc = self.outstandingproposes[msg.commandnumber]
             prc.received[msg.source] = msg
             logger("got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
+            print "MSGBALLOTNUMBER: ", msg.ballotnumber
+            print "INRESPONSETO: ", msg.inresponseto
+            print "PRCBALLOTNUMBER: ", prc.ballotnumber
             assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PROPOSE_ACCEPT can't have non-matching ballotnumber" % self
             if len(prc.received) >= prc.nquorum:
                 logger("WE AGREE!")

@@ -225,7 +225,9 @@ class Node():
         """Add the other peer into the connection pool and group"""
         self.groups[msg.source.type].add(msg.source)
         self.connectionpool.add_connection_to_peer(msg.source,conn)
-        if msg.source.type == NODE_REPLICA or msg.source.type == NODE_LEADER:
+        if self.type == NODE_ACCEPTOR:
+            return
+        elif msg.source.type == NODE_REPLICA or msg.source.type == NODE_LEADER:
             heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, self.groups)
             self.send(heloreplymessage, peer=msg.source)
 
