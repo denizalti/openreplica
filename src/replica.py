@@ -126,7 +126,9 @@ class Replica(Node):
             self.decisions[msg.commandnumber] = (CMD_DECIDED,msg.proposal)
         if self.proposals.has_key(msg.commandnumber) and self.decisions[msg.commandnumber][1] != self.proposals[msg.commandnumber]:
             self.do_command_propose(self.proposals[msg.commandnumber])
-
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        print self.decisions
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         while self.decisions.has_key(self.nexttoexecute) and self.decisions[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
             logger("Executing command %d." % self.nexttoexecute)
             
@@ -299,11 +301,6 @@ class Replica(Node):
     def find_commandnumber(self):
         """Returns the first gap in the proposals dictionary or the item following """
         commandgap = 1
-        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
-        print "PROPOSALS: ", self.proposals
-        print "DECISIONS: ", self.decisions
-        print "PENDING: ", self.pendingcommands
-        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
         proposals = set(self.proposals.keys() + self.decisions.keys() + self.pendingcommands.keys())
         while commandgap <= len(proposals):
             if commandgap in proposals:
@@ -401,9 +398,6 @@ class Replica(Node):
             return
 
         givencommandnumber = self.find_commandnumber()
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-        print "PROPOSING: ", givencommandnumber
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         self.pendingcommands[givencommandnumber] = givenproposal
         # if we're too far in the future, i.e. past window, do not issue the command
         if givencommandnumber - self.nexttoexecute >= WINDOW:
@@ -439,9 +433,6 @@ class Replica(Node):
             return
 
         givencommandnumber = self.find_commandnumber()
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-        print "PREPARING: ", givencommandnumber
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         self.pendingcommands[givencommandnumber] = givenproposal
         # if we're too far in the future, i.e. past window, do not issue the command
         if givencommandnumber - self.nexttoexecute >= WINDOW:
@@ -490,17 +481,8 @@ class Replica(Node):
                 # If the commandnumber we were planning to use is overwritten
                 # we should try proposing with a new commandnumber
                 if self.proposals[prc.commandnumber] != prc.proposal:
-                    print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
-                    print "Proposals: ", self.proposals
-                    print "CMD: ", prc.commandnumber
-                    print "PROPOSAL: ", prc.proposal
-                    print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
                     self.do_command_propose(prc.proposal)
                 for chosencommandnumber,chosenproposal in self.proposals.iteritems():
-                    print "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"
-                    print "CMD: ", chosencommandnumber
-                    print "PROPOSAL: ", chosenproposal
-                    print "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"
                     print "Sending PROPOSE for %d, %s" % (chosencommandnumber, chosenproposal)
                     newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, chosencommandnumber, chosenproposal)
                     self.outstandingproposes[chosencommandnumber] = newprc
@@ -564,10 +546,8 @@ class Replica(Node):
             prc = self.outstandingproposes[msg.commandnumber]
             if msg.inresponseto == prc.ballotnumber:
                 prc.received[msg.source] = msg
-                logger("got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
-                print "MSGBALLOTNUMBER: ", msg.ballotnumber
-                print "INRESPONSETO: ", msg.inresponseto
-                print "PRCBALLOTNUMBER: ", prc.ballotnumber
+                logger("got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts" % \
+                       (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
                 assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PROPOSE_ACCEPT can't have non-matching ballotnumber" % self
                 if len(prc.received) >= prc.nquorum:
                     logger("WE AGREE!")
