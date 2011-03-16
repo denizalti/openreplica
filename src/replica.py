@@ -126,9 +126,9 @@ class Replica(Node):
             self.decisions[msg.commandnumber] = (CMD_DECIDED,msg.proposal)
         if self.proposals.has_key(msg.commandnumber) and self.decisions[msg.commandnumber][1] != self.proposals[msg.commandnumber]:
             self.do_command_propose(self.proposals[msg.commandnumber])
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        print "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
         print self.decisions
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        print "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
         while self.decisions.has_key(self.nexttoexecute) and self.decisions[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
             logger("Executing command %d." % self.nexttoexecute)
             
@@ -338,8 +338,14 @@ class Replica(Node):
             logger("Leader is active: %s" % self.active)
             proposal = givencommand
             if self.active:
+                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                print "HANDLING CLIENT COMMAND - PROPOSE: ",  proposal
+                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                 self.do_command_propose(proposal)
             else:
+                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                print "HANDLING CLIENT COMMAND - PREPARE: ",  proposal
+                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                 self.do_command_prepare(proposal)
 
     def msg_clientrequest(self, conn, msg):
@@ -398,6 +404,9 @@ class Replica(Node):
             return
 
         givencommandnumber = self.find_commandnumber()
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        print "PROPOSE CMDNUM: ", givencommandnumber
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         self.pendingcommands[givencommandnumber] = givenproposal
         # if we're too far in the future, i.e. past window, do not issue the command
         if givencommandnumber - self.nexttoexecute >= WINDOW:
@@ -433,6 +442,9 @@ class Replica(Node):
             return
 
         givencommandnumber = self.find_commandnumber()
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        print "PROPOSE CMDNUM: ", givencommandnumber
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         self.pendingcommands[givencommandnumber] = givenproposal
         # if we're too far in the future, i.e. past window, do not issue the command
         if givencommandnumber - self.nexttoexecute >= WINDOW:
@@ -481,6 +493,10 @@ class Replica(Node):
                 # If the commandnumber we were planning to use is overwritten
                 # we should try proposing with a new commandnumber
                 if self.proposals[prc.commandnumber] != prc.proposal:
+                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                    print "PREPARE ADOPTED, CMDNUM OVERWRITTEN"
+                    print "PROPOSALS: ", self.proposals
+                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                     self.do_command_propose(prc.proposal)
                 for chosencommandnumber,chosenproposal in self.proposals.iteritems():
                     print "Sending PROPOSE for %d, %s" % (chosencommandnumber, chosenproposal)
@@ -521,9 +537,7 @@ class Replica(Node):
             time.sleep(self.backoff)
             #remove the proposal from proposals
             print self.proposals
-            del self.proposals[prc.commandnumber]
-            # retry the prepare
-            self.do_command_prepare(prc.proposal)
+            #del self.proposals[prc.commandnumber]
         else:
             logger("there is no response collector")
 
@@ -588,9 +602,8 @@ class Replica(Node):
                 # update the ballot number
                 self.update_ballotnumber(msg.ballotnumber)
                 #remove the proposal from proposals
-                del self.proposals[msg.commandnumber]
-                # retry the prepare
-                self.do_command_prepare(prc.proposal)
+                print self.proposals
+                #del self.proposals[msg.commandnumber]
             else:
                 logger("there is no response collector for %s" % str(msg.inresponseto))
         else:
