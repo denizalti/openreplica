@@ -98,6 +98,9 @@ class Replica(Node):
                 # so just mark it as executed without actually executing it
                 # the real execution will take place when the window has expired
                 tempcommand = (CMD_EXECUTED,self.decisions[slotno][COMMAND])
+                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                print "TO DECISIONS: ", slotno, " ", tempcommand
+                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                 self.decisions[slotno] = tempcommand
                 return
             elif not dometaonly and not ismeta:
@@ -107,7 +110,10 @@ class Replica(Node):
         except AttributeError:
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
-        cmdstatus, cmd = self.decisions[slotno]
+        cmdstatus, cmd, cmdresult = self.decisions[slotno]
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        print "TO DECISIONS: ", slotno, " ", cmd, " ", givenresult
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         self.decisions[slotno] = (CMD_EXECUTED, cmd, givenresult)
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
@@ -123,7 +129,7 @@ class Replica(Node):
         """Function to handle local perform operations. 
         """
         if not self.decisions.has_key(msg.commandnumber):
-            self.decisions[msg.commandnumber] = (CMD_DECIDED,msg.proposal)
+            self.decisions[msg.commandnumber] = (CMD_DECIDED,msg.proposal,"NOTEXECUTEDYET")
         if self.proposals.has_key(msg.commandnumber) and self.decisions[msg.commandnumber][1] != self.proposals[msg.commandnumber]:
             self.do_command_propose(self.proposals[msg.commandnumber])
         print "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
@@ -219,6 +225,7 @@ class Replica(Node):
         print "Waiting to execute #%d" % self.nexttoexecute
         print "Decisions:\n"
         for (commandnumber,command) in self.decisions.iteritems():
+            print commandnumber, command
             print "%d:\t%s\t%s\t%s\n" %  (commandnumber, command[COMMAND], command[COMMANDRESULT], cmd_states[command[COMMANDSTATE]])
 
 # LEADER STATE
