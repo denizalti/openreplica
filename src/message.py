@@ -131,7 +131,7 @@ class PValue():
 
     def __hash__(self):
         """Returns the hashed id"""
-        return self.id().__hash__()
+        return hash(self.id())
 
     def __eq__(self, otherpvalue):
         """Equality function for two PValues.
@@ -222,6 +222,10 @@ class Command():
         self.client = client
         self.clientcommandnumber = clientcommandnumber
         self.command = command
+
+    def __hash__(self):
+        """Returns the hashed command"""
+        return hash(str(self.client)+str(self.clientcommandnumber)+str(self.command))
 
     def __eq__(self, othercommand):
         """Equality function for two Commands.

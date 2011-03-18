@@ -56,7 +56,8 @@ class Replica(Node):
         Replica State
         - object: the object that Replica is replicating
 	- nexttoexecute: the commandnumber that relica is waiting for to execute
-        - decisions: received requests as <commandnumber:(commandstate,command,commandresult)> mappings
+        - decisions: received requests as <commandnumber:command> mappings
+        - decisionstates: states of the received commands as <command:(commandstate,commandresult)> mappings
 		       - 'commandstate' can be CMD_EXECUTED, CMD_DECIDED
                        		-- CMD_EXECUTED: The command corresponding to the commandnumber has 
                                 		 been both decided and executed.
@@ -71,6 +72,7 @@ class Replica(Node):
         self.object = replicatedobject
         self.nexttoexecute = 1
         self.decisions = {}
+        self.decisionstates = {}
         self.proposals = {}
         self.pendingcommands = {}
 
@@ -81,7 +83,7 @@ class Replica(Node):
 
     def performcore(self, msg, slotno, dometaonly=False):
         print "---> SlotNo: %d Command: %s DoMetaOnly: %s" % (slotno, self.decisions[slotno], dometaonly)
-        command = self.decisions[slotno][COMMAND]
+        command = self.decisions[slotno]
         commandlist = command.command.split()
         commandname = commandlist[0]
         commandargs = commandlist[1:]
@@ -97,11 +99,7 @@ class Replica(Node):
                 # meta command, but the window has not passed yet, 
                 # so just mark it as executed without actually executing it
                 # the real execution will take place when the window has expired
-                tempcommand = (CMD_EXECUTED,self.decisions[slotno][COMMAND])
-                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                print "TO DECISIONS: ", slotno, " ", tempcommand
-                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                self.decisions[slotno] = tempcommand
+                self.decisionstates[self.decisions[slotno]] = (CMD_EXECUTED,NOTEXECUTEDYET)
                 return
             elif not dometaonly and not ismeta:
                 # this is the workhorse case that executes most normal commands
@@ -110,11 +108,7 @@ class Replica(Node):
         except AttributeError:
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
-        cmdstatus, cmd, cmdresult = self.decisions[slotno]
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-        print "TO DECISIONS: ", slotno, " ", cmd, " ", givenresult
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-        self.decisions[slotno] = (CMD_EXECUTED, cmd, givenresult)
+        self.decisionstates[self.decisions[slotno]] = (CMD_EXECUTED, givenresult)
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
             if self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
@@ -129,13 +123,14 @@ class Replica(Node):
         """Function to handle local perform operations. 
         """
         if not self.decisions.has_key(msg.commandnumber):
-            self.decisions[msg.commandnumber] = (CMD_DECIDED,msg.proposal,"NOTEXECUTEDYET")
-        if self.proposals.has_key(msg.commandnumber) and self.decisions[msg.commandnumber][1] != self.proposals[msg.commandnumber]:
+            self.decisions[msg.commandnumber] = msg.proposal
+            self.decisionstates[msg.proposal] = (CMD_DECIDED,NOTEXECUTEDYET)
+        if self.proposals.has_key(msg.commandnumber) and self.decisions[msg.commandnumber] != self.proposals[msg.commandnumber]:
             self.do_command_propose(self.proposals[msg.commandnumber])
         print "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
         print self.decisions
         print "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
-        while self.decisions.has_key(self.nexttoexecute) and self.decisions[self.nexttoexecute][COMMANDSTATE] != CMD_EXECUTED:
+        while self.decisions.has_key(self.nexttoexecute) and self.decisionstates[self.decisions[self.nexttoexecute]][COMMANDSTATE] != CMD_EXECUTED:
             logger("Executing command %d." % self.nexttoexecute)
             
             # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
@@ -225,8 +220,7 @@ class Replica(Node):
         print "Waiting to execute #%d" % self.nexttoexecute
         print "Decisions:\n"
         for (commandnumber,command) in self.decisions.iteritems():
-            print commandnumber, command
-            print "%d:\t%s\t%s\t%s\n" %  (commandnumber, command[COMMAND], command[COMMANDRESULT], cmd_states[command[COMMANDSTATE]])
+            print "%d:\t%s\t%s\t%s\n" %  (commandnumber, command, self.decisionstates[command][COMMANDRESULT], cmd_states[self.decisionstates[command][COMMANDSTATE]])
 
 # LEADER STATE
     def become_leader(self):
@@ -326,8 +320,8 @@ class Replica(Node):
             resultsent = False
             # Check if the request has been executed
             for (commandnumber,command) in self.decisions.iteritems():
-                if command[COMMAND] == givencommand:
-                    clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,command[COMMANDRESULT],givencommand.clientcommandnumber)
+                if command == givencommand:
+                    clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,self.decisionstates[command][COMMANDRESULT],givencommand.clientcommandnumber)
                     conn = self.clientpool.get_connection_by_peer(givencommand.client)
                     if conn is not None:
                         conn.send(clientreply)
