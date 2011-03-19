@@ -121,24 +121,33 @@ class Replica(Node):
 
     def perform(self, msg):
         """Function to handle local perform operations."""
-        # If this commandnumber is not already in the decision, add it as DECIDED and NOTEXECUTEDYET
-        if not self.decisions.has_key(msg.commandnumber):
+        if msg.commandnumber not in self.decisions:
             self.decisions[msg.commandnumber] = msg.proposal
+        else:
+            logger("XXX This commandnumber has been decided before..")
         # If replicas was using this commandnumber for a different proposal, initiate it again
-        if self.proposals.has_key(msg.commandnumber) and self.decisions[msg.commandnumber] != self.proposals[msg.commandnumber]:
+        if self.proposals.has_key(msg.commandnumber) and msg.proposal != self.proposals[msg.commandnumber]:
             self.do_command_propose(self.proposals[msg.commandnumber])
-        while self.decisions.has_key(self.nexttoexecute) and self.decisions[self.nexttoexecute] not in self.decisionstates:
-            logger("executing command %d." % self.nexttoexecute)
             
-            # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
-            if self.nexttoexecute > WINDOW:
-                self.performcore(msg, self.nexttoexecute - WINDOW, True)
+        while self.decisions.has_key(self.nexttoexecute):
+            if self.decisions[self.nexttoexecute] in self.decisionstates:
+                logger("skipping command %d." % self.nexttoexecute)
+                self.nexttoexecute += 1
+                # the window just got bumped by one
+                # check if there are pending commands, and issue one of them
+                self.issue_pending_command(self.nexttoexecute)
+            elif self.decisions[self.nexttoexecute] not in self.decisionstates:
+                logger("executing command %d." % self.nexttoexecute)
 
-            self.performcore(msg, self.nexttoexecute)
-            self.nexttoexecute += 1
-            # the window just got bumped by one
-            # check if there are pending commands, and issue one of them
-            self.issue_pending_command(self.nexttoexecute)
+                # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
+                if self.nexttoexecute > WINDOW:
+                    self.performcore(msg, self.nexttoexecute - WINDOW, True)
+
+                self.performcore(msg, self.nexttoexecute)
+                self.nexttoexecute += 1
+                # the window just got bumped by one
+                # check if there are pending commands, and issue one of them
+                self.issue_pending_command(self.nexttoexecute)
             
     def issue_pending_command(self, candidatecommandno):
         if self.pendingcommands.has_key(candidatecommandno):
