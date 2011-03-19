@@ -57,7 +57,7 @@ class Replica(Node):
         - object: the object that Replica is replicating
 	- nexttoexecute: the commandnumber that relica is waiting for to execute
         - decisions: received requests as <commandnumber:command> mappings
-        - decisionstates: states of the received commands as <command:commandresult> mappings
+        - executed: commands that are executed as <command:commandresult> mappings
         - outstandingproposals: <commandnumber:command> mappings that the replica has made in the past
         - pendingcommands: Set of unissiued commands that are waiting for the window to roll over to be issued
         """
@@ -66,7 +66,7 @@ class Replica(Node):
         self.object = replicatedobject
         self.nexttoexecute = 1
         self.decisions = {}
-        self.decisionstates = {}
+        self.executed = {}
         self.proposals = {}
         self.pendingcommands = {}
 
@@ -93,7 +93,7 @@ class Replica(Node):
                 # meta command, but the window has not passed yet, 
                 # so just mark it as executed without actually executing it
                 # the real execution will take place when the window has expired
-                self.decisionstates[self.decisions[slotno]] = META
+                self.executed[self.decisions[slotno]] = META
                 return
             elif not dometaonly and not ismeta:
                 # this is the workhorse case that executes most normal commands
@@ -102,7 +102,7 @@ class Replica(Node):
         except AttributeError:
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
-        self.decisionstates[self.decisions[slotno]] = givenresult
+        self.executed[self.decisions[slotno]] = givenresult
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
             if self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
@@ -124,13 +124,13 @@ class Replica(Node):
             self.do_command_propose(self.proposals[msg.commandnumber])
             
         while self.decisions.has_key(self.nexttoexecute):
-            if self.decisions[self.nexttoexecute] in self.decisionstates:
+            if self.decisions[self.nexttoexecute] in self.executed:
                 logger("skipping command %d." % self.nexttoexecute)
                 self.nexttoexecute += 1
                 # the window just got bumped by one
                 # check if there are pending commands, and issue one of them
                 self.issue_pending_command(self.nexttoexecute)
-            elif self.decisions[self.nexttoexecute] not in self.decisionstates:
+            elif self.decisions[self.nexttoexecute] not in self.executed:
                 logger("executing command %d." % self.nexttoexecute)
 
                 # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
@@ -221,8 +221,8 @@ class Replica(Node):
         print "Decisions:\n"
         for (commandnumber,command) in self.decisions.iteritems():
             temp = "%d:\t%s" %  (commandnumber, command)
-            if command in self.decisionstates:
-                temp += "\t%s\n" % (self.decisionstates[command])
+            if command in self.executed:
+                temp += "\t%s\n" % (self.executed[command])
             print temp
 # LEADER STATE
     def become_leader(self):
@@ -323,7 +323,7 @@ class Replica(Node):
             # Check if the request has been executed
             for (commandnumber,command) in self.decisions.iteritems():
                 if command == givencommand:
-                    clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,self.decisionstates[command],givencommand.clientcommandnumber)
+                    clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,self.executed[command],givencommand.clientcommandnumber)
                     conn = self.clientpool.get_connection_by_peer(givencommand.client)
                     if conn is not None:
                         conn.send(clientreply)
@@ -631,9 +631,9 @@ class Replica(Node):
         for cmdnum,decision in self.decisions.iteritems():
             print "%d: %s" % (cmdnum,str(decision))
 
-    def cmd_decisionstates(self,args):
+    def cmd_executed(self,args):
         """Prints Decision States"""
-        for decision,state in self.decisionstates.iteritems():
+        for decision,state in self.executed.iteritems():
             print "%s: %s" % (str(decision),str(state))
 
     def cmd_proposals(self,args):
