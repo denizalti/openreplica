@@ -89,10 +89,14 @@ class Replica(Node):
         commandargs = commandlist[1:]
         ismeta=(commandname in METACOMMANDS)
         try:
-            if dometaonly and ismeta:
+            if command in self.decisionstates:
+                givenresult = self.decisionstates[command][COMMANDRESULT]
+                givenstate = CMD_SKIPPED
+            elif dometaonly and ismeta:
                 # execute a metacommand when the window has expired
                 method = getattr(self, commandname)
                 givenresult = method(commandargs)
+                givenstate = CMD_EXECUTED
             elif dometaonly and not ismeta:
                 return
             elif not dometaonly and ismeta:
@@ -105,10 +109,11 @@ class Replica(Node):
                 # this is the workhorse case that executes most normal commands
                 method = getattr(self.object, commandname)
                 givenresult = method(commandargs)
+                givenstate = CMD_EXECUTED
         except AttributeError:
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
-        self.decisionstates[self.decisions[slotno]] = (CMD_EXECUTED, givenresult)
+        self.decisionstates[self.decisions[slotno]] = (givenstate, givenresult)
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
             if self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
@@ -120,14 +125,14 @@ class Replica(Node):
                 clientconn.send(clientreply)
 
     def perform(self, msg):
-        """Function to handle local perform operations. 
-        """
+        """Function to handle local perform operations."""
+        # If this commandnumber is not already in the decision, add it as DECIDED and NOTEXECUTEDYET
         if not self.decisions.has_key(msg.commandnumber):
             self.decisions[msg.commandnumber] = msg.proposal
-            self.decisionstates[msg.proposal] = (CMD_DECIDED,NOTEXECUTEDYET)
+        # If replicas was using this commandnumber for a different proposal, initiate it again
         if self.proposals.has_key(msg.commandnumber) and self.decisions[msg.commandnumber] != self.proposals[msg.commandnumber]:
             self.do_command_propose(self.proposals[msg.commandnumber])
-        while self.decisions.has_key(self.nexttoexecute) and self.decisionstates[self.decisions[self.nexttoexecute]][COMMANDSTATE] != CMD_EXECUTED:
+        while self.decisions.has_key(self.nexttoexecute) and self.decisions[self.nexttoexecute] not in self.decisionstates:
             logger("Executing command %d." % self.nexttoexecute)
             
             # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
@@ -402,9 +407,6 @@ class Replica(Node):
             return
 
         givencommandnumber = self.find_commandnumber()
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-        print "PROPOSE CMDNUM: ", givencommandnumber
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         self.pendingcommands[givencommandnumber] = givenproposal
         # if we're too far in the future, i.e. past window, do not issue the command
         if givencommandnumber - self.nexttoexecute >= WINDOW:
@@ -440,9 +442,6 @@ class Replica(Node):
             return
 
         givencommandnumber = self.find_commandnumber()
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-        print "PROPOSE CMDNUM: ", givencommandnumber
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         self.pendingcommands[givencommandnumber] = givenproposal
         # if we're too far in the future, i.e. past window, do not issue the command
         if givencommandnumber - self.nexttoexecute >= WINDOW:
@@ -491,10 +490,6 @@ class Replica(Node):
                 # If the commandnumber we were planning to use is overwritten
                 # we should try proposing with a new commandnumber
                 if self.proposals[prc.commandnumber] != prc.proposal:
-                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    print "PREPARE ADOPTED, CMDNUM OVERWRITTEN"
-                    print "PROPOSALS: ", self.proposals
-                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                     self.do_command_propose(prc.proposal)
                 for chosencommandnumber,chosenproposal in self.proposals.iteritems():
                     print "Sending PROPOSE for %d, %s" % (chosencommandnumber, chosenproposal)
@@ -642,19 +637,23 @@ class Replica(Node):
 
     def cmd_decisions(self,args):
         """Prints Decisions"""
-        print self.decisions
+        for cmdnum,decision in self.decisions.iteritems():
+            print "%d: %s" % (cmdnum,str(decision))
 
     def cmd_decisionstates(self,args):
         """Prints Decision States"""
-        print self.decisionstates
+        for decision,state in self.decisionstates.iteritems():
+            print "%s: %s" % (str(decision),str(state))
 
     def cmd_proposals(self,args):
         """Prints Proposals"""
-        print self.proposals
+        for cmdnum,command in self.proposals.iteritems():
+            print "%d: %s" % (cmdnum,str(command))
 
     def cmd_pending(self,args):
         """Prints Pending Commands"""
-        print self.pendingcommands
+        for cmdnum,command in self.pendingcommands.iteritems():
+            print "%d: %s" % (cmdnum,str(command))
 
 def main():
     theReplica = Replica(Test())
