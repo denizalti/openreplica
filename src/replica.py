@@ -127,9 +127,6 @@ class Replica(Node):
             self.decisionstates[msg.proposal] = (CMD_DECIDED,NOTEXECUTEDYET)
         if self.proposals.has_key(msg.commandnumber) and self.decisions[msg.commandnumber] != self.proposals[msg.commandnumber]:
             self.do_command_propose(self.proposals[msg.commandnumber])
-        print "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
-        print self.decisions
-        print "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
         while self.decisions.has_key(self.nexttoexecute) and self.decisionstates[self.decisions[self.nexttoexecute]][COMMANDSTATE] != CMD_EXECUTED:
             logger("Executing command %d." % self.nexttoexecute)
             
@@ -642,6 +639,22 @@ class Replica(Node):
     def cmd_clients(self,args):
         """Prints Client Connections"""
         print self.clientpool
+
+    def cmd_decisions(self,args):
+        """Prints Decisions"""
+        print self.decisions
+
+    def cmd_decisionstates(self,args):
+        """Prints Decision States"""
+        print self.decisionstates
+
+    def cmd_proposals(self,args):
+        """Prints Proposals"""
+        print self.proposals
+
+    def cmd_pending(self,args):
+        """Prints Pending Commands"""
+        print self.pendingcommands
 
 def main():
     theReplica = Replica(Test())
