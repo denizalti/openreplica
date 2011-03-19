@@ -156,7 +156,7 @@ class Node():
                     if time.time() - timestamp > HELOTIMEOUT:
                         # expired -- if it's not already in the set, it should be closed
                         if s not in socketset:
-                            logger("Removing %s from the nascentset" % s)
+                            logger("removing %s from the nascentset" % s)
                             nascentset.remove((s,timestamp))
                             s.close()
                     elif s not in socketset:
@@ -180,7 +180,7 @@ class Node():
                         # s is closed, take it out of nascentset and connection pool
                         for sock,timestamp in nascentset:
                             if sock == s:
-                                logger("Removing %s from the nascentset" % s)
+                                logger("removing %s from the nascentset" % s)
                                 nascentset.remove((s,timestamp))
                         self.connectionpool.del_connection_by_socket(s)
                         s.close()  
@@ -199,14 +199,13 @@ class Node():
         if message.type == MSG_ACK:
             with self.outstandingmessages_lock:
                 ackid = "%s+%d" % (self.me.id(), message.ackid)
-                logger("got ack message %s" % ackid)
                 if self.outstandingmessages.has_key(ackid):
-                    logger("deleting outstanding message %s" % ackid)
+                    #logger("deleting outstanding message %s" % ackid)
                     del self.outstandingmessages[ackid]
                 else:
                     logger("acked message %s not in outstanding messages" % ackid)
         else:
-            logger("got message (about to ack) %s" % message.fullid())
+            #logger("got message (about to ack) %s" % message.fullid())
             if message.type != MSG_CLIENTREQUEST:
                 connection.send(AckMessage(MSG_ACK,self.me,message.id))
             mname = "msg_%s" % msg_names[message.type].lower()
@@ -278,7 +277,7 @@ class Node():
                         now = time.time()
                         if messageinfo.messagestate == ACK_NOTACKED and (messageinfo.timestamp + ACKTIMEOUT) < now:
                             #resend NOTACKED message
-                            logger("re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
+                            #logger("re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
                             self.send(messageinfo.message, peer=messageinfo.destination, isresend=True)
                             messageinfo.timestamp = time.time()
                         elif DO_PERIODIC_PINGS and messageinfo.messagestate == ACK_ACKED and \
@@ -286,11 +285,11 @@ class Node():
                                 messageinfo.destination in checkliveness:
                             checkliveness.remove(messageinfo.destination)
             except Exception as ec:
-                logger("Exception in Resend: %s" % ec)
+                logger("exception in resend: %s" % ec)
                 
             if DO_PERIODIC_PINGS:
                 for pingpeer in checkliveness:
-                    logger("Sending PING to %s" % pingpeer)
+                    logger("sending PING to %s" % pingpeer)
                     helomessage = HandshakeMessage(MSG_HELO, self.me)
                     self.send(helomessage, peer=pingpeer)
 
@@ -326,7 +325,6 @@ class Node():
     def send(self, message, peer=None, group=None, isresend=False):
         if peer:
             connection = self.connectionpool.get_connection_by_peer(peer)
-            logger("Sending message %s to %s" % (message.fullid(), peer))
             if not isresend:
                 msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
                 with self.outstandingmessages_lock:
@@ -335,7 +333,6 @@ class Node():
         elif group:
             assert not isresend, "performing a resend to a group"
             for peer in group.members:
-                logger("Sending message to %s" % peer)
                 connection = self.connectionpool.get_connection_by_peer(peer)
                 with self.outstandingmessages_lock:
                     msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())

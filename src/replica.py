@@ -89,14 +89,10 @@ class Replica(Node):
         commandargs = commandlist[1:]
         ismeta=(commandname in METACOMMANDS)
         try:
-            if command in self.decisionstates:
-                givenresult = self.decisionstates[command][COMMANDRESULT]
-                givenstate = CMD_SKIPPED
-            elif dometaonly and ismeta:
+            if dometaonly and ismeta:
                 # execute a metacommand when the window has expired
                 method = getattr(self, commandname)
                 givenresult = method(commandargs)
-                givenstate = CMD_EXECUTED
             elif dometaonly and not ismeta:
                 return
             elif not dometaonly and ismeta:
@@ -109,11 +105,10 @@ class Replica(Node):
                 # this is the workhorse case that executes most normal commands
                 method = getattr(self.object, commandname)
                 givenresult = method(commandargs)
-                givenstate = CMD_EXECUTED
         except AttributeError:
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
-        self.decisionstates[self.decisions[slotno]] = (givenstate, givenresult)
+        self.decisionstates[self.decisions[slotno]] = (CMD_EXECUTED, givenresult)
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
             if self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
@@ -133,7 +128,7 @@ class Replica(Node):
         if self.proposals.has_key(msg.commandnumber) and self.decisions[msg.commandnumber] != self.proposals[msg.commandnumber]:
             self.do_command_propose(self.proposals[msg.commandnumber])
         while self.decisions.has_key(self.nexttoexecute) and self.decisions[self.nexttoexecute] not in self.decisionstates:
-            logger("Executing command %d." % self.nexttoexecute)
+            logger("executing command %d." % self.nexttoexecute)
             
             # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
             if self.nexttoexecute > WINDOW:
@@ -222,8 +217,10 @@ class Replica(Node):
         print "Waiting to execute #%d" % self.nexttoexecute
         print "Decisions:\n"
         for (commandnumber,command) in self.decisions.iteritems():
-            print "%d:\t%s\t%s\t%s\n" %  (commandnumber, command, self.decisionstates[command][COMMANDRESULT], cmd_states[self.decisionstates[command][COMMANDSTATE]])
-
+            temp = "%d:\t%s" %  (commandnumber, command)
+            if command in self.decisionstates:
+                temp += "\t%s\t%s\n" % (self.decisionstates[command][COMMANDRESULT], cmd_states[self.decisionstates[command][COMMANDSTATE]])
+            print temp
 # LEADER STATE
     def become_leader(self):
         """Initialize Leader
@@ -289,11 +286,11 @@ class Replica(Node):
         if self.me == chosenleader:
             # i need to become a leader
             if self.type != NODE_LEADER:
-                logger("Becoming a Leader")
+                logger("becoming leader")
                 self.become_leader()
         elif self.type == NODE_LEADER:
             # there is someone else who should act as a leader
-            logger("Unbecoming a Leader")
+            logger("unbecoming leader")
             self.unbecome_leader()
 
     def update_ballotnumber(self,seedballotnumber):
@@ -337,18 +334,12 @@ class Replica(Node):
                     conn.send(clientreply)    
         else:
             self.receivedclientrequests[(givencommand.client,givencommand.clientcommandnumber)] = givencommand
-            logger("Initiating a New Command")
-            logger("Leader is active: %s" % self.active)
+            logger("initiating a new command")
+            logger("leader is active: %s" % self.active)
             proposal = givencommand
             if self.active:
-                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                print "HANDLING CLIENT COMMAND - PROPOSE: ",  proposal
-                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                 self.do_command_propose(proposal)
             else:
-                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                print "HANDLING CLIENT COMMAND - PREPARE: ",  proposal
-                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                 self.do_command_prepare(proposal)
 
     def msg_clientrequest(self, conn, msg):
@@ -358,7 +349,7 @@ class Replica(Node):
         """
 #        self.check_leader_promotion()
 #        if self.type != NODE_LEADER:
-#            logger("Not a Leader.. Request rejected..")
+#            logger("not leader.. request rejected..")
 #            clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED",msg.command.clientcommandnumber)
 #            conn.send(clientreply)
 #            return
@@ -370,7 +361,7 @@ class Replica(Node):
             self.clientpool.add_connection_to_peer(msg.source, conn)
             self.handle_client_command(msg.command)
         else:
-            logger("Can't become a leader")
+            logger("can't become leader")
             clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED",msg.command.clientcommandnumber)
             conn.send(clientreply)
 
@@ -380,7 +371,7 @@ class Replica(Node):
 
     def msg_response(self, conn, msg):
         """Handler for MSG_RESPONSE"""
-        logger("Received response from Replica")
+        logger("received response from replica")
         clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,msg.result)
         # self.send(clientreply,peer=CLIENT) # XXX
 
@@ -389,9 +380,7 @@ class Replica(Node):
         self.proposals[givencommandnumber] = givenproposal
         del self.pendingcommands[givencommandnumber]
         recentballotnumber = self.ballotnumber
-        logger("2 proposing command: %d:%s" % (givencommandnumber,givenproposal))
-        logger("with ballotnumber %s" % str(recentballotnumber))
-        logger("and %d acceptors" % len(self.groups[NODE_ACCEPTOR]))
+        logger("proposing command: %d:%s with ballotnumber %s and %d acceptors" % (givencommandnumber,givenproposal,str(recentballotnumber),len(self.groups[NODE_ACCEPTOR])))
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, givencommandnumber, givenproposal)
         self.outstandingproposes[givencommandnumber] = prc
         propose = PaxosMessage(MSG_PROPOSE,self.me,recentballotnumber,commandnumber=givencommandnumber,proposal=givenproposal)
@@ -418,8 +407,7 @@ class Replica(Node):
         self.proposals[givencommandnumber] = givenproposal
         del self.pendingcommands[givencommandnumber]
         newballotnumber = self.ballotnumber
-        logger("1 preparing command: %d:%s" % (givencommandnumber, givenproposal))
-        logger("with ballotnumber %s" % str(newballotnumber))
+        logger("preparing command: %d:%s with ballotnumber %s" % (givencommandnumber, givenproposal,str(newballotnumber)))
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], newballotnumber, givencommandnumber, givenproposal)
         self.outstandingprepares[newballotnumber] = prc
         prepare = PaxosMessage(MSG_PREPARE,self.me,newballotnumber)
