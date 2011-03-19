@@ -17,11 +17,8 @@ MSG_ACK, \
 # node types 
 NODE_ACCEPTOR, NODE_LEADER, NODE_REPLICA, NODE_CLIENT = range(4)
 
-# command states
-CMD_EXECUTED, CMD_DECIDED, CMD_SKIPPED = range(3)
-
 # command result
-NOTEXECUTEDYET = 'NOT EXECUTED YET'
+META = 'META'
 
 # message states
 ACK_NOTACKED, ACK_ACKED = range(2)
@@ -34,9 +31,6 @@ CLIENTRESENDTIMEOUT = 5
 BACKOFFDECREASETIMEOUT = 30
 
 # magic numbers
-## command
-COMMANDSTATE = 0
-COMMANDRESULT = 1
 ## ballot
 BALLOTNO = 0
 BALLOTNODE = 1

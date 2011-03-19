@@ -57,13 +57,7 @@ class Replica(Node):
         - object: the object that Replica is replicating
 	- nexttoexecute: the commandnumber that relica is waiting for to execute
         - decisions: received requests as <commandnumber:command> mappings
-        - decisionstates: states of the received commands as <command:(commandstate,commandresult)> mappings
-		       - 'commandstate' can be CMD_EXECUTED, CMD_DECIDED
-                       		-- CMD_EXECUTED: The command corresponding to the commandnumber has 
-                                		 been both decided and executed.
-				-- CMD_DECIDED: The command corresponding to the commandnumber has 
-                                		 been decided but it is not executed yet (probably due to an 
-						 outstanding command prior to this command.)
+        - decisionstates: states of the received commands as <command:commandresult> mappings
         - outstandingproposals: <commandnumber:command> mappings that the replica has made in the past
         - pendingcommands: Set of unissiued commands that are waiting for the window to roll over to be issued
         """
@@ -99,7 +93,7 @@ class Replica(Node):
                 # meta command, but the window has not passed yet, 
                 # so just mark it as executed without actually executing it
                 # the real execution will take place when the window has expired
-                self.decisionstates[self.decisions[slotno]] = (CMD_EXECUTED,NOTEXECUTEDYET)
+                self.decisionstates[self.decisions[slotno]] = META
                 return
             elif not dometaonly and not ismeta:
                 # this is the workhorse case that executes most normal commands
@@ -108,7 +102,7 @@ class Replica(Node):
         except AttributeError:
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
-        self.decisionstates[self.decisions[slotno]] = (CMD_EXECUTED, givenresult)
+        self.decisionstates[self.decisions[slotno]] = givenresult
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
             if self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
@@ -228,7 +222,7 @@ class Replica(Node):
         for (commandnumber,command) in self.decisions.iteritems():
             temp = "%d:\t%s" %  (commandnumber, command)
             if command in self.decisionstates:
-                temp += "\t%s\t%s\n" % (self.decisionstates[command][COMMANDRESULT], cmd_states[self.decisionstates[command][COMMANDSTATE]])
+                temp += "\t%s\n" % (self.decisionstates[command])
             print temp
 # LEADER STATE
     def become_leader(self):
@@ -329,7 +323,7 @@ class Replica(Node):
             # Check if the request has been executed
             for (commandnumber,command) in self.decisions.iteritems():
                 if command == givencommand:
-                    clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,self.decisionstates[command][COMMANDRESULT],givencommand.clientcommandnumber)
+                    clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,self.decisionstates[command],givencommand.clientcommandnumber)
                     conn = self.clientpool.get_connection_by_peer(givencommand.client)
                     if conn is not None:
                         conn.send(clientreply)
