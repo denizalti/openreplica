@@ -69,7 +69,7 @@ class Client():
                         print inputcount, "REPLIED: " if replied else "NOTREPLIED"
                         self.conn.send(cm)
                         reply = self.conn.receive()
-                        print "---------------------->", reply
+                        print "received: ", reply
                         if time.time() - starttime > CLIENTRESENDTIMEOUT:
                             print "bootstrap node failed to respond in time"
                         if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:

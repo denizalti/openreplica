@@ -2,6 +2,12 @@
 paxi. """
 
 *** THINGS TO LOOK INTO ***
+- The design of the Client doesn't take care of SUCCESS messages
+received after having received a CLIENTREPLY with "REQUEST IN
+PROGRESS"
+- To fix this, we should create a Client loop, that doesn't
+necessarily handle a message if it's the reply to the last message
+received.
 
 *** CHANGES TO THE CODE ***
 - save state to disk
