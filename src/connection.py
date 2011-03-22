@@ -115,9 +115,9 @@ class Connection():
     
     def send(self, msg):
         """pickle and send a message on the Connection"""
-        if DEBUG and random.random() <= DROPRATE:
-            print "dropping message..."
-            return
+        #if DEBUG and random.random() <= DROPRATE:
+        #    print "dropping message..."
+        #    return
         messagestr = pickle.dumps(msg)
         messagelength = struct.pack("I", len(messagestr))
         try:

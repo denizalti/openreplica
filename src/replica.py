@@ -69,6 +69,11 @@ class Replica(Node):
         self.executed = {}
         self.proposals = {}
         self.pendingcommands = {}
+        self.starttime = 0
+        self.stoptime = 0
+        self.firststoptime = 0
+        self.secondstoptime = 0
+        self.first = True
 
     def startservice(self):
         Node.startservice(self)
@@ -112,6 +117,24 @@ class Replica(Node):
                 clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,givenresult, command.clientcommandnumber)
                 clientconn = self.clientpool.get_connection_by_peer(command.client)
                 clientconn.send(clientreply)
+
+        if command.command == "append aaaaa":
+            self.firststoptime = time.time()
+
+        if command.command == "append bbbbb":
+            self.secondstoptime = time.time()
+
+        if command.command == "append zzzzz":
+            self.stoptime = time.time()
+
+        print "********* SUMMARY *********"
+        print "START: ", self.starttime
+        print "FIRSTSTOP: ", self.firststoptime
+        print "NONACTIVEOPERATION: ", self.firststoptime - self.starttime
+        print "ACTIVEOPERATION: ", self.secondstoptime - self.firststoptime
+        print "FINISH: ", self.stoptime
+        print "DURATION: ", self.stoptime - self.starttime
+        print "***************************"
 
     def perform(self, msg):
         """Function to handle local perform operations."""
@@ -362,6 +385,9 @@ class Replica(Node):
             self.handle_client_command(msg.command)
         elif self.type == NODE_LEADER:
             self.clientpool.add_connection_to_peer(msg.source, conn)
+            if self.first:
+                self.starttime = time.time()
+                self.first = False
             self.handle_client_command(msg.command)
         else:
             logger("can't become leader")
