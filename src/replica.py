@@ -127,7 +127,7 @@ class Replica(Node):
         if command.command == "append zzzzz":
             self.stoptime = time.time()
 
-        print len(self.groups[NODE_ACCEPTOR]), "Acceptors"
+        print len(self.groups[NODE_REPLICA]), "Replicas"
         print "********* SUMMARY *********"
         print "START: ", self.starttime
         print "FIRSTSTOP: ", self.firststoptime
@@ -136,7 +136,7 @@ class Replica(Node):
         print "FINISH: ", self.stoptime
         print "DURATION: ", self.stoptime - self.starttime
         print "***************************"
-        print len(self.groups[NODE_ACCEPTOR]),",",self.firststoptime - self.starttime,",",self.secondstoptime - self.firststoptime,",",self.stoptime - self.starttime
+        print len(self.groups[NODE_REPLICA]),",",self.firststoptime - self.starttime,",",self.secondstoptime - self.firststoptime,",",self.stoptime - self.starttime
 
     def perform(self, msg):
         """Function to handle local perform operations."""
