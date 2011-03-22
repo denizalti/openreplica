@@ -379,15 +379,15 @@ class Replica(Node):
 #            clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED",msg.command.clientcommandnumber)
 #            conn.send(clientreply)
 #            return
+        if self.first:
+            self.starttime = time.time()
+            self.first = False
         if self.type != NODE_LEADER and self.stateuptodate:
             self.become_leader()
             self.clientpool.add_connection_to_peer(msg.source, conn)
             self.handle_client_command(msg.command)
         elif self.type == NODE_LEADER:
             self.clientpool.add_connection_to_peer(msg.source, conn)
-            if self.first:
-                self.starttime = time.time()
-                self.first = False
             self.handle_client_command(msg.command)
         else:
             logger("can't become leader")
