@@ -8,6 +8,7 @@ import operator
 import time
 import random
 import math
+import sys
 
 from node import Node
 from enums import *
@@ -70,10 +71,12 @@ class Replica(Node):
         self.proposals = {}
         self.pendingcommands = {}
         self.starttime = 0
+        self.secondstarttime = 0
         self.stoptime = 0
         self.firststoptime = 0
         self.secondstoptime = 0
         self.first = True
+        self.second = False
 
     def startservice(self):
         Node.startservice(self)
@@ -126,17 +129,8 @@ class Replica(Node):
 
         if command.command == "append zzzzz":
             self.stoptime = time.time()
-
-        print len(self.groups[NODE_REPLICA]), "Replicas"
-        print "********* SUMMARY *********"
-        print "START: ", self.starttime
-        print "FIRSTSTOP: ", self.firststoptime
-        print "NONACTIVEOPERATION: ", self.firststoptime - self.starttime
-        print "ACTIVEOPERATION: ", self.secondstoptime - self.firststoptime
-        print "FINISH: ", self.stoptime
-        print "DURATION: ", self.stoptime - self.starttime
-        print "***************************"
-        print len(self.groups[NODE_REPLICA]),self.firststoptime - self.starttime,self.secondstoptime - self.firststoptime,self.stoptime - self.starttime
+            print "XXX %d %.15f %.15f %.15f" % (len(self.groups[NODE_ACCEPTOR]),self.firststoptime - self.starttime,self.stoptime - self.secondstarttime,(self.stoptime - self.secondstarttime)/30.0)
+            sys.stdout.flush()
 
     def perform(self, msg):
         """Function to handle local perform operations."""
@@ -375,15 +369,19 @@ class Replica(Node):
         A new Paxos Protocol is initiated with the first available commandnumber
         the Leader knows of.
         """
-#        self.check_leader_promotion()
-#        if self.type != NODE_LEADER:
-#            logger("not leader.. request rejected..")
-#            clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED",msg.command.clientcommandnumber)
-#            conn.send(clientreply)
-#            return
+        self.check_leader_promotion()
+        if self.type != NODE_LEADER:
+            logger("not leader.. request rejected..")
+            clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED",msg.command.clientcommandnumber)
+            conn.send(clientreply)
+            return
         if self.first:
             self.starttime = time.time()
             self.first = False
+            self.second = True
+        if self.second:
+            self.secondstarttime = time.time()
+            self.second = False
         if self.type != NODE_LEADER and self.stateuptodate:
             self.become_leader()
             self.clientpool.add_connection_to_peer(msg.source, conn)
@@ -582,8 +580,11 @@ class Replica(Node):
                     del self.outstandingproposes[msg.commandnumber]
                     # now we can perform this action on the replicas
                     performmessage = PaxosMessage(MSG_PERFORM,self.me,commandnumber=prc.commandnumber,proposal=prc.proposal)
-                    self.send(performmessage, group=self.groups[NODE_REPLICA])
-                    self.send(performmessage, group=self.groups[NODE_LEADER])
+                    try:
+                        self.send(performmessage, group=self.groups[NODE_REPLICA])
+                        self.send(performmessage, group=self.groups[NODE_LEADER])
+                    except:
+                        pass
                     self.perform(performmessage)
             else:
                 logger("there is no response collector for %s cmdno:%d" % (str(msg.inresponseto), msg.commandnumber))

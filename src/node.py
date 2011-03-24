@@ -48,7 +48,7 @@ class Node():
         - groups: other Peers in the system that Node knows about. Node.groups is indexed by the
         corresponding node_name (NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA), which returns a Group
         """
-        self.addr = findOwnIP()
+        self.addr = "127.0.0.1"
         self.port = port
         self.connectionpool = ConnectionPool()
         self.type = mytype
