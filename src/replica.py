@@ -129,7 +129,7 @@ class Replica(Node):
 
         if command.command == "append zzzzz":
             self.stoptime = time.time()
-            print "XXX %d %.15f %.15f %.15f" % (len(self.groups[NODE_ACCEPTOR]),self.firststoptime - self.starttime,self.stoptime - self.secondstarttime,(self.stoptime - self.secondstarttime)/30.0)
+            print "XXX %d %.15f %.15f %.15f" % (len(self.groups[NODE_REPLICA]),self.firststoptime - self.starttime,self.stoptime - self.secondstarttime,(self.stoptime - self.secondstarttime)/30.0)
             sys.stdout.flush()
 
     def perform(self, msg):
