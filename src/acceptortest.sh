@@ -6,7 +6,7 @@ for run in {1..30}; do
 	echo "run $run with $numacceptors acceptors" 
 	python replica.py | grep "^XXX" >> output/$numacceptors 2> /dev/null &
 	sleep 5
-	for acceptor in {1..$numacceptors};do
+	for (( x=1; x<=$numacceptors; x++ )); do
 	    python acceptor.py -b 127.0.0.1:6668 > /dev/null 2>&1 &
 	done
 	sleep 10
