@@ -89,7 +89,7 @@ class Node():
             self.readyreplicas.append(self.me)
 
     def startservice(self):
-        """Start a server, a shell and a ping thread"""
+        """Starts the background services associated with a node."""
         # Start a thread with the server which will start a thread for each request
         server_thread = Thread(target=self.server_loop)
         server_thread.start()
@@ -109,10 +109,6 @@ class Node():
         returnstr = "state:\n"
         for type,group in self.groups.iteritems():
             returnstr += str(group)
-        if self.type == NODE_REPLICA or self.type == NODE_LEADER:
-            returnstr += "\nreadyreplicas:\n"
-            for replica in self.readyreplicas:
-                returnstr += str(replica)+"\n"
         returnstr += "\nPending:\n"
         for cno,proposal in self.pendingcommands.iteritems():
             returnstr += "command#%d: %s" % (cno, proposal)
