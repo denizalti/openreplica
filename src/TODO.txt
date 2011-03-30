@@ -3,6 +3,11 @@ paxi. """
 
 *** GRAPHS ***
 - Graph4: How does the Throughput change as time passes
+- Object should be noop during tests
+
+*** FUTURE ***
+- We want to be able to a DNS-textlookup which will invoke a toStr
+function for the 
 
 *** CHANGES TO THE CODE ***
 - acceptor state should be garbage collected
