@@ -5,9 +5,6 @@ paxi. """
 - Graph4: How does the Throughput change as time passes
 
 *** CHANGES TO THE CODE ***
-- if during leaderpromotion i find out that i should be a leader, i'll
-send update message to everyone and collect decisions from everyone
-- the update message has to carry decisions and executed
 - acceptor state should be garbage collected
 - adaptive resend
 - save state to disk
@@ -16,6 +13,9 @@ send update message to everyone and collect decisions from everyone
 - Failure Detector that is connected to the Membership Object
 
 *** DONE ***
+- if during leaderpromotion i find out that i should be a leader, i'll
+send update message to everyone and collect decisions from everyone
+- the update message has to carry decisions and executed
 - Client has to switch to the new leader (it gets more than one leader
 in the beginning and makes a list of them)
 - graphs with standard deviation
