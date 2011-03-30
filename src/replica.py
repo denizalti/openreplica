@@ -111,7 +111,7 @@ class Replica(Node):
         leaderping_thread = Timer(LIVENESSTIMEOUT, self.ping_leader)
         leaderping_thread.start()
 
-    @endtiming
+#    @endtiming
     def performcore(self, msg, slotno, dometaonly=False):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
@@ -322,7 +322,11 @@ class Replica(Node):
                 else:
                     self.leader_initializing = True
                     assert len(self.groups[NODE_REPLICA]) > 0, "no live replicas"
-                    # XXX send update message to any one of the replicas
+                    # send update message to any one of the replicas
+                    randomreplica = self.groups[NODE_REPLICA].members.pop()
+                    self.groups[NODE_REPLICA].members.add(randomreplica)
+                    updatemessage = UpdateMessage(MSG_UPDATE, self.me)
+                    self.send(updatemessage, peer=randomreplica)
         elif self.type == NODE_LEADER:
             # there is someone else who should act as a leader
             logger("unbecoming leader")
@@ -377,7 +381,7 @@ class Replica(Node):
             else:
                 self.do_command_prepare(proposal)
 
-    @starttiming
+#    @starttiming
     def msg_clientrequest(self, conn, msg):
         """Handler for a MSG_CLIENTREQUEST
         A new Paxos Protocol is initiated with the first available commandnumber

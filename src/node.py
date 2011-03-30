@@ -171,6 +171,7 @@ class Node():
                         nascentset.append((clientsock,time.time()))
                         success = True
                     else:
+                        print "Handling Connection for: ", s
                         success = self.handle_connection(s)
                     if not success:
                         # s is closed, take it out of nascentset and connection pool
@@ -211,6 +212,8 @@ class Node():
                 logger("message not supported: %s" % message)
                 return False
             with self.lock:
+                print "XXXXXX Method XXXXXXX: ", method
+                print "Calling method for conn: ", connection, "mess: ", message
                 method(connection, message)
         return True
     #
