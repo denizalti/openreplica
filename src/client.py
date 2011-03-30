@@ -18,12 +18,12 @@ import os
 import time
 
 parser = OptionParser(usage="usage: %prog -b bootstrap")
-parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
+parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port tuples separated with commas for bootstrap peers")
 (options, args) = parser.parse_args()
 
 class Client():
     """Client sends requests and receives responses"""
-    def __init__(self, bootstrap):
+    def __init__(self, givenbootstraplist):
         """Initialize Client
 
         Client State
@@ -34,15 +34,29 @@ class Client():
         """
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        bootaddr,bootport = bootstrap.split(":")
-        self.socket.connect((bootaddr,int(bootport)))
+        bootstrapstrlist = givenbootstraplist.split(",")
+        bootstraplist = []
+        for bootstrap in bootstrapstrlist:
+            bootaddr,bootport = bootstrap.split(":")
+            bootpeer = Peer(bootaddr,int(bootport),NODE_REPLICA)
+            bootstraplist.append(bootpeer)
+        for bootpeer in bootstraplist:
+            if self.connectbootstrap(bootpeer):
+                break
         myaddr = findOwnIP()
         myport = self.socket.getsockname()[1]
         self.me = Peer(myaddr,myport,NODE_CLIENT)
-        self.conn = Connection(self.socket)
         self.alive = True
         self.clientcommandnumber = 1
-        
+
+    def connectbootstrap(self, bootpeer):
+        try:
+            self.socket.connect((bootpeer.addr,bootpeer.port))
+            self.conn = Connection(self.socket)
+        except:
+            return False
+        return True
+    
     def clientloop(self):
         """Accepts commands from the prompt and sends requests for the commands
         and receives corresponding replies.
@@ -74,7 +88,8 @@ class Client():
                             print "bootstrap node failed to respond in time"
                         if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                             replied = True
-            except ( KeyboardInterrupt,EOFError ):
+            except:
+                print ":)"
                 os._exit(0)
         return
         
