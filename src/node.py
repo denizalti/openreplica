@@ -212,7 +212,7 @@ class Node():
                 logger("message not supported: %s" % message)
                 return False
             with self.lock:
-                print "XXXXXX Method XXXXXXX: ", method
+                print "***** Method *****: ", method
                 print "Calling method for conn: ", connection, "mess: ", message
                 method(connection, message)
         return True

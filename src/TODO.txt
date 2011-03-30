@@ -9,6 +9,10 @@ PROGRESS"
 necessarily handle a message if it's the reply to the last message
 received.
 
+*** GRAPHS ***
+- standard deviation
+- Graph4: How does the Throughput change as time passes
+
 *** CHANGES TO THE CODE ***
 - if during leaderpromotion i find out that i should be a leader, i'll
 send update message to everyone and collect decisions from everyone
@@ -19,6 +23,8 @@ in the beginning and makes a list of them)
 - adaptive resend
 - save state to disk
 - garbage collect commands that all replicas have seen
+- Membership Object!
+- Failure Detector that is connected to the Membership Object
 
 *** TO THINK ABOUT ***
 - How should the Leader and Replica states be updated so commandnumber
