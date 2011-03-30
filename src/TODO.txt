@@ -9,27 +9,15 @@ paxi. """
 send update message to everyone and collect decisions from everyone
 - the update message has to carry decisions and executed
 - acceptor state should be garbage collected
-- client has to switch to the new leader (it gets more than one leader
-in the beginning and makes a list of them)
 - adaptive resend
 - save state to disk
 - garbage collect commands that all replicas have seen
 - Membership Object!
 - Failure Detector that is connected to the Membership Object
 
-*** TO THINK ABOUT ***
-- How should the Leader and Replica states be updated so commandnumber
-  allocation is done appropriately.
-- How to make Leader not reissue all previous commands
-    -- Leader can have the state that Replica has (especially if the
-    Leader extends a Replica) and not reissue command in the Executed
-    (maybe even Decided) state.
-    -- Leader can receive periodic "state of the system" messages from
-    Replicas
-- How will Leader Failure be handled.
-- How will the weak Leader election be done.
-
 *** DONE ***
+- Client has to switch to the new leader (it gets more than one leader
+in the beginning and makes a list of them)
 - graphs with standard deviation
 - adaptive timeout for leader loop - LONGTIMEOUT/SHORTTIMEOUT
 - check_leader_promotion has to take into account if the chosen leader

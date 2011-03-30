@@ -89,7 +89,6 @@ class Replica(Node):
         - outstandingproposals: <commandnumber:command> mappings that the replica has made in the past
         - pendingcommands: Set of unissiued commands that are waiting for the window to roll over to be issued
         """
-        self.readyreplicas = []
         Node.__init__(self, NODE_REPLICA)
         self.object = replicatedobject
         self.nexttoexecute = 1
@@ -158,7 +157,8 @@ class Replica(Node):
         if msg.commandnumber not in self.decisions:
             self.decisions[msg.commandnumber] = msg.proposal
         else:
-            assert False, "This commandnumber has been decided before.."
+            #XXX assert False, "This commandnumber has been decided before.."
+            print "This commandnumber has been decided before.."
         # If replica was using this commandnumber for a different proposal, initiate it again
         if self.proposals.has_key(msg.commandnumber) and msg.proposal != self.proposals[msg.commandnumber]:
             self.do_command_propose(self.proposals[msg.commandnumber])
@@ -212,12 +212,13 @@ class Replica(Node):
 
     def msg_update(self, conn, msg):
         """Someone needs to be updated on the set of past decisions, send whatever we know to them."""
-        updatereplymessage = UpdateMessage(MSG_UPDATEREPLY, self.me, self.decisions)
+        updatereplymessage = UpdateMessage(MSG_UPDATEREPLY, self.me, self.decisions, self.executed)
         self.send(updatereplymessage, peer=msg.source)
 
     def msg_updatereply(self, conn, msg):
         """Merge decisions received with local decisions"""
         self.decisions.update(msg.decisions)
+        self.executed.update(msg.executed)
         self.stateuptodate = True
         if self.leader_initializing:
             self.leader_initializing = False
@@ -304,9 +305,9 @@ class Replica(Node):
         return otherleader
             
     def find_leader(self):
-        minpeer = None
-        for peer in self.readyreplicas:
-            if minpeer == None or peer < minpeer:
+        minpeer = self.me
+        for peer in self.groups[NODE_REPLICA]:
+            if peer < minpeer:
                 minpeer = peer
         return minpeer
 
@@ -651,8 +652,8 @@ class Replica(Node):
                 try:
                     self.send(helomessage, peer=currentleader)
                 except:
-                    logger("removing current leader from the readylist")
-                    self.readyreplicas.remove(currentleader)
+                    logger("removing current leader from the replicalist")
+                    self.groups[NODE_REPLICA].remove(currentleader)
 
             time.sleep(LIVENESSTIMEOUT)
 

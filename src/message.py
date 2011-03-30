@@ -158,15 +158,18 @@ class HandshakeMessage(Message):
         return temp
 
 class UpdateMessage(Message):
-    def __init__(self,msgtype,myname,decisions=None):
+    def __init__(self,msgtype,myname,decisions=None,executed=None):
         Message.__init__(self, msgtype, myname)
         if decisions != None:
             self.decisions = decisions
+        if executed != None:
+            self.executed = executed
 
     def __str__(self):
         temp = Message.__str__(self)
         if self.type == MSG_UPDATEREPLY:
             temp += ' decisions %s' % self.decisions
+            temp += ' executed %s' % self.executed
         return temp
 
 class PaxosMessage(Message):

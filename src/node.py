@@ -83,10 +83,8 @@ class Node():
             self.send(helomessage, peer=bootpeer)
             if self.type == NODE_REPLICA:
                 self.stateuptodate = False
-                self.readyreplicas.append(bootpeer)
         elif self.type == NODE_REPLICA:
             self.stateuptodate = True
-            self.readyreplicas.append(self.me)
 
     def startservice(self):
         """Starts the background services associated with a node."""
