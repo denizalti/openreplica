@@ -384,7 +384,7 @@ class Replica(Node):
 
 #    @starttiming
     def msg_clientrequest(self, conn, msg):
-        """Handler for a MSG_CLIENTREQUEST
+        """
         A new Paxos Protocol is initiated with the first available commandnumber
         the Leader knows of.
         """
@@ -399,11 +399,7 @@ class Replica(Node):
             clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"LEADERNOTREADY",msg.command.clientcommandnumber)
             conn.send(clientreply)
             return
-        if self.type != NODE_LEADER:
-            self.become_leader()
-            self.clientpool.add_connection_to_peer(msg.source, conn)
-            self.handle_client_command(msg.command)
-        elif self.type == NODE_LEADER:
+        if self.type == NODE_LEADER:
             self.clientpool.add_connection_to_peer(msg.source, conn)
             self.handle_client_command(msg.command)
         else:
