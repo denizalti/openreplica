@@ -31,9 +31,11 @@ def starttiming(fn):
         elif obj.secondstarttime == 0:
             obj.secondstarttime = time.time()
         return fn(*args, **kw)
+    return new
 
 def endtiming(fn):
     """Decorator used to start timing. Keeps track of the count for the first and second calls."""
+    NITER = 2.0
     def new(*args, **kw):
         ret = fn(*args, **kw)
         obj = args[0]
@@ -41,13 +43,14 @@ def endtiming(fn):
             obj.firststoptime = time.time()
         elif obj.secondstoptime == 0:
             obj.secondstoptime = time.time()
-        elif obj.count == 30:
+        elif obj.count == NITER:
             now = time.time()
-            print "YYY %d %.15f %.15f %.15f" % (len(obj.groups[NODE_REPLICA]),obj.firststoptime - obj.firststarttime, now - obj.secondstarttime, (now - obj.secondstarttime)/30.0)
+            print "YYY %d %.15f %.15f %.15f" % (len(obj.groups[NODE_REPLICA]),obj.firststoptime - obj.firststarttime, now - obj.secondstarttime, (now - obj.secondstarttime)/NITER)
             sys.stdout.flush()
         else:
             obj.count += 1
         return ret
+    return new
 
 # Class used to collect responses to both PREPARE and PROPOSE messages
 class ResponseCollector():
@@ -110,7 +113,7 @@ class Replica(Node):
         leaderping_thread = Timer(LIVENESSTIMEOUT, self.ping_leader)
         leaderping_thread.start()
 
-#    @endtiming
+    @endtiming
     def performcore(self, msg, slotno, dometaonly=False):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
@@ -382,7 +385,7 @@ class Replica(Node):
             else:
                 self.do_command_prepare(proposal)
 
-#    @starttiming
+    @starttiming
     def msg_clientrequest(self, conn, msg):
         """
         A new Paxos Protocol is initiated with the first available commandnumber
