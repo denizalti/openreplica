@@ -1,16 +1,7 @@
 """ This file keeps the outstanding changes and thoughts we have about
 paxi. """
 
-*** THINGS TO LOOK INTO ***
-- The design of the Client doesn't take care of SUCCESS messages
-received after having received a CLIENTREPLY with "REQUEST IN
-PROGRESS"
-- To fix this, we should create a Client loop, that doesn't
-necessarily handle a message if it's the reply to the last message
-received.
-
 *** GRAPHS ***
-- standard deviation
 - Graph4: How does the Throughput change as time passes
 
 *** CHANGES TO THE CODE ***
@@ -39,6 +30,7 @@ in the beginning and makes a list of them)
 - How will the weak Leader election be done.
 
 *** DONE ***
+- graphs with standard deviation
 - adaptive timeout for leader loop - LONGTIMEOUT/SHORTTIMEOUT
 - check_leader_promotion has to take into account if the chosen leader
 is ready to become a leader

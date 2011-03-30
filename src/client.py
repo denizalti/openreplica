@@ -34,33 +34,40 @@ class Client():
         """
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        bootstrapstrlist = givenbootstraplist.split(",")
-        bootstraplist = []
-        for bootstrap in bootstrapstrlist:
-            bootaddr,bootport = bootstrap.split(":")
-            bootpeer = Peer(bootaddr,int(bootport),NODE_REPLICA)
-            bootstraplist.append(bootpeer)
-        for bootpeer in bootstraplist:
-            if self.connectbootstrap(bootpeer):
-                break
+        self.initializebootstraplist(givenbootstraplist)
+        self.connecttobootstrap()
         myaddr = findOwnIP()
-        myport = self.socket.getsockname()[1]
+        myport = self.socket.getsockname()[1] 
         self.me = Peer(myaddr,myport,NODE_CLIENT)
         self.alive = True
         self.clientcommandnumber = 1
 
-    def connectbootstrap(self, bootpeer):
-        try:
-            self.socket.connect((bootpeer.addr,bootpeer.port))
-            self.conn = Connection(self.socket)
-        except:
-            return False
-        return True
+    def initializebootstraplist(self,givenbootstraplist):
+        bootstrapstrlist = givenbootstraplist.split(",")
+        self.bootstraplist = []
+        for bootstrap in bootstrapstrlist:
+            bootaddr,bootport = bootstrap.split(":")
+            bootpeer = Peer(bootaddr,int(bootport),NODE_REPLICA)
+            self.bootstraplist.append(bootpeer)
+
+    def connecttobootstrap(self):
+        for bootpeer in self.bootstraplist:
+            try:
+                print "Connecting to new bootstrap: ", bootpeer.addr,bootpeer.port
+                self.socket.close()
+                self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+                self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+                self.socket.connect((bootpeer.addr,bootpeer.port))
+                self.conn = Connection(self.socket)
+                print "Connected to new bootstrap: ", bootpeer.addr,bootpeer.port
+                break
+            except socket.error, e:
+                print e
+                continue
     
     def clientloop(self):
         """Accepts commands from the prompt and sends requests for the commands
-        and receives corresponding replies.
-        """
+        and receives corresponding replies."""
         while self.alive:
             inputcount = 0
             try:
@@ -80,18 +87,27 @@ class Client():
                     self.conn.settimeout(CLIENTRESENDTIMEOUT)
 
                     while not replied:
-                        print inputcount, "REPLIED: " if replied else "NOTREPLIED"
-                        self.conn.send(cm)
+                        success = self.conn.send(cm)
+                        if not success:
+                            currentbootstrap = self.bootstraplist.pop(0)
+                            self.bootstraplist.append(currentbootstrap)
+                            self.connecttobootstrap()
+                            continue
                         reply = self.conn.receive()
                         print "received: ", reply
-                        if time.time() - starttime > CLIENTRESENDTIMEOUT:
-                            print "bootstrap node failed to respond in time"
                         if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
-                            replied = True
-            except:
-                print ":)"
-                os._exit(0)
-        return
+                            if reply.command == "REJECTED" or reply.command == "LEADERNOTREADY":
+                                currentbootstrap = self.bootstraplist.pop(0)
+                                self.bootstraplist.append(currentbootstrap)
+                                self.connecttobootstrap()
+                                continue
+                            else:
+                                replied = True
+                        if time.time() - starttime > CLIENTRESENDTIMEOUT:
+                            if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
+                                replied = True
+            except ( IOError, EOFError ):
+                os._exit()
         
 theClient = Client(options.bootstrap)
 theClient.clientloop()

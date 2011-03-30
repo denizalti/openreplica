@@ -1,9 +1,9 @@
-import socket
+import socket, errno
 import struct
 import cPickle as pickle
 import random
 
-DEBUG=True
+DEBUG=False
 DROPRATE=0.3
 
 class ConnectionPool():
@@ -115,15 +115,22 @@ class Connection():
     
     def send(self, msg):
         """pickle and send a message on the Connection"""
-        #if DEBUG and random.random() <= DROPRATE:
-        #    print "dropping message..."
-        #    return
+        if DEBUG and random.random() <= DROPRATE:
+            print "dropping message..."
+            return
         messagestr = pickle.dumps(msg)
         messagelength = struct.pack("I", len(messagestr))
         try:
             self.thesocket.send(messagelength + messagestr)
-        except IOError as inst:
-            print "Send Error: ", inst
+            return True
+        except socket.error, e:
+             if isinstance(e.args, tuple):
+                 if e[0] == errno.EPIPE:
+                     print "Remote disconnect"
+                     return False
+        except IOError, e:
+            print "Send Error: ", e
+            return False
     
     def settimeout(self, timeout):
         self.thesocket.settimeout(timeout)
