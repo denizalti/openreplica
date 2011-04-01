@@ -240,8 +240,10 @@ class Replica(Node):
         self.groups[NODE_ACCEPTOR].remove(acceptor)
     
     def add_replica(self, args):
+        print "***ADDING REPLICA***"
         args = args[0].split(":")
         replica = Peer(args[0],int(args[1]),NODE_REPLICA)
+        print replica
         self.groups[NODE_REPLICA].add(replica)
         
     def del_replica(self, args):

@@ -23,7 +23,7 @@ from message import Message,PaxosMessage,HandshakeMessage,AckMessage,PValue,PVal
 parser = OptionParser(usage="usage: %prog -p port -b bootstrap -d delay")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
-parser.add_option("-i", "--id", action="store", dest="accountid", type="int", default=0, help="[optional] id for the account")
+
 (options, args) = parser.parse_args()
 
 DO_PERIODIC_PINGS=False
@@ -33,6 +33,7 @@ class Node():
     are extended by Leaders, Acceptors or Replicas.
     """ 
     def __init__(self, mytype, port=options.port, bootstrap=options.bootstrap):
+        
         """Initialize Node
 
         Node State
@@ -84,8 +85,6 @@ class Node():
                 self.stateuptodate = False
         elif self.type == NODE_REPLICA:
             # As this is the first Node it will start a NODE_NAMESERVER
-            nameservernode = Node(NODE_NAMESERVER, bootstrap=self.id)
-            nameservernode.startnameserver()
             self.stateuptodate = True
 
     def startservice(self):
@@ -346,4 +345,3 @@ class Node():
                 connection.send(message)
                 message = copy.copy(message)
                 message.assignuniqueid()
-         
