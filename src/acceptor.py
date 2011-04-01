@@ -12,7 +12,8 @@ from node import Node
 from connection import ConnectionPool
 from group import Group
 from peer import Peer
-from message import Message,PaxosMessage,HandshakeMessage,AckMessage,PValue,PValueSet
+from message import Message,PaxosMessage,HandshakeMessage,AckMessage
+from pvalue import PValue, PValueSet
 
 class Acceptor(Node):
     """Acceptor acts like a server responding to PaxosMessages received from the Leader.

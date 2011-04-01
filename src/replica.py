@@ -16,7 +16,8 @@ from utils import *
 from connection import Connection, ConnectionPool
 from group import Group
 from peer import Peer
-from message import Message, PaxosMessage, HandshakeMessage, AckMessage, PValue, PValueSet, ClientMessage, Command, UpdateMessage
+from message import Message, PaxosMessage, HandshakeMessage, AckMessage, ClientMessage, Command, UpdateMessage
+from pvalue import PValue, PValueSet
 from test import Test
 from bank import Bank
 
@@ -35,7 +36,7 @@ def starttiming(fn):
 
 def endtiming(fn):
     """Decorator used to start timing. Keeps track of the count for the first and second calls."""
-    NITER = 2.0
+    NITER = 30
     def new(*args, **kw):
         ret = fn(*args, **kw)
         obj = args[0]
@@ -157,6 +158,9 @@ class Replica(Node):
                 print "Sending REPLY to CLIENT"
                 clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,givenresult, command.clientcommandnumber)
                 clientconn = self.clientpool.get_connection_by_peer(command.client)
+                if clientconn.thesocket == None:
+                    print "Client disconnected.."
+                    return
                 clientconn.send(clientreply)
 
     def perform(self, msg):

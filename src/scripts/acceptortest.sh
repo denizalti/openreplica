@@ -13,8 +13,7 @@ for run in {1..30}; do
 	for replica in {1..4};do
 	    python replica.py -b 127.0.0.1:6668 > /dev/null 2>&1 &
 	done
-	sleep 10
-	python client.py -b 127.0.0.1:6668 < client1 > /dev/null 2>&1
+	python client.py -b 127.0.0.1:6668 < noop > /dev/null 2>&1
 	sleep 60
 	killall python
 	sleep 5
