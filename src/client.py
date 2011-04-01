@@ -107,7 +107,7 @@ class Client():
                             if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                                 replied = True
             except ( IOError, EOFError ):
-                os._exit()
+                os._exit(0)
         
 theClient = Client(options.bootstrap)
 theClient.clientloop()

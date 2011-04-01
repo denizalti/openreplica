@@ -10,6 +10,21 @@ paxi. """
 function for the 
 
 *** CHANGES TO THE CODE ***
+- Get rid of HELOREPLY, a replica is added once it starts getting
+PERFORM
+- External client to issue ADD NewReplica
+- Leader proposes METACOMMAND ADDReplica
+
+
+
+
+- DNSSERVER for openreplica.org
+  -- Special Replicas: Listen to state, cannot become leader
+  -- Keep dictionary of name to specialnode
+  -- when asked for name, return specialnode
+  -- specialnode handles metacommands like visible/invisible replicas
+  -- specialnode responds to Aqueries with list of nodes
+- DNSSERVER for group membership
 - acceptor state should be garbage collected
 - adaptive resend
 - save state to disk

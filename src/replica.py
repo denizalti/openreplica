@@ -215,13 +215,15 @@ class Replica(Node):
 
     def msg_update(self, conn, msg):
         """Someone needs to be updated on the set of past decisions, send whatever we know to them."""
-        updatereplymessage = UpdateMessage(MSG_UPDATEREPLY, self.me, self.decisions, self.executed)
+        updatereplymessage = UpdateMessage(MSG_UPDATEREPLY, self.me, self.decisions)
         self.send(updatereplymessage, peer=msg.source)
 
     def msg_updatereply(self, conn, msg):
         """Merge decisions received with local decisions"""
+        for key,value in self.decisions.iteritems():
+            if msg.decisions.has_key(key):
+                assert self.decisions[key] == msg.decisions[key], "Update Error"
         self.decisions.update(msg.decisions)
-        self.executed.update(msg.executed)
         self.stateuptodate = True
         if self.leader_initializing:
             self.leader_initializing = False
