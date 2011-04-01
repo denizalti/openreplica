@@ -72,8 +72,7 @@ class Node():
         self.me = Peer(self.addr,self.port,self.type)
         self.id = self.me.id()
         setlogprefix(self.id)
-        logger("I'm alive.")
-        self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_LEADER:Group(self.me)}
+        self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_LEADER:Group(self.me), NODE_NAMESERVER:Group(self.me)}
         # connect to the bootstrap node
         if bootstrap:
             logger("connecting to %s" % bootstrap)
@@ -84,6 +83,9 @@ class Node():
             if self.type == NODE_REPLICA:
                 self.stateuptodate = False
         elif self.type == NODE_REPLICA:
+            # As this is the first Node it will start a NODE_NAMESERVER
+            nameservernode = Node(NODE_NAMESERVER, bootstrap=self.id)
+            nameservernode.startnameserver()
             self.stateuptodate = True
 
     def startservice(self):
@@ -94,6 +96,15 @@ class Node():
         # Start a thread that waits for inputs
         input_thread = Thread(target=self.get_inputs)
         input_thread.start()
+        # Start a thread that pings neighbors
+        timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
+        timer_thread.start()
+
+    def startnameserver(self):
+        """Starts the background services associated with a node."""
+        # Start a thread with the server which will start a thread for each request
+        server_thread = Thread(target=self.server_loop)
+        server_thread.start()
         # Start a thread that pings neighbors
         timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
         timer_thread.start()
@@ -246,7 +257,8 @@ class Node():
         byemessage = Message(MSG_BYE,self.me)
         for type,nodegroup in self.groups.iteritems():
             self.send(byemessage, group=nodegroup)
-        self.send(byemessage, peer=self)
+        self.send(byemessage, peer=self.me)
+        os._exit(0)
                     
     def cmd_state(self, args):
         """Shell command [state]: Prints connectivity state of the corresponding Node."""
