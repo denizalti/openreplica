@@ -123,9 +123,13 @@ class Replica(Node):
         commandlist = command.command.split()
         commandname = commandlist[0]
         commandargs = commandlist[1:]
-        ismeta=(commandname in METACOMMANDS)
+        ismeta = (commandname in METACOMMANDS)
+        noop = (commandname == "noop")        
         try:
-            if dometaonly and ismeta:
+            if noop:
+                method = getattr(self, NOOP)
+                givenresult = "NOOP"
+            elif dometaonly and ismeta:
                 # execute a metacommand when the window has expired
                 method = getattr(self, commandname)
                 givenresult = method(commandargs)
@@ -227,6 +231,9 @@ class Replica(Node):
         self.stateuptodate = True
         if self.leader_initializing:
             self.leader_initializing = False
+
+    def do_noop(self):
+        pass
 
     def add_acceptor(self, args):
         # args keep addr:port

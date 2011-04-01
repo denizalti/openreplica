@@ -42,6 +42,8 @@ BACKOFFINCREASE = 0.1
 METACOMMANDS = set(["add_acceptor", "del_acceptor", "add_replica", "del_replica"])
 WINDOW = 3
 
+NOOP = "do_noop"
+
 ###########################
 # code to convert enum variables to strings of different kinds
 
