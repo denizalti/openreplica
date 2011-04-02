@@ -13,7 +13,7 @@ from utils import findOwnIP
 from connection import ConnectionPool, Connection
 from group import Group
 from peer import Peer
-from message import ClientMessage,Message,PaxosMessage,HandshakeMessage,AckMessage,Command
+from message import ClientMessage, Message, PaxosMessage, HandshakeMessage, AckMessage, Command
 from pvalue import PValue, PValueSet
 import os
 import time

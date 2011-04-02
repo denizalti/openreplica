@@ -18,7 +18,7 @@ from utils import *
 from connection import ConnectionPool,Connection
 from group import Group
 from peer import Peer
-from message import Message,PaxosMessage,HandshakeMessage,AckMessage,MessageInfo,Command
+from message import Message, PaxosMessage, HandshakeMessage, AckMessage, MessageInfo, Command
 from pvalue import PValue, PValueSet
 
 parser = OptionParser(usage="usage: %prog -p port -b bootstrap -d delay")
@@ -144,21 +144,26 @@ class Node():
         while self.alive:
             try:
                 # collect the set of all sockets that we want to listen to
-                socketset = [self.socket]  # add the server socket
+                socketset = [self.socket] # add the server socket
+                # add sockets from connectionpool
                 for conn in self.connectionpool.poolbypeer.itervalues():
                     sock = conn.thesocket
                     if sock is not None:
                         socketset.append(sock)
+                # add clientsockets if they exist
                 try:
+
                     for conn in self.clientpool.poolbypeer.itervalues():
                         sock = conn.thesocket
                         if sock is not None:
                             socketset.append(sock)
                 except AttributeError:
                     pass
+                
+                # add sockets we didn't receive a message from yet, which are not expired
                 for s,timestamp in nascentset:
                     # prune and close old sockets that never got turned into connections
-                    if time.time() - timestamp > HELOTIMEOUT:
+                    if time.time() - timestamp > NASCENTTIMEOUT:
                         # expired -- if it's not already in the set, it should be closed
                         if s not in socketset:
                             logger("removing %s from the nascentset" % s)
@@ -186,10 +191,9 @@ class Node():
                         for sock,timestamp in nascentset:
                             if sock == s:
                                 logger("removing %s from the nascentset" % s)
-                                nascentset.remove((s,timestamp))
+                                nascentset.remove((sock,timestamp))
                         self.connectionpool.del_connection_by_socket(s)
-                        s.close()  
-
+                        s.close()
             except KeyboardInterrupt, EOFError:
                 os._exit(0)
         self.socket.close()
@@ -201,26 +205,34 @@ class Node():
         message = connection.receive()
         if message == None:
             return False
-        if message.type == MSG_ACK:
-            with self.outstandingmessages_lock:
-                ackid = "%s+%d" % (self.me.id(), message.ackid)
-                if self.outstandingmessages.has_key(ackid):
-                    #logger("deleting outstanding message %s" % ackid)
-                    del self.outstandingmessages[ackid]
-                else:
-                    logger("acked message %s not in outstanding messages" % ackid)
         else:
-            #logger("got message (about to ack) %s" % message.fullid())
-            if message.type != MSG_CLIENTREQUEST:
-                connection.send(AckMessage(MSG_ACK,self.me,message.id))
-            mname = "msg_%s" % msg_names[message.type].lower()
-            try:
-                method = getattr(self, mname)
-            except AttributeError:
-                logger("message not supported: %s" % message)
-                return False
-            with self.lock:
-                method(connection, message)
+            if message.type == MSG_CLIENTREQUEST:
+                try:
+                    self.clientpool.add_connection_to_peer(message.source, connection)
+                except AttributeError:
+                    pass
+            else:
+                self.connectionpool.add_connection_to_peer(message.source, connection)
+            if message.type == MSG_ACK:
+                with self.outstandingmessages_lock:
+                    ackid = "%s+%d" % (self.me.id(), message.ackid)
+                    if self.outstandingmessages.has_key(ackid):
+                        #logger("deleting outstanding message %s" % ackid)
+                        del self.outstandingmessages[ackid]
+                    else:
+                        logger("acked message %s not in outstanding messages" % ackid)
+            else:
+                #logger("got message (about to ack) %s" % message.fullid())
+                if message.type != MSG_CLIENTREQUEST:
+                    connection.send(AckMessage(MSG_ACK,self.me,message.id))
+                mname = "msg_%s" % msg_names[message.type].lower()
+                try:
+                    method = getattr(self, mname)
+                except AttributeError:
+                    logger("message not supported: %s" % message)
+                    return False
+                with self.lock:
+                    method(connection, message)
         return True
     #
     # message handlers
@@ -228,7 +240,6 @@ class Node():
     def msg_helo(self, conn, msg):
         """Add the other peer into the connection pool and group"""
         self.groups[msg.source.type].add(msg.source)
-        self.connectionpool.add_connection_to_peer(msg.source,conn)
         if self.type == NODE_ACCEPTOR:
             return
         elif msg.source.type == NODE_REPLICA or msg.source.type == NODE_LEADER:

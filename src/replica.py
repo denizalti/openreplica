@@ -168,7 +168,6 @@ class Replica(Node):
         if msg.commandnumber not in self.decisions:
             self.decisions[msg.commandnumber] = msg.proposal
         else:
-            #XXX assert False, "This commandnumber has been decided before.."
             print "This commandnumber has been decided before.."
         # If replica was using this commandnumber for a different proposal, initiate it again
         if self.proposals.has_key(msg.commandnumber) and msg.proposal != self.proposals[msg.commandnumber]:
