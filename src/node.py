@@ -74,6 +74,7 @@ class Node():
         self.me = Peer(self.addr,self.port,self.type)
         self.id = self.me.id()
         setlogprefix(self.id)
+        logger("Ready!")
         self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_LEADER:Group(self.me), NODE_NAMESERVER:Group(self.me)}
         # connect to the bootstrap node
         if bootstrap:
@@ -170,7 +171,6 @@ class Node():
                         # check if it has been added before
                         socketset.append(s)
 
-                print "Waiting on ", socketset
                 assert len(socketset) == len(set(socketset)), "[%s] socketset has Duplicates." % self
                 inputready,outputready,exceptready = select.select(socketset,[],socketset)
                 
@@ -201,7 +201,6 @@ class Node():
         """Receives a message and calls the corresponding message handler"""
         connection = self.connectionpool.get_connection_by_socket(clientsock)
         message = connection.receive()
-        print "Received ", message
         if message == None:
             return False
         else:

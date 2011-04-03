@@ -430,6 +430,8 @@ class Replica(Node):
         logger("proposing command: %d:%s with ballotnumber %s and %d acceptors" % (givencommandnumber,givenproposal,str(recentballotnumber),len(self.groups[NODE_ACCEPTOR])))
         # since we never propose a commandnumber that is beyond the window, we can simply use the current acceptor set here
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, givencommandnumber, givenproposal)
+        if len(prc.acceptors) == 0:
+            print "There are no acceptors.."
         self.outstandingproposes[givencommandnumber] = prc
         propose = PaxosMessage(MSG_PROPOSE,self.me,recentballotnumber,commandnumber=givencommandnumber,proposal=givenproposal)
         self.send(propose,group=prc.acceptors)
@@ -457,6 +459,8 @@ class Replica(Node):
         newballotnumber = self.ballotnumber
         logger("preparing command: %d:%s with ballotnumber %s" % (givencommandnumber, givenproposal,str(newballotnumber)))
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], newballotnumber, givencommandnumber, givenproposal)
+        if len(prc.acceptors) == 0:
+            print "There are no acceptors.."
         self.outstandingprepares[newballotnumber] = prc
         prepare = PaxosMessage(MSG_PREPARE,self.me,newballotnumber)
         self.send(prepare,group=prc.acceptors)
