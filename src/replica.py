@@ -208,17 +208,12 @@ class Replica(Node):
             self.send(updatemessage, peer=currentleader)
 
     def msg_heloreply(self, conn, msg):
-        """Add the acceptors carried in the HELOREPLY message and send helo to the replicas"""
+        """Add acceptors and replicas carried in the HELOREPLY message"""
         self.groups[msg.source.type].add(msg.source)
-        self.connectionpool.add_connection_to_peer(msg.source,conn)
         for acceptor in msg.groups[NODE_ACCEPTOR]:
             self.groups[NODE_ACCEPTOR].add(acceptor)
-            helomessage = HandshakeMessage(MSG_HELO, self.me)
-            self.send(helomessage, peer=acceptor)
         for replica in msg.groups[NODE_REPLICA]:
-            if replica != self.me and not self.groups[NODE_REPLICA].haspeer(replica):
-                helomessage = HandshakeMessage(MSG_HELO, self.me)
-                self.send(helomessage, peer=replica)
+            self.groups[NODE_REPLICA].add(replica)
 
     def msg_update(self, conn, msg):
         """Someone needs to be updated on the set of past decisions, send whatever we know to them."""
@@ -231,9 +226,7 @@ class Replica(Node):
             if msg.decisions.has_key(key):
                 assert self.decisions[key] == msg.decisions[key], "Update Error"
         self.decisions.update(msg.decisions)
-        self.stateuptodate = True
-        if self.leader_initializing:
-            self.leader_initializing = False
+        self.stateuptodate = True # XXX
 
     def do_noop(self):
         pass
@@ -250,11 +243,12 @@ class Replica(Node):
         self.groups[NODE_ACCEPTOR].remove(acceptor)
     
     def add_replica(self, args):
-        print "***ADDING REPLICA***"
         args = args[0].split(":")
         replica = Peer(args[0],int(args[1]),NODE_REPLICA)
-        print replica
         self.groups[NODE_REPLICA].add(replica)
+        if self.type == NODE_LEADER:
+            heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, self.groups)
+            self.send(heloreplymessage, peer=replica)
         
     def del_replica(self, args):
         args = args[0].split(":")

@@ -239,11 +239,6 @@ class Node():
     def msg_helo(self, conn, msg):
         """Add the other peer into the connection pool and group"""
         self.groups[msg.source.type].add(msg.source)
-        if self.type == NODE_ACCEPTOR:
-            return
-        elif msg.source.type == NODE_REPLICA or msg.source.type == NODE_LEADER:
-            heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, self.groups)
-            self.send(heloreplymessage, peer=msg.source)
 
     def msg_bye(self, conn, msg):
         """Handler for MSG_BYE
