@@ -16,7 +16,6 @@ class ConnectionPool():
         
     def add_connection_to_peer(self, peer, conn):
         """Adds a Connection to the ConnectionPool by its Peer"""
-        print "Adding to peer: %s" % peer
         connectionkey = peer.id()
         self.poolbypeer[connectionkey] = conn
         

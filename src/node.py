@@ -82,10 +82,7 @@ class Node():
             bootpeer = Peer(bootaddr,int(bootport), NODE_REPLICA)
             helomessage = HandshakeMessage(MSG_HELO, self.me)
             self.send(helomessage, peer=bootpeer)
-            if self.type == NODE_REPLICA:
-                self.stateuptodate = False
         elif self.type == NODE_REPLICA:
-            # As this is the first Node it will start a NODE_NAMESERVER
             self.stateuptodate = True
 
     def startservice(self):
@@ -172,7 +169,8 @@ class Node():
                     elif s not in socketset:
                         # check if it has been added before
                         socketset.append(s)
-                        
+
+                print "Waiting on ", socketset
                 assert len(socketset) == len(set(socketset)), "[%s] socketset has Duplicates." % self
                 inputready,outputready,exceptready = select.select(socketset,[],socketset)
                 
@@ -203,6 +201,7 @@ class Node():
         """Receives a message and calls the corresponding message handler"""
         connection = self.connectionpool.get_connection_by_socket(clientsock)
         message = connection.receive()
+        print "Received ", message
         if message == None:
             return False
         else:

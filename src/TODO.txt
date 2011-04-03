@@ -12,11 +12,6 @@ function for the
 *** CHANGES TO THE CODE ***
 - Get rid of HELOREPLY, a replica is added once it starts getting
 PERFORM
-- External client to issue ADD NewReplica
-- Leader proposes METACOMMAND ADDReplica
-
-
-
 
 - DNSSERVER for openreplica.org
   -- Special Replicas: Listen to state, cannot become leader
@@ -33,6 +28,8 @@ PERFORM
 - Failure Detector that is connected to the Membership Object
 
 *** DONE ***
+- External client to issue ADD NewReplica
+- Leader proposes METACOMMAND ADDReplica
 - if during leaderpromotion i find out that i should be a leader, i'll
 send update message to everyone and collect decisions from everyone
 - the update message has to carry decisions and executed
