@@ -59,9 +59,7 @@ class ResponseCollector():
     MSG_PROPOSE.
     """
     def __init__(self, acceptors, ballotnumber, commandnumber, proposal):
-        """Initialize ResponseCollector
-
-        ResponseCollector State
+        """ResponseCollector State
         - ballotnumber: ballotnumber for the corresponding MSG
         - commandnumber: commandnumber for the corresponding MSG
         - proposal: proposal for the corresponding MSG
@@ -83,14 +81,12 @@ class ResponseCollector():
 class Replica(Node):
     """Replica receives MSG_PERFORM from Leaders and execute corresponding commands."""
     def __init__(self, replicatedobject):
-        """Initialize Replica
-
-        Replica State
+        """Replica State
         - object: the object that Replica is replicating
 	- nexttoexecute: the commandnumber that relica is waiting for to execute
         - decisions: received requests as <commandnumber:command> mappings
         - executed: commands that are executed as <command:commandresult> mappings
-        - outstandingproposals: <commandnumber:command> mappings that the replica has made in the past
+        - proposals: proposals that are made by this replica kept as <commandnumber:command> mappings
         - pendingcommands: Set of unissiued commands that are waiting for the window to roll over to be issued
         """
         Node.__init__(self, NODE_REPLICA)
@@ -102,6 +98,7 @@ class Replica(Node):
         self.pendingcommands = {}
         self.leader_initializing = False
 
+        # Measurement Variables
         self.firststarttime = 0
         self.firststoptime = 0
         self.secondstarttime = 0
@@ -194,34 +191,33 @@ class Replica(Node):
                 self.issue_pending_command(self.nexttoexecute)
             
     def issue_pending_command(self, candidatecommandno):
+        """propose a command from the pending commands"""
         if self.pendingcommands.has_key(candidatecommandno):
             self.do_command_propose_frompending(candidatecommandno)
 
     def msg_perform(self, conn, msg):
-        """Received a PERFORM message, add it to the set of decided commands and perform it if necessary."""
+        """received a PERFORM message, perform it and send an UPDATE message to the source if necessary"""
         self.perform(msg)
         
         if not self.stateuptodate and self.type == NODE_REPLICA:
             updatemessage = UpdateMessage(MSG_UPDATE, self.me)
-            currentleader = self.find_leader()
-            print "Sending Update Message to ", currentleader
-            self.send(updatemessage, peer=currentleader)
+            print "Sending Update Message to ", msg.source
+            self.send(updatemessage, peer=msg.source)
 
     def msg_heloreply(self, conn, msg):
-        """Add acceptors and replicas carried in the HELOREPLY message"""
-        self.groups[msg.source.type].add(msg.source)
+        """add acceptors and replicas carried in the HELOREPLY message"""
         for acceptor in msg.groups[NODE_ACCEPTOR]:
             self.groups[NODE_ACCEPTOR].add(acceptor)
         for replica in msg.groups[NODE_REPLICA]:
             self.groups[NODE_REPLICA].add(replica)
 
     def msg_update(self, conn, msg):
-        """Someone needs to be updated on the set of past decisions, send whatever we know to them."""
+        """someone needs to be updated on the set of past decisions, send our decisions"""
         updatereplymessage = UpdateMessage(MSG_UPDATEREPLY, self.me, self.decisions)
         self.send(updatereplymessage, peer=msg.source)
 
     def msg_updatereply(self, conn, msg):
-        """Merge decisions received with local decisions"""
+        """merge decisions received with local decisions"""
         for key,value in self.decisions.iteritems():
             if msg.decisions.has_key(key):
                 assert self.decisions[key] == msg.decisions[key], "Update Error"
@@ -232,17 +228,19 @@ class Replica(Node):
         pass
 
     def add_acceptor(self, args):
-        # args keep addr:port
+        """add given acceptor to groups: args = addr:port"""
         args = args[0].split(":")
         acceptor = Peer(args[0],int(args[1]),NODE_ACCEPTOR)
         self.groups[NODE_ACCEPTOR].add(acceptor)
         
     def del_acceptor(self, args):
+        """remove given acceptor from groups: args = addr:port"""
         args = args[0].split(":")
         acceptor = Peer(args[0],int(args[1]),NODE_REPLICA)
         self.groups[NODE_ACCEPTOR].remove(acceptor)
     
     def add_replica(self, args):
+        """add given replica to groups: args = addr:port"""
         args = args[0].split(":")
         replica = Peer(args[0],int(args[1]),NODE_REPLICA)
         self.groups[NODE_REPLICA].add(replica)
@@ -251,16 +249,17 @@ class Replica(Node):
             self.send(heloreplymessage, peer=replica)
         
     def del_replica(self, args):
+        """remove given replica from groups: args = addr:port"""
         args = args[0].split(":")
         replica = Peer(args[0],int(args[1]),NODE_REPLICA)
         self.groups[NODE_REPLICA].remove(replica)
 
     def cmd_showobject(self, args):
-        """Shell command [showobject]: Print Replicated Object information""" 
+        """shell command [showobject]: print replicated object information""" 
         print self.object
 
     def cmd_info(self, args):
-        """Shell command [info]: Print Requests and Command to execute next"""
+        """shell command [info]: print next commandnumber to execute and executed commands"""
         print "Waiting to execute #%d" % self.nexttoexecute
         print "Decisions:\n"
         for (commandnumber,command) in self.decisions.iteritems():
@@ -268,21 +267,21 @@ class Replica(Node):
             if command in self.executed:
                 temp += "\t%s\n" % (self.executed[command])
             print temp
+            
 # LEADER STATE
     def become_leader(self):
-        """Initialize Leader
-
-        Leader State
+        """Leader State
         - active: indicates if the Leader has a *good* ballotnumber
         - ballotnumber: the highest ballotnumber Leader has used
-        - pvalueset: the PValueSet for Leader, which encloses all
-        (ballotnumber,commandnumber,proposal) triples Leader knows about
-        - object: the object that Leader is replicating (as it is a Replica too)
-        - commandnumber: the highest commandnumber Leader knows about
         - outstandingprepares: ResponseCollector dictionary for MSG_PREPARE,
         indexed by ballotnumber
         - outstandingproposes: ResponseCollector dictionary for MSG_PROPOSE,
-        indexed by ballotnumber
+        indexed by commandnumber
+        - receivedclientrequests: commands received from clients as
+        <(client,clientcommandnumber):command> mappings
+        - clientpool: connections to clients
+        - backoff: backoff amount that is used to determine how much a leader should
+        backoff during a collusion
         """
         if self.type != NODE_LEADER:
             self.type = NODE_LEADER
@@ -298,7 +297,7 @@ class Replica(Node):
             backoff_thread.start()
             
     def unbecome_leader(self):
-        """Stop being a leader"""
+        """stop being a leader and change type to NODE_REPLICA"""
         # fail-stop tolerance, coupled with retries in the client, mean that a 
         # leader can at any time discard all of its internal state and the protocol
         # will still work correctly.
@@ -306,16 +305,19 @@ class Replica(Node):
         backoff_event.set()
 
     def update_backoff(self):
+        """used by the backoffthread to decrease the backoff amount by half periodically"""
         while not backoff_event.isSet():
             self.backoff = self.backoff/2
             backoff_event.wait(BACKOFFDECREASETIMEOUT)
 
     def detect_colliding_leader(self,ballotnumber):
+        """detects a colliding leader from the highest ballotnumber received from acceptors"""
         otherleader_addr,otherleader_port = ballotnumber[BALLOTNODE].split(":")
         otherleader = Peer(otherleader_addr, int(otherleader_port), NODE_LEADER)
         return otherleader
             
     def find_leader(self):
+        """returns the minimum peer as the leader"""
         minpeer = self.me
         for peer in self.groups[NODE_REPLICA]:
             if peer < minpeer:
@@ -323,6 +325,7 @@ class Replica(Node):
         return minpeer
 
     def check_leader_promotion(self):
+        """checks which node is the leader and changes the state of the caller if necessary"""
         chosenleader = self.find_leader()
         if self.me == chosenleader:
             # I need to become a leader
@@ -334,23 +337,18 @@ class Replica(Node):
                 else:
                     self.leader_initializing = True
                     assert len(self.groups[NODE_REPLICA]) > 0, "no live replicas"
-                    # send update message to any one of the replicas
-                    randomreplica = self.groups[NODE_REPLICA].members.pop()
-                    self.groups[NODE_REPLICA].members.add(randomreplica)
-                    updatemessage = UpdateMessage(MSG_UPDATE, self.me)
-                    self.send(updatemessage, peer=randomreplica)
         elif self.type == NODE_LEADER:
             # there is someone else who should act as a leader
             logger("unbecoming leader")
             self.unbecome_leader()
 
     def update_ballotnumber(self,seedballotnumber):
-        """Update the ballotnumber with a higher value than given ballotnumber"""
+        """update the ballotnumber with a higher value than the given ballotnumber"""
         temp = (seedballotnumber[BALLOTNO]+1,self.ballotnumber[BALLOTNODE])
         self.ballotnumber = temp
 
     def find_commandnumber(self):
-        """Returns the first gap in the proposals dictionary or the item following """
+        """returns the first gap in proposals, decisions and pendingcommands combined"""
         commandgap = 1
         proposals = set(self.proposals.keys() + self.decisions.keys() + self.pendingcommands.keys())
         while commandgap <= len(proposals):
@@ -361,6 +359,11 @@ class Replica(Node):
         return commandgap
 
     def handle_client_command(self, givencommand):
+        """handle the received client request
+        - if it has been received before check if it has been executed
+        -- if it has been executed send the result
+        -- if it has not been executed yet send REQUESTINPROGRESS
+        - if this request has not been received before initiate a paxos round for the command"""
         if self.type != NODE_LEADER:
             logger("got a request but not a leader..")
             return
@@ -396,10 +399,10 @@ class Replica(Node):
 
     @starttiming
     def msg_clientrequest(self, conn, msg):
-        """
-        A new Paxos Protocol is initiated with the first available commandnumber
-        the Leader knows of.
-        """
+        """handles the request from the client if the node is a leader and ready
+        - if not leader: reject
+        - if not ready: reject
+        - if leader and ready: add connection to client connections and handle request"""
         self.check_leader_promotion()
         if self.type != NODE_LEADER:
             logger("not leader.. request rejected..")
@@ -414,16 +417,15 @@ class Replica(Node):
         if self.type == NODE_LEADER:
             self.clientpool.add_connection_to_peer(msg.source, conn)
             self.handle_client_command(msg.command)
-        else:
-            logger("can't become leader")
-            clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED",msg.command.clientcommandnumber)
-            conn.send(clientreply)
 
     def msg_clientreply(self, conn, msg):
-        """This only occurs in response to commands initiated by the shell"""
+        """this only occurs in response to commands initiated by the shell"""
         print "==================>", msg
 
     def do_command_propose_frompending(self, givencommandnumber):
+        """initiates the givencommandnumber from pendingcommands list
+        removes the command from pending and transfers it to proposals
+        if there are no acceptors present, sets the lists back and returns"""
         givenproposal = self.pendingcommands[givencommandnumber]
         self.proposals[givencommandnumber] = givenproposal
         del self.pendingcommands[givencommandnumber]
@@ -432,20 +434,22 @@ class Replica(Node):
         # since we never propose a commandnumber that is beyond the window, we can simply use the current acceptor set here
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, givencommandnumber, givenproposal)
         if len(prc.acceptors) == 0:
-            print "There are no acceptors.."
+            print "There are no acceptors!"
+            self.pendingcommands[givencommandnumber] = givenproposal
+            del self.proposals[givencommandnumber]
+            return
         self.outstandingproposes[givencommandnumber] = prc
         propose = PaxosMessage(MSG_PROPOSE,self.me,recentballotnumber,commandnumber=givencommandnumber,proposal=givenproposal)
         self.send(propose,group=prc.acceptors)
         
     # Paxos Methods
     def do_command_propose(self, givenproposal):
-        """Propose a command with the given commandnumber and proposal. Stage p2a.
+        """propose a command with the given commandnumber and proposal. Stage p2a.
         A command is proposed by running the PROPOSE stage of Paxos Protocol for the command.
         """
         if self.type != NODE_LEADER:
             print "Not a Leader.."
             return
-
         givencommandnumber = self.find_commandnumber()
         self.pendingcommands[givencommandnumber] = givenproposal
         # if we're too far in the future, i.e. past window, do not issue the command
@@ -454,6 +458,9 @@ class Replica(Node):
         self.do_command_propose_frompending(givencommandnumber)
             
     def do_command_prepare_frompending(self, givencommandnumber):
+        """initiates the givencommandnumber from pendingcommands list
+        removes the command from pending and transfers it to proposals
+        if there are no acceptors present, sets the lists back and returns"""
         givenproposal = self.pendingcommands[givencommandnumber]
         self.proposals[givencommandnumber] = givenproposal
         del self.pendingcommands[givencommandnumber]
@@ -461,7 +468,10 @@ class Replica(Node):
         logger("preparing command: %d:%s with ballotnumber %s" % (givencommandnumber, givenproposal,str(newballotnumber)))
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], newballotnumber, givencommandnumber, givenproposal)
         if len(prc.acceptors) == 0:
-            print "There are no acceptors.."
+            print "There are no acceptors!"
+            self.pendingcommands[givencommandnumber] = givenproposal
+            del self.proposals[givencommandnumber]
+            return
         self.outstandingprepares[newballotnumber] = prc
         prepare = PaxosMessage(MSG_PREPARE,self.me,newballotnumber)
         self.send(prepare,group=prc.acceptors)
@@ -572,7 +582,6 @@ class Replica(Node):
                 self.backoff += BACKOFFINCREASE
             time.sleep(self.backoff)
             #remove the proposal from proposals
-            print self.proposals
             #del self.proposals[prc.commandnumber]
         else:
             logger("there is no response collector")
@@ -641,7 +650,6 @@ class Replica(Node):
                 # update the ballot number
                 self.update_ballotnumber(msg.ballotnumber)
                 #remove the proposal from proposals
-                print self.proposals
                 #del self.proposals[msg.commandnumber]
 
                 leader_causing_reject = self.detect_colliding_leader(msg.ballotnumber)
@@ -656,6 +664,7 @@ class Replica(Node):
             logger("there is no response collector for %s" % str(msg.inresponseto))
 
     def ping_leader(self):
+        """used by the ping_thread to ping the current leader periodically"""
         while True:
             currentleader = self.find_leader()
             if currentleader != self.me:
@@ -671,7 +680,7 @@ class Replica(Node):
 
     # Debug Methods
     def cmd_command(self, args):
-        """Shell command [command]: Initiate a new command.
+        """shell command [command]: initiate a new command.
         This function calls do_command_propose() with inputs from the Shell."""
         try:
             proposal = ' '.join(args[1:])
@@ -681,30 +690,30 @@ class Replica(Node):
             print "command expects only one command"
 
     def cmd_goleader(self, args):
-        """Shell command [goleader]: Start Leader state""" 
+        """shell command [goleader]: start Leader state""" 
         self.become_leader()
 
     def cmd_clients(self,args):
-        """Prints Client Connections"""
+        """prints client connections"""
         print self.clientpool
 
     def cmd_decisions(self,args):
-        """Prints Decisions"""
+        """prints decisions"""
         for cmdnum,decision in self.decisions.iteritems():
             print "%d: %s" % (cmdnum,str(decision))
 
     def cmd_executed(self,args):
-        """Prints Decision States"""
+        """prints decision states"""
         for decision,state in self.executed.iteritems():
             print "%s: %s" % (str(decision),str(state))
 
     def cmd_proposals(self,args):
-        """Prints Proposals"""
+        """prints proposals"""
         for cmdnum,command in self.proposals.iteritems():
             print "%d: %s" % (cmdnum,str(command))
 
     def cmd_pending(self,args):
-        """Prints Pending Commands"""
+        """prints pending commands"""
         for cmdnum,command in self.pendingcommands.iteritems():
             print "%d: %s" % (cmdnum,str(command))
 
