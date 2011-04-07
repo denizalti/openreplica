@@ -12,6 +12,7 @@ import random
 import socket
 import select
 import copy
+import fcntl
 
 from enums import *
 from utils import *
@@ -66,14 +67,30 @@ class Node():
             try:
                 self.socket.bind((self.addr,self.port))
                 break
-            except:
+            except socket.error:
                 self.port += 1
         self.socket.listen(10)
 
+        # append port number to controlfile
+        try:
+            f = open('ports', 'a')
+            fcntl.flock(f,fcntl.LOCK_EX)
+            if self.type == NODE_ACCEPTOR:
+                t = "acceptor"
+            elif self.type == NODE_REPLICA:
+                t = "replica"
+            f.write("add_%s %s:%d\n" % (t, self.addr, self.port))
+            for i in range WINDOW:
+                f.write("noop\n")
+            fcntl.flock(f,fcntl.LOCK_UN)
+            f.close()
+        except IOError:
+            print "Error opening port file"
+        
         # initialize empty groups
         self.me = Peer(self.addr,self.port,self.type)
         self.id = self.me.id()
-        setlogprefix(self.id)
+        setlogprefix("%s %s" % (node_names[self.type],self.id))
         logger("Ready!")
         self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_LEADER:Group(self.me), NODE_NAMESERVER:Group(self.me)}
         # connect to the bootstrap node
@@ -83,6 +100,7 @@ class Node():
             bootpeer = Peer(bootaddr,int(bootport), NODE_REPLICA)
             helomessage = HandshakeMessage(MSG_HELO, self.me)
             self.send(helomessage, peer=bootpeer)
+            self.groups[NODE_REPLICA].add(bootpeer)
         elif self.type == NODE_REPLICA:
             self.stateuptodate = True
 
@@ -116,9 +134,11 @@ class Node():
         returnstr = "state:\n"
         for type,group in self.groups.iteritems():
             returnstr += str(group)
-        returnstr += "\nPending:\n"
-        for cno,proposal in self.pendingcommands.iteritems():
-            returnstr += "command#%d: %s" % (cno, proposal)
+
+        if hasattr(self,'pendingcommands') and len(self.pendingcommands) > 0:
+            returnstr += "\nPending:\n"
+            for cno,proposal in self.pendingcommands.iteritems():
+                returnstr += "command#%d: %s" % (cno, proposal)
         return returnstr
 
     def outstandingmsgstr(self):

@@ -1,0 +1,28 @@
+#!/bin/sh
+
+ARGS=2
+E_BADARGS=65
+
+if [ $# -ne "$ARGS" ]
+then
+  echo "Usage: `basename $0` number-of-acceptors number-of-replicas"
+  exit $E_BADARGS
+fi
+
+let "numacceptors = $1 - 1"
+let "numreplicas = $2 - 1"
+
+rm ports
+
+tmux rename main
+unset TMUX
+tmux kill-session -t paxi
+tmux new-session -d -s paxi
+
+tmux new-window -t paxi:1 -n 'Replica 0' 'python replica.py'
+sleep 1
+tmux new-window -t paxi:2 -n 'Acceptor 0' 'python acceptor.py -b 127.0.0.1:6668'
+tmux new-window -t paxi:3 -n 'Replicas' "bash startreplicas.sh \"$numreplicas\""
+tmux new-window -t paxi:4 -n 'Acceptors' "bash startacceptors.sh \"$numacceptors\""
+tmux new-window -t paxi:5 -n 'Client' 'python client.py -b 127.0.0.1:6668 -f ports'
+tmux switch -t paxi

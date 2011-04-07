@@ -371,12 +371,13 @@ class Replica(Node):
             # Check if the request has been executed
             for (commandnumber,command) in self.decisions.iteritems():
                 if command == givencommand:
-                    clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,self.executed[command],givencommand.clientcommandnumber)
-                    conn = self.clientpool.get_connection_by_peer(givencommand.client)
-                    if conn is not None:
-                        conn.send(clientreply)
-                    resultsent = True
-                    break
+                    if self.executed.has_key(command):
+                        clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,self.executed[command],givencommand.clientcommandnumber)
+                        conn = self.clientpool.get_connection_by_peer(givencommand.client)
+                        if conn is not None:
+                            conn.send(clientreply)
+                        resultsent = True
+                        break
             # If request not executed yet, send REQUEST IN PROGRESS
             if not resultsent:
                 clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REQUEST IN PROGRESS",givencommand.clientcommandnumber)
