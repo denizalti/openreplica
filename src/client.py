@@ -21,8 +21,6 @@ parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="addres
 parser.add_option("-f", "--file", action="store", dest="filename", default=None, help="inputfile")
 (options, args) = parser.parse_args()
 
-# source filename
-
 class Client():
     """Client sends requests and receives responses"""
     def __init__(self, givenbootstraplist, inputfile):
@@ -71,16 +69,20 @@ class Client():
     def clientloop(self):
         """Accepts commands from the prompt and sends requests for the commands
         and receives corresponding replies."""
-        f = open(self.file,'r')
+        if self.file:
+            f = open(self.file,'r')
+            EOF = False
         while self.alive:
             inputcount = 0
             try:
-                if self.file == None:
-                    shellinput = raw_input("client-shell> ")
-                else:
+                if self.file and not EOF:
                     shellinput = f.readline()
+                else:
+                    shellinput = raw_input("client-shell> ")
 
                 if len(shellinput) == 0:
+                    if self.file:
+                        EOF = True
                     continue
                 else:
                     inputcount += 1

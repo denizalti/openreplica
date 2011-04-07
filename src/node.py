@@ -73,17 +73,15 @@ class Node():
 
         # append port number to controlfile
         try:
-            f = open('ports', 'a')
-            fcntl.flock(f,fcntl.LOCK_EX)
-            if self.type == NODE_ACCEPTOR:
-                t = "acceptor"
-            elif self.type == NODE_REPLICA:
-                t = "replica"
-            f.write("add_%s %s:%d\n" % (t, self.addr, self.port))
-            for i in range WINDOW:
-                f.write("noop\n")
-            fcntl.flock(f,fcntl.LOCK_UN)
-            f.close()
+            if self.type == NODE_ACCEPTOR or self.type == NODE_REPLICA:
+                f = open('ports', 'a')
+                fcntl.flock(f,fcntl.LOCK_EX)
+                t = node_names[self.type].lower()
+                f.write("add_%s %s:%d\n" % (t, self.addr, self.port))
+                for i in range (WINDOW):
+                    f.write("noop\n")
+                fcntl.flock(f,fcntl.LOCK_UN)
+                f.close()
         except IOError:
             print "Error opening port file"
         

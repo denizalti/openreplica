@@ -15,7 +15,7 @@ MSG_ACK, \
          MSG_CLIENTREQUEST, MSG_CLIENTREPLY = range(16)
 
 # node types 
-NODE_ACCEPTOR, NODE_LEADER, NODE_REPLICA, NODE_CLIENT, NODE_NAMESERVER = range(5)
+NODE_ACCEPTOR, NODE_REPLICA, NODE_LEADER, NODE_CLIENT, NODE_NAMESERVER = range(5)
 
 # command result
 META = 'META'
@@ -37,7 +37,6 @@ BALLOTNO = 0
 BALLOTNODE = 1
 ##backoff
 BACKOFFINCREASE = 0.1
-
 
 METACOMMANDS = set(["add_acceptor", "del_acceptor", "add_replica", "del_replica"])
 WINDOW = 3
