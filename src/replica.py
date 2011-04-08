@@ -198,8 +198,11 @@ class Replica(Node):
     def msg_perform(self, conn, msg):
         """received a PERFORM message, perform it and send an UPDATE message to the source if necessary"""
         self.perform(msg)
-        
+
         if not self.stateuptodate and self.type == NODE_REPLICA:
+            if msg.commandnumber == 1:
+                self.stateuptodate = True
+                return
             updatemessage = UpdateMessage(MSG_UPDATE, self.me)
             print "Sending Update Message to ", msg.source
             self.send(updatemessage, peer=msg.source)
