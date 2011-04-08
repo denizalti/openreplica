@@ -35,21 +35,19 @@ class Node():
     are extended by Leaders, Acceptors or Replicas.
     """ 
     def __init__(self, mytype, port=options.port, bootstrap=options.bootstrap):
-        
-        """Initialize Node
-
-        Node State
+        """Node State
         - addr: hostname for Node, detected automatically
         - port: port for Node, can be taken from the commandline (-p [port]) or
         detected automatically by binding.
-        - socket: socket of Node
         - connectionpool: ConnectionPool that keeps all Connections Node knows about
         - type: type of the corresponding Node: NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA
         - alive: liveness of Node
+        - outstandingmessages: keeps <messageid:messageinfo> mappings as <MessageID:MessageInfo> objects
+        - socket: socket of Node
         - me: Peer object that represents Node
         - id: id for Node (addr:port)
         - groups: other Peers in the system that Node knows about. Node.groups is indexed by the
-        corresponding node_name (NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA), which returns a Group
+        corresponding node_name (NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA | NODE_NAMESERVER), which returns a Group
         """
         self.addr = "127.0.0.1"
         self.port = port
@@ -57,7 +55,7 @@ class Node():
         self.type = mytype
         self.alive = True
         self.outstandingmessages_lock = RLock()
-        self.outstandingmessages = {} # keeps <messageid:messageinfo> mappings as <MessageID:MessageInfo> objects
+        self.outstandingmessages = {}
         self.lock = Lock()
 
         # create server socket and bind to a port
@@ -100,7 +98,7 @@ class Node():
             self.send(helomessage, peer=bootpeer)
             self.groups[NODE_REPLICA].add(bootpeer)
         elif self.type == NODE_REPLICA:
-            self.stateuptodate = True
+            self.stateuptodate = False # XXX
 
     def startservice(self):
         """Starts the background services associated with a node."""

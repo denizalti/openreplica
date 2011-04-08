@@ -500,8 +500,7 @@ class Replica(Node):
         self.do_command_prepare_frompending(givencommandnumber)
             
     def msg_prepare_adopted(self, conn, msg):
-        """Handler for MSG_PREPARE_ADOPTED
-        MSG_PREPARE_ADOPTED is handled only if it belongs to an outstanding MSG_PREPARE,
+        """MSG_PREPARE_ADOPTED is handled only if it belongs to an outstanding MSG_PREPARE,
         otherwise it is discarded.
         When MSG_PREPARE_ADOPTED is received, the corresponding ResponseCollector is retrieved
         and its state is updated accordingly.
@@ -554,8 +553,7 @@ class Replica(Node):
             logger("there is no response collector")
 
     def msg_prepare_preempted(self, conn, msg):
-        """
-        MSG_PREPARE_PREEMPTED is handled only if it belongs to an outstanding MSG_PREPARE,
+        """MSG_PREPARE_PREEMPTED is handled only if it belongs to an outstanding MSG_PREPARE,
         otherwise it is discarded.
         A MSG_PREPARE_PREEMPTED causes the PREPARE STAGE to be unsuccessful, hence the current
         state is deleted and a ne PREPARE STAGE is initialized.
@@ -587,8 +585,7 @@ class Replica(Node):
             logger("there is no response collector")
 
     def msg_propose_accept(self, conn, msg):
-        """Handler for MSG_PROPOSE_ACCEPT
-        MSG_PROPOSE_ACCEPT is handled only if it belongs to an outstanding MSG_PREPARE,
+        """MSG_PROPOSE_ACCEPT is handled only if it belongs to an outstanding MSG_PREPARE,
         otherwise it is discarded.
         When MSG_PROPOSE_ACCEPT is received, the corresponding ResponseCollector is retrieved
         and its state is updated accordingly.
@@ -627,8 +624,7 @@ class Replica(Node):
             logger("there is no response collector for %s cmdno:%d" % (str(msg.inresponseto), msg.commandnumber))
 
     def msg_propose_reject(self, conn, msg):
-        """Handler for MSG_PROPOSE_REJECT
-        MSG_PROPOSE_REJECT is handled only if it belongs to an outstanding MSG_PROPOSE,
+        """MSG_PROPOSE_REJECT is handled only if it belongs to an outstanding MSG_PROPOSE,
         otherwise it is discarded.
         A MSG_PROPOSE_REJECT causes the PROPOSE STAGE to be unsuccessful, hence the current
         state is deleted and a new PREPARE STAGE is initialized.
