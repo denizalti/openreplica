@@ -361,7 +361,7 @@ class Replica(Node):
                 return commandgap
         return commandgap
 
-    def handle_client_command(self, givencommand):
+    def handle_client_command(self, givencommand, prepare=False):
         """handle the received client request
         - if it has been received before check if it has been executed
         -- if it has been executed send the result
@@ -395,28 +395,26 @@ class Replica(Node):
             logger("initiating a new command")
             logger("leader is active: %s" % self.active)
             proposal = givencommand
-            if self.active:
+            if self.active and not prepare:
                 self.do_command_propose(proposal)
             else:
                 self.do_command_prepare(proposal)
 
     @starttiming
     def msg_clientrequest(self, conn, msg):
-        """handles the request from the client if the node is a leader and ready
+        """handles the request from the client if the node is a leader
         - if not leader: reject
-        - if not ready: reject
-        - if leader and ready: add connection to client connections and handle request"""
+        - if leader: add connection to client connections and handle request"""
         self.check_leader_promotion()
         if self.type != NODE_LEADER:
             logger("not leader.. request rejected..")
             clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED",msg.command.clientcommandnumber)
             conn.send(clientreply)
             return
+        # Leader should accept a request even if it's not ready as this way it will make itself ready during the prepare stage.
         if self.leader_initializing:
-            logger("leader not ready.. request rejected..")
-            clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"LEADERNOTREADY",msg.command.clientcommandnumber)
-            conn.send(clientreply)
-            return
+            self.clientpool.add_connection_to_peer(msg.source, conn)
+            self.handle_client_command(msg.command, prepare=True)
         if self.type == NODE_LEADER:
             self.clientpool.add_connection_to_peer(msg.source, conn)
             self.handle_client_command(msg.command)
@@ -550,6 +548,9 @@ class Replica(Node):
                     self.outstandingproposes[chosencommandnumber] = newprc
                     propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotnumber,commandnumber=chosencommandnumber,proposal=chosenproposal)
                     self.send(propose,group=newprc.acceptors)
+                # As leader collected all proposals from acceptors its state is up-to-date and it is done initializing
+                self.leader_initializing = False
+                self.stateuptodate = True
                 # become active
                 self.active = True
         else:
