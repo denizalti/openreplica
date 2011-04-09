@@ -12,7 +12,8 @@ from node import Node
 from connection import ConnectionPool
 from group import Group
 from peer import Peer
-from message import Message,PaxosMessage,HandshakeMessage,AckMessage,PValue,PValueSet
+from message import Message, PaxosMessage, HandshakeMessage, AckMessage
+from pvalue import PValue, PValueSet
 
 class Acceptor(Node):
     """Acceptor acts like a server responding to PaxosMessages received from the Leader.
@@ -27,6 +28,7 @@ class Acceptor(Node):
         """
         Node.__init__(self, NODE_ACCEPTOR)
         self.ballotnumber = (0,0)
+        self.last_accept_msg_id = -1
         self.accepted = PValueSet()
         
     def msg_prepare(self, conn, msg):
@@ -40,13 +42,18 @@ class Acceptor(Node):
         - MSG_PREPARE_PREEMPTED carries the highest ballotnumber Acceptor has seen and all
         pvalues accepted thus far.
         """
+        # this ballot should be strictly higher than previous ballots we have accepted,
         if msg.ballotnumber > self.ballotnumber:
             logger("prepare received with acceptable ballotnumber %s" % str(msg.ballotnumber))
             self.ballotnumber = msg.ballotnumber
-            replymsg = PaxosMessage(MSG_PREPARE_ADOPTED,self.me,self.ballotnumber,msg.ballotnumber,givenpvalueset=self.accepted)
+            self.last_accept_msg_id = msg.fullid()
+            replymsg = PaxosMessage(MSG_PREPARE_ADOPTED,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,givenpvalueset=self.accepted)
+        # or else it should be a precise duplicate of the last request, in which case we do nothing
+        elif msg.ballotnumber == self.ballotnumber and msg.fullid() == self.last_accept_msg_id:
+            return
         else:
             logger("prepare received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))
-            replymsg = PaxosMessage(MSG_PREPARE_PREEMPTED,self.me,self.ballotnumber,msg.ballotnumber,givenpvalueset=self.accepted)
+            replymsg = PaxosMessage(MSG_PREPARE_PREEMPTED,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,givenpvalueset=self.accepted)
         logger("prepare responding to ballotnumber %s" % str(msg.ballotnumber))
         self.send(replymsg,peer=msg.source)
 
@@ -65,10 +72,10 @@ class Acceptor(Node):
             self.ballotnumber = msg.ballotnumber
             newpvalue = PValue(msg.ballotnumber,msg.commandnumber,msg.proposal)
             self.accepted.add_highest(newpvalue)
-            replymsg = PaxosMessage(MSG_PROPOSE_ACCEPT,self.me,self.ballotnumber,msg.ballotnumber,newpvalue.commandnumber)
+            replymsg = PaxosMessage(MSG_PROPOSE_ACCEPT,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,commandnumber=msg.commandnumber)
         else:
             logger("propose received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))
-            replymsg = PaxosMessage(MSG_PROPOSE_REJECT,self.me,self.ballotnumber,msg.ballotnumber,msg.commandnumber)
+            replymsg = PaxosMessage(MSG_PROPOSE_REJECT,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,commandnumber=msg.commandnumber)
         self.send(replymsg,peer=msg.source)
 
     def cmd_paxos(self, args):

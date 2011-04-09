@@ -1,32 +1,57 @@
 """ This file keeps the outstanding changes and thoughts we have about
 paxi. """
 
-*** THINGS TO LOOK INTO ***
+*** GRAPHS ***
+- Graph4: How does the Throughput change as time passes
+- Object should be noop during tests
+
+*** FUTURE ***
+- We want to be able to a DNS-textlookup which will invoke a toStr
+function for the object
 
 *** CHANGES TO THE CODE ***
+- DNSSERVER for openreplica.org
+  -- Special Replicas: Listen to state, cannot become leader
+  -- Keep dictionary of name to specialnode
+  -- when asked for name, return specialnode
+  -- specialnode handles metacommands like visible/invisible replicas
+  -- specialnode responds to Aqueries with list of nodes
+- DNSSERVER for group membership
+- acceptor state should be garbage collected
+- adaptive resend
+- save state to disk
+- garbage collect commands that all replicas have seen
+- Membership Object!
+- Failure Detector that is connected to the Membership Object
+
+*** DONE ***
+- noop commands
+- External client to issue ADD NewReplica
+- Leader proposes METACOMMAND ADDReplica
+- if during leaderpromotion i find out that i should be a leader, i'll
+send update message to everyone and collect decisions from everyone
+- the update message has to carry decisions and executed
+- Client has to switch to the new leader (it gets more than one leader
+in the beginning and makes a list of them)
+- graphs with standard deviation
+- adaptive timeout for leader loop - LONGTIMEOUT/SHORTTIMEOUT
 - check_leader_promotion has to take into account if the chosen leader
 is ready to become a leader
 - new replica should inherit state from a live replica
+- new replica inherits connection state from live replica
+  -- new replica sends helo to replicas it received from the bootstrap
+  -- bootstrap shares acceptor set with a new replica (upon join)
+- everyone pings the leader (failure monitoring and local failure detection)
+- as Client doesn't send a HELO message to the Leader the nascentset
+update has to happen in another way, otherwise the connection gets
+lost
+- when feeding in multiple requests to a client, client has to make
+sure that all requests get replied. It shouldn't skip over a request
+when it times out.
+- multiple performs for the same command do not get
+executed more than once
+- NOT TO BE DONE: automatically take non-responsive peers out of the configuration
 - do not let the commands get past the edge of the window
-- save state to disk
-- weak leader election with adaptive timeouts
-- failure monitoring and local failure detection
-- automatically take non-responsive peers out of the configuration
-- garbage collect commands that all replicas have seen
-
-*** TO THINK ABOUT ***
-- How should the Leader and Replica states be updated so commandnumber
-  allocation is done appropriately.
-- How to make Leader not reissue all previous commands
-    -- Leader can have the state that Replica has (especially if the
-    Leader extends a Replica) and not reissue command in the Executed
-    (maybe even Decided) state.
-    -- Leader can receive periodic "state of the system" messages from
-    Replicas
-- How will Leader Failure be handled.
-- How will the weak Leader election be done.
-
-*** DONE ***
 - configuration change meta-events
 - nexttodecide is removed
 - to find an eligible commandnumber look at *both* proposals and

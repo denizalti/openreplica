@@ -10,32 +10,38 @@ import enums
 MSG_ACK, \
          MSG_PREPARE, MSG_PREPARE_ADOPTED, MSG_PREPARE_PREEMPTED, MSG_PROPOSE, MSG_PROPOSE_ACCEPT, MSG_PROPOSE_REJECT, \
          MSG_HELO, MSG_HELOREPLY, MSG_BYE, \
+         MSG_UPDATE, MSG_UPDATEREPLY, \
          MSG_PERFORM, MSG_RESPONSE, \
-         MSG_CLIENTREQUEST, MSG_CLIENTREPLY = range(14)
+         MSG_CLIENTREQUEST, MSG_CLIENTREPLY = range(16)
 
 # node types 
-NODE_ACCEPTOR, NODE_LEADER, NODE_REPLICA, NODE_CLIENT = range(4)
+NODE_ACCEPTOR, NODE_REPLICA, NODE_LEADER, NODE_CLIENT, NODE_NAMESERVER = range(5)
 
-# command states
-CMD_EXECUTED, CMD_DECIDED = range(2)
+# command result
+META = 'META'
 
 # message states
 ACK_NOTACKED, ACK_ACKED = range(2)
 
 # timeouts
-HELOTIMEOUT = 5
-ACKTIMEOUT = 10
-LIVENESSTIMEOUT = 60
+ACKTIMEOUT = 1
+LIVENESSTIMEOUT = 30
+NASCENTTIMEOUT = 20 * ACKTIMEOUT
+CLIENTRESENDTIMEOUT = 5
+BACKOFFDECREASETIMEOUT = 30
+TESTTIMEOUT = 1
 
 # magic numbers
-COMMANDSTATE = 0
-COMMAND = 1
-COMMANDRESULT = 2
-
-CLIENTRESENDTIMEOUT = 10
+## ballot
+BALLOTNO = 0
+BALLOTNODE = 1
+##backoff
+BACKOFFINCREASE = 0.1
 
 METACOMMANDS = set(["add_acceptor", "del_acceptor", "add_replica", "del_replica"])
 WINDOW = 3
+
+NOOP = "do_noop"
 
 ###########################
 # code to convert enum variables to strings of different kinds

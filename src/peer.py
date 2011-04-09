@@ -35,20 +35,32 @@ class Peer():
         """Equality function for two Peers.
         Returns True if given Peer is equal to Peer, False otherwise.
         """
-        return self.addr == otherpeer.addr and self.port == otherpeer.port
+        if otherpeer == None:
+            return False
+        else:
+            return self.addr == otherpeer.addr and self.port == otherpeer.port 
 
     # Added for testing
     def __lt__(self, otherpeer):
-        return self.port < otherpeer.port
+        if otherpeer == None:
+            return False
+        else:
+            return self.port < otherpeer.port
 
     def __gt__(self, otherpeer):
-        return self.port > otherpeer.port
+        if otherpeer == None:
+            return False
+        else:
+            return self.port > otherpeer.port
 
     def __ne__(self, otherpeer):
         """Non-equality function for two Peers.
         Returns True if given Peer is not equal to Peer, False otherwise.
         """
-        return self.addr != otherpeer.addr or self.port != otherpeer.port
+        if otherpeer == None:
+            return False
+        else:
+            return self.addr != otherpeer.addr or self.port != otherpeer.port
         
     def __str__(self):
         """Return Peer information"""
