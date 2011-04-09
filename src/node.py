@@ -53,11 +53,10 @@ class Node():
         self.port = port
         self.connectionpool = ConnectionPool()
         self.type = mytype
-        self.alive = True
         self.outstandingmessages_lock = RLock()
         self.outstandingmessages = {}
         self.lock = Lock()
-
+        
         # create server socket and bind to a port
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
@@ -68,6 +67,7 @@ class Node():
             except socket.error:
                 self.port += 1
         self.socket.listen(10)
+        self.alive = True
 
         # append port number to controlfile
         try:

@@ -1,55 +1,50 @@
 #!/usr/bin/env python
-
-#
-# Use a TSIG-signed DDNS update to update our hostname-to-address
-# mapping.
-#
-# usage: ddns.py <ip-address>
-#
-# On linux systems, you can automatically update your DNS any time an
-# interface comes up by adding an ifup-local script that invokes this
-# python code.
-#
-# E.g. on my systems I have this
-#
-#	#!/bin/sh
-#
-#	DEVICE=$1
-#
-#	if [ "X${DEVICE}" == "Xeth0" ]; then
-#        	IPADDR=`LANG= LC_ALL= ifconfig ${DEVICE} | grep 'inet addr' |
-#                	awk -F: '{ print $2 } ' | awk '{ print $1 }'`
-#		/usr/local/sbin/ddns.py $IPADDR
-#	fi
-#
-# in /etc/ifup-local.
-#
-
 import sys
+import socket
+import select
+from optparse import OptionParser
+from time import sleep,time
+
 
 import dns.update
 import dns.query
-import dns.tsigkeyring
+import dns.message
 
-# XXX 
+from utils import *
+
+parser = OptionParser(usage="usage: %prog -p port -b bootstrap -d delay")
+parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
+parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
+
+(options, args) = parser.parse_args()
+
+# Find the address in question
+# Connect to corresponding nameserver (TCP?)
+# Get the list of members
+
+class DNSServer():
+    def __init__(self, port=options.port, bootstrap=options.bootstrap):
+        self.addr = "127.0.0.1"
+        self.port = port # DNS Port: 53
+        self.registerednames = {} # <name: nameserver> mappings
+
+        # create server socket and bind to a port
+        self.socket = socket.socket(AF_INET,SOCK_DGRAM)
+            try:
+                self.socket.bind((self.addr,self.port))
+                break
+            except socket.error:
+                print "Can't bind to socket.."
+        self.alive = True
+
+    def server_loop():
+        ip='192.168.1.1'
+        try:
+            while 1:
+                data, addr = self.socket.recvfrom(1024)
+                query = DNSQuery(data)
+                self.socket.sendto(query.respond(ip), addr)
+        except KeyboardInterrupt:
+            self.socket.close()
 
 
-
-#
-# Replace the keyname and secret with appropriate values for your
-# configuration.
-#
-keyring = dns.tsigkeyring.from_text({
-    'keyname.' : 'NjHwPsMKjdN++dOfE5iAiQ=='
-    })
-
-#
-# Replace "example." with your domain, and "host" with your hostname.
-#
-update = dns.update.Update('example.', keyring=keyring)
-update.replace('host', 300, 'A', sys.argv[1])
-
-#
-# Replace "10.0.0.1" with the IP address of your master server.
-#
-response = dns.query.tcp(update, '10.0.0.1', timeout=10)

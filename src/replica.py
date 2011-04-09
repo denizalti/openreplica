@@ -338,8 +338,9 @@ class Replica(Node):
                     logger("becoming leader")
                     self.become_leader()
                 else:
+                    logger("initializing leader")
+                    self.become_leader()
                     self.leader_initializing = True
-                    assert len(self.groups[NODE_REPLICA]) > 0, "no live replicas"
         elif self.type == NODE_LEADER:
             # there is someone else who should act as a leader
             logger("unbecoming leader")
