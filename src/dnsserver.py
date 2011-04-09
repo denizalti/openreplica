@@ -26,7 +26,7 @@ class DNSServer():
     def __init__(self, port=options.port, bootstrap=options.bootstrap):
         self.addr = "127.0.0.1"
         self.port = port # DNS Port: 53
-        self.registerednames = {} # <name: nameserver> mappings
+        self.registerednames = {'paxi':'127.0.0.1:5000'} # <name:nameserver> mappings
 
         # create server socket and bind to a port
         self.socket = socket.socket(AF_INET,SOCK_DGRAM)
@@ -48,3 +48,7 @@ class DNSServer():
             self.socket.close()
 
 
+    # To send a WHO message we will need a TCP Connection
+    def msg_whoreply(self, conn, msg):
+        """Send groups as a reply to the query msg"""
+        pass

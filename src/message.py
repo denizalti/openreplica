@@ -107,9 +107,21 @@ class ClientMessage(Message):
         return temp
 
 class AckMessage(Message):
-    def __init__(self,msgtype,myname,ackid):
+    def __init__(self,msgtype, myname, ackid):
         Message.__init__(self, msgtype, myname)
         self.ackid = ackid
+
+class WhoMessage(Message):
+    def __init__(self,msgtype, myname, groups=None):
+        Message.__init__(self, msgtype, myname)
+        if groups != None:
+            self.groups = groups
+
+    def __str__(self):
+        temp = Message.__str__(self)
+        if self.groups != None:
+            temp += ' groups %s' % self.groups
+        return temp
 
 class Command():
     """Command encloses a client, clientcommandnumber and command"""

@@ -256,10 +256,15 @@ class Node():
         self.groups[msg.source.type].add(msg.source)
 
     def msg_bye(self, conn, msg):
-        """Handler for MSG_BYE
-        Deletes the source of MSG_BYE from groups
-        """
+        """Deletes the source of MSG_BYE from groups"""
         self.groups[msg.source.type].remove(msg.source)
+
+    # nameserver query function
+    def msg_who(self, conn, msg):
+        """Send groups as a reply to the query msg"""
+        whoreplymessage = HandshakeMessage(MSG_WHOREPLY, self.me, self.groups)
+        self.send(whoreplymessage, peer=msg.source)
+        
     #
     # shell commands generic to all nodes
     #
