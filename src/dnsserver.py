@@ -49,6 +49,8 @@ class DNSServer():
 
 
     # To send a WHO message we will need a TCP Connection
-    def msg_whoreply(self, conn, msg):
+    def msg_queryreply(self, conn, msg):
         """Send groups as a reply to the query msg"""
         pass
+
+        

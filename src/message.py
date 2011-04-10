@@ -111,7 +111,7 @@ class AckMessage(Message):
         Message.__init__(self, msgtype, myname)
         self.ackid = ackid
 
-class WhoMessage(Message):
+class QueryMessage(Message):
     def __init__(self,msgtype, myname, groups=None):
         Message.__init__(self, msgtype, myname)
         if groups != None:

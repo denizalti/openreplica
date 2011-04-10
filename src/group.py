@@ -42,6 +42,12 @@ class Group():
     def haspeer(self,peer):
         return peer in self.members
 
+    def serialize(self,peer):
+        returnstr = ''
+        for peer in self.members:
+            returnstr += peer.id() + ' '
+        return returnstr
+
     def __iter__(self):
         for peer in self.members:
             yield peer
@@ -49,8 +55,8 @@ class Group():
     def __str__(self):
         """Returns Group information"""
         returnstr = ''
-        for member in self.members:
-            returnstr += str(member)+' '
+        for peer in self.members:
+            returnstr += str(peer) + ' '
         return returnstr
     
     def __len__(self):

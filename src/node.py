@@ -111,15 +111,6 @@ class Node():
         # Start a thread that pings neighbors
         timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
         timer_thread.start()
-
-    def startnameserver(self):
-        """Starts the background services associated with a node."""
-        # Start a thread with the server which will start a thread for each request
-        server_thread = Thread(target=self.server_loop)
-        server_thread.start()
-        # Start a thread that pings neighbors
-        timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
-        timer_thread.start()
         
     def __str__(self):
         """Return Node information (addr:port)"""
@@ -258,16 +249,8 @@ class Node():
     def msg_bye(self, conn, msg):
         """Deletes the source of MSG_BYE from groups"""
         self.groups[msg.source.type].remove(msg.source)
-
-    # nameserver query function
-    def msg_who(self, conn, msg):
-        """Send groups as a reply to the query msg"""
-        whoreplymessage = HandshakeMessage(MSG_WHOREPLY, self.me, self.groups)
-        self.send(whoreplymessage, peer=msg.source)
         
-    #
     # shell commands generic to all nodes
-    #
     def cmd_help(self, args):
         """Shell command [help]: Prints the commands that are supported
         by the corresponding Node.""" 
