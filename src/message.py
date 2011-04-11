@@ -112,15 +112,15 @@ class AckMessage(Message):
         self.ackid = ackid
 
 class QueryMessage(Message):
-    def __init__(self,msgtype, myname, groups=None):
+    def __init__(self,msgtype, myname, peers=None):
         Message.__init__(self, msgtype, myname)
-        if groups != None:
-            self.groups = groups
+        if peers != None:
+            self.peers = peers
 
     def __str__(self):
         temp = Message.__str__(self)
-        if self.groups != None:
-            temp += ' groups %s' % self.groups
+        if self.peers != None:
+            temp += ' peers %s' % self.peers
         return temp
 
 class Command():

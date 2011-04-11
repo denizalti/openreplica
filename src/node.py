@@ -157,7 +157,6 @@ class Node():
                         socketset.append(sock)
                 # add clientsockets if they exist
                 try:
-
                     for conn in self.clientpool.poolbypeer.itervalues():
                         sock = conn.thesocket
                         if sock is not None:

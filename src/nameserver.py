@@ -15,7 +15,6 @@ class Nameserver(Node):
         # Start a thread with the server which will start a thread for each request
         server_thread = Thread(target=self.server_loop)
         server_thread.start()
-        print "YAAAYYY..."
         # Start a thread that pings neighbors
         timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
         timer_thread.start()
