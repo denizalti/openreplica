@@ -42,7 +42,7 @@ class Group():
     def haspeer(self,peer):
         return peer in self.members
 
-    def serialize(self,peer):
+    def serialize(self):
         returnstr = ''
         for peer in self.members:
             returnstr += peer.id() + ' '

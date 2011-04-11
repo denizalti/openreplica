@@ -22,7 +22,8 @@ class Nameserver(Replica):
         self.udpsocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         try:
             self.udpsocket.bind((self.addr,self.udpport))
-        except socket.error:
+        except socket.error as e:
+            print e
             print "Can't bind to UDP socket.."
 
     def startservice(self):
@@ -109,16 +110,18 @@ class Nameserver(Replica):
         dnsmsg = DNSPacket(data)
         query = dnsmsg.query
         serializedgroups = ""
-        for group in self.groups:
+        for group in self.groups.itervalues():
             serializedgroups += group.serialize()
+        peers = serializedgroups.split()
         if query.domain == self.name:
-            response = query.create_a_response(serializedgroups, auth=True)
+            response = query.create_a_response(peers, auth=True)
             self.udpsocket.sendto(response, addr)
         elif self.registerednames.has_key(query.domain):
             response = query.create_ns_response(self.registerednames[query.domain])
             self.udpsocket.sendto(response, addr)
         else:
-            response = query.create_error_response()
+            #response = query.create_error_response(self.addr)
+            response = query.create_a_response(peers, auth=True)
             self.udpsocket.sendto(response, addr)
 
 # nameserver query function
