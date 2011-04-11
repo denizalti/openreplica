@@ -5,7 +5,7 @@ import select
 from optparse import OptionParser
 from time import sleep,time
 from utils import *
-from dnsquery import DNSQuery
+from dnsquery import DNSQuery, DNSPacket
 
 parser = OptionParser(usage="usage: %prog -p port -b bootstrap")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=10000, help="port for the dnsserver")
@@ -16,8 +16,6 @@ parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="addres
 # Find the address in question
 # Connect to corresponding nameserver (TCP?)
 # Get the list of members
-
-MAXLEN = 1024
 
 class DNSServer():
     def __init__(self, port=options.port, bootstrap=options.bootstrap):
@@ -45,7 +43,7 @@ class DNSServer():
                 for s in exceptready:
                     print "EXCEPTION ", s
                 for s in inputready:
-                    data,clientaddr = self.socket.recvfrom(MAXLEN)
+                    data,clientaddr = self.socket.recvfrom(UDPMAXLEN)
                     logger("received a message from address %s" % str(clientaddr))
                     self.handle_query(data,clientaddr)
 
@@ -55,7 +53,7 @@ class DNSServer():
         return
 
     def handle_query(self, data, addr):
-        query = DNSQuery(data)
+        query = DNSPacket(data)
         print "QUERY for ", query.domain
 #        self.socket.sendto(XXX, addr)
 

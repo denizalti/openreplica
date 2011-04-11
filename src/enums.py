@@ -44,6 +44,9 @@ WINDOW = 3
 
 NOOP = "do_noop"
 
+# UDPPACKETLEN
+UDPMAXLEN = 1024
+
 ###########################
 # code to convert enum variables to strings of different kinds
 
