@@ -6,13 +6,14 @@ from threading import Thread, Timer
 from utils import *
 from enums import *
 from node import Node, options
+from replica import *
 from dnsquery import DNSQuery, DNSPacket
 
-class Nameserver(Node):
+class Nameserver(Replica):
     """Nameserver keeps track of the connectivity state of the system and replies to
     QUERY messages from dnsserver."""
     def __init__(self):
-        Node.__init__(self, NODE_NAMESERVER, port=5000,  bootstrap=options.bootstrap)
+        Replica.__init__(self, nodetype=NODE_NAMESERVER, port=5000, bootstrap=options.bootstrap)
         self.name = 'herbivore'
         self.registerednames = {'paxi':'127.0.0.1:5000'} # <name:nameserver> mappings
         self.nameserverconnections = {}  # <nameserver:connection> mappings
@@ -26,16 +27,68 @@ class Nameserver(Node):
 
     def startservice(self):
         """Starts the background services associated with a node."""
-        # Start a thread for the TCP server
-        TCP_server_thread = Thread(target=self.server_loop)
-        TCP_server_thread.start()
+        Node.startservice(self)
         # Start a thread for the UDP server
         UDP_server_thread = Thread(target=self.udp_server_loop)
         UDP_server_thread.start()
-        # Start a thread that pings neighbors
-        timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
-        timer_thread.start()
 
+    def performcore(self, msg, slotno, dometaonly=False):
+        """The core function that performs a given command in a slot number. It 
+        executes regular commands as well as META-level commands (commands related
+        to the managements of the Paxos protocol) with a delay of WINDOW commands."""
+        print "---> SlotNo: %d Command: %s DoMetaOnly: %s" % (slotno, self.decisions[slotno], dometaonly)
+        command = self.decisions[slotno]
+        commandlist = command.command.split()
+        commandname = commandlist[0]
+        commandargs = commandlist[1:]
+        ismeta = (commandname in METACOMMANDS)
+        noop = (commandname == "noop")        
+        try:
+            if dometaonly and ismeta:
+                # execute a metacommand when the window has expired
+                method = getattr(self, commandname)
+                givenresult = method(commandargs)
+            elif dometaonly and not ismeta:
+                return
+            elif not dometaonly and ismeta:
+                # meta command, but the window has not passed yet, 
+                # so just mark it as executed without actually executing it
+                # the real execution will take place when the window has expired
+                self.executed[self.decisions[slotno]] = META
+                return
+            elif not dometaonly and not ismeta:
+                # this is the workhorse case that executes most normal commands
+                givenresult = "NOTMETA"
+        except AttributeError:
+            print "command not supported: %s" % (command)
+            givenresult = 'COMMAND NOT SUPPORTED'
+        self.executed[self.decisions[slotno]] = givenresult
+
+    def perform(self, msg):
+        """Take a given PERFORM message, add it to the set of decided commands, and call performcore to execute."""
+        if msg.commandnumber not in self.decisions:
+            self.decisions[msg.commandnumber] = msg.proposal
+        else:
+            print "This commandnumber has been decided before.."
+            
+        while self.decisions.has_key(self.nexttoexecute):
+            if self.decisions[self.nexttoexecute] in self.executed:
+                logger("skipping command %d." % self.nexttoexecute)
+                self.nexttoexecute += 1
+            elif self.decisions[self.nexttoexecute] not in self.executed:
+                logger("executing command %d." % self.nexttoexecute)
+
+                # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
+                if self.nexttoexecute > WINDOW:
+                    self.performcore(msg, self.nexttoexecute - WINDOW, True)
+                self.performcore(msg, self.nexttoexecute)
+                self.nexttoexecute += 1
+
+    def msg_perform(self, conn, msg):
+        """received a PERFORM message, perform it"""
+        self.perform(msg)
+        
+    # DNS Side
     def udp_server_loop(self):
         while self.alive:
             try:
@@ -59,7 +112,7 @@ class Nameserver(Node):
         for group in self.groups:
             serializedgroups += group.serialize()
         if query.domain == self.name:
-            response = query.create_a_response(serializedgroups)
+            response = query.create_a_response(serializedgroups, auth=True)
             self.udpsocket.sendto(response, addr)
         elif self.registerednames.has_key(query.domain):
             response = query.create_ns_response(self.registerednames[query.domain])

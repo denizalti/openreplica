@@ -34,7 +34,7 @@ class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
     """ 
-    def __init__(self, mytype, port=options.port, bootstrap=options.bootstrap):
+    def __init__(self, nodetype, port=options.port, bootstrap=options.bootstrap):
         """Node State
         - addr: hostname for Node, detected automatically
         - port: port for Node, can be taken from the commandline (-p [port]) or
@@ -52,7 +52,7 @@ class Node():
         self.addr = "127.0.0.1"
         self.port = port
         self.connectionpool = ConnectionPool()
-        self.type = mytype
+        self.type = nodetype
         self.outstandingmessages_lock = RLock()
         self.outstandingmessages = {}
         self.lock = Lock()

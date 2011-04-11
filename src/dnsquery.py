@@ -47,10 +47,14 @@ class DNSQuery:
     if self.querytype == AQUERY:
       print "AQuery for %s" % self.domain
 
-  def create_a_response(self, peers):
+  def create_a_response(self, peers, auth=False):
     response=''
     if self.domain:
-      response += self.ID + "\x81\x80"                                   # ID + Flags: isResponse, RecursionDesired, RecursionAvail
+      if auth:
+        response += self.ID + "\x85"
+      else:
+        response += self.ID + "\x81"                                     # ID + Flags: isResponse, Opcode, Authoritative, Truncated, RecursionDesired
+      response += "\x80"                                                 # Flags: RecursionAvail
       response += self.data[4:6] + self.data[4:6] + '\x00\x00\x00\x00'   # Question Count + Answer Count + Authority RRs + Additional RRs
       response += self.data[12:]                                         # Original Domain Name Question
       response += '\xc0\x0c'                                             # Pointer to domain name
@@ -63,7 +67,7 @@ class DNSQuery:
         response += str.join('',map(lambda x: chr(int(x)), peer.split('.'))) # 4bytes of IP
     return response
 
-  def create_ns_response(self, authns):
+  def create_ns_response(self, authns, auth=False):
     response=''
     if self.domain:
       response += self.ID + "\x81\x80"                                   # ID + Flags: isResponse, RecursionDesired, RecursionAvail

@@ -80,7 +80,7 @@ class ResponseCollector():
 
 class Replica(Node):
     """Replica receives MSG_PERFORM from Leaders and execute corresponding commands."""
-    def __init__(self, replicatedobject):
+    def __init__(self, replicatedobject=None, nodetype=NODE_REPLICA, port=None,  bootstrap=None):
         """Replica State
         - object: the object that Replica is replicating
 	- nexttoexecute: the commandnumber that relica is waiting for to execute
@@ -89,7 +89,7 @@ class Replica(Node):
         - proposals: proposals that are made by this replica kept as <commandnumber:command> mappings
         - pendingcommands: Set of unissiued commands that are waiting for the window to roll over to be issued
         """
-        Node.__init__(self, NODE_REPLICA)
+        Node.__init__(self, nodetype)
         self.object = replicatedobject
         self.nexttoexecute = 1
         self.decisions = {}
@@ -620,6 +620,7 @@ class Replica(Node):
                     try:
                         self.send(performmessage, group=self.groups[NODE_REPLICA])
                         self.send(performmessage, group=self.groups[NODE_LEADER])
+                        self.send(performmessage, group=self.groups[NODE_NAMESERVER])
                     except:
                         pass
                     self.perform(performmessage)
