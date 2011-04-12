@@ -19,9 +19,10 @@ function for the object
 - DNSSERVER for group membership
 - acceptor state should be garbage collected
 - adaptive resend
-- save state to disk
 - garbage collect commands that all replicas have seen
-- Membership Object!
+
+*** Objects ***
+- Membership Object: NameServer without the UDP
 - Failure Detector that is connected to the Membership Object
 
 *** DONE ***

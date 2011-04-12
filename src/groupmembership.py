@@ -18,7 +18,7 @@ class Nameserver(Replica):
         self.registerednames = {'paxi':'127.0.0.1:5000'} # <name:nameserver> mappings
         self.nameserverconnections = {}  # <nameserver:connection> mappings
 
-        self.udpport = 10000 #DNS port: 53
+        self.udpport = 53 #DNS port: 53
         self.udpsocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         try:
             self.udpsocket.bind((self.addr,self.udpport))
@@ -120,8 +120,7 @@ class Nameserver(Replica):
             response = query.create_ns_response(self.registerednames[query.domain])
             self.udpsocket.sendto(response, addr)
         else:
-            #response = query.create_error_response(self.addr)
-            response = query.create_a_response(peers, auth=True)
+            response = query.create_error_response(self.addr)
             self.udpsocket.sendto(response, addr)
 
 # nameserver query function
