@@ -6,7 +6,10 @@ from utils import *
 from enums import *
 from membership import *
 from node import *
-from dnsquery import DNSQuery, DNSPacket
+import dns.exception
+import dns.message
+
+DOMAIN = '.groups.openreplica.org.'
 
 class Nameserver(Membership):
     """Nameserver keeps track of the connectivity state of the system and replies to
@@ -50,21 +53,30 @@ class Nameserver(Membership):
         return
 
     def handle_query(self, data, addr):
-        dnsmsg = DNSPacket(data)
-        query = dnsmsg.query
-        serializedgroups = ""
-        for group in self.groups.itervalues():
-            serializedgroups += group.serialize()
-        peers = serializedgroups.split()
-        if query.domain == self.name:
-            response = query.create_a_response(peers, auth=True)
-            self.udpsocket.sendto(response, addr)
-        elif self.registerednames.has_key(query.domain):
-            response = query.create_ns_response(self.registerednames[query.domain])
-            self.udpsocket.sendto(response, addr)
-        else:
-            response = query.create_error_response(self.addr)
-            self.udpsocket.sendto(response, addr)
+        #dnsmsg = DNSPacket(data)
+        #query = dnsmsg.query
+        query = dns.message.from_wire(data)
+        response = dns.message.make_response(query)
+        print "**QUERY**\n%s" % query
+        print "**RESPONSE**\n%s" % response
+
+        for question in query.question:
+            print question.name
+            print self.name+DOMAIN
+            print question.name == self.name+DOMAIN
+            if question.name == self.name+DOMAIN:
+                print "This is me!"
+                #response = query.create_a_response(peers, auth=True)
+                self.udpsocket.sendto(response, addr)
+            elif self.registerednames.has_key(question.name):
+                print "Forwarding!"
+                #response = query.create_ns_response(self.registerednames[question.name])
+                self.udpsocket.sendto(response, addr)
+            else:
+                print "Error.."
+                #response = query.create_error_response(self.addr)
+        #print "**RESPONSE**\n%s" % response
+        self.udpsocket.sendto(response.to_wire(), addr)
 
 # nameserver query function
     def msg_query(self, conn, msg):

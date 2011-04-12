@@ -42,11 +42,12 @@ class Group():
     def haspeer(self,peer):
         return peer in self.members
 
-    def serialize(self):
-        returnstr = ''
+    def addresses(self):
+        # XXX Should this be a set so same IP is not listed multiple times
+        addresses = []
         for peer in self.members:
-            returnstr += peer.id() + ' '
-        return returnstr
+            addresses.append(peer.addr)
+        return addresses
 
     def __iter__(self):
         for peer in self.members:
