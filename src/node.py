@@ -88,7 +88,7 @@ class Node():
         self.id = self.me.id()
         setlogprefix("%s %s" % (node_names[self.type],self.id))
         logger("Ready!")
-        self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_LEADER:Group(self.me), NODE_NAMESERVER:Group(self.me)}
+        self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_LEADER:Group(self.me), NODE_MEMBERSHIP:Group(self.me), NODE_NAMESERVER:Group(self.me)}
         # connect to the bootstrap node
         if bootstrap:
             logger("connecting to %s" % bootstrap)
