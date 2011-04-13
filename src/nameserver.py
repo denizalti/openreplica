@@ -8,19 +8,25 @@ from membership import *
 from node import *
 import dns.exception
 import dns.message
-from dns.name import *
+import dns.rcode
+import dns.opcode
+import dns.rdatatype
+import dns.name
 from dns.flags import *
-from dns.rrset import *
 
 DOMAIN = ['groups','openreplica','org','']
+RRTYPE = ['','A','NS','MD','MF','CNAME','SOA']
+RRCLASS = ['','IN','CS','CH','HS']
+OPCODES = ['QUERY','IQUERY','STATUS']
+RCODES = ['NOERROR','FORMERR','SERVFAIL','NXDOMAIN','NOTIMP','REFUSED']
 
 class Nameserver(Membership):
     """Nameserver keeps track of the connectivity state of the system and replies to
     QUERY messages from dnsserver."""
     def __init__(self):
         Membership.__init__(self, nodetype=NODE_NAMESERVER, port=5000, bootstrap=options.bootstrap)
-        self.name = Name(['herbivore']+DOMAIN)
-        self.registerednames = {Name(['paxi']+DOMAIN):'127.0.0.1'} # <name:nameserver> mappings
+        self.name = dns.name.Name(['herbivore']+DOMAIN)
+        self.registerednames = {dns.name.Name(['paxi']+DOMAIN):'127.0.0.1'} # <name:nameserver> mappings
         self.nameserverconnections = {}  # <nameserver:connection> mappings
 
         self.udpport = 53 #DNS port: 53
@@ -72,38 +78,33 @@ class Nameserver(Membership):
                 # AA : I'm an authority as I know all nameservers in the system
                 # RD : *recursion* comes from the query
                 # RCODE : 1 (Format Error)
-                flags = QR + AA + RD + 1
+                flags = QR + AA + RD + dns.rcode.FORMERR
                 response.flags = flags
-                #print "**RESPONSE**\n%s" % response
-                #response = query.create_error_response(self.addr)
+                print "**RESPONSE**\n%s" % response
             elif question.name == self.name:
                 print "This is me."
                 # Which Flags to set?
                 # QR : this is a response
                 # AA : as this is me I'm an authority
                 # RD : *recursion* comes from the query
+                # RA ? Support for Recursion
                 # RCODE : 0 (No Error)
-                flags = QR + AA + RD
-                response.flags = flags
-                # How many answers?
-                
-                # Answer Resource Record
-                
-                #print "**RESPONSE**\n%s" % response
-                #response = query.create_a_response(peers, auth=True)
-                self.udpsocket.sendto(response.to_wire(), addr)
+                flagstr = 'QR AA RD'
+                answerstr = self.create_answer_section(question, addr='1.2.3.4')
+                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+                print responsestr
+                response = dns.message.from_text(responsestr)
             elif self.registerednames.has_key(question.name):
                 print "Forwarding"
                 # Which Flags to set?
                 # QR : this is a response
                 # RD : *recursion* comes from the query
+                # RA ? Support for Recursion
                 # RCODE : 0 (No Error)
-                flags = QR + RD
-                response.flags = flags
-
-                #print "**RESPONSE**\n%s" % response
-                #response = query.create_ns_response(self.registerednames[question.name])
-                self.udpsocket.sendto(response.to_wire(), addr)
+                flagstr = 'QR RD'
+                answerstr = self.create_answer_section(question, rrtype=dns.rdatatype.NS, name=str(question.name))
+                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+                response = dns.message.from_text(responsestr)
             else:
                 print "Name Error"
                 # Which Flags to set?
@@ -111,14 +112,22 @@ class Nameserver(Membership):
                 # AA : I'm an authority as I know all nameservers in the system
                 # RD : *recursion* comes from the query
                 # RCODE : 3 (Name Error)
-                flags = QR + AA + RD + 3
+                flags = QR + AA + RD + dns.rcode.NXDOMAIN
                 response.flags = flags
-                #print "**RESPONSE**\n%s" % response
-                #response = query.create_error_response(self.addr)
         #print "**RESPONSE**\n%s" % response
         self.udpsocket.sendto(response.to_wire(), addr)
-        
 
+    def create_response(self, id, opcode=0, rcode=0, flags='', question='', answer='', authority='', additional=''):
+        responsestr = "id %s\nopcode %s\nrcode %s\nflags %s\n;QUESTION\n%s\n;ANSWER\n%s\n;AUTHORITY\n%s\n;ADDITIONAL\n%s\n" % (str(id), OPCODES[opcode], RCODES[rcode], flags, question, answer, authority, additional)
+        return responsestr
+
+    def create_answer_section(self, question, ttl='3600', rrclass=1, rrtype=1, addr='', name=''):
+        if rrtype == dns.rdatatype.A:
+            answerstr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + addr
+        elif rrtype == dns.rdatatype.NS:
+            answerstr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + name
+        return answerstr
+        
 def main():
     nameservernode = Nameserver()
     nameservernode.startservice()
