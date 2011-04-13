@@ -8,6 +8,9 @@ from membership import *
 from node import *
 import dns.exception
 import dns.message
+from dns.name import *
+from dns.flags import *
+from dns.rrset import *
 
 DOMAIN = ['groups','openreplica','org','']
 
@@ -16,8 +19,8 @@ class Nameserver(Membership):
     QUERY messages from dnsserver."""
     def __init__(self):
         Membership.__init__(self, nodetype=NODE_NAMESERVER, port=5000, bootstrap=options.bootstrap)
-        self.name = 'herbivore'
-        self.registerednames = {'paxi':'127.0.0.1:5000'} # <name:nameserver> mappings
+        self.name = Name(['herbivore']+DOMAIN)
+        self.registerednames = {Name(['paxi']+DOMAIN):'127.0.0.1'} # <name:nameserver> mappings
         self.nameserverconnections = {}  # <nameserver:connection> mappings
 
         self.udpport = 53 #DNS port: 53
@@ -53,34 +56,68 @@ class Nameserver(Membership):
         return
 
     def handle_query(self, data, addr):
-        #dnsmsg = DNSPacket(data)
-        #query = dnsmsg.query
         query = dns.message.from_wire(data)
         response = dns.message.make_response(query)
         print "**QUERY**\n%s" % query
-        print "!!", query.flags
         print "**RESPONSE**\n%s" % response
-        print "!!", response.flags
 
-        olek = "%0.4x" % dec
-        olek.encode('hex_codec')
-
+#        flags = "%0.4x" % flagsdec
+#        flags = flags.decode('hex_codec')
 
         for question in query.question:
-            mydomain = dns.name.Name([self.name]+DOMAIN)
-            if question.name == mydomain:
-                print "This is me!"
+            if question.name.parent() != self.name.parent():
+                print "Format Error"
+                # Which Flags to set?
+                # QR : this is a response
+                # AA : I'm an authority as I know all nameservers in the system
+                # RD : *recursion* comes from the query
+                # RCODE : 1 (Format Error)
+                flags = QR + AA + RD + 1
+                response.flags = flags
+                #print "**RESPONSE**\n%s" % response
+                #response = query.create_error_response(self.addr)
+            elif question.name == self.name:
+                print "This is me."
+                # Which Flags to set?
+                # QR : this is a response
+                # AA : as this is me I'm an authority
+                # RD : *recursion* comes from the query
+                # RCODE : 0 (No Error)
+                flags = QR + AA + RD
+                response.flags = flags
+                # How many answers?
+                
+                # Answer Resource Record
+                
+                #print "**RESPONSE**\n%s" % response
                 #response = query.create_a_response(peers, auth=True)
                 self.udpsocket.sendto(response.to_wire(), addr)
             elif self.registerednames.has_key(question.name):
-                print "Forwarding!"
+                print "Forwarding"
+                # Which Flags to set?
+                # QR : this is a response
+                # RD : *recursion* comes from the query
+                # RCODE : 0 (No Error)
+                flags = QR + RD
+                response.flags = flags
+
+                #print "**RESPONSE**\n%s" % response
                 #response = query.create_ns_response(self.registerednames[question.name])
                 self.udpsocket.sendto(response.to_wire(), addr)
             else:
-                print "Error.."
+                print "Name Error"
+                # Which Flags to set?
+                # QR : this is a response
+                # AA : I'm an authority as I know all nameservers in the system
+                # RD : *recursion* comes from the query
+                # RCODE : 3 (Name Error)
+                flags = QR + AA + RD + 3
+                response.flags = flags
+                #print "**RESPONSE**\n%s" % response
                 #response = query.create_error_response(self.addr)
         #print "**RESPONSE**\n%s" % response
         self.udpsocket.sendto(response.to_wire(), addr)
+        
 
 def main():
     nameservernode = Nameserver()
