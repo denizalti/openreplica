@@ -9,7 +9,7 @@ from node import *
 import dns.exception
 import dns.message
 
-DOMAIN = '.groups.openreplica.org.'
+DOMAIN = ['groups','openreplica','org','']
 
 class Nameserver(Membership):
     """Nameserver keeps track of the connectivity state of the system and replies to
@@ -58,34 +58,29 @@ class Nameserver(Membership):
         query = dns.message.from_wire(data)
         response = dns.message.make_response(query)
         print "**QUERY**\n%s" % query
+        print "!!", query.flags
         print "**RESPONSE**\n%s" % response
+        print "!!", response.flags
+
+        olek = "%0.4x" % dec
+        olek.encode('hex_codec')
+
 
         for question in query.question:
-            print question.name
-            print self.name+DOMAIN
-            print question.name == self.name+DOMAIN
-            if question.name == self.name+DOMAIN:
+            mydomain = dns.name.Name([self.name]+DOMAIN)
+            if question.name == mydomain:
                 print "This is me!"
                 #response = query.create_a_response(peers, auth=True)
-                self.udpsocket.sendto(response, addr)
+                self.udpsocket.sendto(response.to_wire(), addr)
             elif self.registerednames.has_key(question.name):
                 print "Forwarding!"
                 #response = query.create_ns_response(self.registerednames[question.name])
-                self.udpsocket.sendto(response, addr)
+                self.udpsocket.sendto(response.to_wire(), addr)
             else:
                 print "Error.."
                 #response = query.create_error_response(self.addr)
         #print "**RESPONSE**\n%s" % response
         self.udpsocket.sendto(response.to_wire(), addr)
-
-# nameserver query function
-    def msg_query(self, conn, msg):
-        """Send groups as a reply to the query msg"""
-        serializedgroups = ""
-        for group in self.groups:
-            serializedgroups += group.serialize()
-        queryreplymessage = HandshakeMessage(MSG_QUERYREPLY, self.me, serializedgroups)
-        self.send(queryreplymessage, peer=msg.source)
 
 def main():
     nameservernode = Nameserver()
@@ -93,3 +88,11 @@ def main():
 
 if __name__=='__main__':
     main()
+
+## RRTYPE
+# A               1 a host address
+# NS              2 an authoritative name server
+# CNAME           5 the canonical name for an alias
+# SOA             6 marks the start of a zone of authority
+## CLASS
+# IN              1 the Internet
