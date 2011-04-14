@@ -4,13 +4,13 @@ from threading import Thread, Timer
 
 from utils import *
 from enums import *
-from membership import *
+from tracker import *
 from node import *
 import dns.exception
 import dns.message
 import dns.rcode
 import dns.opcode
-import dns.rdatatype
+import dns.rdatatypeMembership
 import dns.name
 from dns.flags import *
 
@@ -20,11 +20,11 @@ RRCLASS = ['','IN','CS','CH','HS']
 OPCODES = ['QUERY','IQUERY','STATUS']
 RCODES = ['NOERROR','FORMERR','SERVFAIL','NXDOMAIN','NOTIMP','REFUSED']
 
-class Nameserver(Membership):
+class Nameserver(Tracker):
     """Nameserver keeps track of the connectivity state of the system and replies to
     QUERY messages from dnsserver."""
     def __init__(self):
-        Membership.__init__(self, nodetype=NODE_NAMESERVER, port=5000, bootstrap=options.bootstrap)
+        Tracker.__init__(self, nodetype=NODE_NAMESERVER, port=5000, bootstrap=options.bootstrap)
         self.name = dns.name.Name(['herbivore']+DOMAIN)
         self.registerednames = {dns.name.Name(['paxi']+DOMAIN):'127.0.0.1'} # <name:nameserver> mappings
         self.nameserverconnections = {}  # <nameserver:connection> mappings
@@ -39,7 +39,7 @@ class Nameserver(Membership):
 
     def startservice(self):
         """Starts the background services associated with a node."""
-        Membership.startservice(self)
+        Tracker.startservice(self)
         # Start a thread for the UDP server
         UDP_server_thread = Thread(target=self.udp_server_loop)
         UDP_server_thread.start()

@@ -143,7 +143,7 @@ class Replica(Node):
                 # this is the workhorse case that executes most normal commands
                 method = getattr(self.object, commandname)
                 givenresult = method(commandargs)
-        except AttributeError:
+        except (TypeError, AttributeError):
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
         self.executed[self.decisions[slotno]] = givenresult
