@@ -18,8 +18,8 @@ from group import Group
 from peer import Peer
 from message import Message, PaxosMessage, HandshakeMessage, AckMessage, ClientMessage, Command, UpdateMessage
 from pvalue import PValue, PValueSet
-from test import Test
-from bank import Bank
+from obj.test import Test
+from obj.bank import Bank
 
 backoff_event = Event()
 

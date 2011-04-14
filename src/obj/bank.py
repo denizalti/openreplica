@@ -1,4 +1,11 @@
 class Bank():
+    """Bank object that supports following functions:
+    - open: creates an Account with given id
+    - close: deletes an Account with given id
+    - debit: debits money from Account with given id
+    - deposit: deposits to Account with given id
+    - balance: returns balance of Account with given id
+    """
     def __init__(self):
         self.accounts = {}  # dictionary indexed by accountid storing accounts
 

@@ -1,4 +1,10 @@
 class Membership():
+    """Object to keep track of members in a system.
+    Supports three functions:
+    - add: adds a member
+    - remove: removes a member
+    - who: returns list of members
+    """
     def __init__(self):
         self.members = set() # Members stored as 'addr:port'
 
@@ -10,11 +16,11 @@ class Membership():
         else:
             return "MEMBER EXISTS"
         
-    def delete(self, args):
+    def remove(self, args):
         member = args[0]
         if member in self.members:
             self.members.remove(member)
-            return "MEMBER %s DELETED" % member
+            return "MEMBER %s REMOVED" % member
         else:
             return "NO SUCH MEMBER"
         

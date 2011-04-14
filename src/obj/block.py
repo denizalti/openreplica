@@ -1,4 +1,10 @@
 class Block():
+    """Lock object that supports following functions:
+    - lock: locks the object
+    - trylock: tries locking the object
+    - unlock: unlocks the object
+    - state: returns the state of the object
+    """
     def __init__(self):
         self.locked = False
 
@@ -20,7 +26,7 @@ class Block():
         return self.lock
     
     def __str__(self):
-        return self.lock
+        return "Locked: ", self.lock
         
     
         
