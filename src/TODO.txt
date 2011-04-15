@@ -6,9 +6,8 @@ paxi. """
 - Object should be noop during tests
 - Run on sys01 in parallel, collect new graphs
 
-*** FUTURE ***
-- We want to be able to a DNS-textlookup which will invoke a toStr
-function for the object
+*** TESTING ***
+- Fuzztesting (Test with Random inputs): Peach might be used.
 
 *** CHANGES TO THE CODE ***
 - DNSSERVER for openreplica.org
@@ -18,6 +17,9 @@ function for the object
   -- specialnode handles metacommands like visible/invisible replicas
   -- specialnode responds to Aqueries with list of nodes
 - DNSSERVER for group membership
+  -- Make sure that the registerednames are up-to-date. We may need
+  paxi to keep track of this -> A membership Object keeping track of
+  recent Groups.
 - clientgenerator.py -o bank 
 	-- enumerate functions
 	-- return new object -> bankclient.py
