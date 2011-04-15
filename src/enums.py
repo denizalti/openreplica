@@ -18,6 +18,9 @@ MSG_ACK, \
 # node types 
 NODE_ACCEPTOR, NODE_REPLICA, NODE_LEADER, NODE_CLIENT, NODE_TRACKER, NODE_NAMESERVER = range(6)
 
+# error_types
+ERR_NOERROR, ERR_NOTLEADER, ERR_INITIALIZING = range(3)
+
 # command result
 META = 'META'
 
@@ -64,3 +67,4 @@ msg_names = get_var_list("MSG_")
 node_names = get_var_list("NODE_")
 cmd_states = get_var_list("CMD_")
 msg_states = get_var_list("ACK_")
+err_types = get_var_list("ERR_")
