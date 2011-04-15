@@ -92,7 +92,7 @@ class Client():
                     command = Command(self.me, mynumber, shellinput)
                     cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
                     replied = False
-                    print "Client Message about to be sent:", cm
+                    #print "Client Message about to be sent:", cm
                     starttime = time.time()
                     self.conn.settimeout(CLIENTRESENDTIMEOUT)
 

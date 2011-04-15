@@ -10,7 +10,7 @@ import dns.exception
 import dns.message
 import dns.rcode
 import dns.opcode
-import dns.rdatatypeMembership
+import dns.rdatatype
 import dns.name
 from dns.flags import *
 
@@ -26,6 +26,7 @@ class Nameserver(Tracker):
     def __init__(self):
         Tracker.__init__(self, nodetype=NODE_NAMESERVER, port=5000, bootstrap=options.bootstrap)
         self.name = dns.name.Name(['herbivore']+DOMAIN)
+        # XXX: How to keep this dictionary up-to-date
         self.registerednames = {dns.name.Name(['paxi']+DOMAIN):'127.0.0.1'} # <name:nameserver> mappings
         self.nameserverconnections = {}  # <nameserver:connection> mappings
 
@@ -127,6 +128,22 @@ class Nameserver(Tracker):
         elif rrtype == dns.rdatatype.NS:
             answerstr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + name
         return answerstr
+
+    def create_authority_section(self, question, ttl='3600', rrclass=1, rrtype=1, addr='', name=''):
+        if rrtype == dns.rdatatype.A:
+            authoritystr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + addr
+        elif rrtype == dns.rdatatype.NS:
+            authoritystr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + name
+        return authoritystr
+
+    def create_additional_section(self, question, ttl='3600', rrclass=1, rrtype=1, addr='', name=''):
+        if rrtype == dns.rdatatype.A:
+            additionalstr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + addr
+        elif rrtype == dns.rdatatype.NS:
+            additionalstr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + name
+        return additionalstr
+
+    
         
 def main():
     nameservernode = Nameserver()

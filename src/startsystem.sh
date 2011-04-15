@@ -24,6 +24,7 @@ sleep 1
 tmux new-window -t paxi:2 -n 'NameServer' 'python nameserver.py -b 127.0.0.1:6668'
 sleep 1
 tmux new-window -t paxi:3 -n 'Acceptor 0' 'python acceptor.py -b 127.0.0.1:6668'
+sleep 1
 tmux new-window -t paxi:4 -n 'Replicas' "bash startreplicas.sh \"$numreplicas\""
 tmux new-window -t paxi:5 -n 'Acceptors' "bash startacceptors.sh \"$numacceptors\""
 tmux new-window -t paxi:6 -n 'Client' 'python client.py -b 127.0.0.1:6668 -f ports'
