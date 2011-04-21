@@ -42,8 +42,7 @@ class Group():
     def haspeer(self,peer):
         return peer in self.members
 
-    def addresses(self):
-        # XXX Should this be a set so same IP is not listed multiple times
+    def get_addresses(self):
         addresses = []
         for peer in self.members:
             addresses.append(peer.addr)

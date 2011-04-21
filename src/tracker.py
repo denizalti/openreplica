@@ -11,8 +11,8 @@ class Tracker(Replica):
     """Membership keeps track of the connectivity state of the system and replies to
     QUERY messages from dnsserver."""
     def __init__(self, nodetype=NODE_TRACKER, port=None,  bootstrap=None):
-        Replica.__init__(self, nodetype, port=5000, bootstrap=options.bootstrap)
-
+        Replica.__init__(self, nodetype=nodetype, port=5000, bootstrap=options.bootstrap)
+        
     def performcore(self, msg, slotno, dometaonly=False):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
@@ -68,6 +68,14 @@ class Tracker(Replica):
     def msg_perform(self, conn, msg):
         """received a PERFORM message, perform it"""
         self.perform(msg)
+
+        if not self.stateuptodate:
+            if msg.commandnumber == 1:
+                self.stateuptodate = True
+                return
+            updatemessage = UpdateMessage(MSG_UPDATE, self.me)
+            print "Sending Update Message to ", msg.source
+            self.send(updatemessage, peer=msg.source)
 
 def main():
     membershipnode = Membership()

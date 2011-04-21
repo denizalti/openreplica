@@ -34,7 +34,7 @@ class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
     """ 
-    def __init__(self, nodetype, port=options.port, bootstrap=options.bootstrap):
+    def __init__(self, nodetype, port=options.port, bootstrap=options.bootstrap, local=False):
         """Node State
         - addr: hostname for Node, detected automatically
         - port: port for Node, can be taken from the commandline (-p [port]) or
@@ -49,7 +49,10 @@ class Node():
         - groups: other Peers in the system that Node knows about. Node.groups is indexed by the
         corresponding node_name (NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA | NODE_NAMESERVER), which returns a Group
         """
-        self.addr = "127.0.0.1"
+        if local = True:
+            self.addr = '127.0.0.1'
+        else:
+            self.addr = findOwnIP() 
         self.port = port
         self.connectionpool = ConnectionPool()
         self.type = nodetype
@@ -98,7 +101,7 @@ class Node():
             helomessage = HandshakeMessage(MSG_HELO, self.me)
             self.send(helomessage, peer=bootpeer)
             self.groups[NODE_REPLICA].add(bootpeer)
-        elif self.type == NODE_REPLICA:
+        if self.type == NODE_REPLICA or self.type == NODE_TRACKER or self.type == NODE_NAMESERVER:
             self.stateuptodate = False
 
     def startservice(self):

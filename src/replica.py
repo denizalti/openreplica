@@ -150,8 +150,6 @@ class Replica(Node):
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
             if self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
-                print "Clientpool: ", self.clientpool
-                print "ClientID: ", command.client.id()
                 print "Sending REPLY to CLIENT"
                 clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,givenresult, command.clientcommandnumber)
                 clientconn = self.clientpool.get_connection_by_peer(command.client)
@@ -618,9 +616,13 @@ class Replica(Node):
                     # now we can perform this action on the replicas
                     performmessage = PaxosMessage(MSG_PERFORM,self.me,commandnumber=prc.commandnumber,proposal=prc.proposal)
                     try:
+                        print "Sending PERFORM!"
+                        print str(self.groups[NODE_NAMESERVER])
+                        print str(self.groups[NODE_TRACKER]) 
                         self.send(performmessage, group=self.groups[NODE_REPLICA])
                         self.send(performmessage, group=self.groups[NODE_LEADER])
                         self.send(performmessage, group=self.groups[NODE_NAMESERVER])
+                        self.send(performmessage, group=self.groups[NODE_TRACKER])
                     except:
                         pass
                     self.perform(performmessage)

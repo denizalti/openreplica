@@ -1,6 +1,7 @@
 import socket
 import select
 from threading import Thread, Timer
+from time import strftime
 
 from utils import *
 from enums import *
@@ -29,14 +30,12 @@ class Nameserver(Tracker):
         # XXX: How to keep this dictionary up-to-date
         self.registerednames = {dns.name.Name(['paxi']+DOMAIN):'127.0.0.1'} # <name:nameserver> mappings
         self.nameserverconnections = {}  # <nameserver:connection> mappings
-
         self.udpport = 53 #DNS port: 53
         self.udpsocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         try:
             self.udpsocket.bind((self.addr,self.udpport))
         except socket.error as e:
-            print e
-            print "Can't bind to UDP socket.."
+            print "Can't bind to UDP socket: ", e
 
     def startservice(self):
         """Starts the background services associated with a node."""
@@ -63,17 +62,14 @@ class Nameserver(Tracker):
         return
 
     def handle_query(self, data, addr):
+        f = open("nameserverlog", 'a')
         query = dns.message.from_wire(data)
         response = dns.message.make_response(query)
-        print "**QUERY**\n%s" % query
-        print "**RESPONSE**\n%s" % response
-
-#        flags = "%0.4x" % flagsdec
-#        flags = flags.decode('hex_codec')
-
+        f.write(strftime("%Y-%m-%d %H:%M:%S")+'\n')
         for question in query.question:
+            f.write("\nReceived Query for %s\n" % question.name)
             if question.name.parent() != self.name.parent():
-                print "Format Error"
+                f.write("Format Error\n")
                 # Which Flags to set?
                 # QR : this is a response
                 # AA : I'm an authority as I know all nameservers in the system
@@ -81,9 +77,8 @@ class Nameserver(Tracker):
                 # RCODE : 1 (Format Error)
                 flags = QR + AA + RD + dns.rcode.FORMERR
                 response.flags = flags
-                print "**RESPONSE**\n%s" % response
             elif question.name == self.name:
-                print "This is me."
+                f.write("This is me\n")
                 # Which Flags to set?
                 # QR : this is a response
                 # AA : as this is me I'm an authority
@@ -91,12 +86,15 @@ class Nameserver(Tracker):
                 # RA ? Support for Recursion
                 # RCODE : 0 (No Error)
                 flagstr = 'QR AA RD'
-                answerstr = self.create_answer_section(question, addr='1.2.3.4')
+                answerstr = ''
+                for group in self.groups.values():
+                    for address in group.get_addresses():
+                        answerstr += self.create_answer_section(question, addr=address)
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 print responsestr
                 response = dns.message.from_text(responsestr)
             elif self.registerednames.has_key(question.name):
-                print "Forwarding"
+                f.write("Forwarding\n")
                 # Which Flags to set?
                 # QR : this is a response
                 # RD : *recursion* comes from the query
@@ -107,7 +105,7 @@ class Nameserver(Tracker):
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 response = dns.message.from_text(responsestr)
             else:
-                print "Name Error"
+                f.write("Name Error\n")
                 # Which Flags to set?
                 # QR : this is a response
                 # AA : I'm an authority as I know all nameservers in the system
@@ -115,8 +113,9 @@ class Nameserver(Tracker):
                 # RCODE : 3 (Name Error)
                 flags = QR + AA + RD + dns.rcode.NXDOMAIN
                 response.flags = flags
-        #print "**RESPONSE**\n%s" % response
+        f.write( "\nRESPONSE:\n%s\n---\n" % response)
         self.udpsocket.sendto(response.to_wire(), addr)
+        f.close()
 
     def create_response(self, id, opcode=0, rcode=0, flags='', question='', answer='', authority='', additional=''):
         responsestr = "id %s\nopcode %s\nrcode %s\nflags %s\n;QUESTION\n%s\n;ANSWER\n%s\n;AUTHORITY\n%s\n;ADDITIONAL\n%s\n" % (str(id), OPCODES[opcode], RCODES[rcode], flags, question, answer, authority, additional)
@@ -124,23 +123,23 @@ class Nameserver(Tracker):
 
     def create_answer_section(self, question, ttl='3600', rrclass=1, rrtype=1, addr='', name=''):
         if rrtype == dns.rdatatype.A:
-            answerstr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + addr
+            answerstr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + addr + '\n'
         elif rrtype == dns.rdatatype.NS:
-            answerstr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + name
+            answerstr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + name + '\n'
         return answerstr
 
     def create_authority_section(self, question, ttl='3600', rrclass=1, rrtype=1, addr='', name=''):
         if rrtype == dns.rdatatype.A:
-            authoritystr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + addr
+            authoritystr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + addr + '\n'
         elif rrtype == dns.rdatatype.NS:
-            authoritystr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + name
+            authoritystr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + name + '\n'
         return authoritystr
 
     def create_additional_section(self, question, ttl='3600', rrclass=1, rrtype=1, addr='', name=''):
         if rrtype == dns.rdatatype.A:
-            additionalstr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + addr
+            additionalstr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + addr + '\n'
         elif rrtype == dns.rdatatype.NS:
-            additionalstr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + name
+            additionalstr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + name + '\n'
         return additionalstr
 
     
