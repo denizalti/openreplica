@@ -9,7 +9,7 @@ then
 fi
 
 for (( x=1; x<=$1; x++ )); do
-    python acceptor.py < /dev/null &
+    python acceptor.py -l < /dev/null &
 done
 
 wait

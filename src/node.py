@@ -25,6 +25,7 @@ from pvalue import PValue, PValueSet
 parser = OptionParser(usage="usage: %prog -p port -b bootstrap -d delay")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
+parser.add_option("-l", "--local", action="store_true", dest="local", default=False, help="initiates the node at localhost")
 
 (options, args) = parser.parse_args()
 
@@ -34,7 +35,7 @@ class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
     """ 
-    def __init__(self, nodetype, port=options.port, bootstrap=options.bootstrap, local=False):
+    def __init__(self, nodetype, port=options.port, bootstrap=options.bootstrap, local=options.local):
         """Node State
         - addr: hostname for Node, detected automatically
         - port: port for Node, can be taken from the commandline (-p [port]) or
@@ -49,7 +50,7 @@ class Node():
         - groups: other Peers in the system that Node knows about. Node.groups is indexed by the
         corresponding node_name (NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA | NODE_NAMESERVER), which returns a Group
         """
-        if local = True:
+        if local == True:
             self.addr = '127.0.0.1'
         else:
             self.addr = findOwnIP() 

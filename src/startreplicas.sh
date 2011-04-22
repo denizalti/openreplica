@@ -9,7 +9,7 @@ then
 fi
 
 for (( x=1; x<=$1; x++ )); do
-    python replica.py < /dev/null & 
+    python replica.py -l < /dev/null & 
 done
 
 wait
