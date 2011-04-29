@@ -76,7 +76,7 @@ class Client():
             inputcount = 0
             try:
                 if self.file and not EOF:
-                    shellinput = f.readline()
+                    shellinput = f.readline().strip()
                 else:
                     shellinput = raw_input("client-shell> ")
 

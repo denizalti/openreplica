@@ -77,6 +77,7 @@ class Node():
         try:
             if self.type == NODE_ACCEPTOR or self.type == NODE_REPLICA:
                 f = open('ports', 'a')
+                # XXX This lock blocks on sys machines
                 fcntl.flock(f,fcntl.LOCK_EX)
                 t = node_names[self.type].lower()
                 f.write("add_%s %s:%d\n" % (t, self.addr, self.port))
@@ -150,6 +151,7 @@ class Node():
         - inputready: sockets that are ready for reading
         - exceptready: sockets that are ready according to an *exceptional condition*
         """
+        self.socket.listen(10)
         nascentset = []
         while self.alive:
             try:

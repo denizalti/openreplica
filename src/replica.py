@@ -35,8 +35,8 @@ def starttiming(fn):
     return new
 
 def endtiming(fn):
-    """Decorator used to start timing. Keeps track of the count for the first and second calls."""
-    NITER = 30
+    """Decorator used to end timing. Keeps track of the count for the first and second calls."""
+    NITER = 100
     def new(*args, **kw):
         ret = fn(*args, **kw)
         obj = args[0]
@@ -46,7 +46,8 @@ def endtiming(fn):
             obj.secondstoptime = time.time()
         elif obj.count == NITER:
             now = time.time()
-            print "YYY %d %.15f %.15f %.15f" % (len(obj.groups[NODE_REPLICA]),obj.firststoptime - obj.firststarttime, now - obj.secondstarttime, (now - obj.secondstarttime)/NITER)
+            print "YYY %d %.15f" % (len(obj.groups[NODE_REPLICA]), (now - obj.secondstarttime)/NITER)
+            obj.count += 1
             sys.stdout.flush()
         else:
             obj.count += 1
