@@ -23,10 +23,10 @@ class Block():
         return "block unlocked"
         
     def state(self, args):
-        return self.lock
+        return self.locked
     
     def __str__(self):
-        return "Locked: ", self.lock
+        return "Locked: ", self.locked
         
     
         
