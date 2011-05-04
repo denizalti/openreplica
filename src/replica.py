@@ -143,14 +143,20 @@ class Replica(Node):
             elif not dometaonly and not ismeta:
                 # this is the workhorse case that executes most normal commands
                 method = getattr(self.object, commandname)
-                givenresult = method(commandargs)
+                try:
+                    kwargs = {"_paxi_designated": True, "_paxi_client_cmdno":command.clientcommandnumber, "_paxi_me":self}
+                    givenresult = method(commandargs)
+                    send_result_to_client = True
+                except UnusualReturn:
+                    givenresult = 0
+                    send_result_to_client = False
         except (TypeError, AttributeError):
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
         self.executed[self.decisions[slotno]] = givenresult
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
-            if self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
+            if send_result_to_client and self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
                 print "Sending REPLY to CLIENT"
                 clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,givenresult, command.clientcommandnumber)
                 clientconn = self.clientpool.get_connection_by_peer(command.client)

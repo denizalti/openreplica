@@ -15,3 +15,7 @@ class SyntaxError(PaxiException):
 class Timeout(PaxiException):
     """The operation timed out."""
     pass
+
+class UnusualReturn(PaxiException):
+    """Unusual Return"""
+    pass

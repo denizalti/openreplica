@@ -65,6 +65,15 @@ class Client():
             except socket.error, e:
                 print e
                 continue
+
+    def invoke_command(self, args):
+        mynumber = self.clientcommandnumber
+        self.clientcommandnumber += 1
+        newcommand = Command(self.me, mynumber, args)
+        self.commandlist.append(newcommand)
+        with newcommand.lock:
+            while not newcommand.done:
+                newcommand.donecondition.wait()
     
     def clientloop(self):
         """Accepts commands from the prompt and sends requests for the commands
@@ -113,6 +122,8 @@ class Client():
                                 continue
                             else:
                                 replied = True
+                        elif reply and reply.type == MSG_CLIENTMETAREPLY and reply.inresponseto == mynumber:
+                            
                         if time.time() - starttime > CLIENTRESENDTIMEOUT:
                             if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                                 replied = True
