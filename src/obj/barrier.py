@@ -24,9 +24,10 @@ class Barrier():
                 self.current = 0
                 self.members = []
                 paxi.return_outofband(_paxi_me, _paxi_client_cmdno, everyone, paxi.RCODE_UNBLOCK)
-                raise paxi.
+                raise paxi.UnusualReturn
             else:
                 paxi.return_outofband(_paxi_me, _paxi_client_cmdno, caller, paxi.RCODE_BLOCK_UNTIL_NOTICE)
+                raise paxi.UnusualReturn
         
     def state(self, args):
         return self.__str__()

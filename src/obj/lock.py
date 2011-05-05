@@ -1,32 +1,28 @@
-class Block():
-    """Lock object that supports following functions:
-    - lock: locks the object
-    - trylock: tries locking the object
-    - unlock: unlocks the object
-    - state: returns the state of the object
+class Lock():
+    """Block object that supports following functions:
+    - acquire: locks the object
+    - release: unlocks the object
     """
     def __init__(self):
         self.locked = False
 
-    def lock(self, args):
+    def acquire(self, args):
         if self.locked == True:
-            return "FAILURE"
+            paxi.return_outofband(_paxi_me, _paxi_client_cmdno, caller, paxi.RCODE_BLOCK_UNTIL_NOTICE)
+            raise paxi.UnusualReturn
         else:
             self.locked = True
-            return "block locked"
+            return True
         
-    def trylock(self, args):
-        pass
-        
-    def unlock(self, args):
-        self.locked = False
-        return "block unlocked"
-        
-    def state(self, args):
-        return self.locked
+    def release(self, args):
+        if self.locked == True:
+            self.locked = False
+            return 0
+        else:
+            raise thread.error("release unlocked lock")
     
     def __str__(self):
-        return "Locked: ", self.locked
+        return self.locked
         
     
         
