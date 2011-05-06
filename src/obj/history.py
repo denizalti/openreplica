@@ -19,10 +19,8 @@ class History():
         return self.__str__()
         
     def __str__(self):
-        temp = ''
-        for entry in self.history:
-            temp += str(entry)+' '
-        return temp
+        return " ".join([str(e) for e in self.history])
+
         
     
         

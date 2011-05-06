@@ -6,7 +6,7 @@ class Lock():
     def __init__(self):
         self.locked = False
 
-    def acquire(self, args):
+    def acquire(self, args, _paxi_designated, _paxi_client_cmdno, _paxi_me):
         if self.locked == True:
             paxi.return_outofband(_paxi_me, _paxi_client_cmdno, caller, paxi.RCODE_BLOCK_UNTIL_NOTICE)
             raise paxi.UnusualReturn
@@ -14,7 +14,7 @@ class Lock():
             self.locked = True
             return True
         
-    def release(self, args):
+    def release(self, args, _paxi_designated, _paxi_client_cmdno, _paxi_me):
         if self.locked == True:
             self.locked = False
             return 0

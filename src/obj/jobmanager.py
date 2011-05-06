@@ -11,7 +11,6 @@ class JobManager():
         self.jobs = []
         
     def add_job(self, args):
-        self.jobs = []
         self.jobs.append(args[0])
         
     def remove_job(self, args):
@@ -21,10 +20,7 @@ class JobManager():
         return self.__str__()
         
     def __str__(self):
-        temp = ''
-        for job in self.jobs:
-            temp += str(job)+'\n'
-        return temp
+        return " ".join([str(m) for m in self.members])
         
     
         
