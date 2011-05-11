@@ -1,13 +1,15 @@
 """
 @author: denizalti
-@note: Message, PValueSet, PValue
+@note: Message
 @date: February 1, 2011
 """
-import struct
+from threading import Lock
+
 from enums import *
 from utils import *
-from peer import *
-from threading import Lock
+from peer import Peer
+from command import Command
+
 
 msgidpool = 0
 msgidpool_lock=Lock()

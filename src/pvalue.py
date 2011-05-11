@@ -3,11 +3,6 @@ class PValueSet():
     set functions.
     """
     def __init__(self):
-        """Initialize PValueSet
-
-        PValueSet State
-        - pvalues: set of PValues
-        """
         self.pvalues = set()
 
     def remove(self,pvalue):

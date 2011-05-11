@@ -19,7 +19,8 @@ from utils import *
 from connection import ConnectionPool,Connection
 from group import Group
 from peer import Peer
-from message import Message, PaxosMessage, HandshakeMessage, AckMessage, MessageInfo, Command
+from message import Message, PaxosMessage, HandshakeMessage, AckMessage, MessageInfo
+from command import Command
 from pvalue import PValue, PValueSet
 
 parser = OptionParser(usage="usage: %prog -p port -b bootstrap -d delay")
