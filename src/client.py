@@ -5,7 +5,6 @@
 '''
 import socket
 from optparse import OptionParser
-from threading import Thread, Lock, Condition
 from enums import *
 from utils import findOwnIP
 from connection import ConnectionPool, Connection
@@ -66,15 +65,6 @@ class Client():
             except socket.error, e:
                 print e
                 continue
-
-    def invoke_command(self, args):
-        mynumber = self.clientcommandnumber
-        self.clientcommandnumber += 1
-        newcommand = Command(self.me, mynumber, args)
-        self.commandlist.append(newcommand)
-        with newcommand.lock:
-            while not newcommand.done:
-                newcommand.donecondition.wait()
     
     def clientloop(self):
         """Accepts commands from the prompt and sends requests for the commands
@@ -102,7 +92,7 @@ class Client():
                     command = Command(self.me, mynumber, shellinput)
                     cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
                     replied = False
-                    #print "Client Message about to be sent:", cm
+                    print "Client Message about to be sent:", cm
                     starttime = time.time()
                     self.conn.settimeout(CLIENTRESENDTIMEOUT)
 
@@ -122,9 +112,7 @@ class Client():
                                 self.connecttobootstrap()
                                 continue
                             else:
-                                replied = True
-                        elif reply and reply.type == MSG_CLIENTMETAREPLY and reply.inresponseto == mynumber:
-                            
+                                replied = True   
                         if time.time() - starttime > CLIENTRESENDTIMEOUT:
                             if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                                 replied = True
