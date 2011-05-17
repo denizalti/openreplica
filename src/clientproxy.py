@@ -79,9 +79,6 @@ class Client():
         with self.commandlistcond:
             self.commandlist.append(newcommand)
             self.commandlistcond.notify()
-        with newcommand.lock:
-            while not newcommand.done:
-                newcommand.donecondition.wait()
     
     def clientloop(self):
         """Accepts commands from the prompt and sends requests for the commands

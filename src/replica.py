@@ -379,9 +379,6 @@ class Replica(Node):
             return
         
         if self.receivedclientrequests.has_key((givencommand.client,givencommand.clientcommandnumber)):
-            print "***"
-            print self.receivedclientrequests
-            print "***"
             logger("client request received previously")
             resultsent = False
             # Check if the request has been executed

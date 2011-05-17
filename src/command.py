@@ -14,10 +14,6 @@ class Command():
         self.client = client
         self.clientcommandnumber = clientcommandnumber
         self.command = command
-        # The following objects cannot be pickled.
-#        self.lock = Lock()
-#        self.done = False
-#        self.donecondition = Condition(self.lock)
 
     def __hash__(self):
         """Returns the hashed command"""
