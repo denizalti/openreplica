@@ -72,10 +72,11 @@ class Client():
                 print e
                 continue
 
-    def invoke_command(self, args):
+    def invoke_command(self, commandname, args):
         mynumber = self.clientcommandnumber
         self.clientcommandnumber += 1
-        newcommand = Command(self.me, mynumber, args)
+        commandargs = commandname + " " + args
+        newcommand = Command(self.me, mynumber, commandargs)
         with self.commandlistcond:
             self.commandlist.append(newcommand)
             self.commandlistcond.notify()

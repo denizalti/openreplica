@@ -1,6 +1,6 @@
 from job import Job
 
-class JobManager():
+class Jobmanager():
     """Object to keep track of jobs in a system.
     Supports three functions:
     - add_job
