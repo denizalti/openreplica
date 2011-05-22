@@ -78,7 +78,7 @@ class Node():
         try:
             if self.type == NODE_ACCEPTOR or self.type == NODE_REPLICA:
                 f = open('ports', 'a')
-                # XXX This lock blocks on sys machines
+                # XXX This lock blocks on NFS
                 fcntl.flock(f,fcntl.LOCK_EX)
                 t = node_names[self.type].lower()
                 f.write("add_%s %s:%d\n" % (t, self.addr, self.port))

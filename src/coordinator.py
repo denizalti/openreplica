@@ -13,6 +13,8 @@ class Coordinator(Replica):
     def __init__(self):
         Replica.__init__(self, nodetype=NODE_COORDINATOR, port=5020, bootstrap=options.bootstrap)
 
+        self.coordinatorcommandnumber = 1
+
     def performcore(self, msg, slotno, dometaonly=False):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
@@ -119,6 +121,22 @@ class Coordinator(Replica):
                     self.send(helomessage, peer=pingpeer)
 
             time.sleep(ACKTIMEOUT/5)
+
+    def create_delete_command(self, node):
+        mynumber = self.coordinatorcommandnumber
+        self.coordinatorcommandnumber += 1
+        nodetype = node_names[node.type].lower()
+        operation = "del_%s %s:%d" % (nodetype, node.addr, node.port))
+        command = Command(self.me, mynumber, operation)
+        return command
+
+    def create_add_command(self, node):
+        mynumber = self.coordinatorcommandnumber
+        self.coordinatorcommandnumber += 1
+        nodetype = node_names[node.type].lower()
+        operation = "add_%s %s:%d" % (nodetype, node.addr, node.port))
+        command = Command(self.me, mynumber, operation)
+        return command
         
 def main():
     coordinatornode = Coordinator()
