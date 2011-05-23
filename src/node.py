@@ -30,7 +30,7 @@ parser.add_option("-l", "--local", action="store_true", dest="local", default=Fa
 
 (options, args) = parser.parse_args()
 
-DO_PERIODIC_PINGS=False
+DO_PERIODIC_PINGS = False
 
 class Node():
     """Node encloses the basic Node behaviour and state that
@@ -104,7 +104,7 @@ class Node():
             helomessage = HandshakeMessage(MSG_HELO, self.me)
             self.send(helomessage, peer=bootpeer)
             self.groups[NODE_REPLICA].add(bootpeer)
-        if self.type == NODE_REPLICA or self.type == NODE_TRACKER or self.type == NODE_NAMESERVER:
+        if self.type == NODE_REPLICA or self.type == NODE_TRACKER or self.type == NODE_NAMESERVER or self.type == NODE_COORDINATOR:
             self.stateuptodate = False
 
     def startservice(self):
@@ -231,8 +231,8 @@ class Node():
                     if self.outstandingmessages.has_key(ackid):
                         #logger("deleting outstanding message %s" % ackid)
                         del self.outstandingmessages[ackid]
-                    else:
-                        logger("acked message %s not in outstanding messages" % ackid)
+                    #else:
+                        # logger("acked message %s not in outstanding messages" % ackid)
             else:
                 #logger("got message (about to ack) %s" % message.fullid())
                 if message.type != MSG_CLIENTREQUEST:
@@ -310,11 +310,11 @@ class Node():
                 
             if DO_PERIODIC_PINGS:
                 for pingpeer in checkliveness:
-                    logger("sending PING to %s" % pingpeer)
+                    # logger("sending PING to %s" % pingpeer)
                     helomessage = HandshakeMessage(MSG_HELO, self.me)
                     self.send(helomessage, peer=pingpeer)
 
-            time.sleep(ACKTIMEOUT/5)
+            time.sleep(ACKTIMEOUT)
 
     def get_inputs(self):
         """Shellloop that accepts inputs from the command prompt and calls corresponding command

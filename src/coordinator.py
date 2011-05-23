@@ -14,6 +14,15 @@ class Coordinator(Replica):
         Replica.__init__(self, nodetype=NODE_COORDINATOR, port=5020, bootstrap=options.bootstrap)
 
         self.coordinatorcommandnumber = 1
+        self.active = False
+        self.ballotnumber = (0,self.id)
+        self.outstandingprepares = {}
+        self.outstandingproposes = {}
+        self.clientpool = ConnectionPool()
+        self.backoff = 0
+        backoff_thread = Thread(target=self.update_backoff)
+        backoff_event.clear()
+        backoff_thread.start()
 
     def performcore(self, msg, slotno, dometaonly=False):
         """The core function that performs a given command in a slot number. It 
@@ -91,42 +100,49 @@ class Coordinator(Replica):
         coordinate_thread.start()
 
     def periodic_ping(self):
-        for group in self.groups:
-            for peer in group:
-                logger("sending PING to %s" % pingpeer)
-                helomessage = HandshakeMessage(MSG_HELO, self.me)
-                self.send(helomessage, peer=pingpeer)
-
-    def coordinate(self):
         while True:
             checkliveness = set()
             for type,group in self.groups.iteritems():
                 checkliveness = checkliveness.union(group.members)
-
-            try:
-                with self.outstandingmessages_lock:
-                    for id, messageinfo in self.outstandingmessages.iteritems():
-                        now = time.time()
-                        if messageinfo.messagestate == ACK_ACKED \
-                               and (messageinfo.timestamp + LIVENESSTIMEOUT) < now \
-                               and messageinfo.destination in checkliveness:
-                            checkliveness.remove(messageinfo.destination)
-            except Exception as ec:
-                logger("exception in resend: %s" % ec)
-                
-            if DO_PERIODIC_PINGS:
-                for pingpeer in checkliveness:
-                    logger("sending PING to %s" % pingpeer)
-                    helomessage = HandshakeMessage(MSG_HELO, self.me)
+            helomessage = HandshakeMessage(MSG_HELO, self.me)
+            for pingpeer in checkliveness:
+                try:
                     self.send(helomessage, peer=pingpeer)
+                    logger("PING to %s." %str(pingpeer))
+                except:
+                    print "WHOOPS."
+                    # take this node out of the configuration
+                    deletecommand = self.create_delete_command(pingpeer)
+                    logger("initiating a new coordination command")
+                    self.do_command_prepare(deletecommand)
 
-            time.sleep(ACKTIMEOUT/5)
+            time.sleep(ACKTIMEOUT)
+
+    def coordinate(self):
+        """Decide which node should be removed and issue the command."""
+        while True:
+            print "*** COORDINATE ***"
+            peerstoremove = set()
+            with self.outstandingmessages_lock:
+                for id, messageinfo in self.outstandingmessages.iteritems():
+                    now = time.time()
+                    if messageinfo.messagestate == ACK_NOTACKED and (messageinfo.timestamp - LIVENESSTIMEOUT) > now:
+                        peerstoremove.add(messageinfo.destination)
+
+            for peertoremove in peerstoremove:
+                print str(peertoremove)
+                # take this node out of the configuration
+                deletecommand = self.create_delete_command(peertoremove)
+                logger("initiating a new coordination command")
+                self.do_command_prepare(deletecommand)
+
+            time.sleep(LIVENESSTIMEOUT)
 
     def create_delete_command(self, node):
         mynumber = self.coordinatorcommandnumber
         self.coordinatorcommandnumber += 1
         nodetype = node_names[node.type].lower()
-        operation = "del_%s %s:%d" % (nodetype, node.addr, node.port))
+        operation = "del_%s %s:%d" % (nodetype, node.addr, node.port)
         command = Command(self.me, mynumber, operation)
         return command
 
@@ -134,13 +150,13 @@ class Coordinator(Replica):
         mynumber = self.coordinatorcommandnumber
         self.coordinatorcommandnumber += 1
         nodetype = node_names[node.type].lower()
-        operation = "add_%s %s:%d" % (nodetype, node.addr, node.port))
+        operation = "add_%s %s:%d" % (nodetype, node.addr, node.port)
         command = Command(self.me, mynumber, operation)
         return command
         
 def main():
     coordinatornode = Coordinator()
-    coordinator.startservice()
+    coordinatornode.startservice()
 
 if __name__=='__main__':
     main()

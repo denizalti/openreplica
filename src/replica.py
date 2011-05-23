@@ -124,7 +124,8 @@ class Replica(Node):
         commandname = commandlist[0]
         commandargs = commandlist[1:]
         ismeta = (commandname in METACOMMANDS)
-        noop = (commandname == "noop")        
+        noop = (commandname == "noop")
+        send_result_to_client = True
         try:
             if noop:
                 method = getattr(self, NOOP)
@@ -455,7 +456,7 @@ class Replica(Node):
         """propose a command with the given commandnumber and proposal. Stage p2a.
         A command is proposed by running the PROPOSE stage of Paxos Protocol for the command.
         """
-        if self.type != NODE_LEADER:
+        if self.type != NODE_LEADER and self.type != NODE_COORDINATOR:
             print "Not a Leader.."
             return
         givencommandnumber = self.find_commandnumber()
@@ -496,7 +497,7 @@ class Replica(Node):
         -- add the ResponseCollector to the outstanding prepare set
         -- send MSG_PREPARE to Acceptor nodes
         """
-        if self.type != NODE_LEADER:
+        if self.type != NODE_LEADER and self.type != NODE_COORDINATOR:
             print "Not a Leader.."
             return
 
