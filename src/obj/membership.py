@@ -19,6 +19,3 @@ class Membership():
         
     def __str__(self):
         return " ".join([str(m) for m in self.members])
-    
-        
-        
