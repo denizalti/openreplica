@@ -1,6 +1,7 @@
 import copy
 import paxi
 from threading import Lock
+from cooncoord import DistributedLock, DistributedCondition
 
 class Barrier():
     """Barrier object that supports following functions:
@@ -9,24 +10,16 @@ class Barrier():
     def __init__(self, number):
         self.limit = number
         self.current = 0
-        self.members = []
         self.atomic = Lock()
+        self.everyoneready = DistributedCondition(self.atomic)
 
-    def wait(self, args, _paxi_designated, _paxi_client_cmdno, _paxi_me):
+    def wait(self, args, **kwargs):
         with self.atomic:
-            if self.current == self.limit:
-                return False
             self.current += 1
-            self.members.append(args[0])
-            if self.current == self.limit:
-                everyone = copy.copy(self.members)
-                self.current = 0
-                self.members = []
-                paxi.return_outofband(_paxi_me, _paxi_client_cmdno, everyone, paxi.RCODE_UNBLOCK)
-                raise paxi.UnusualReturn
-            else:
-                paxi.return_outofband(_paxi_me, _paxi_client_cmdno, caller, paxi.RCODE_BLOCK_UNTIL_NOTICE)
-                raise paxi.UnusualReturn
+            while self.current != self.limit:
+                self.everyoneready.wait(kwargs)
+            self.current = 0
+            self.everyoneready.notifyall()
         
     def __str__(self):
         return "Barrier %d/%d: %s" % (self.current, self.limit, " ".join([str(m) for m in self.members]))
