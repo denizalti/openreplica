@@ -8,7 +8,12 @@ paxi. """
 *** TESTING ***
 - Fuzztesting (Test with Random inputs): Peach might be used.
 
+*** Applications ***
+- Web Crawler
+- Email?
+
 *** CHANGES TO THE CODE ***
+- Object Fixes!
 - Failure Detector
 - acceptor state should be garbage collected
 - garbage collect commands that all replicas have seen
