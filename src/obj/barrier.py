@@ -13,7 +13,7 @@ class Barrier():
         self.atomic = Lock()
         self.everyoneready = DistributedCondition(self.atomic)
 
-    def wait(self, args, **kwargs):
+    def wait(self, **kwargs):
         with self.atomic:
             self.current += 1
             while self.current != self.limit:

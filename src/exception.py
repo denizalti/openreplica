@@ -1,21 +1,21 @@
-"""common paxi exceptions"""
+"""common concoord exceptions"""
 
-class PaxiException(Exception):
-    """Abstract base class shared by all paxi exceptions"""
+class ConCoordException(Exception):
+    """Abstract base class shared by all concoord exceptions"""
     pass
 
-class AcceptorError(PaxiException):
+class AcceptorError(ConCoordException):
     """Not enough acceptors or not responding"""
     pass
 
-class SyntaxError(PaxiException):
+class SyntaxError(ConCoordException):
     """input is malformed."""
     pass
 
-class Timeout(PaxiException):
+class Timeout(ConCoordException):
     """The operation timed out."""
     pass
 
-class UnusualReturn(PaxiException):
+class UnusualReturn(ConCoordException):
     """Unusual Return"""
     pass

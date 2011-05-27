@@ -9,40 +9,35 @@ class Bank():
     def __init__(self):
         self.accounts = {}  # dictionary indexed by accountid storing accounts
 
-    def open(self, args):
-        accountid = args[0]
+    def open(self, accountid, **kwargs):
         if self.accounts.has_key(accountid):
             return "FAILURE"
         else:
             self.accounts[accountid] = Account(accountid)
             return "ACCT %s OPENED" % accountid
         
-    def close(self, args):
-        accountid = args[0]
+    def close(self, accountid, **kwargs):
         if self.accounts.has_key(accountid):
             del self.accounts[accountid]
             return "ACCT %s CLOSED" % accountid
         else:
             return "FAILURE"
         
-    def debit(self, args):
-        accountid = args[0]
+    def debit(self, accountid, **kwargs):
         if self.accounts.has_key(accountid):
             self.accounts[accountid].debit()
             return "DEBIT SUCCESSFUL: %.2f" % self.accounts[accountid].balance
         else:
             return "FAILURE"
         
-    def deposit(self, args):
-        accountid = args[0]
+    def deposit(self, accountid, **kwargs):
         if self.accounts.has_key(accountid):
             self.accounts[accountid].deposit()
             return "DEPOSIT SUCCESSFUL: %.2f" % self.accounts[accountid].balance
         else:
             return "FAILURE"
         
-    def balance(self, args):
-        accountid = args[0]
+    def balance(self, accountid, **kwargs):
         if self.accounts.has_key(accountid):
             return "CURRENT BALANCE: %.2f" % self.accounts[accountid].balance
         else:
