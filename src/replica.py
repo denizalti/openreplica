@@ -22,6 +22,7 @@ from pvalue import PValue, PValueSet
 from obj.test import Test
 from obj.bank import Bank
 from obj.lock import Lock
+from exception import *
 
 backoff_event = Event()
 
@@ -145,15 +146,25 @@ class Replica(Node):
                 return
             elif not dometaonly and not ismeta:
                 # this is the workhorse case that executes most normal commands
+                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                print "object: ", str(self.object)
+                print "commandname: ", commandname
+                print dir(self.object)
+                print "YYY: ", commandargs
+                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                 method = getattr(self.object, commandname)
                 try:
                     kwargs = {"_paxi_designated": True, "_paxi_client_cmdno":command.clientcommandnumber, "_paxi_me":self}
-                    givenresult = method(commandargs)
+                    if len(commandargs) > 0:
+                        givenresult = method(commandargs)
+                    else:
+                        givenresult = method()
                     send_result_to_client = True
                 except UnusualReturn:
                     givenresult = 0
                     send_result_to_client = False
-        except (TypeError, AttributeError):
+        except (TypeError, AttributeError) as t:
+            print t
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
         self.executed[self.decisions[slotno]] = givenresult
