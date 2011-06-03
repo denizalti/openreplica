@@ -10,62 +10,55 @@ class DistributedCondition():
         self.members = []
     
     def acquire(self):
-        # _paxi_designated, _paxi_client_cmdno, _paxi_me
         if self.locked == True:
-            paxi.return_outofband(_paxi_me, _paxi_client_cmdno, caller, paxi.RCODE_BLOCK_UNTIL_NOTICE)
-            raise paxi.UnusualReturn
+            concoord.return_outofband(_concoord_me, _concoord_client_cmdno, caller, concoord.RCODE_BLOCK_UNTIL_NOTICE)
+            raise concoord.UnusualReturn
         else:
             pass
 
     def release(self):
-        # _paxi_designated, _paxi_client_cmdno, _paxi_me
-        paxi.return_outofband(_paxi_me, _paxi_client_cmdno, caller, paxi.RCODE_UNBLOCK)
-        raise paxi.UnusualReturn
+        concoord.return_outofband(_concoord_me, _concoord_client_cmdno, caller, concoord.RCODE_UNBLOCK)
+        raise concoord.UnusualReturn
 
     def wait(self):
-        # _paxi_designated, _paxi_client_cmdno, _paxi_me
         self.members.append(caller)
-        paxi.return_outofband(_paxi_me, _paxi_client_cmdno, caller, paxi.RCODE_BLOCK_UNTIL_NOTICE)
-        raise paxi.UnusualReturn
+        concoord.return_outofband(_concoord_me, _concoord_client_cmdno, caller, concoord.RCODE_BLOCK_UNTIL_NOTICE)
+        raise concoord.UnusualReturn
 
     def notify(self):
-        # _paxi_designated, _paxi_client_cmdno, _paxi_me
-        paxi.return_outofband(_paxi_me, _paxi_client_cmdno, self.members.pop(), paxi.RCODE_UNBLOCK)
-        raise paxi.UnusualReturn
+        concoord.return_outofband(_concoord_me, _concoord_client_cmdno, self.members.pop(), concoord.RCODE_UNBLOCK)
+        raise concoord.UnusualReturn
 
     def notifyAll(self):
-        # _paxi_designated, _paxi_client_cmdno, _paxi_me
-        paxi.return_outofband(_paxi_me, _paxi_client_cmdno, self.members, paxi.RCODE_UNBLOCK)
-        raise paxi.UnusualReturn
+        concoord.return_outofband(_concoord_me, _concoord_client_cmdno, self.members, concoord.RCODE_UNBLOCK)
+        raise concoord.UnusualReturn
 
     def __str__(self):
-        pass
+        return 'Distributed Condition: %s' % (" ".join([str(m) for m in self.members]))
 
 class DistributedLock():
     def __init__(self):
         self.locked = False
     
     def acquire(self):
-        # _paxi_designated, _paxi_client_cmdno, _paxi_me
         if self.locked == True:
-            paxi.return_outofband(_paxi_me, _paxi_client_cmdno, caller, concoord.RCODE_BLOCK_UNTIL_NOTICE)
-            raise paxi.UnusualReturn
+            concoord.return_outofband(_concoord_me, _concoord_client_cmdno, caller, concoord.RCODE_BLOCK_UNTIL_NOTICE)
+            raise concoord.UnusualReturn
         else:
             self.locked = True
             return True
 
     def release(self):
-        # _paxi_designated, _paxi_client_cmdno, _paxi_me
         if self.locked == True:
-            paxi.return_outofband(_paxi_me, _paxi_client_cmdno, caller, concoord.RCODE_BLOCK_UNTIL_NOTICE)
-            raise paxi.UnusualReturn
+            concoord.return_outofband(_concoord_me, _concoord_client_cmdno, caller, concoord.RCODE_BLOCK_UNTIL_NOTICE)
+            raise concoord.UnusualReturn
         else:
             self.locked = True
             return True
 
     def __str__(self):
-        pass
-
+        return 'Distributed Lock: LOCKED' if self.locked else 'Distributed Lock: UNLOCKED'
+    
 def return_outofband(source, clientcommandnumber, destinations, retval):
     for dest in destinations:
         clientreply = ClientMessage(MSG_CLIENTMETAREPLY, source.me, retval, clientcommandnumber)

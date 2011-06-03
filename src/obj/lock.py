@@ -1,4 +1,4 @@
-from cooncoord import DistributedLock
+from concoord import DistributedLock
 
 class Lock():
     """Block object that supports following functions:
@@ -15,8 +15,4 @@ class Lock():
         self.lock.release()
     
     def __str__(self):
-        return str(self.lock
-        
-    
-        
-        
+        return str(self.lock)

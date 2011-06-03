@@ -21,6 +21,7 @@ from command import Command
 from pvalue import PValue, PValueSet
 from obj.test import Test
 from obj.bank import Bank
+from obj.lock import Lock
 
 backoff_event = Event()
 
@@ -731,7 +732,7 @@ class Replica(Node):
             print "%d: %s" % (cmdnum,str(command))
 
 def main():
-    theReplica = Replica(Test())
+    theReplica = Replica(Lock())
     theReplica.startservice()
 
 if __name__=='__main__':
