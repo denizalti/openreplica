@@ -60,10 +60,10 @@ class Client():
                 self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
                 self.socket.connect((bootpeer.addr,bootpeer.port))
                 self.conn = Connection(self.socket)
-                print "Connected to new bootstrap: ", bootpeer.addr,bootpeer.port
+#                print "Connected to new bootstrap: ", bootpeer.addr,bootpeer.port
                 break
             except socket.error, e:
-                print e
+#                print e
                 continue
     
     def clientloop(self):
@@ -104,12 +104,15 @@ class Client():
                             self.connecttobootstrap()
                             continue
                         reply = self.conn.receive()
-                        print "received: ", reply
+                        if reply and reply.command != "INPROGRESS":
+                            print "received: ", reply
                         if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                             if reply.command == "REJECTED" or reply.command == "LEADERNOTREADY":
                                 currentbootstrap = self.bootstraplist.pop(0)
                                 self.bootstraplist.append(currentbootstrap)
                                 self.connecttobootstrap()
+                                continue
+                            elif reply.command == "INPROGRESS":
                                 continue
                             else:
                                 replied = True   

@@ -154,7 +154,7 @@ class Replica(Node):
                         givenresult = method(_concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
                     send_result_to_client = True
                 except UnusualReturn:
-                    givenresult = 0
+                    givenresult = "UNUSUALRETURN"
                     send_result_to_client = False
         except (TypeError, AttributeError) as t:
             print t
@@ -165,7 +165,7 @@ class Replica(Node):
             # if this client contacted me for this operation, return him the response 
             if send_result_to_client and self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
                 print "Sending REPLY to CLIENT"
-                clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,givenresult, command.clientcommandnumber)
+                clientreply = ClientMessage(MSG_CLIENTREPLY, self.me, givenresult, command.clientcommandnumber)
                 clientconn = self.clientpool.get_connection_by_peer(command.client)
                 if clientconn.thesocket == None:
                     print "Client disconnected.."
@@ -378,28 +378,28 @@ class Replica(Node):
         """handle the received client request
         - if it has been received before check if it has been executed
         -- if it has been executed send the result
-        -- if it has not been executed yet send REQUESTINPROGRESS
+        -- if it has not been executed yet send INPROGRESS
         - if this request has not been received before initiate a paxos round for the command"""
         if self.type != NODE_LEADER:
             logger("got a request but not a leader..")
             return
         
-        if self.receivedclientrequests.has_key((givencommand.client,givencommand.clientcommandnumber)):
-            logger("client request received previously")
+        if self.receivedclientrequests.has_key((givencommand.client, givencommand.clientcommandnumber)):
+            #logger("client request received previously")
             resultsent = False
             # Check if the request has been executed
             for (commandnumber,command) in self.decisions.iteritems():
                 if command == givencommand:
-                    if self.executed.has_key(command):
-                        clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,self.executed[command],givencommand.clientcommandnumber)
+                    if self.executed.has_key(command) and self.executed[command]!="UNUSUALRETURN":
+                        clientreply = ClientMessage(MSG_CLIENTREPLY, self.me, self.executed[command], givencommand.clientcommandnumber)
                         conn = self.clientpool.get_connection_by_peer(givencommand.client)
                         if conn is not None:
                             conn.send(clientreply)
                         resultsent = True
                         break
-            # If request not executed yet, send REQUEST IN PROGRESS
+            # If request not executed yet, send IN PROGRESS
             if not resultsent:
-                clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REQUEST IN PROGRESS",givencommand.clientcommandnumber)
+                clientreply = ClientMessage(MSG_CLIENTREPLY, self.me, "INPROGRESS", givencommand.clientcommandnumber)
                 conn = self.clientpool.get_connection_by_peer(givencommand.client)
                 if conn is not None:
                     conn.send(clientreply)    
