@@ -116,7 +116,7 @@ class Replica(Node):
         leaderping_thread.start()
 
     @endtiming
-    def performcore(self, msg, slotno, dometaonly=False):
+    def performcore(self, msg, slotno, dometaonly=False, designated=False):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
         to the managements of the Paxos protocol) with a delay of WINDOW commands."""
@@ -135,7 +135,7 @@ class Replica(Node):
             elif dometaonly and ismeta:
                 # execute a metacommand when the window has expired
                 method = getattr(self, commandname)
-                givenresult = method(commandargs)
+                givenresult = method(commandargs, _concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
             elif dometaonly and not ismeta:
                 return
             elif not dometaonly and ismeta:
@@ -146,19 +146,12 @@ class Replica(Node):
                 return
             elif not dometaonly and not ismeta:
                 # this is the workhorse case that executes most normal commands
-                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                print "object: ", str(self.object)
-                print "commandname: ", commandname
-                print dir(self.object)
-                print "YYY: ", commandargs
-                print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                 method = getattr(self.object, commandname)
                 try:
-                    kwargs = {"_paxi_designated": True, "_paxi_client_cmdno":command.clientcommandnumber, "_paxi_me":self}
                     if len(commandargs) > 0:
-                        givenresult = method(commandargs)
+                        givenresult = method(commandargs, _concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
                     else:
-                        givenresult = method()
+                        givenresult = method(_concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
                     send_result_to_client = True
                 except UnusualReturn:
                     givenresult = 0
@@ -179,7 +172,7 @@ class Replica(Node):
                     return
                 clientconn.send(clientreply)
 
-    def perform(self, msg):
+    def perform(self, msg, designated=False):
         """Take a given PERFORM message, add it to the set of decided commands, and call performcore to execute."""
         if msg.commandnumber not in self.decisions:
             self.decisions[msg.commandnumber] = msg.proposal
@@ -201,9 +194,9 @@ class Replica(Node):
 
                 # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
                 if self.nexttoexecute > WINDOW:
-                    self.performcore(msg, self.nexttoexecute - WINDOW, True)
+                    self.performcore(msg, self.nexttoexecute - WINDOW, True, designated=designated)
 
-                self.performcore(msg, self.nexttoexecute)
+                self.performcore(msg, self.nexttoexecute, designated=designated)
                 self.nexttoexecute += 1
                 # the window just got bumped by one
                 # check if there are pending commands, and issue one of them
@@ -646,7 +639,7 @@ class Replica(Node):
                         self.send(performmessage, group=self.groups[NODE_TRACKER])
                     except:
                         pass
-                    self.perform(performmessage)
+                    self.perform(performmessage, designated=True)
             else:
                 logger("there is no response collector for %s cmdno:%d" % (str(msg.inresponseto), msg.commandnumber))
         else:
