@@ -7,9 +7,9 @@ from enums import *
 
 RCODE_UNBLOCK, RCODE_BLOCK_UNTIL_NOTICE = range(2)
 
-def return_outofband(designated, owner, command, destinations, retval):
+def return_outofband(designated, owner, command, destinations):
     for dest in destinations:
-        clientreply = ClientMessage(MSG_CLIENTMETAREPLY, owner.me, retval, command.clientcommandnumber)
+        clientreply = ClientMessage(MSG_CLIENTMETAREPLY, owner.me, "METAREPLY", command.clientcommandnumber)
         destconn = owner.clientpool.get_connection_by_peer(dest)
         if destconn.thesocket == None:
             return
@@ -20,25 +20,29 @@ class DistributedLock():
         self.locked = False
         self.holder = None
         self.queue = []
+        self.lock = Lock()
     
     def acquire(self, _concoord_designated, _concoord_owner, _concoord_command):
         if self.locked == True:
-            return_outofband(_concoord_designated, _concoord_owner, _concoord_command, [_concoord_command.client], RCODE_BLOCK_UNTIL_NOTICE)
+            self.queue.append(_concoord_command.client)
             raise UnusualReturn
         else:
+            self.holder = _concoord_command.client
             self.locked = True
-            self.queue.append(_concoord_command.client)
-            return True
 
     def release(self, _concoord_designated, _concoord_owner, _concoord_command):
         if self.locked == True and self.holder == _concoord_command.client:
-            if len(self.queue) == 0:
-                self.holder = None
-                self.locked = False
-            else:
-                self.holder = self.queue.pop()
-            return_outofband(_concoord_designated, _concoord_owner, _concoord_command, [_concoord_command.client], RCODE_UNBLOCK)
-            raise UnusualReturn
+            with self.lock:
+                if len(self.queue) == 0:
+                    self.holder = None
+                    self.locked = False
+                else:
+                    oldholder = self.holder
+                    self.queue.reverse()
+                    self.holder = self.queue.pop()
+                    self.queue.reverse()
+                    return_outofband(_concoord_designated, _concoord_owner, _concoord_command, [self.holder, oldholder])
+                    raise UnusualReturn
         else:
             return "Release on unacquired lock"
 

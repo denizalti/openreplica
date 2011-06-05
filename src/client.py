@@ -104,9 +104,9 @@ class Client():
                             self.connecttobootstrap()
                             continue
                         reply = self.conn.receive()
-                        if reply and reply.command != "INPROGRESS":
-                            print "received: ", reply
-                        if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
+                        if reply.inresponseto != mynumber:
+                            print "FUCK!"
+                        if reply and (reply.type == MSG_CLIENTREPLY or reply.type == MSG_CLIENTMETAREPLY) and reply.inresponseto == mynumber:
                             if reply.command == "REJECTED" or reply.command == "LEADERNOTREADY":
                                 currentbootstrap = self.bootstraplist.pop(0)
                                 self.bootstraplist.append(currentbootstrap)
@@ -115,10 +115,12 @@ class Client():
                             elif reply.command == "INPROGRESS":
                                 continue
                             else:
+                                print "YAAY"
                                 replied = True   
                         if time.time() - starttime > CLIENTRESENDTIMEOUT:
                             if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                                 replied = True
+                        time.sleep(1)
             except ( IOError, EOFError ):
                 os._exit(0)
         
