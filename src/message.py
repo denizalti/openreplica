@@ -94,18 +94,29 @@ class PaxosMessage(Message):
         return temp
 
 class ClientMessage(Message):
-    def __init__(self,msgtype,myname,command=None,inresponseto=0):
+    def __init__(self, msgtype, myname, command=None, inresponseto=0):
         Message.__init__(self, msgtype, myname)
         self.command = command
-        self.inresponseto = inresponseto # command number this reply is in response to
+        self.inresponseto = inresponseto
 
     def __str__(self):
         temp = Message.__str__(self)
         temp += '  inresponseto: %d' % self.inresponseto
-        if self.type == MSG_CLIENTREQUEST:
-            temp += '  request: %s' % str(self.command)
-        elif self.type == MSG_CLIENTREPLY:
-            temp += '  reply: %s' % str(self.command)
+        temp += '  request: %s' % str(self.command)
+        return temp
+
+class ClientReplyMessage(Message):
+    def __init__(self, msgtype, myname, reply=None, replycode=-1, inresponseto=0):
+        Message.__init__(self, msgtype, myname)
+        self.reply = reply
+        self.replycode = replycode
+        self.inresponseto = inresponseto
+
+    def __str__(self):
+        temp = Message.__str__(self)
+        temp += '  inresponseto: %d' % self.inresponseto
+        temp += '  reply: %s' % str(self.reply)
+        temp += '  replycode: %s' % cr_codes[self.replycode]
         return temp
 
 class AckMessage(Message):

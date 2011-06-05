@@ -16,7 +16,7 @@ from utils import *
 from connection import Connection, ConnectionPool
 from group import Group
 from peer import Peer
-from message import Message, PaxosMessage, HandshakeMessage, AckMessage, ClientMessage, UpdateMessage
+from message import Message, PaxosMessage, HandshakeMessage, AckMessage, ClientMessage, ClientReplyMessage, UpdateMessage
 from command import Command
 from pvalue import PValue, PValueSet
 from obj.test import Test
@@ -154,7 +154,7 @@ class Replica(Node):
                         givenresult = method(_concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
                     send_result_to_client = True
                 except UnusualReturn:
-                    givenresult = "UNUSUALRETURN"
+                    givenresult = CR_METAREPLY
                     send_result_to_client = False
         except (TypeError, AttributeError) as t:
             print t
@@ -165,7 +165,7 @@ class Replica(Node):
             # if this client contacted me for this operation, return him the response 
             if send_result_to_client and self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
                 print "Sending REPLY to CLIENT"
-                clientreply = ClientMessage(MSG_CLIENTREPLY, self.me, givenresult, command.clientcommandnumber)
+                clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=givenresult, inresponseto=command.clientcommandnumber)
                 clientconn = self.clientpool.get_connection_by_peer(command.client)
                 if clientconn.thesocket == None:
                     print "Client disconnected.."
@@ -390,8 +390,8 @@ class Replica(Node):
             # Check if the request has been executed
             for (commandnumber,command) in self.decisions.iteritems():
                 if command == givencommand:
-                    if self.executed.has_key(command) and self.executed[command]!="UNUSUALRETURN":
-                        clientreply = ClientMessage(MSG_CLIENTREPLY, self.me, self.executed[command], givencommand.clientcommandnumber)
+                    if self.executed.has_key(command) and self.executed[command]!= CR_METAREPLY:
+                        clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=self.executed[command], inresponseto=givencommand.clientcommandnumber)
                         conn = self.clientpool.get_connection_by_peer(givencommand.client)
                         if conn is not None:
                             conn.send(clientreply)
@@ -399,7 +399,7 @@ class Replica(Node):
                         break
             # If request not executed yet, send IN PROGRESS
             if not resultsent:
-                clientreply = ClientMessage(MSG_CLIENTREPLY, self.me, "INPROGRESS", givencommand.clientcommandnumber)
+                clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_INPROGRESS, inresponseto=givencommand.clientcommandnumber)
                 conn = self.clientpool.get_connection_by_peer(givencommand.client)
                 if conn is not None:
                     conn.send(clientreply)    
@@ -421,7 +421,7 @@ class Replica(Node):
         self.check_leader_promotion()
         if self.type != NODE_LEADER:
             logger("not leader.. request rejected..")
-            clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED",msg.command.clientcommandnumber)
+            clientreply = ClientReplyMessage(MSG_CLIENTREPLY,self.me,replycode=CR_REJECTED,inresponseto=msg.command.clientcommandnumber)
             conn.send(clientreply)
             return
         # Leader should accept a request even if it's not ready as this way it will make itself ready during the prepare stage.

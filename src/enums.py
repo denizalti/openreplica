@@ -27,6 +27,9 @@ META = 'META'
 # message states
 ACK_NOTACKED, ACK_ACKED = range(2)
 
+# client reply codes
+CR_INPROGRESS, CR_LEADERNOTREADY, CR_REJECTED, CR_METAREPLY = range(4)
+
 # timeouts
 ACKTIMEOUT = 1
 LIVENESSTIMEOUT = 30
@@ -68,3 +71,4 @@ node_names = get_var_list("NODE_")
 cmd_states = get_var_list("CMD_")
 msg_states = get_var_list("ACK_")
 err_types = get_var_list("ERR_")
+cr_codes = get_var_list("CR_")

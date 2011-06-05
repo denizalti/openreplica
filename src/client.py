@@ -60,7 +60,7 @@ class Client():
                 self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
                 self.socket.connect((bootpeer.addr,bootpeer.port))
                 self.conn = Connection(self.socket)
-#                print "Connected to new bootstrap: ", bootpeer.addr,bootpeer.port
+                print "Connected to new bootstrap: ", bootpeer.addr,bootpeer.port
                 break
             except socket.error, e:
 #                print e
@@ -69,9 +69,11 @@ class Client():
     def clientloop(self):
         """Accepts commands from the prompt and sends requests for the commands
         and receives corresponding replies."""
+        # Read commands from a file
         if self.file:
             f = open(self.file,'r')
             EOF = False
+        # Read commands from the shell
         while self.alive:
             inputcount = 0
             try:
@@ -79,7 +81,7 @@ class Client():
                     shellinput = f.readline().strip()
                 else:
                     shellinput = raw_input("client-shell> ")
-
+                    
                 if len(shellinput) == 0:
                     if self.file:
                         EOF = True
@@ -88,7 +90,7 @@ class Client():
                     inputcount += 1
                     mynumber = self.clientcommandnumber
                     self.clientcommandnumber += 1
-                    
+                    # create command from input
                     command = Command(self.me, mynumber, shellinput)
                     cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
                     replied = False
@@ -98,6 +100,7 @@ class Client():
 
                     while not replied:
                         success = self.conn.send(cm)
+                        # problem with the connection, try another bootstrap
                         if not success:
                             currentbootstrap = self.bootstraplist.pop(0)
                             self.bootstraplist.append(currentbootstrap)
@@ -107,15 +110,14 @@ class Client():
                         if reply.inresponseto != mynumber:
                             print "NONMATCHING NUMBER IN REPLY!"
                         if reply and (reply.type == MSG_CLIENTREPLY or reply.type == MSG_CLIENTMETAREPLY) and reply.inresponseto == mynumber:
-                            if reply.command == "REJECTED" or reply.command == "LEADERNOTREADY":
+                            if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
                                 currentbootstrap = self.bootstraplist.pop(0)
                                 self.bootstraplist.append(currentbootstrap)
                                 self.connecttobootstrap()
                                 continue
-                            elif reply.command == "INPROGRESS":
+                            elif reply.replycode == CR_INPROGRESS:
                                 continue
                             else:
-                                print "YAAY!"
                                 replied = True   
                         if time.time() - starttime > CLIENTRESENDTIMEOUT:
                             if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:

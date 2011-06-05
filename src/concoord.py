@@ -1,15 +1,13 @@
 from threading import Lock
 
-from message import Message, PaxosMessage, HandshakeMessage, AckMessage, ClientMessage, UpdateMessage
+from message import Message, PaxosMessage, HandshakeMessage, AckMessage, ClientMessage, ClientReplyMessage, UpdateMessage
 from connection import Connection, ConnectionPool
 from exception import *
 from enums import *
 
-RCODE_UNBLOCK, RCODE_BLOCK_UNTIL_NOTICE = range(2)
-
 def return_outofband(designated, owner, command, destinations):
     for dest in destinations:
-        clientreply = ClientMessage(MSG_CLIENTMETAREPLY, owner.me, "METAREPLY", command.clientcommandnumber)
+        clientreply = ClientReplyMessage(MSG_CLIENTMETAREPLY, owner.me, replycode=CR_METAREPLY, inresponseto=command.clientcommandnumber)
         destconn = owner.clientpool.get_connection_by_peer(dest)
         if destconn.thesocket == None:
             return
