@@ -57,31 +57,55 @@ class DistributedCondition():
             self.lock = lock
         else:
             self.lock = Lock()
-        self.members = []
+        self.locked = False
+        self.holder = None
+        self.queue = []
+        self.waiting = []
     
-    def acquire(self):
+    def acquire(self, _concoord_designated, _concoord_owner, _concoord_command):
         if self.locked == True:
-            return_outofband(_concoord_me, _concoord_client_cmdno, caller, RCODE_BLOCK_UNTIL_NOTICE)
+            self.queue.append(_concoord_command)
             raise UnusualReturn
         else:
-            pass
+            self.holder = _concoord_command.client
+            self.locked = True
 
     def release(self):
-        return_outofband(_concoord_me, _concoord_client_cmdno, caller, RCODE_UNBLOCK)
-        raise concoord.UnusualReturn
+        if self.locked == True and self.holder == _concoord_command.client:
+            with self.lock:
+                if len(self.queue) == 0:
+                    self.holder = None
+                    self.locked = False
+                else:
+                    oldholder = self.holder
+                    self.queue.reverse()
+                    newcommand = self.queue.pop()
+                    self.holder = newcommand.client
+                    self.queue.reverse()
+                    # return to old holder which made a release
+                    return_outofband(_concoord_designated, _concoord_owner, _concoord_command, [oldholder])
+                    # return to new holder which is waiting
+                    return_outofband(_concoord_designated, _concoord_owner, newcommand, [self.holder])
+                    raise UnusualReturn
+        else:
+            return "Release on unacquired lock"
 
     def wait(self):
-        self.members.append(caller)
-        return_outofband(_concoord_me, _concoord_client_cmdno, caller, RCODE_BLOCK_UNTIL_NOTICE)
+        self.waiting.append(caller)
+        return_outofband(_concoord_me, _concoord_client_cmdno, caller)
         raise UnusualReturn
 
     def notify(self):
-        return_outofband(_concoord_me, _concoord_client_cmdno, self.members.pop(), RCODE_UNBLOCK)
+        self.waiting.reverse()
+        nextcommand = self.queue.pop()
+        self.waiting.reverse()
+        return_outofband(_concoord_designated, _concoord_owner, nextcommand, [nextcommand.client])
         raise UnusualReturn
 
     def notifyAll(self):
-        return_outofband(_concoord_me, _concoord_client_cmdno, self.members, RCODE_UNBLOCK)
+        # the command thing needs fixing
+        #return_outofband(_concoord_designated, _concoord_owner, nextcommand, [self.waiting])
         raise UnusualReturn
 
     def __str__(self):
-        return 'Distributed Condition: %s' % (" ".join([str(m) for m in self.members]))
+        return 'Distributed Condition: %s' % (" ".join([str(m) for m in self.waiting]))
