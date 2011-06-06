@@ -107,8 +107,6 @@ class Client():
                             self.connecttobootstrap()
                             continue
                         reply = self.conn.receive()
-                        if reply.inresponseto != mynumber:
-                            print "NONMATCHING NUMBER IN REPLY!"
                         if reply and (reply.type == MSG_CLIENTREPLY or reply.type == MSG_CLIENTMETAREPLY) and reply.inresponseto == mynumber:
                             if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
                                 currentbootstrap = self.bootstraplist.pop(0)

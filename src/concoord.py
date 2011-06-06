@@ -22,7 +22,7 @@ class DistributedLock():
     
     def acquire(self, _concoord_designated, _concoord_owner, _concoord_command):
         if self.locked == True:
-            self.queue.append(_concoord_command.client)
+            self.queue.append(_concoord_command)
             raise UnusualReturn
         else:
             self.holder = _concoord_command.client
@@ -37,9 +37,13 @@ class DistributedLock():
                 else:
                     oldholder = self.holder
                     self.queue.reverse()
-                    self.holder = self.queue.pop()
+                    newcommand = self.queue.pop()
+                    self.holder = newcommand.client
                     self.queue.reverse()
-                    return_outofband(_concoord_designated, _concoord_owner, _concoord_command, [self.holder, oldholder])
+                    # return to old holder which made a release
+                    return_outofband(_concoord_designated, _concoord_owner, _concoord_command, [oldholder])
+                    # return to new holder which is waiting
+                    return_outofband(_concoord_designated, _concoord_owner, newcommand, [self.holder])
                     raise UnusualReturn
         else:
             return "Release on unacquired lock"
