@@ -89,9 +89,9 @@ class DistributedCondition():
 
     def wait(self, _concoord_designated, _concoord_owner, _concoord_command):
         # put the caller on waitinglist and take the lock away
-        self.waiting.append(caller)
         if self.locked == True and self.holder == _concoord_command.client:
             with self.lock:
+                self.waiting.append(_concoord_command)
                 if len(self.lockqueue) == 0:
                     self.lockholder = None
                     self.locked = False
@@ -110,15 +110,21 @@ class DistributedCondition():
         
 
     def notify(self):
-        self.waiting.reverse()
-        nextcommand = self.queue.pop()
-        self.waiting.reverse()
-        return_outofband(_concoord_designated, _concoord_owner, nextcommand, [nextcommand.client])
+        # Notify the next client on the wait list
+        with self.lock:
+            self.waiting.reverse()
+            nextcommand = self.queue.pop()
+            self.waiting.reverse()
+        return_outofband(_concoord_designated, _concoord_owner, nextcommand)
         raise UnusualReturn
 
     def notifyAll(self):
-        # the command thing needs fixing
-        #return_outofband(_concoord_designated, _concoord_owner, nextcommand, [self.waiting])
+        # Notify every client on the wait list
+        with self.lock:
+            self.waiting.reverse()
+            for client in self.waiting:
+                nextcommand = self.waiting.pop()
+                return_outofband(_concoord_designated, _concoord_owner, nextcommand)
         raise UnusualReturn
 
     def __str__(self):

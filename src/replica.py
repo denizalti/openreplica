@@ -736,7 +736,7 @@ class Replica(Node):
             print "%d: %s" % (cmdnum,str(command))
 
 def main():
-    theReplica = Replica(Lock())
+    theReplica = Replica(Barrier())
     theReplica.startservice()
 
 if __name__=='__main__':
