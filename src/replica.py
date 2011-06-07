@@ -22,6 +22,7 @@ from pvalue import PValue, PValueSet
 from obj.test import Test
 from obj.bank import Bank
 from obj.lock import Lock
+from obj.barrier import Barrier
 from exception import *
 
 backoff_event = Event()

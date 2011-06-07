@@ -109,7 +109,7 @@ class DistributedCondition():
             return "Can't wait on unacquired condition"
         
 
-    def notify(self):
+    def notify(self, _concoord_designated, _concoord_owner, _concoord_command):
         # Notify the next client on the wait list
         with self.lock:
             self.waiting.reverse()
@@ -118,7 +118,7 @@ class DistributedCondition():
         return_outofband(_concoord_designated, _concoord_owner, nextcommand)
         raise UnusualReturn
 
-    def notifyAll(self):
+    def notifyAll(self, _concoord_designated, _concoord_owner, _concoord_command):
         # Notify every client on the wait list
         with self.lock:
             self.waiting.reverse()
@@ -127,5 +127,5 @@ class DistributedCondition():
                 return_outofband(_concoord_designated, _concoord_owner, nextcommand)
         raise UnusualReturn
 
-    def __str__(self):
+    def __str__(self, _concoord_designated, _concoord_owner, _concoord_command):
         return 'Distributed Condition: %s' % (" ".join([str(m) for m in self.waiting]))

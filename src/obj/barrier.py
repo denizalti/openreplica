@@ -1,13 +1,15 @@
 import copy
-import paxi
 from threading import Lock
-from cooncoord import DistributedLock, DistributedCondition
+from concoord import DistributedLock, DistributedCondition
 
 class Barrier():
     """Barrier object that supports following functions:
     - wait: takes a thread who wants to wait on the barrier
     """
-    def __init__(self, number):
+    def __init__(self):
+        pass
+
+    def create(self, number, _concoord_designated, _concoord_owner, _concoord_command):
         self.limit = number
         self.current = 0
         self.atomic = Lock()
