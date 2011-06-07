@@ -19,7 +19,8 @@ class DistributedLock():
         self.queue = []
         self.lock = Lock()
     
-    def acquire(self, _concoord_designated, _concoord_owner, _concoord_command):
+    def acquire(self, kwargs):
+        _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
         if self.locked == True:
             self.queue.append(_concoord_command)
             raise UnusualReturn
@@ -27,7 +28,8 @@ class DistributedLock():
             self.holder = _concoord_command.client
             self.locked = True
 
-    def release(self, _concoord_designated, _concoord_owner, _concoord_command):
+    def release(self, kwargs):
+        _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
         if self.locked == True and self.holder == _concoord_command.client:
             with self.lock:
                 if len(self.queue) == 0:

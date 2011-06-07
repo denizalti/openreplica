@@ -8,11 +8,11 @@ class Lock():
     def __init__(self):
         self.lock = DistributedLock()
 
-    def acquire(self, _concoord_designated, _concoord_owner, _concoord_command):
-        self.lock.acquire(_concoord_designated, _concoord_owner, _concoord_command)
+    def acquire(self, **kwargs):
+        self.lock.acquire(kwargs)
         
-    def release(self, _concoord_designated, _concoord_owner, _concoord_command):
-        self.lock.release(_concoord_designated, _concoord_owner, _concoord_command)
+    def release(self, **kwargs):
+        self.lock.release(kwargs)
     
     def __str__(self):
         return str(self.lock)

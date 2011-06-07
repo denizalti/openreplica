@@ -150,6 +150,8 @@ class Replica(Node):
                 method = getattr(self.object, commandname)
                 try:
                     if len(commandargs) > 0:
+                        kwargs = [designated,self,command]
+                        commandargs.extend(kwargs)
                         givenresult = method(commandargs, _concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
                     else:
                         givenresult = method(_concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
@@ -737,7 +739,7 @@ class Replica(Node):
             print "%d: %s" % (cmdnum,str(command))
 
 def main():
-    theReplica = Replica(Barrier())
+    theReplica = Replica(Lock())
     theReplica.startservice()
 
 if __name__=='__main__':

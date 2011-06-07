@@ -10,21 +10,22 @@ class Barrier():
         pass
 
     def create(self, number, _concoord_designated, _concoord_owner, _concoord_command):
-        self.limit = number
+        self.limit = int(number)
         self.current = 0
         self.atomic = Lock()
         self.everyoneready = DistributedCondition(self.atomic)
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
-    def wait(self, **kwargs):
+    def wait(self, _concoord_designated, _concoord_owner, _concoord_command):
         with self.atomic:
             self.current += 1
             while self.current != self.limit:
-                self.everyoneready.wait(kwargs)
+                self.everyoneready.wait(_concoord_designated, _concoord_owner, _concoord_command)
             self.current = 0
-            self.everyoneready.notifyall()
+            self.everyoneready.notifyall(_concoord_designated, _concoord_owner, _concoord_command)
         
     def __str__(self):
-        return "Barrier %d/%d: %s" % (self.current, self.limit, " ".join([str(m) for m in self.members]))
+        return "Barrier %d/%d" % (self.current, self.limit)
         
     
         
