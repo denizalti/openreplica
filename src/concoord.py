@@ -6,6 +6,8 @@ from exception import *
 from enums import *
 
 def return_outofband(designated, owner, command):
+    if not designated:
+        return
     clientreply = ClientReplyMessage(MSG_CLIENTMETAREPLY, owner.me, replycode=CR_METAREPLY, inresponseto=command.clientcommandnumber)
     destconn = owner.clientpool.get_connection_by_peer(command.client)
     if destconn.thesocket == None:
@@ -53,6 +55,7 @@ class DistributedLock():
     
 class DistributedCondition():
     def __init__(self, lock=None):
+        print "Distributed Condition INIT!"
         if lock:
             self.lock = lock
         else:
@@ -62,7 +65,9 @@ class DistributedCondition():
         self.lockqueue = []
         self.waiting = []
     
-    def acquire(self, _concoord_designated, _concoord_owner, _concoord_command):
+    def acquire(self, kwargs):
+        print "Distributed Condition ACQUIRE!"
+        _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
         if self.locked == True:
             self.lockqueue.append(_concoord_command)
             raise UnusualReturn
@@ -70,7 +75,9 @@ class DistributedCondition():
             self.lockholder = _concoord_command.client
             self.locked = True
 
-    def release(self, _concoord_designated, _concoord_owner, _concoord_command):
+    def release(self, kwargs):
+        print "Distributed Condition RELEASE!"
+        _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
         if self.locked == True and self.holder == _concoord_command.client:
             with self.lock:
                 if len(self.lockqueue) == 0:
@@ -89,15 +96,20 @@ class DistributedCondition():
         else:
             return "Release on unacquired lock"
 
-    def wait(self, _concoord_designated, _concoord_owner, _concoord_command):
+    def wait(self, kwargs):
+        print "Distributed Condition WAIT!"
+        _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
         # put the caller on waitinglist and take the lock away
-        if self.locked == True and self.holder == _concoord_command.client:
+        if self.locked == True and self.lockholder == _concoord_command.client:
             with self.lock:
+                print "Peki"
                 self.waiting.append(_concoord_command)
                 if len(self.lockqueue) == 0:
+                    print "Noluyo"
                     self.lockholder = None
                     self.locked = False
                 else:
+                    print "Anlamadim"
                     self.lockqueue.reverse()
                     newcommand = self.lockqueue.pop()
                     self.lockqueue.reverse()
@@ -106,12 +118,15 @@ class DistributedCondition():
                     return_outofband(_concoord_designated, _concoord_owner, _concoord_command)
                     # return to new holder which is waiting
                     return_outofband(_concoord_designated, _concoord_owner, newcommand)
-                    raise UnusualReturn
+                print "HEEEEEEEEEEEEEEEHEHEHE"
+                raise UnusualReturn
         else:
             return "Can't wait on unacquired condition"
         
 
-    def notify(self, _concoord_designated, _concoord_owner, _concoord_command):
+    def notify(self, kwargs):
+        print "Distributed Condition NOTIFY!"
+        _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
         # Notify the next client on the wait list
         with self.lock:
             self.waiting.reverse()
@@ -120,7 +135,9 @@ class DistributedCondition():
         return_outofband(_concoord_designated, _concoord_owner, nextcommand)
         raise UnusualReturn
 
-    def notifyAll(self, _concoord_designated, _concoord_owner, _concoord_command):
+    def notifyAll(self, kwargs):
+        print "Distributed Condition NOTIFYALL!"
+        _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
         # Notify every client on the wait list
         with self.lock:
             self.waiting.reverse()
@@ -129,5 +146,5 @@ class DistributedCondition():
                 return_outofband(_concoord_designated, _concoord_owner, nextcommand)
         raise UnusualReturn
 
-    def __str__(self, _concoord_designated, _concoord_owner, _concoord_command):
+    def __str__(self, kwargs):
         return 'Distributed Condition: %s' % (" ".join([str(m) for m in self.waiting]))

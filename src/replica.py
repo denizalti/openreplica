@@ -149,12 +149,7 @@ class Replica(Node):
                 # this is the workhorse case that executes most normal commands
                 method = getattr(self.object, commandname)
                 try:
-                    if len(commandargs) > 0:
-                        kwargs = [designated,self,command]
-                        commandargs.extend(kwargs)
-                        givenresult = method(commandargs, _concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
-                    else:
-                        givenresult = method(_concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
+                    givenresult = method(commandargs, _concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
                     send_result_to_client = True
                 except UnusualReturn:
                     givenresult = CR_METAREPLY
@@ -640,6 +635,7 @@ class Replica(Node):
                         self.send(performmessage, group=self.groups[NODE_LEADER])
                         self.send(performmessage, group=self.groups[NODE_NAMESERVER])
                         self.send(performmessage, group=self.groups[NODE_TRACKER])
+                        self.send(performmessage, group=self.groups[NODE_COORDINATOR])
                     except:
                         pass
                     self.perform(performmessage, designated=True)
@@ -739,7 +735,7 @@ class Replica(Node):
             print "%d: %s" % (cmdnum,str(command))
 
 def main():
-    theReplica = Replica(Lock())
+    theReplica = Replica(Barrier())
     theReplica.startservice()
 
 if __name__=='__main__':

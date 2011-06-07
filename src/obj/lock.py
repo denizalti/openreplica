@@ -8,10 +8,10 @@ class Lock():
     def __init__(self):
         self.lock = DistributedLock()
 
-    def acquire(self, **kwargs):
+    def acquire(self, args, **kwargs):
         self.lock.acquire(kwargs)
         
-    def release(self, **kwargs):
+    def release(self, args, **kwargs):
         self.lock.release(kwargs)
     
     def __str__(self):
