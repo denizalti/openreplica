@@ -102,14 +102,11 @@ class DistributedCondition():
         # put the caller on waitinglist and take the lock away
         if self.locked == True and self.lockholder == _concoord_command.client:
             with self.lock:
-                print "Peki"
                 self.waiting.append(_concoord_command)
                 if len(self.lockqueue) == 0:
-                    print "Noluyo"
                     self.lockholder = None
                     self.locked = False
                 else:
-                    print "Anlamadim"
                     self.lockqueue.reverse()
                     newcommand = self.lockqueue.pop()
                     self.lockqueue.reverse()
@@ -118,7 +115,6 @@ class DistributedCondition():
                     return_outofband(_concoord_designated, _concoord_owner, _concoord_command)
                     # return to new holder which is waiting
                     return_outofband(_concoord_designated, _concoord_owner, newcommand)
-                print "HEEEEEEEEEEEEEEEHEHEHE"
                 raise UnusualReturn
         else:
             return "Can't wait on unacquired condition"
