@@ -7,11 +7,13 @@ class Log():
     def __init__(self):
         self.history = []
         
-    def write(self, entry, **kwargs):
+    def write(self, args, **kwargs):
+        entry = args[0]
         self.history = []
         self.history.append(entry)
         
-    def append(self, entry, **kwargs):
+    def append(self, args, **kwargs):
+        entry = args[0]
         self.history.append(entry)
         
     def read(self, **kwargs):

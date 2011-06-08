@@ -7,11 +7,13 @@ class Membership():
     def __init__(self):
         self.members = set()
 
-    def add(self, member, **kwargs):
+    def add(self, args, **kwargs):
+        member = args[0]
         if member not in self.members:
             self.members.add(member)
         
-    def remove(self, member, **kwargs):
+    def remove(self, args, **kwargs):
+        member = args[0]
         if member in self.members:
             self.members.remove(member)
         else:

@@ -14,9 +14,9 @@ class Barrier():
         self.current = 0
         self.atomic = Lock()
         self.everyoneready = DistributedCondition(self.atomic)
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
     def wait(self, args, **kwargs):
+        print self
         self.everyoneready.acquire(kwargs)
         self.current += 1
         if self.current != self.limit:

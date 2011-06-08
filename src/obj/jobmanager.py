@@ -18,17 +18,19 @@ class Jobmanager():
     def __init__(self):
         self.jobs = []
         
-    def add_job(self, job, **kwargs):
+    def add_job(self, args, **kwargs):
+        job = args[0]
         self.jobs.append(job)
         
-    def remove_job(self, job, **kwargs):
+    def remove_job(self, args, **kwargs):
+        job = args[0]
         self.jobs.append(job)
         
     def list_jobs(self, **kwargs):
         return self.__str__()
         
     def __str__(self):
-        return " ".join([str(m) for m in self.members])
+        return " ".join([str(j) for j in self.jobs])
         
     
         
