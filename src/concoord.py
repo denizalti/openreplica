@@ -42,11 +42,8 @@ class DistributedLock():
                     newcommand = self.queue.pop()
                     self.queue.reverse()
                     self.holder = newcommand.client
-                    # return to old holder which made a release
-                    return_outofband(_concoord_designated, _concoord_owner, _concoord_command)
                     # return to new holder which is waiting
                     return_outofband(_concoord_designated, _concoord_owner, newcommand)
-                    raise UnusualReturn
         else:
             return "Release on unacquired lock"
 
@@ -85,11 +82,8 @@ class DistributedCondition():
                     newcommand = self.lockqueue.pop()
                     self.lockqueue.reverse()
                     self.lockholder = newcommand.client
-                    # return to old holder which made a release
-                    return_outofband(_concoord_designated, _concoord_owner, _concoord_command)
                     # return to new holder which is waiting
                     return_outofband(_concoord_designated, _concoord_owner, newcommand)
-                    raise UnusualReturn
         else:
             return "Release on unacquired lock"
 
@@ -121,8 +115,6 @@ class DistributedCondition():
             nextcommand = self.queue.pop()
             self.waiting.reverse()
         return_outofband(_concoord_designated, _concoord_owner, nextcommand)
-        return_outofband(_concoord_designated, _concoord_owner, _concoord_command)
-        raise UnusualReturn
 
     def notifyAll(self, kwargs):
         _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
@@ -132,8 +124,6 @@ class DistributedCondition():
             for client in self.waiting:
                 nextcommand = self.waiting.pop()
                 return_outofband(_concoord_designated, _concoord_owner, nextcommand)
-            return_outofband(_concoord_designated, _concoord_owner, _concoord_command)
-        raise UnusualReturn
 
     def __str__(self, kwargs):
         return 'Distributed Condition: %s' % (" ".join([str(m) for m in self.waiting]))
