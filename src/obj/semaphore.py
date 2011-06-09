@@ -1,3 +1,4 @@
+from threading import Lock
 from concoord import DistributedLock
 
 class Semaphore():
@@ -6,28 +7,25 @@ class Semaphore():
     - release: unlocks the object
     """
     def __init__(self):
-        pass()
+        pass
 
     def create(self, args, **kwargs):
         self.count = int(args[0])
         self.queue = []
         self.atomic = Lock()
+        self.lock = DistributedLock()
 
     def acquire(self, args, **kwargs):
         with self.atomic:
             self.count -= 1
             if self.count < 0:
-                self.queue.append(XXX)
-                block
+                self.lock.acquire(kwargs)
         
     def release(self, args, **kwargs):
         with self.atomic:
             self.count += 1
             if self.count < 0:
-                self.queue.reverse()
-                lockholder = self.queue.pop()
-                self.queue.reverse()
-                unblock lockholder
+                self.lock.release(kwargs)
     
     def __str__(self):
         return str(self.lock)

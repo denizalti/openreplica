@@ -23,6 +23,7 @@ from obj.test import Test
 from obj.bank import Bank
 from obj.lock import Lock
 from obj.barrier import Barrier
+from obj.semaphore import Semaphore
 from exception import *
 
 backoff_event = Event()
@@ -735,7 +736,7 @@ class Replica(Node):
             print "%d: %s" % (cmdnum,str(command))
 
 def main():
-    theReplica = Replica(Barrier())
+    theReplica = Replica(Semaphore())
     theReplica.startservice()
 
 if __name__=='__main__':
