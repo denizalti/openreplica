@@ -15,35 +15,40 @@ def return_outofband(designated, owner, command):
     destconn.send(clientreply)
 
 class DistributedLock():
-    def __init__(self):
+    def __init__(self, count=1):
+        self.count = count
         self.locked = False
         self.holder = None
         self.queue = []
-        self.lock = Lock()
+        self.atomic = Lock()
     
     def acquire(self, kwargs):
         _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
-        if self.locked == True:
-            self.queue.append(_concoord_command)
-            raise UnusualReturn
-        else:
-            self.holder = _concoord_command.client
-            self.locked = True
+        with self.atomic:
+            self.count -= 1
+            if count < 0:
+                self.queue.append(_concoord_command)
+                raise UnusualReturn
+            else:
+                self.holder = _concoord_command.client
 
     def release(self, kwargs):
         _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
-        if self.locked == True and self.holder == _concoord_command.client:
-            with self.lock:
-                if len(self.queue) == 0:
-                    self.holder = None
-                    self.locked = False
-                else:
+        if self.holder == _concoord_command.client:
+            with self.atomic:
+                self.count += 1
+                if self.count < 0:
                     self.queue.reverse()
                     newcommand = self.queue.pop()
                     self.queue.reverse()
                     self.holder = newcommand.client
                     # return to new holder which is waiting
                     return_outofband(_concoord_designated, _concoord_owner, newcommand)
+                elif len(self.queue) == 0:
+                    self.holder = None
+                    self.locked = False
+                else:
+                    pass
         else:
             return "Release on unacquired lock"
 
