@@ -1,6 +1,10 @@
 from threading import Lock
 from concoord import DistributedLock
 
+"""Note to self: The DistributedLock object is implemented exactly
+like a Semaphore with count 1. It has a queue and holder that
+Semaphore needs. This might be used to create the Semaphore."""
+
 class Semaphore():
     """Block object that supports following functions:
     - acquire: locks the object
