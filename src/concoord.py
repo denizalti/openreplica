@@ -17,7 +17,6 @@ def return_outofband(designated, owner, command):
 class DistributedLock():
     def __init__(self, count=1):
         self.count = count
-        self.locked = False
         self.holder = None
         self.queue = []
         self.atomic = Lock()
@@ -26,7 +25,7 @@ class DistributedLock():
         _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
         with self.atomic:
             self.count -= 1
-            if count < 0:
+            if self.count < 0:
                 self.queue.append(_concoord_command)
                 raise UnusualReturn
             else:
@@ -37,7 +36,7 @@ class DistributedLock():
         if self.holder == _concoord_command.client:
             with self.atomic:
                 self.count += 1
-                if self.count < 0:
+                if len(self.queue) > 0:
                     self.queue.reverse()
                     newcommand = self.queue.pop()
                     self.queue.reverse()
@@ -47,13 +46,11 @@ class DistributedLock():
                 elif len(self.queue) == 0:
                     self.holder = None
                     self.locked = False
-                else:
-                    pass
         else:
             return "Release on unacquired lock"
 
     def __str__(self):
-        temp = 'Distributed Lock: LOCKED' if self.locked else 'Distributed Lock: UNLOCKED'
+        temp = 'Distributed Lock' if self.count == 1 else 'Distributed Semaphore'
         try:
             temp += "\nholder: %s\nqueue: %s\n" % (self.holder, " ".join([str(m) for m in self.queue]))
         except:
