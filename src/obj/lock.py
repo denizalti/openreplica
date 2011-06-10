@@ -1,7 +1,7 @@
 from concoord import DistributedLock
 
 class Lock():
-    """Block object that supports following functions:
+    """Lock object that supports following functions:
     - acquire: locks the object
     - release: unlocks the object
     """

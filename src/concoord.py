@@ -16,7 +16,7 @@ def return_outofband(designated, owner, command):
 
 class DistributedLock():
     def __init__(self, count=1):
-        self.count = count
+        self.count = int(count)
         self.holder = None
         self.queue = []
         self.atomic = Lock()
@@ -33,28 +33,22 @@ class DistributedLock():
 
     def release(self, kwargs):
         _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
-        if self.holder == _concoord_command.client:
-            with self.atomic:
-                self.count += 1
-                if len(self.queue) > 0:
-                    self.queue.reverse()
-                    newcommand = self.queue.pop()
-                    self.queue.reverse()
-                    self.holder = newcommand.client
-                    # return to new holder which is waiting
-                    return_outofband(_concoord_designated, _concoord_owner, newcommand)
-                elif len(self.queue) == 0:
-                    self.holder = None
-                    self.locked = False
-        else:
-            return "Release on unacquired lock"
-
+        with self.atomic:
+            self.count += 1
+            if len(self.queue) > 0:
+                self.queue.reverse()
+                newcommand = self.queue.pop()
+                self.queue.reverse()
+                self.holder = newcommand.client
+                # return to new holder which is waiting
+                return_outofband(_concoord_designated, _concoord_owner, newcommand)
+            elif len(self.queue) == 0:
+                self.holder = None
+                self.locked = False
+                
     def __str__(self):
         temp = 'Distributed Lock' if self.count == 1 else 'Distributed Semaphore'
-        try:
-            temp += "\nholder: %s\nqueue: %s\n" % (self.holder, " ".join([str(m) for m in self.queue]))
-        except:
-            pass
+        temp += "\ncount: %d\nholder: %s\nqueue: %s\n" % (self.count, self.holder, " ".join([str(m) for m in self.queue]))
         return temp
     
 class DistributedCondition():
