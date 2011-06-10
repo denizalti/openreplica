@@ -28,4 +28,9 @@ class Semaphore():
                 self.lock.release(kwargs)
     
     def __str__(self):
-        return str(self.lock)
+        temp = "Semaphore"
+        try:
+            temp += "\n count: %d\n queue: %s\n" % (self.count, " ".join([str(m) for m in self.queue]))
+        except:
+            pass
+        return temp

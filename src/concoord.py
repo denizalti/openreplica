@@ -48,7 +48,12 @@ class DistributedLock():
             return "Release on unacquired lock"
 
     def __str__(self):
-        return 'Distributed Lock: LOCKED' if self.locked else 'Distributed Lock: UNLOCKED'
+        temp = 'Distributed Lock: LOCKED' if self.locked else 'Distributed Lock: UNLOCKED'
+        try:
+            temp += "\nholder: %s\nqueue: %s\n" % (self.holder, " ".join([str(m) for m in self.queue]))
+        except:
+            pass
+        return temp
     
 class DistributedCondition():
     def __init__(self, lock=None):
@@ -126,4 +131,9 @@ class DistributedCondition():
                 return_outofband(_concoord_designated, _concoord_owner, nextcommand)
 
     def __str__(self, kwargs):
-        return 'Distributed Condition: %s' % (" ".join([str(m) for m in self.waiting]))
+        temp = 'Distributed Condition: LOCKED' if self.locked else 'Distributed Lock: UNLOCKED'
+        try:
+            temp += "\nlockholder: %s\nlockqueue: %s\nwaiting: %s\n" % (self.lockholder, " ".join([str(l) for l in self.lockqueue]), " ".join([str(w) for w in self.waiting]))
+        except:
+            pass
+        return temp
