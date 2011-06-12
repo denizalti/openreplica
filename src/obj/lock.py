@@ -1,4 +1,4 @@
-from concoord import DistributedLock
+from threadingobj.lock import DistributedLock
 
 class Lock():
     """Lock object that supports following functions:

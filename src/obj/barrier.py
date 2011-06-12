@@ -1,6 +1,7 @@
 import copy
 from threading import Lock
-from concoord import DistributedLock, DistributedCondition
+from threadingobj.semaphore import DistributedSemaphore
+from threadingobj.lock import DistributedLock
 
 class Barrier():
     """Barrier object that supports following functions:

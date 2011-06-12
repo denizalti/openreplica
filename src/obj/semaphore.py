@@ -1,4 +1,4 @@
-from concoord import DistributedLock
+from threadingobj.semaphore import DistributedSemaphore
 
 class Semaphore():
     """Semaphore object that supports following functions:
@@ -7,17 +7,17 @@ class Semaphore():
     """
     def __init__(self):
         # automatically created with count 1
-        self.lock = DistributedLock()
+        self.semaphore = DistributedSemaphore()
 
     def create(self, args, **kwargs):
         count = args[0]
-        self.lock = DistributedLock(count)
+        self.semaphore = DistributedSemaphore(count)
 
     def acquire(self, args, **kwargs):
-        self.lock.acquire(kwargs)
+        self.semaphore.acquire(kwargs)
         
     def release(self, args, **kwargs):
-        self.lock.release(kwargs)
+        self.semaphore.release(kwargs)
     
     def __str__(self):
-        return str(self.lock)
+        return str(self.semaphore)
