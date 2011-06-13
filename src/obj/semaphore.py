@@ -1,4 +1,4 @@
-from threadingobj.semaphore import DistributedSemaphore
+from threadingobj.dsemaphore import DSemaphore
 
 class Semaphore():
     """Semaphore object that supports following functions:
@@ -7,11 +7,11 @@ class Semaphore():
     """
     def __init__(self):
         # automatically created with count 1
-        self.semaphore = DistributedSemaphore()
+        self.semaphore = DSemaphore()
 
     def create(self, args, **kwargs):
         count = args[0]
-        self.semaphore = DistributedSemaphore(count)
+        self.semaphore = DSemaphore(count)
 
     def acquire(self, args, **kwargs):
         self.semaphore.acquire(kwargs)
