@@ -1,3 +1,3 @@
 """paxi objects"""
 
-__all__ = ['test','bank','block','membership']
+__all__ = ['test', 'bank', 'lock', 'membership', 'jobmanager', 'log', 'barrier', 'semaphore']

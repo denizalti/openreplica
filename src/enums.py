@@ -12,11 +12,11 @@ MSG_ACK, \
          MSG_HELO, MSG_HELOREPLY, MSG_BYE, \
          MSG_UPDATE, MSG_UPDATEREPLY, \
          MSG_PERFORM, MSG_RESPONSE, \
-         MSG_CLIENTREQUEST, MSG_CLIENTREPLY, \
-         MSG_QUERY, MSG_QUERYREPLY = range(18)
+         MSG_CLIENTREQUEST, MSG_CLIENTREPLY, MSG_CLIENTMETAREPLY, \
+         MSG_QUERY, MSG_QUERYREPLY = range(19)
 
 # node types 
-NODE_ACCEPTOR, NODE_REPLICA, NODE_LEADER, NODE_CLIENT, NODE_TRACKER, NODE_NAMESERVER = range(6)
+NODE_ACCEPTOR, NODE_REPLICA, NODE_LEADER, NODE_CLIENT, NODE_TRACKER, NODE_NAMESERVER, NODE_COORDINATOR = range(7)
 
 # error_types
 ERR_NOERROR, ERR_NOTLEADER, ERR_INITIALIZING = range(3)
@@ -26,6 +26,9 @@ META = 'META'
 
 # message states
 ACK_NOTACKED, ACK_ACKED = range(2)
+
+# client reply codes
+CR_INPROGRESS, CR_LEADERNOTREADY, CR_REJECTED, CR_METAREPLY = range(4)
 
 # timeouts
 ACKTIMEOUT = 1
@@ -68,3 +71,4 @@ node_names = get_var_list("NODE_")
 cmd_states = get_var_list("CMD_")
 msg_states = get_var_list("ACK_")
 err_types = get_var_list("ERR_")
+cr_codes = get_var_list("CR_")

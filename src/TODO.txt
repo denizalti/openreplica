@@ -3,13 +3,22 @@ paxi. """
 
 *** GRAPHS ***
 - Graph4: How does the Throughput change as time passes
-- Object should be noop during tests
 - Run on sys01 in parallel, collect new graphs
 
 *** TESTING ***
 - Fuzztesting (Test with Random inputs): Peach might be used.
 
+*** Applications ***
+- Web Crawler
+- Email?
+
 *** CHANGES TO THE CODE ***
+- Object Fixes!
+- Failure Detector
+- acceptor state should be garbage collected
+- garbage collect commands that all replicas have seen
+
+*** DONE ***
 - DNSSERVER for openreplica.org
   -- Special Replicas: Listen to state, cannot become leader
   -- Keep dictionary of name to specialnode
@@ -24,15 +33,7 @@ paxi. """
 	-- enumerate functions
 	-- return new object -> bankclient.py
 		--- when deposit is called it sends "deposit AccountID" to the leader
-- acceptor state should be garbage collected
 - adaptive resend
-- garbage collect commands that all replicas have seen
-
-*** Objects ***
-- Membership Object: NameServer without the UDP
-- Failure Detector that is connected to the Membership Object
-
-*** DONE ***
 - noop commands
 - External client to issue ADD NewReplica
 - Leader proposes METACOMMAND ADDReplica

@@ -16,10 +16,15 @@ from utils import *
 from connection import Connection, ConnectionPool
 from group import Group
 from peer import Peer
-from message import Message, PaxosMessage, HandshakeMessage, AckMessage, ClientMessage, Command, UpdateMessage
+from message import Message, PaxosMessage, HandshakeMessage, AckMessage, ClientMessage, ClientReplyMessage, UpdateMessage
+from command import Command
 from pvalue import PValue, PValueSet
 from obj.test import Test
 from obj.bank import Bank
+from obj.lock import Lock
+from obj.barrier import Barrier
+from obj.semaphore import Semaphore
+from exception import *
 
 backoff_event = Event()
 
@@ -35,8 +40,8 @@ def starttiming(fn):
     return new
 
 def endtiming(fn):
-    """Decorator used to start timing. Keeps track of the count for the first and second calls."""
-    NITER = 30
+    """Decorator used to end timing. Keeps track of the count for the first and second calls."""
+    NITER = 100
     def new(*args, **kw):
         ret = fn(*args, **kw)
         obj = args[0]
@@ -46,7 +51,8 @@ def endtiming(fn):
             obj.secondstoptime = time.time()
         elif obj.count == NITER:
             now = time.time()
-            print "YYY %d %.15f %.15f %.15f" % (len(obj.groups[NODE_REPLICA]),obj.firststoptime - obj.firststarttime, now - obj.secondstarttime, (now - obj.secondstarttime)/NITER)
+            print "YYY %d %.15f" % (len(obj.groups[NODE_REPLICA]), (now - obj.secondstarttime)/NITER)
+            obj.count += 1
             sys.stdout.flush()
         else:
             obj.count += 1
@@ -112,7 +118,7 @@ class Replica(Node):
         leaderping_thread.start()
 
     @endtiming
-    def performcore(self, msg, slotno, dometaonly=False):
+    def performcore(self, msg, slotno, dometaonly=False, designated=False):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
         to the managements of the Paxos protocol) with a delay of WINDOW commands."""
@@ -122,7 +128,8 @@ class Replica(Node):
         commandname = commandlist[0]
         commandargs = commandlist[1:]
         ismeta = (commandname in METACOMMANDS)
-        noop = (commandname == "noop")        
+        noop = (commandname == "noop")
+        send_result_to_client = True
         try:
             if noop:
                 method = getattr(self, NOOP)
@@ -130,7 +137,7 @@ class Replica(Node):
             elif dometaonly and ismeta:
                 # execute a metacommand when the window has expired
                 method = getattr(self, commandname)
-                givenresult = method(commandargs)
+                givenresult = method(commandargs, _concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
             elif dometaonly and not ismeta:
                 return
             elif not dometaonly and ismeta:
@@ -142,23 +149,29 @@ class Replica(Node):
             elif not dometaonly and not ismeta:
                 # this is the workhorse case that executes most normal commands
                 method = getattr(self.object, commandname)
-                givenresult = method(commandargs)
-        except (TypeError, AttributeError):
+                try:
+                    givenresult = method(commandargs, _concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
+                    send_result_to_client = True
+                except UnusualReturn:
+                    givenresult = CR_METAREPLY
+                    send_result_to_client = False
+        except (TypeError, AttributeError) as t:
+            print t
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
         self.executed[self.decisions[slotno]] = givenresult
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
-            if self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
+            if send_result_to_client and self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
                 print "Sending REPLY to CLIENT"
-                clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,givenresult, command.clientcommandnumber)
+                clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=givenresult, inresponseto=command.clientcommandnumber)
                 clientconn = self.clientpool.get_connection_by_peer(command.client)
                 if clientconn.thesocket == None:
                     print "Client disconnected.."
                     return
                 clientconn.send(clientreply)
 
-    def perform(self, msg):
+    def perform(self, msg, designated=False):
         """Take a given PERFORM message, add it to the set of decided commands, and call performcore to execute."""
         if msg.commandnumber not in self.decisions:
             self.decisions[msg.commandnumber] = msg.proposal
@@ -180,9 +193,9 @@ class Replica(Node):
 
                 # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
                 if self.nexttoexecute > WINDOW:
-                    self.performcore(msg, self.nexttoexecute - WINDOW, True)
+                    self.performcore(msg, self.nexttoexecute - WINDOW, True, designated=designated)
 
-                self.performcore(msg, self.nexttoexecute)
+                self.performcore(msg, self.nexttoexecute, designated=designated)
                 self.nexttoexecute += 1
                 # the window just got bumped by one
                 # check if there are pending commands, and issue one of them
@@ -364,28 +377,28 @@ class Replica(Node):
         """handle the received client request
         - if it has been received before check if it has been executed
         -- if it has been executed send the result
-        -- if it has not been executed yet send REQUESTINPROGRESS
+        -- if it has not been executed yet send INPROGRESS
         - if this request has not been received before initiate a paxos round for the command"""
         if self.type != NODE_LEADER:
             logger("got a request but not a leader..")
             return
         
-        if self.receivedclientrequests.has_key((givencommand.client,givencommand.clientcommandnumber)):
-            logger("client request received previously")
+        if self.receivedclientrequests.has_key((givencommand.client, givencommand.clientcommandnumber)):
+            #logger("client request received previously")
             resultsent = False
             # Check if the request has been executed
             for (commandnumber,command) in self.decisions.iteritems():
                 if command == givencommand:
-                    if self.executed.has_key(command):
-                        clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,self.executed[command],givencommand.clientcommandnumber)
+                    if self.executed.has_key(command) and self.executed[command]!= CR_METAREPLY:
+                        clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=self.executed[command], inresponseto=givencommand.clientcommandnumber)
                         conn = self.clientpool.get_connection_by_peer(givencommand.client)
                         if conn is not None:
                             conn.send(clientreply)
                         resultsent = True
                         break
-            # If request not executed yet, send REQUEST IN PROGRESS
+            # If request not executed yet, send IN PROGRESS
             if not resultsent:
-                clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REQUEST IN PROGRESS",givencommand.clientcommandnumber)
+                clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_INPROGRESS, inresponseto=givencommand.clientcommandnumber)
                 conn = self.clientpool.get_connection_by_peer(givencommand.client)
                 if conn is not None:
                     conn.send(clientreply)    
@@ -407,7 +420,7 @@ class Replica(Node):
         self.check_leader_promotion()
         if self.type != NODE_LEADER:
             logger("not leader.. request rejected..")
-            clientreply = ClientMessage(MSG_CLIENTREPLY,self.me,"REJECTED",msg.command.clientcommandnumber)
+            clientreply = ClientReplyMessage(MSG_CLIENTREPLY,self.me,replycode=CR_REJECTED,inresponseto=msg.command.clientcommandnumber)
             conn.send(clientreply)
             return
         # Leader should accept a request even if it's not ready as this way it will make itself ready during the prepare stage.
@@ -447,7 +460,7 @@ class Replica(Node):
         """propose a command with the given commandnumber and proposal. Stage p2a.
         A command is proposed by running the PROPOSE stage of Paxos Protocol for the command.
         """
-        if self.type != NODE_LEADER:
+        if self.type != NODE_LEADER and self.type != NODE_COORDINATOR:
             print "Not a Leader.."
             return
         givencommandnumber = self.find_commandnumber()
@@ -488,7 +501,7 @@ class Replica(Node):
         -- add the ResponseCollector to the outstanding prepare set
         -- send MSG_PREPARE to Acceptor nodes
         """
-        if self.type != NODE_LEADER:
+        if self.type != NODE_LEADER and self.type != NODE_COORDINATOR:
             print "Not a Leader.."
             return
 
@@ -623,9 +636,10 @@ class Replica(Node):
                         self.send(performmessage, group=self.groups[NODE_LEADER])
                         self.send(performmessage, group=self.groups[NODE_NAMESERVER])
                         self.send(performmessage, group=self.groups[NODE_TRACKER])
+                        self.send(performmessage, group=self.groups[NODE_COORDINATOR])
                     except:
                         pass
-                    self.perform(performmessage)
+                    self.perform(performmessage, designated=True)
             else:
                 logger("there is no response collector for %s cmdno:%d" % (str(msg.inresponseto), msg.commandnumber))
         else:
@@ -722,7 +736,7 @@ class Replica(Node):
             print "%d: %s" % (cmdnum,str(command))
 
 def main():
-    theReplica = Replica(Test())
+    theReplica = Replica(Semaphore())
     theReplica.startservice()
 
 if __name__=='__main__':

@@ -1,13 +1,15 @@
 """
 @author: denizalti
-@note: Message, PValueSet, PValue
+@note: Message
 @date: February 1, 2011
 """
-import struct
+from threading import Lock
+
 from enums import *
 from utils import *
-from peer import *
-from threading import Lock
+from peer import Peer
+from command import Command
+
 
 msgidpool = 0
 msgidpool_lock=Lock()
@@ -92,18 +94,29 @@ class PaxosMessage(Message):
         return temp
 
 class ClientMessage(Message):
-    def __init__(self,msgtype,myname,command=None,inresponseto=0):
+    def __init__(self, msgtype, myname, command=None, inresponseto=0):
         Message.__init__(self, msgtype, myname)
         self.command = command
-        self.inresponseto = inresponseto # command number this reply is in response to
+        self.inresponseto = inresponseto
 
     def __str__(self):
         temp = Message.__str__(self)
         temp += '  inresponseto: %d' % self.inresponseto
-        if self.type == MSG_CLIENTREQUEST:
-            temp += '  request: %s' % str(self.command)
-        elif self.type == MSG_CLIENTREPLY:
-            temp += '  reply: %s' % str(self.command)
+        temp += '  request: %s' % str(self.command)
+        return temp
+
+class ClientReplyMessage(Message):
+    def __init__(self, msgtype, myname, reply=None, replycode=-1, inresponseto=0):
+        Message.__init__(self, msgtype, myname)
+        self.reply = reply
+        self.replycode = replycode
+        self.inresponseto = inresponseto
+
+    def __str__(self):
+        temp = Message.__str__(self)
+        temp += '  inresponseto: %d' % self.inresponseto
+        temp += '  reply: %s' % str(self.reply)
+        temp += '  replycode: %s' % cr_codes[self.replycode]
         return temp
 
 class AckMessage(Message):
@@ -122,45 +135,6 @@ class QueryMessage(Message):
         if self.peers != None:
             temp += ' peers %s' % self.peers
         return temp
-
-class Command():
-    """Command encloses a client, clientcommandnumber and command"""
-    def __init__(self,client=None,clientcommandnumber=0,command=""):
-        """Initialize Command
-
-        Command State
-        - client
-        - clientcommandnumber: unique id for the command, specific to Client
-                               doesn't affect paxos commandnumber
-        - command: command to be executed
-        """
-        self.client = client
-        self.clientcommandnumber = clientcommandnumber
-        self.command = command
-
-    def __hash__(self):
-        """Returns the hashed command"""
-        return hash(str(self.client)+str(self.clientcommandnumber)+str(self.command))
-
-    def __eq__(self, othercommand):
-        """Equality function for two Commands.
-        Returns True if given Command is equal to Command, False otherwise.
-        """
-        return self.client == othercommand.client and \
-            self.clientcommandnumber == othercommand.clientcommandnumber and \
-            self.command == othercommand.command
-
-    def __ne__(self, othercommand):
-        """Non-equality function for two Commands.
-        Returns True if given Command is not equal to Command, False otherwise.
-        """
-        return self.client != othercommand.client or \
-            self.clientcommandnumber != othercommand.clientcommandnumber or \
-            self.command != othercommand.command
-    
-    def __str__(self):
-        """Returns Command information"""
-        return 'Command(%s,%d,%s)' % (str(self.client),self.clientcommandnumber,self.command)
 
 class MessageInfo():
     """MessageState encloses a message, destination, messagestate and timestamp"""

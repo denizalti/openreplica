@@ -5,6 +5,7 @@
 '''
 import socket
 from optparse import OptionParser
+from threading import Thread, Lock, Condition
 from enums import *
 from utils import findOwnIP
 from connection import ConnectionPool, Connection
@@ -41,7 +42,12 @@ class Client():
         self.me = Peer(myaddr,myport,NODE_CLIENT)
         self.alive = True
         self.clientcommandnumber = 1
-        self.file = inputfile
+        self.commandlistcond = Condition()
+        self.commandlist = []
+
+    def startclientproxy():
+        clientloop_thread = Thread(target=self.clientloop)
+        clientloop_thread.start()
 
     def initializebootstraplist(self,givenbootstraplist):
         bootstrapstrlist = givenbootstraplist.split(",")
@@ -63,67 +69,55 @@ class Client():
                 print "Connected to new bootstrap: ", bootpeer.addr,bootpeer.port
                 break
             except socket.error, e:
-#                print e
+                print e
                 continue
+
+    def invoke_command(self, commandname, args):
+        mynumber = self.clientcommandnumber
+        self.clientcommandnumber += 1
+        commandargs = commandname + " " + args
+        newcommand = Command(self.me, mynumber, commandargs)
+        with self.commandlistcond:
+            self.commandlist.append(newcommand)
+            self.commandlistcond.notify()
     
     def clientloop(self):
         """Accepts commands from the prompt and sends requests for the commands
         and receives corresponding replies."""
-        # Read commands from a file
-        if self.file:
-            f = open(self.file,'r')
-            EOF = False
-        # Read commands from the shell
         while self.alive:
-            inputcount = 0
-            try:
-                if self.file and not EOF:
-                    shellinput = f.readline().strip()
-                else:
-                    shellinput = raw_input("client-shell> ")
-                    
-                if len(shellinput) == 0:
-                    if self.file:
-                        EOF = True
+            with self.commandlistcond:
+                while len(self.commandlist) == 0:
+                    self.commandlistcond.wait()
+                command = self.commandlist.pop(0)
+            cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
+            replied = False
+            #print "Client Message about to be sent:", cm
+            starttime = time.time()
+            self.conn.settimeout(CLIENTRESENDTIMEOUT)
+            
+            while not replied:
+                success = self.conn.send(cm)
+                if not success:
+                    currentbootstrap = self.bootstraplist.pop(0)
+                    self.bootstraplist.append(currentbootstrap)
+                    self.connecttobootstrap()
                     continue
-                else:
-                    inputcount += 1
-                    mynumber = self.clientcommandnumber
-                    self.clientcommandnumber += 1
-                    # create command from input
-                    command = Command(self.me, mynumber, shellinput)
-                    cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
-                    replied = False
-                    print "Client Message about to be sent:", cm
-                    starttime = time.time()
-                    self.conn.settimeout(CLIENTRESENDTIMEOUT)
+                reply = self.conn.receive()
+                print "received: ", reply
+                if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
+                    if reply.command == "REJECTED" or reply.command == "LEADERNOTREADY":
+                        currentbootstrap = self.bootstraplist.pop(0)
+                        self.bootstraplist.append(currentbootstrap)
+                        self.connecttobootstrap()
+                        continue
+                    else:
+                        replied = True
+                elif reply and reply.type == MSG_CLIENTMETAREPLY and reply.inresponseto == mynumber:
+                    pass
+                if time.time() - starttime > CLIENTRESENDTIMEOUT:
+                    if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
+                        replied = True
 
-                    while not replied:
-                        success = self.conn.send(cm)
-                        # problem with the connection, try another bootstrap
-                        if not success:
-                            currentbootstrap = self.bootstraplist.pop(0)
-                            self.bootstraplist.append(currentbootstrap)
-                            self.connecttobootstrap()
-                            continue
-                        reply = self.conn.receive()
-                        if reply and (reply.type == MSG_CLIENTREPLY or reply.type == MSG_CLIENTMETAREPLY) and reply.inresponseto == mynumber:
-                            if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
-                                currentbootstrap = self.bootstraplist.pop(0)
-                                self.bootstraplist.append(currentbootstrap)
-                                self.connecttobootstrap()
-                                continue
-                            elif reply.replycode == CR_INPROGRESS:
-                                continue
-                            else:
-                                replied = True   
-                        if time.time() - starttime > CLIENTRESENDTIMEOUT:
-                            if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
-                                replied = True
-                        time.sleep(1)
-            except ( IOError, EOFError ):
-                os._exit(0)
-        
 theClient = Client(options.bootstrap, options.filename)
 theClient.clientloop()
 

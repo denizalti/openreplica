@@ -8,7 +8,6 @@ from connection import *
 from enums import *
 from utils import *
 from peer import *
-from message import *
 
 class Group():
     """Group keeps a set of Peer objects and supports functions

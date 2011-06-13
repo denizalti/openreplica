@@ -19,7 +19,8 @@ from utils import *
 from connection import ConnectionPool,Connection
 from group import Group
 from peer import Peer
-from message import Message, PaxosMessage, HandshakeMessage, AckMessage, MessageInfo, Command
+from message import Message, PaxosMessage, HandshakeMessage, AckMessage, MessageInfo
+from command import Command
 from pvalue import PValue, PValueSet
 
 parser = OptionParser(usage="usage: %prog -p port -b bootstrap -d delay")
@@ -29,7 +30,7 @@ parser.add_option("-l", "--local", action="store_true", dest="local", default=Fa
 
 (options, args) = parser.parse_args()
 
-DO_PERIODIC_PINGS=False
+DO_PERIODIC_PINGS = False
 
 class Node():
     """Node encloses the basic Node behaviour and state that
@@ -77,6 +78,7 @@ class Node():
         try:
             if self.type == NODE_ACCEPTOR or self.type == NODE_REPLICA:
                 f = open('ports', 'a')
+                # XXX This lock blocks on NFS
                 fcntl.flock(f,fcntl.LOCK_EX)
                 t = node_names[self.type].lower()
                 f.write("add_%s %s:%d\n" % (t, self.addr, self.port))
@@ -93,7 +95,7 @@ class Node():
         setlogprefix("%s %s" % (node_names[self.type],self.id))
         logger("Ready!")
         self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_LEADER:Group(self.me), \
-                       NODE_TRACKER:Group(self.me), NODE_NAMESERVER:Group(self.me)}
+                       NODE_TRACKER:Group(self.me), NODE_COORDINATOR:Group(self.me), NODE_NAMESERVER:Group(self.me)}
         # connect to the bootstrap node
         if bootstrap:
             logger("connecting to %s" % bootstrap)
@@ -102,7 +104,7 @@ class Node():
             helomessage = HandshakeMessage(MSG_HELO, self.me)
             self.send(helomessage, peer=bootpeer)
             self.groups[NODE_REPLICA].add(bootpeer)
-        if self.type == NODE_REPLICA or self.type == NODE_TRACKER or self.type == NODE_NAMESERVER:
+        if self.type == NODE_REPLICA or self.type == NODE_TRACKER or self.type == NODE_NAMESERVER or self.type == NODE_COORDINATOR:
             self.stateuptodate = False
 
     def startservice(self):
@@ -150,6 +152,7 @@ class Node():
         - inputready: sockets that are ready for reading
         - exceptready: sockets that are ready according to an *exceptional condition*
         """
+        self.socket.listen(10)
         nascentset = []
         while self.alive:
             try:
@@ -228,8 +231,8 @@ class Node():
                     if self.outstandingmessages.has_key(ackid):
                         #logger("deleting outstanding message %s" % ackid)
                         del self.outstandingmessages[ackid]
-                    else:
-                        logger("acked message %s not in outstanding messages" % ackid)
+                    #else:
+                        # logger("acked message %s not in outstanding messages" % ackid)
             else:
                 #logger("got message (about to ack) %s" % message.fullid())
                 if message.type != MSG_CLIENTREQUEST:
@@ -307,11 +310,11 @@ class Node():
                 
             if DO_PERIODIC_PINGS:
                 for pingpeer in checkliveness:
-                    logger("sending PING to %s" % pingpeer)
+                    # logger("sending PING to %s" % pingpeer)
                     helomessage = HandshakeMessage(MSG_HELO, self.me)
                     self.send(helomessage, peer=pingpeer)
 
-            time.sleep(ACKTIMEOUT/5)
+            time.sleep(ACKTIMEOUT)
 
     def get_inputs(self):
         """Shellloop that accepts inputs from the command prompt and calls corresponding command

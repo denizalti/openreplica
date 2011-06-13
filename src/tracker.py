@@ -8,10 +8,9 @@ from replica import *
 from node import *
 
 class Tracker(Replica):
-    """Membership keeps track of the connectivity state of the system and replies to
-    QUERY messages from dnsserver."""
+    """Tracker keeps track of the connectivity state of the system"""
     def __init__(self, nodetype=NODE_TRACKER, port=None,  bootstrap=None):
-        Replica.__init__(self, nodetype=nodetype, port=5000, bootstrap=options.bootstrap)
+        Replica.__init__(self, nodetype=nodetype, port=5010, bootstrap=options.bootstrap)
         
     def performcore(self, msg, slotno, dometaonly=False):
         """The core function that performs a given command in a slot number. It 

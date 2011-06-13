@@ -3,15 +3,12 @@
 @note: Peer
 @date: February 1, 2011
 """
-
 from enums import *
 from utils import *
-import struct
-from connection import *
 
 class Peer():
     """Peer instance of a Node"""
-    def __init__(self,peeraddr,peerport,peertype=-1):
+    def __init__(self, peeraddr, peerport, peertype=-1):
         """Initialize Peer
 
         Peer State
@@ -25,7 +22,7 @@ class Peer():
 
     def id(self):
         """Returns the id (addr:port) of the Peer"""
-        return "%s:%d" % (self.addr,self.port)
+        return "%s:%d" % (self.addr, self.port)
     
     def __hash__(self):
         """Returns the hashed id"""
