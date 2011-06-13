@@ -29,10 +29,8 @@ class DRLock():
                 return "Release on unacquired lock"
             
             if self.lockcount == 0 and len(self.queue) > 0:
-                 self.lockcount += 1
-                self.queue.reverse()
-                newcommand = self.queue.pop()
-                self.queue.reverse()
+                self.lockcount += 1
+                newcommand = self.queue.pop(0)
                 self.holder = newcommand.client
                 # return to new holder which is waiting
                 return_outofband(_concoord_designated, _concoord_owner, newcommand)

@@ -21,10 +21,9 @@ class DLock():
     def release(self, kwargs):
         _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
         with self.atomic:
+            ### Release on unacquired lock
             if len(self.queue) > 0:
-                self.queue.reverse()
-                newcommand = self.queue.pop()
-                self.queue.reverse()
+                newcommand = self.queue.pop(0)
                 self.holder = newcommand.client
                 # return to new holder which is waiting
                 return_outofband(_concoord_designated, _concoord_owner, newcommand)

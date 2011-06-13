@@ -1,12 +1,13 @@
 from concoord import *
 from exception import *
+from dlock import DLock
     
 class DCondition():
     def __init__(self, lock=None):
         if lock:
             self.lock = lock
         else:
-            self.lock = Lock()
+            self.lock = DRLock()
         self.locked = False
         self.lockholder = None
         self.lockqueue = []
@@ -14,12 +15,13 @@ class DCondition():
     
     def acquire(self, kwargs):
         _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
-        if self.locked == True:
-            self.lockqueue.append(_concoord_command)
-            raise UnusualReturn
-        else:
-            self.lockholder = _concoord_command.client
-            self.locked = True
+        with self.lock:
+            if self.locked == True:
+                self.lockqueue.append(_concoord_command)
+                raise UnusualReturn
+            else:
+                self.lockholder = _concoord_command.client
+                self.locked = True
 
     def release(self, kwargs):
         _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
@@ -29,9 +31,7 @@ class DCondition():
                     self.lockholder = None
                     self.locked = False
                 else:
-                    self.lockqueue.reverse()
-                    newcommand = self.lockqueue.pop()
-                    self.lockqueue.reverse()
+                    newcommand = self.lockqueue.pop(0)
                     self.lockholder = newcommand.client
                     # return to new holder which is waiting
                     return_outofband(_concoord_designated, _concoord_owner, newcommand)
@@ -48,9 +48,8 @@ class DCondition():
                     self.lockholder = None
                     self.locked = False
                 else:
-                    self.lockqueue.reverse()
-                    newcommand = self.lockqueue.pop()
-                    self.lockqueue.reverse()
+                    ## Call the release code. Use RLock!
+                    newcommand = self.lockqueue.pop(0)
                     self.lockholder = newcommand.client
                     # return to new holder which is waiting
                     return_outofband(_concoord_designated, _concoord_owner, newcommand)
@@ -62,9 +61,7 @@ class DCondition():
         _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
         # Notify the next client on the wait list
         with self.lock:
-            self.waiting.reverse()
-            nextcommand = self.queue.pop()
-            self.waiting.reverse()
+            nextcommand = self.queue.pop(0)
         return_outofband(_concoord_designated, _concoord_owner, nextcommand)
 
     def notifyAll(self, kwargs):
