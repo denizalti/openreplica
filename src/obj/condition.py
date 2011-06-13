@@ -1,6 +1,6 @@
 from threadingobj.dcondition import DCondition
 
-class Lock():
+class Condition():
     """Lock object that supports following functions:
     - acquire: locks the object
     - release: unlocks the object
@@ -15,13 +15,13 @@ class Lock():
         self.condition.release(kwargs)
 
     def wait(self, args, **kwargs):
-        self.condition.acquire(kwargs)
+        self.condition.wait(kwargs)
 
     def notify(self, args, **kwargs):
-        self.condition.acquire(kwargs)
+        self.condition.notify(kwargs)
 
     def notifyAll(self, args, **kwargs):
-        self.condition.acquire(kwargs)
+        self.condition.notifyAll(kwargs)
 
     def __str__(self):
-        return str(self.lock)
+        return str(self.condition)
