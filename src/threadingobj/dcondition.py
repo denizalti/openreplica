@@ -39,6 +39,7 @@ class DCondition():
             if self.lock.locked == True and self.lock.holder == _concoord_command.client:
                 waitcommand = self.__waiters.pop(0)
                 return_outofband(_concoord_designated, _concoord_owner, waitcommand)
+                # Upon notifying the client continues *without* the lock! I have to make a trick for this.
             else:
                 raise RuntimeError("cannot notify on un-acquired lock")         
 
