@@ -1,4 +1,4 @@
-from threadingobj.lock import DistributedLock
+from threadingobj.dlock import DLock
 
 class Lock():
     """Lock object that supports following functions:
@@ -6,7 +6,7 @@ class Lock():
     - release: unlocks the object
     """
     def __init__(self):
-        self.lock = DistributedLock()
+        self.lock = DLock()
 
     def acquire(self, args, **kwargs):
         self.lock.acquire(kwargs)

@@ -1,3 +1,3 @@
 """distributed threading objects"""
 
-__all__ = ['lock', 'semaphore', 'condition']
+__all__ = ['dlock', 'dsemaphore', 'dcondition', 'drlock', 'dboundedsemaphore']

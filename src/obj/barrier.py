@@ -1,10 +1,11 @@
-import copy
 from threading import Lock
-from threadingobj.semaphore import DistributedSemaphore
-from threadingobj.lock import DistributedLock
+from threadingobj.dsemaphore import DSemaphore
+from threadingobj.dlock import DLock
+from threadingobj.dcondition import DCondition
 
 class Barrier():
     """Barrier object that supports following functions:
+    - create: to reinitialize the object
     - wait: takes a thread who wants to wait on the barrier
     """
     def __init__(self):
