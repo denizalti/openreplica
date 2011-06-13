@@ -1,5 +1,6 @@
-from concoord import *
-from exception import *
+#from concoord import *
+#from exception import *
+from threading import Lock
 
 class DRLock():
     def __init__(self):
