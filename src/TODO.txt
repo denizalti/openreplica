@@ -13,11 +13,6 @@ paxi. """
 - Email?
 
 *** CHANGES TO THE CODE ***
-- self.lock problem: every msg_method function is called with the
-lock, this might cause a problem in the perform core if it doesn't
-return.
-One fix 
-
 - Object Fixes!
 - Failure Detector
 - acceptor state should be garbage collected
@@ -25,6 +20,9 @@ One fix
 
 
 *** DONE ***
+- self.lock problem: every msg_method function is called with the
+lock, this might cause a problem in the perform core if it doesn't
+return.
 - DNSSERVER for openreplica.org
   -- Special Replicas: Listen to state, cannot become leader
   -- Keep dictionary of name to specialnode
