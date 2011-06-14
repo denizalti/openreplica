@@ -2,7 +2,7 @@
 from returns import *
 from exception import *
 from threading import RLock
-from drlock import DRLock
+from drlock import DRlock
 from dlock import DLock
     
 class DCondition():
@@ -38,8 +38,11 @@ class DCondition():
         with self.atomic:
             if self.lock.locked == True and self.lock.holder == _concoord_command.client:
                 waitcommand = self.__waiters.pop(0)
-                return_outofband(_concoord_designated, _concoord_owner, waitcommand)
-                # Upon notifying the client continues *without* the lock! I have to make a trick for this.
+                #return_outofband(_concoord_designated, _concoord_owner, waitcommand)
+                # To make sure that the client that will be unblocked has the lock we'll make an acquire on the lock for that client.
+                kwargs['_concoord_command'] = waitcommand
+                # XXX
+                return self.lock.acquire(kwargs)
             else:
                 raise RuntimeError("cannot notify on un-acquired lock")         
 

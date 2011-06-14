@@ -1,6 +1,6 @@
-from threadingobj.dsemaphore import DBoundedSemaphore
+from threadingobj.dboundedsemaphore import DBoundedSemaphore
 
-class BoundedSemaphore():
+class Boundedsemaphore():
     """Semaphore object that supports following functions:
     - create: to reinitialize the semaphore
     - acquire: locks the object

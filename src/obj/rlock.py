@@ -1,6 +1,6 @@
-from threadingobj.drlock import DRLock
+from threadingobj.drlock import DRlock
 
-class RLock():
+class Rlock():
     """RLock object that supports following functions:
     - acquire: locks the object
     - release: unlocks the object

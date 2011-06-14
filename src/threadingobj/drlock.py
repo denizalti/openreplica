@@ -2,7 +2,7 @@ from returns import *
 from exception import *
 from threading import Lock
 
-class DRLock():
+class DRlock():
     def __init__(self):
         self.lockcount = 0
         self.holder = None

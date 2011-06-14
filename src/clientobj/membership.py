@@ -8,9 +8,9 @@ class Membership():
 	def __str__(self):
 		invoke_command(self, "__str__")
 
-	def add(self, args, _paxi_designated, _paxi_client_cmdno, _paxi_me):
-		invoke_command(self, "add", args, _paxi_designated, _paxi_client_cmdno, _paxi_me)
+	def add(self, args):
+		invoke_command(self, "add", args)
 
-	def remove(self, args, _paxi_designated, _paxi_client_cmdno, _paxi_me):
-		invoke_command(self, "remove", args, _paxi_designated, _paxi_client_cmdno, _paxi_me)
+	def remove(self, args):
+		invoke_command(self, "remove", args)
 
