@@ -131,36 +131,37 @@ class Replica(Node):
         ismeta = (commandname in METACOMMANDS)
         noop = (commandname == "noop")
         send_result_to_client = True
-        #try:
-        if noop:
-            method = getattr(self, NOOP)
-            givenresult = "NOOP"
-        elif dometaonly and ismeta:
-            # execute a metacommand when the window has expired
-            method = getattr(self, commandname)
-            givenresult = method(commandargs, _concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
-        elif dometaonly and not ismeta:
-            return
-        elif not dometaonly and ismeta:
-            # meta command, but the window has not passed yet, 
-            # so just mark it as executed without actually executing it
-            # the real execution will take place when the window has expired
-            self.executed[self.decisions[slotno]] = META
-            return
-        elif not dometaonly and not ismeta:
-            # this is the workhorse case that executes most normal commands
-            method = getattr(self.object, commandname)
-            try:
-                print commandargs
+        try:
+            if noop:
+                method = getattr(self, NOOP)
+                givenresult = "NOOP"
+            elif dometaonly and ismeta:
+                # execute a metacommand when the window has expired
+                method = getattr(self, commandname)
                 givenresult = method(commandargs, _concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
-                send_result_to_client = True
-            except UnusualReturn:
-                givenresult = CR_METAREPLY
-                send_result_to_client = False
-       #except (TypeError, AttributeError) as t:
-       #     print t
-       #     print "command not supported: %s" % (command)
-       #     givenresult = 'COMMAND NOT SUPPORTED'
+            elif dometaonly and not ismeta:
+                return
+            elif not dometaonly and ismeta:
+                # meta command, but the window has not passed yet, 
+                # so just mark it as executed without actually executing it
+                # the real execution will take place when the window has expired
+                self.executed[self.decisions[slotno]] = META
+                return
+            elif not dometaonly and not ismeta:
+                # this is the workhorse case that executes most normal commands
+                method = getattr(self.object, commandname)
+                self.lock.release()
+                try:
+                    givenresult = method(commandargs, _concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
+                    send_result_to_client = True
+                except UnusualReturn:
+                    givenresult = CR_METAREPLY
+                    send_result_to_client = False
+                self.lock.acquire()
+       except (TypeError, AttributeError) as t:
+            print t
+            print "command not supported: %s" % (command)
+            givenresult = 'COMMAND NOT SUPPORTED'
         self.executed[self.decisions[slotno]] = givenresult
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
