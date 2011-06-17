@@ -158,7 +158,7 @@ class Replica(Node):
                     givenresult = CR_METAREPLY
                     send_result_to_client = False
                 self.lock.acquire()
-       except (TypeError, AttributeError) as t:
+        except (TypeError, AttributeError) as t:
             print t
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'

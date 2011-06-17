@@ -1,6 +1,4 @@
 from threading import Lock
-from threadingobj.dsemaphore import DSemaphore
-from threadingobj.dlock import DLock
 from threadingobj.dcondition import DCondition
 
 class Barrier():
@@ -15,7 +13,7 @@ class Barrier():
         self.limit = int(args[0])
         self.current = 0
         self.atomic = Lock()
-        self.everyoneready = DistributedCondition(self.atomic)
+        self.everyoneready = DCondition(self.atomic)
 
     def wait(self, args, **kwargs):
         print self

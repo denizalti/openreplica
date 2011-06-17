@@ -18,7 +18,6 @@ class DCondition():
             raise UnusualReturn
 
     def release(self, kwargs):
-#        _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
         return self.lock.release(kwargs)
 
     def wait(self, kwargs):
