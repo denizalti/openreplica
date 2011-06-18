@@ -1,5 +1,5 @@
 #from concoord import *
-from returns import *
+from returntypes import *
 from exception import *
 from threading import RLock
 from drlock import DRlock
@@ -37,11 +37,8 @@ class DCondition():
         with self.atomic:
             if self.lock.locked == True and self.lock.holder == _concoord_command.client:
                 waitcommand = self.__waiters.pop(0)
-                #return_outofband(_concoord_designated, _concoord_owner, waitcommand)
-                # To make sure that the client that will be unblocked has the lock we'll make an acquire on the lock for that client.
-                kwargs['_concoord_command'] = waitcommand
-                # XXX
-                return self.lock.acquire(kwargs)
+                # To make sure that the client that will be unblocked has the lock we'll add the client to the lock queue.
+                self.lock.queue.append(waitcommand)
             else:
                 raise RuntimeError("cannot notify on un-acquired lock")         
 
@@ -51,15 +48,12 @@ class DCondition():
         with self.atomic:
             if self.lock.locked == True and self.lock.holder == _concoord_command.client:
                 for waitcommand in self.__waiters:
-                    return_outofband(_concoord_designated, _concoord_owner, waitcommand)
+                    self.lock.queue.append(waitcommand)
             else:
                 raise RuntimeError("cannot notify on un-acquired lock")   
 
     def __str__(self):
         temp = 'Distributed Condition'
-        #try:
         temp += "\nlock: %s\nwaiters: %s\n" % (str(self.lock), " ".join([str(w) for w in self.__waiters]))
-        #except:
-        #    pass
         return temp
 

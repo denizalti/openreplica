@@ -19,13 +19,13 @@ from peer import Peer
 from message import Message, PaxosMessage, HandshakeMessage, AckMessage, ClientMessage, ClientReplyMessage, UpdateMessage
 from command import Command
 from pvalue import PValue, PValueSet
+from exception import *
 from obj.test import Test
 from obj.bank import Bank
 from obj.lock import Lock
 from obj.barrier import Barrier
 from obj.semaphore import Semaphore
 from obj.condition import Condition
-from exception import *
 
 backoff_event = Event()
 
@@ -157,6 +157,10 @@ class Replica(Node):
                 except UnusualReturn:
                     givenresult = CR_METAREPLY
                     send_result_to_client = False
+                # XXX: Catch exceptions and return to client
+                #except Exception as e:
+                #    givenresult = e
+                #    send_result_to_client = True
                 self.lock.acquire()
         except (TypeError, AttributeError) as t:
             print t

@@ -1,6 +1,7 @@
-from returns import *
+from returntypes import *
 from exception import *
 from threading import Lock
+from thread import error
 
 class DLock():
     def __init__(self):
@@ -32,7 +33,7 @@ class DLock():
                     self.holder = None
                     self.locked = False
             else:
-                return "Release on unacquired lock"
+                raise error("release unlocked lock")
                 
     def __str__(self):
         temp = 'Distributed Lock'
