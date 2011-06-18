@@ -17,7 +17,7 @@ class DLock():
                 self.queue.append(_concoord_command)
                 raise UnusualReturn
             else:
-                self.locked = True
+                self.locked = True          
                 self.holder = _concoord_command.client
 
     def release(self, kwargs):

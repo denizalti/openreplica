@@ -80,6 +80,9 @@ class Client():
         with self.commandlistcond:
             self.commandlist.append(newcommand)
             self.commandlistcond.notify()
+        # XXX This function should return the reply to the client
+        # XXX or I should find another way to "return" the result or
+        # XXX the exception to the client.
     
     def clientloop(self):
         """Accepts commands from the prompt and sends requests for the commands
