@@ -85,16 +85,14 @@ class Client():
             self.commandlist.append(newcommand)
             self.requests[newcommand] = (None,Condition())
             self.commandlistcond.notify()
-        # XXX This function should return the reply to the client
-        # XXX or I should find another way to "return" the result or
-        # XXX the exception to the client.
+        # Wait for the reply
         while self.requests[newcommand][REPLY] == None:
             self.requests[newcommand][CONDITION].wait()
-        # XXX Check if there are exceptions and raise them.
+        # Check if there are exceptions and raise them.
         if self.requests[newcommand][REPLY].replycode == cr_codes[METAREPLY]:
             pass
         elif self.requests[newcommand][REPLY].replycode == cr_codes[EXCEPTION]:
-            pass
+            raise self.requests[newcommand][REPLY].reply
         else:
             return self.requests[newcommand][REPLY].reply
     
@@ -136,6 +134,8 @@ class Client():
                 if time.time() - starttime > CLIENTRESENDTIMEOUT:
                     if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                         replied = True
+                        self.requests[newcommand][REPLY] = reply
+                        self.requests[newcommand][CONDITION].notify()
 
 theClient = Client(options.bootstrap, options.filename)
 theClient.clientloop()

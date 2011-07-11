@@ -150,17 +150,19 @@ class Replica(Node):
             elif not dometaonly and not ismeta:
                 # this is the workhorse case that executes most normal commands
                 method = getattr(self.object, commandname)
+                # Watch out for the lock release and acquire!
                 self.lock.release()
                 try:
+                    clientreplycode = CR_METAREPLY
                     givenresult = method(commandargs, _concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
                     send_result_to_client = True
                 except UnusualReturn:
-                    givenresult = CR_METAREPLY
+                    clientreplycode = CR_METAREPLY
                     send_result_to_client = False
-                # XXX: Catch exceptions and return to client
-                #except Exception as e:
-                #    givenresult = e
-                #    send_result_to_client = True
+                except Exception as e:
+                    clientreplycode = CR_EXCEPTION
+                    givenresult = e
+                    send_result_to_client = True
                 self.lock.acquire()
         except (TypeError, AttributeError) as t:
             print t
@@ -171,7 +173,7 @@ class Replica(Node):
             # if this client contacted me for this operation, return him the response 
             if send_result_to_client and self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
                 print "Sending REPLY to CLIENT"
-                clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=givenresult, inresponseto=command.clientcommandnumber)
+                clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=givenresult, replycode=clientreplycode, inresponseto=command.clientcommandnumber)
                 clientconn = self.clientpool.get_connection_by_peer(command.client)
                 if clientconn.thesocket == None:
                     print "Client disconnected.."
