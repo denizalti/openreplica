@@ -135,6 +135,7 @@ class Replica(Node):
             if noop:
                 method = getattr(self, NOOP)
                 givenresult = "NOOP"
+                clientreplycode = CR_OK
             elif dometaonly and ismeta:
                 # execute a metacommand when the window has expired
                 method = getattr(self, commandname)
@@ -153,22 +154,24 @@ class Replica(Node):
                 # Watch out for the lock release and acquire!
                 self.lock.release()
                 try:
-                    clientreplycode = CR_METAREPLY
                     givenresult = method(commandargs, _concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
+                    clientreplycode = CR_METAREPLY
                     send_result_to_client = True
                 except UnusualReturn:
                     clientreplycode = CR_METAREPLY
                     send_result_to_client = False
                 except Exception as e:
-                    clientreplycode = CR_EXCEPTION
                     givenresult = e
+                    clientreplycode = CR_EXCEPTION
                     send_result_to_client = True
                 self.lock.acquire()
         except (TypeError, AttributeError) as t:
             print t
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
+            clientreplycode = CR_EXCEPTION
         self.executed[self.decisions[slotno]] = givenresult
+        
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
             if send_result_to_client and self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
@@ -199,11 +202,9 @@ class Replica(Node):
                 self.issue_pending_command(self.nexttoexecute)
             elif self.decisions[self.nexttoexecute] not in self.executed:
                 logger("executing command %d." % self.nexttoexecute)
-
                 # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
                 if self.nexttoexecute > WINDOW:
                     self.performcore(msg, self.nexttoexecute - WINDOW, True, designated=designated)
-
                 self.performcore(msg, self.nexttoexecute, designated=designated)
                 self.nexttoexecute += 1
                 # the window just got bumped by one
