@@ -11,8 +11,8 @@ class Jobmanager():
 	def add_job(self, args):
 		invoke_command(self, "add_job", args)
 
-	def list_jobs(self, args):
-		invoke_command(self, "list_jobs", args)
+	def list_jobs(self):
+		invoke_command(self, "list_jobs")
 
 	def remove_job(self, args):
 		invoke_command(self, "remove_job", args)

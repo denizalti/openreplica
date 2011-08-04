@@ -1,5 +1,6 @@
-from concoord import *
+from returns import *
 from exception import *
+from threading import Lock
 
 class DBoundedSemaphore():
     def __init__(self, count=1):
@@ -29,9 +30,7 @@ class DBoundedSemaphore():
             else:
                 self.count += 1
             if len(self.queue) > 0:
-                self.queue.reverse()
-                newcommand = self.queue.pop()
-                self.queue.reverse()
+                newcommand = self.queue.pop(0)
                 # return to new holder which is waiting
                 return_outofband(_concoord_designated, _concoord_owner, newcommand)
                 

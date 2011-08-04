@@ -1,86 +1,59 @@
-from concoord import *
+#from concoord import *
+from returntypes import *
 from exception import *
+from threading import RLock
+from drlock import DRlock
+from dlock import DLock
     
 class DCondition():
-    def __init__(self, lock=None):
-        if lock:
-            self.lock = lock
-        else:
-            self.lock = Lock()
-        self.locked = False
-        self.lockholder = None
-        self.lockqueue = []
-        self.waiting = []
+    def __init__(self):
+        self.atomic = RLock()
+        self.lock = DLock()
+        self.__waiters = []
     
     def acquire(self, kwargs):
-        _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
-        if self.locked == True:
-            self.lockqueue.append(_concoord_command)
+        try:
+            return self.lock.acquire(kwargs)
+        except UnusualReturn:
             raise UnusualReturn
-        else:
-            self.lockholder = _concoord_command.client
-            self.locked = True
 
     def release(self, kwargs):
-        _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
-        if self.locked == True and self.holder == _concoord_command.client:
-            with self.lock:
-                if len(self.lockqueue) == 0:
-                    self.lockholder = None
-                    self.locked = False
-                else:
-                    self.lockqueue.reverse()
-                    newcommand = self.lockqueue.pop()
-                    self.lockqueue.reverse()
-                    self.lockholder = newcommand.client
-                    # return to new holder which is waiting
-                    return_outofband(_concoord_designated, _concoord_owner, newcommand)
-        else:
-            return "Release on unacquired lock"
+        return self.lock.release(kwargs)
 
     def wait(self, kwargs):
         _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
         # put the caller on waitinglist and take the lock away
-        if self.locked == True and self.lockholder == _concoord_command.client:
-            with self.lock:
-                self.waiting.append(_concoord_command)
-                if len(self.lockqueue) == 0:
-                    self.lockholder = None
-                    self.locked = False
-                else:
-                    self.lockqueue.reverse()
-                    newcommand = self.lockqueue.pop()
-                    self.lockqueue.reverse()
-                    self.lockholder = newcommand.client
-                    # return to new holder which is waiting
-                    return_outofband(_concoord_designated, _concoord_owner, newcommand)
+        with self.atomic:
+            if self.lock.locked == True and self.lock.holder == _concoord_command.client:
+                self.__waiters.append(_concoord_command)
+                self.lock.release(kwargs)
                 raise UnusualReturn
-        else:
-            return "Can't wait on unacquired condition"
+            else:
+                raise RuntimeError("cannot wait on un-acquired lock")
 
     def notify(self, kwargs):
         _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
         # Notify the next client on the wait list
-        with self.lock:
-            self.waiting.reverse()
-            nextcommand = self.queue.pop()
-            self.waiting.reverse()
-        return_outofband(_concoord_designated, _concoord_owner, nextcommand)
+        with self.atomic:
+            if self.lock.locked == True and self.lock.holder == _concoord_command.client:
+                waitcommand = self.__waiters.pop(0)
+                # To make sure that the client that will be unblocked has the lock we'll add the client to the lock queue.
+                self.lock.queue.append(waitcommand)
+            else:
+                raise RuntimeError("cannot notify on un-acquired lock")         
 
     def notifyAll(self, kwargs):
         _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
         # Notify every client on the wait list
-        with self.lock:
-            self.waiting.reverse()
-            for client in self.waiting:
-                nextcommand = self.waiting.pop()
-                return_outofband(_concoord_designated, _concoord_owner, nextcommand)
+        with self.atomic:
+            if self.lock.locked == True and self.lock.holder == _concoord_command.client:
+                for waitcommand in self.__waiters:
+                    self.lock.queue.append(waitcommand)
+            else:
+                raise RuntimeError("cannot notify on un-acquired lock")   
 
-    def __str__(self, kwargs):
+    def __str__(self):
         temp = 'Distributed Condition'
-        try:
-            temp += "\nlockholder: %s\nlockqueue: %s\nwaiting: %s\n" % (self.lockholder, " ".join([str(l) for l in self.lockqueue]), " ".join([str(w) for w in self.waiting]))
-        except:
-            pass
+        temp += "\nlock: %s\nwaiters: %s\n" % (str(self.lock), " ".join([str(w) for w in self.__waiters]))
         return temp
 

@@ -2,23 +2,28 @@
 paxi. """
 
 *** GRAPHS ***
-- Graph4: How does the Throughput change as time passes
-- Run on sys01 in parallel, collect new graphs
+- Performance: Throughput vs. number of Replicas
+- Performance: Throughput vs. number of Acceptors
+- Reliability: Throughput vs. failure events
+- Reliability: Throughput in time
 
 *** TESTING ***
 - Fuzztesting (Test with Random inputs): Peach might be used.
 
-*** Applications ***
-- Web Crawler
-- Email?
-
 *** CHANGES TO THE CODE ***
-- Object Fixes!
 - Failure Detector
-- acceptor state should be garbage collected
-- garbage collect commands that all replicas have seen
+- Garbage collection: acceptor state, safe commands
+
+*** ADDITIONS ***
+- interface to show all ConCoord transactions
+- *tab* on an object (watch in ZooKeeper)
+- read vs. write requests. read requests do not require Paxos round.
+- 
 
 *** DONE ***
+- self.lock problem: every msg_method function is called with the
+lock, this might cause a problem in the perform core if it doesn't
+return.
 - DNSSERVER for openreplica.org
   -- Special Replicas: Listen to state, cannot become leader
   -- Keep dictionary of name to specialnode

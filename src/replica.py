@@ -19,12 +19,13 @@ from peer import Peer
 from message import Message, PaxosMessage, HandshakeMessage, AckMessage, ClientMessage, ClientReplyMessage, UpdateMessage
 from command import Command
 from pvalue import PValue, PValueSet
+from exception import *
 from obj.test import Test
 from obj.bank import Bank
 from obj.lock import Lock
 from obj.barrier import Barrier
 from obj.semaphore import Semaphore
-from exception import *
+from obj.condition import Condition
 
 backoff_event = Event()
 
@@ -134,6 +135,7 @@ class Replica(Node):
             if noop:
                 method = getattr(self, NOOP)
                 givenresult = "NOOP"
+                clientreplycode = CR_OK
             elif dometaonly and ismeta:
                 # execute a metacommand when the window has expired
                 method = getattr(self, commandname)
@@ -149,22 +151,32 @@ class Replica(Node):
             elif not dometaonly and not ismeta:
                 # this is the workhorse case that executes most normal commands
                 method = getattr(self.object, commandname)
+                # Watch out for the lock release and acquire!
+                self.lock.release()
                 try:
                     givenresult = method(commandargs, _concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
+                    clientreplycode = CR_METAREPLY
                     send_result_to_client = True
                 except UnusualReturn:
-                    givenresult = CR_METAREPLY
+                    clientreplycode = CR_METAREPLY
                     send_result_to_client = False
+                except Exception as e:
+                    givenresult = e
+                    clientreplycode = CR_EXCEPTION
+                    send_result_to_client = True
+                self.lock.acquire()
         except (TypeError, AttributeError) as t:
             print t
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
+            clientreplycode = CR_EXCEPTION
         self.executed[self.decisions[slotno]] = givenresult
+        
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
             if send_result_to_client and self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
                 print "Sending REPLY to CLIENT"
-                clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=givenresult, inresponseto=command.clientcommandnumber)
+                clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=givenresult, replycode=clientreplycode, inresponseto=command.clientcommandnumber)
                 clientconn = self.clientpool.get_connection_by_peer(command.client)
                 if clientconn.thesocket == None:
                     print "Client disconnected.."
@@ -190,11 +202,9 @@ class Replica(Node):
                 self.issue_pending_command(self.nexttoexecute)
             elif self.decisions[self.nexttoexecute] not in self.executed:
                 logger("executing command %d." % self.nexttoexecute)
-
                 # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
                 if self.nexttoexecute > WINDOW:
                     self.performcore(msg, self.nexttoexecute - WINDOW, True, designated=designated)
-
                 self.performcore(msg, self.nexttoexecute, designated=designated)
                 self.nexttoexecute += 1
                 # the window just got bumped by one
@@ -736,7 +746,7 @@ class Replica(Node):
             print "%d: %s" % (cmdnum,str(command))
 
 def main():
-    theReplica = Replica(Semaphore())
+    theReplica = Replica(Condition())
     theReplica.startservice()
 
 if __name__=='__main__':

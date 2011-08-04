@@ -1,4 +1,6 @@
 #!/bin/sh
+# This script starts a given number of replica nodes, 3 acceptor nodes
+# and a client node on a remote sys server.
 
 ARGS=1
 E_BADARGS=65

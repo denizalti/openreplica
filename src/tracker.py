@@ -77,7 +77,7 @@ class Tracker(Replica):
             self.send(updatemessage, peer=msg.source)
 
 def main():
-    membershipnode = Membership()
+    membershipnode = Tracker()
     membershipnode.startservice()
 
 if __name__=='__main__':

@@ -22,6 +22,9 @@ parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="addres
 parser.add_option("-f", "--file", action="store", dest="filename", default=None, help="inputfile")
 (options, args) = parser.parse_args()
 
+REPLY = 0
+CONDITION = 1
+
 class Client():
     """Client sends requests and receives responses"""
     def __init__(self, givenbootstraplist, inputfile):
@@ -44,6 +47,7 @@ class Client():
         self.clientcommandnumber = 1
         self.commandlistcond = Condition()
         self.commandlist = []
+        self.requests = {} # Keeps request:(reply, condition) mappings
 
     def startclientproxy():
         clientloop_thread = Thread(target=self.clientloop)
@@ -79,7 +83,18 @@ class Client():
         newcommand = Command(self.me, mynumber, commandargs)
         with self.commandlistcond:
             self.commandlist.append(newcommand)
+            self.requests[newcommand] = (None,Condition())
             self.commandlistcond.notify()
+        # Wait for the reply
+        while self.requests[newcommand][REPLY] == None:
+            self.requests[newcommand][CONDITION].wait()
+        # Check if there are exceptions and raise them.
+        if self.requests[newcommand][REPLY].replycode == cr_codes[METAREPLY]:
+            pass
+        elif self.requests[newcommand][REPLY].replycode == cr_codes[EXCEPTION]:
+            raise self.requests[newcommand][REPLY].reply
+        else:
+            return self.requests[newcommand][REPLY].reply
     
     def clientloop(self):
         """Accepts commands from the prompt and sends requests for the commands
@@ -105,18 +120,22 @@ class Client():
                 reply = self.conn.receive()
                 print "received: ", reply
                 if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
-                    if reply.command == "REJECTED" or reply.command == "LEADERNOTREADY":
+                    if reply.replycode == cr_codes[REJECTED] or reply.replycode == cr_codes[LEADERNOTREADY]:
                         currentbootstrap = self.bootstraplist.pop(0)
                         self.bootstraplist.append(currentbootstrap)
                         self.connecttobootstrap()
                         continue
                     else:
                         replied = True
+                        self.requests[newcommand][REPLY] = reply
+                        self.requests[newcommand][CONDITION].notify()
                 elif reply and reply.type == MSG_CLIENTMETAREPLY and reply.inresponseto == mynumber:
                     pass
                 if time.time() - starttime > CLIENTRESENDTIMEOUT:
                     if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                         replied = True
+                        self.requests[newcommand][REPLY] = reply
+                        self.requests[newcommand][CONDITION].notify()
 
 theClient = Client(options.bootstrap, options.filename)
 theClient.clientloop()
