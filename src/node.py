@@ -23,10 +23,11 @@ from message import Message, PaxosMessage, HandshakeMessage, AckMessage, Message
 from command import Command
 from pvalue import PValue, PValueSet
 
-parser = OptionParser(usage="usage: %prog -p port -b bootstrap -d delay")
+parser = OptionParser(usage="usage: %prog -p port -b bootstrap -l -d")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
 parser.add_option("-l", "--local", action="store_true", dest="local", default=False, help="initiates the node at localhost")
+parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
 
 (options, args) = parser.parse_args()
 
@@ -36,7 +37,7 @@ class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
     """ 
-    def __init__(self, nodetype, port=options.port, bootstrap=options.bootstrap, local=options.local):
+    def __init__(self, nodetype, port=options.port, bootstrap=options.bootstrap, local=options.local, debugoption=options.debug):
         """Node State
         - addr: hostname for Node, detected automatically
         - port: port for Node, can be taken from the commandline (-p [port]) or
@@ -79,7 +80,7 @@ class Node():
             if self.type == NODE_ACCEPTOR or self.type == NODE_REPLICA:
                 f = open('ports', 'a')
                 # XXX This lock blocks on NFS
-                fcntl.flock(f,fcntl.LOCK_EX)
+                #fcntl.flock(f,fcntl.LOCK_EX)
                 t = node_names[self.type].lower()
                 f.write("add_%s %s:%d\n" % (t, self.addr, self.port))
                 for i in range (WINDOW):
@@ -92,7 +93,8 @@ class Node():
         # initialize empty groups
         self.me = Peer(self.addr,self.port,self.type)
         self.id = self.me.id()
-        setlogprefix("%s %s" % (node_names[self.type],self.id))
+        if debugoption:
+            setlogprefix("%s %s" % (node_names[self.type],self.id))
         logger("Ready!")
         self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_LEADER:Group(self.me), \
                        NODE_TRACKER:Group(self.me), NODE_COORDINATOR:Group(self.me), NODE_NAMESERVER:Group(self.me)}
