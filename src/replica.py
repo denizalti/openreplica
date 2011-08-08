@@ -9,6 +9,7 @@ import time
 import random
 import math
 import sys
+import os
 
 from node import Node
 from enums import *
@@ -42,7 +43,7 @@ def starttiming(fn):
 
 def endtiming(fn):
     """Decorator used to end timing. Keeps track of the count for the first and second calls."""
-    NITER = 100
+    NITER = 300
     def new(*args, **kw):
         ret = fn(*args, **kw)
         obj = args[0]
@@ -55,6 +56,7 @@ def endtiming(fn):
             print "YYY %d %.15f" % (len(obj.groups[NODE_REPLICA]), (now - obj.secondstarttime)/NITER)
             obj.count += 1
             sys.stdout.flush()
+            os._exit(0)
         else:
             obj.count += 1
         return ret
@@ -118,7 +120,6 @@ class Replica(Node):
         leaderping_thread = Timer(LIVENESSTIMEOUT, self.ping_leader)
         leaderping_thread.start()
 
-    @endtiming
     def performcore(self, msg, slotno, dometaonly=False, designated=False):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
@@ -132,7 +133,9 @@ class Replica(Node):
         noop = (commandname == "noop")
         send_result_to_client = True
         try:
-            if noop:
+            if dometaonly and not ismeta:
+                return
+            elif noop:
                 method = getattr(self, NOOP)
                 givenresult = "NOOP"
                 clientreplycode = CR_OK
@@ -140,8 +143,6 @@ class Replica(Node):
                 # execute a metacommand when the window has expired
                 method = getattr(self, commandname)
                 givenresult = method(commandargs, _concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
-            elif dometaonly and not ismeta:
-                return
             elif not dometaonly and ismeta:
                 # meta command, but the window has not passed yet, 
                 # so just mark it as executed without actually executing it
@@ -183,6 +184,7 @@ class Replica(Node):
                     return
                 clientconn.send(clientreply)
 
+    @endtiming
     def perform(self, msg, designated=False):
         """Take a given PERFORM message, add it to the set of decided commands, and call performcore to execute."""
         if msg.commandnumber not in self.decisions:
@@ -203,6 +205,7 @@ class Replica(Node):
             elif self.decisions[self.nexttoexecute] not in self.executed:
                 logger("executing command %d." % self.nexttoexecute)
                 # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
+                # We are calling performcore 2 times, the timing gets screwed plus this is very unefficient :(
                 if self.nexttoexecute > WINDOW:
                     self.performcore(msg, self.nexttoexecute - WINDOW, True, designated=designated)
                 self.performcore(msg, self.nexttoexecute, designated=designated)
@@ -225,7 +228,7 @@ class Replica(Node):
                 self.stateuptodate = True
                 return
             updatemessage = UpdateMessage(MSG_UPDATE, self.me)
-            print "Sending Update Message to ", msg.source
+            #print "Sending Update Message to ", msg.source
             self.send(updatemessage, peer=msg.source)
 
     def msg_heloreply(self, conn, msg):
@@ -246,7 +249,7 @@ class Replica(Node):
             if msg.decisions.has_key(key):
                 assert self.decisions[key] == msg.decisions[key], "Update Error"
         self.decisions.update(msg.decisions)
-        self.stateuptodate = True # XXX
+        self.stateuptodate = True
 
     def do_noop(self):
         pass
@@ -746,7 +749,7 @@ class Replica(Node):
             print "%d: %s" % (cmdnum,str(command))
 
 def main():
-    theReplica = Replica(Condition())
+    theReplica = Replica(Bank())
     theReplica.startservice()
 
 if __name__=='__main__':
