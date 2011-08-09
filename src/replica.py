@@ -43,7 +43,7 @@ def starttiming(fn):
 
 def endtiming(fn):
     """Decorator used to end timing. Keeps track of the count for the first and second calls."""
-    NITER = 300
+    NITER = 30
     def new(*args, **kw):
         ret = fn(*args, **kw)
         obj = args[0]
@@ -56,6 +56,8 @@ def endtiming(fn):
             print "YYY %d %.15f" % (len(obj.groups[NODE_REPLICA]), (now - obj.secondstarttime)/NITER)
             obj.count += 1
             sys.stdout.flush()
+            obj.signalend()
+            time.sleep(2)
             os._exit(0)
         else:
             obj.count += 1
@@ -751,6 +753,7 @@ class Replica(Node):
 def main():
     theReplica = Replica(Bank())
     theReplica.startservice()
+    theReplica.waituntilend()
 
 if __name__=='__main__':
     main()

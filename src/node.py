@@ -62,7 +62,9 @@ class Node():
         self.outstandingmessages_lock = RLock()
         self.outstandingmessages = {}
         self.lock = Lock()
-        
+        self.done = False
+        self.donecond = Condition()
+
         # create server socket and bind to a port
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
@@ -120,7 +122,18 @@ class Node():
         # Start a thread that pings neighbors
         timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
         timer_thread.start()
-        
+
+    def signalend(self):
+        with self.donecond:
+            self.done = True
+            self.donecond.notifyAll()
+            
+    def waituntilend(self):
+        with self.donecond:
+            while self.done == False:
+                self.donecond.wait()
+        logger("End of life")
+
     def __str__(self):
         """Return Node information (addr:port)"""
         return "%s  %s:%d" % (node_names[self.type], self.addr, self.port)
