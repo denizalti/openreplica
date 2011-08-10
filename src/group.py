@@ -53,10 +53,7 @@ class Group():
 
     def __str__(self):
         """Returns Group information"""
-        returnstr = ''
-        for peer in self.members:
-            returnstr += str(peer) + ' '
-        return returnstr
+        return " ".join(str(peer) for peer in self.members)
     
     def __len__(self):
         """Returns number of Peers in the Group"""

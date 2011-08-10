@@ -35,6 +35,4 @@ class DBoundedSemaphore():
                 return_outofband(_concoord_designated, _concoord_owner, newcommand)
                 
     def __str__(self):
-        temp = 'Distributed BoundedSemaphore'
-        temp += "\ncount: %d\nqueue: %s\n" % (self.count, " ".join([str(m) for m in self.queue]))
-        return temp
+        return "Distributed BoundedSemaphore\ncount: %d\nqueue: %s\n" % (self.count, " ".join([str(m) for m in self.queue]))

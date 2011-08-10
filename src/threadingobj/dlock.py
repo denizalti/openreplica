@@ -36,6 +36,4 @@ class DLock():
                 raise error("release unlocked lock")
                 
     def __str__(self):
-        temp = 'Distributed Lock'
-        temp += "\nholder: %s\nqueue: %s\n" % (self.holder, " ".join([str(m) for m in self.queue]))
-        return temp
+        return "Distributed Lock\nholder: %s\nqueue: %s\n" % (self.holder, " ".join([str(m) for m in self.queue]))

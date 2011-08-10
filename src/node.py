@@ -143,15 +143,11 @@ class Node():
 
     def statestr(self):
         """Return the Peers Node knows of, i.e. connectivity state"""
-        returnstr = "state:\n"
-        for type,group in self.groups.iteritems():
-            returnstr += str(group)
-
+        groups = "".join(str(group) for type,group in self.groups.iteritems())
         if hasattr(self,'pendingcommands') and len(self.pendingcommands) > 0:
-            returnstr += "\nPending:\n"
-            for cno,proposal in self.pendingcommands.iteritems():
-                returnstr += "command#%d: %s" % (cno, proposal)
-        return returnstr
+            pending =  "".join("%d: %s" % (cno, proposal) for cno,proposal in self.pendingcommands.iteritems())
+            groups = "%s\nPending:\n%s" % (groups, pending)
+        return groups
 
     def outstandingmsgstr(self):
         """Return the dictionary of outstandingmessages"""

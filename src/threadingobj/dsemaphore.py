@@ -29,6 +29,4 @@ class DSemaphore():
                 return_outofband(_concoord_designated, _concoord_owner, newcommand)
                 
     def __str__(self):
-        temp = 'Distributed Semaphore'
-        temp += "\ncount: %d\nqueue: %s\n" % (self.count, " ".join([str(m) for m in self.queue]))
-        return temp
+        return "Distributed Semaphore\ncount: %d\nqueue: %s\n" % (self.count, " ".join([str(m) for m in self.queue]))

@@ -123,23 +123,23 @@ class Nameserver(Tracker):
 
     def create_answer_section(self, question, ttl='3600', rrclass=1, rrtype=1, addr='', name=''):
         if rrtype == dns.rdatatype.A:
-            answerstr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + addr + '\n'
+            answerstr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[rrtype]), str(addr))
         elif rrtype == dns.rdatatype.NS:
-            answerstr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + name + '\n'
+            answerstr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[rrtype]), str(name))
         return answerstr
 
     def create_authority_section(self, question, ttl='3600', rrclass=1, rrtype=1, addr='', name=''):
         if rrtype == dns.rdatatype.A:
-            authoritystr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + addr + '\n'
+            authoritystr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[rrtype]), str(addr))
         elif rrtype == dns.rdatatype.NS:
-            authoritystr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + name + '\n'
+            authoritystr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[rrtype]), str(name))
         return authoritystr
 
     def create_additional_section(self, question, ttl='3600', rrclass=1, rrtype=1, addr='', name=''):
         if rrtype == dns.rdatatype.A:
-            additionalstr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + addr + '\n'
+            additionalstr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[rrtype]), str(addr))
         elif rrtype == dns.rdatatype.NS:
-            additionalstr = str(question.name) + ' ' + ttl + ' ' + RRCLASS[rrclass] + ' ' + RRTYPE[rrtype] + ' ' + name + '\n'
+            additionalstr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[rrtype]), str(name))
         return additionalstr
 
     

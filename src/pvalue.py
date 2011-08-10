@@ -48,10 +48,7 @@ class PValueSet():
 
     def __str__(self):
         """Returns PValueSet information"""
-        temp = ''
-        for pvalue in self.pvalues:
-            temp += str(pvalue)+"\n"
-        return temp
+        return "\n".join(str(pvalue) for pvalue in self.pvalues)
 
 class PValue():
     """PValue encloses a ballotnumber, commandnumber and proposal.

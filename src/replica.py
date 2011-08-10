@@ -477,6 +477,7 @@ class Replica(Node):
             return
         self.outstandingproposes[givencommandnumber] = prc
         propose = PaxosMessage(MSG_PROPOSE,self.me,recentballotnumber,commandnumber=givencommandnumber,proposal=givenproposal)
+        print "XXXXXXXXXXXXXX %s" % str(propose)
         self.send(propose,group=prc.acceptors)
         
     # Paxos Methods
@@ -511,6 +512,7 @@ class Replica(Node):
             return
         self.outstandingprepares[newballotnumber] = prc
         prepare = PaxosMessage(MSG_PREPARE,self.me,newballotnumber)
+        print "XXXXXXXXXXXXXX %s" % str(prepare)
         self.send(prepare,group=prc.acceptors)
 
     def do_command_prepare(self, givenproposal):
@@ -619,8 +621,6 @@ class Replica(Node):
                 # if I lost to someone whose name precedes mine, back off more than he does
                 self.backoff += BACKOFFINCREASE
             time.sleep(self.backoff)
-            #remove the proposal from proposals
-            #del self.proposals[prc.commandnumber]
         else:
             logger("there is no response collector")
 

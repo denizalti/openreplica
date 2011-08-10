@@ -59,7 +59,7 @@ class HandshakeMessage(Message):
     def __str__(self):
         temp = Message.__str__(self)
         if self.type == MSG_HELOREPLY:
-            temp += ' groups %s' % self.groups
+            temp = '%s groups %s' % (temp, self.groups)
         return temp
 
 class UpdateMessage(Message):
@@ -71,7 +71,7 @@ class UpdateMessage(Message):
     def __str__(self):
         temp = Message.__str__(self)
         if self.type == MSG_UPDATEREPLY:
-            temp += ' decisions %s' % self.decisions
+            temp = '%s decisions %s' % (temp, self.decisions)
         return temp
 
 class PaxosMessage(Message):
@@ -85,12 +85,11 @@ class PaxosMessage(Message):
         self.result = result
 
     def __str__(self):
-        temp = Message.__str__(self)
-        temp += 'ballotnumber: %s commandnumber: %d proposal: %s result: %s pvalues: ' \
-            % (str(self.ballotnumber),self.commandnumber,self.proposal,self.result)
+        temp = '%sballotnumber: %s commandnumber: %d proposal: %s result: %s pvalues: ' \
+            % (Message.__str__(self),str(self.ballotnumber),self.commandnumber,self.proposal,self.result)
         if self.pvalueset is not None:
-            for pvalue in self.pvalueset.pvalues:
-                temp += str(pvalue) + '\n'
+            ps = "\n".join(str(pvalue) for pvalue in self.pvalueset.pvalues)
+            temp = "%s\n%s" % (temp, ps)
         return temp
 
 class ClientMessage(Message):
@@ -100,10 +99,7 @@ class ClientMessage(Message):
         self.inresponseto = inresponseto
 
     def __str__(self):
-        temp = Message.__str__(self)
-        temp += '  inresponseto: %d' % self.inresponseto
-        temp += '  request: %s' % str(self.command)
-        return temp
+        return "%s inresponseto: %d  request: %s" % (Message.__str__(self), self.inresponseto, str(self.command))
 
 class ClientReplyMessage(Message):
     def __init__(self, msgtype, myname, reply=None, replycode=-1, inresponseto=0):
@@ -113,11 +109,7 @@ class ClientReplyMessage(Message):
         self.inresponseto = inresponseto
 
     def __str__(self):
-        temp = Message.__str__(self)
-        temp += '  inresponseto: %d' % self.inresponseto
-        temp += '  reply: %s' % str(self.reply)
-        temp += '  replycode: %s' % cr_codes[self.replycode]
-        return temp
+        return "%s inresponseto: %d  reply: %s replycode: %s" % (Message.__str__(self), self.inresponseto, str(self.reply), cr_codes[self.replycode])
 
 class AckMessage(Message):
     def __init__(self,msgtype, myname, ackid):
