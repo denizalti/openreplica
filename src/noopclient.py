@@ -66,8 +66,6 @@ class Client():
     def clientloop(self):
         """Creates and send noop"""
         while self.alive:
-            if self.clientcommandnumber == 100:
-                self.alive = False
             mynumber = self.clientcommandnumber
             self.clientcommandnumber += 1
             # create command from input

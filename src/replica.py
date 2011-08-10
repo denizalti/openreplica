@@ -111,6 +111,7 @@ class Replica(Node):
         self.object = replicatedobject
         self.nexttoexecute = 1
         self.decisions = {}
+        self.decidedcommandset = set()
         self.executed = {}
         self.proposals = {}
         self.pendingcommands = {}
@@ -197,6 +198,7 @@ class Replica(Node):
         """Take a given PERFORM message, add it to the set of decided commands, and call performcore to execute."""
         if msg.commandnumber not in self.decisions:
             self.decisions[msg.commandnumber] = msg.proposal
+            self.decidedcommandset.add(msg.proposal)
         else:
             print "This commandnumber has been decided before.."
         # If replica was using this commandnumber for a different proposal, initiate it again
@@ -256,6 +258,7 @@ class Replica(Node):
             if msg.decisions.has_key(key):
                 assert self.decisions[key] == msg.decisions[key], "Update Error"
         self.decisions.update(msg.decisions)
+        # XXX self.decidedcommandset
         self.stateuptodate = True
 
     def do_noop(self):
@@ -407,15 +410,13 @@ class Replica(Node):
             #logger("client request received previously")
             resultsent = False
             # Check if the request has been executed
-            for (commandnumber,command) in self.decisions.iteritems():
-                if command == givencommand:
-                    if self.executed.has_key(command) and self.executed[command]!= CR_METAREPLY:
-                        clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=self.executed[command], inresponseto=givencommand.clientcommandnumber)
-                        conn = self.clientpool.get_connection_by_peer(givencommand.client)
-                        if conn is not None:
-                            conn.send(clientreply)
-                        resultsent = True
-                        break
+            if givencommand in self.decidedcommandset:
+                if self.executed.has_key(givencommand) and self.executed[givencommand]!= CR_METAREPLY:
+                    clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=self.executed[givencommand], inresponseto=givencommand.clientcommandnumber)
+                    conn = self.clientpool.get_connection_by_peer(givencommand.client)
+                    if conn is not None:
+                        conn.send(clientreply)
+                    resultsent = True
             # If request not executed yet, send IN PROGRESS
             if not resultsent:
                 clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_INPROGRESS, inresponseto=givencommand.clientcommandnumber)
