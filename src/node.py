@@ -22,6 +22,7 @@ from peer import Peer
 from message import Message, PaxosMessage, HandshakeMessage, AckMessage, MessageInfo
 from command import Command
 from pvalue import PValue, PValueSet
+from concoordprofiler import *
 
 parser = OptionParser(usage="usage: %prog -p port -b bootstrap -l -d")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
@@ -64,6 +65,8 @@ class Node():
         self.lock = Lock()
         self.done = False
         self.donecond = Condition()
+        # profiler
+        profile_on()
 
         # create server socket and bind to a port
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)

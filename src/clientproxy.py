@@ -35,7 +35,7 @@ class Client():
         - me: Peer instance of Client
         - conn: Connection on Client's socket
         - alive: liveness of Client
-        """
+         """
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.initializebootstraplist(givenbootstraplist)

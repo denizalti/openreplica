@@ -33,7 +33,6 @@ class PValueSet():
     def pmax(self):
         """Returns a  mapping from command numbers to proposals with the highest ballotnumbers"""
         commandnumbers = [pvalue.commandnumber for pvalue in self.pvalues]
-        print "Will do PMAX for commandnumbers", commandnumbers
         pmaxresult = {}
         for c in commandnumbers:
             maxballotnumberpvalue = PValue()

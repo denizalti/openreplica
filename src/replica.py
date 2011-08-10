@@ -11,6 +11,7 @@ import math
 import sys
 import os
 
+from pprint import pprint
 from node import Node
 from enums import *
 from utils import *
@@ -27,6 +28,7 @@ from obj.lock import Lock
 from obj.barrier import Barrier
 from obj.semaphore import Semaphore
 from obj.condition import Condition
+from concoordprofiler import *
 
 backoff_event = Event()
 
@@ -43,7 +45,7 @@ def starttiming(fn):
 
 def endtiming(fn):
     """Decorator used to end timing. Keeps track of the count for the first and second calls."""
-    NITER = 30
+    NITER = 1000
     def new(*args, **kw):
         ret = fn(*args, **kw)
         obj = args[0]
@@ -53,11 +55,16 @@ def endtiming(fn):
             obj.secondstoptime = time.time()
         elif obj.count == NITER:
             now = time.time()
-            print "YYY %d %.15f" % (len(obj.groups[NODE_REPLICA]), (now - obj.secondstarttime)/NITER)
+            total = now - obj.secondstarttime
+            print "Replicas: ", len(obj.groups[NODE_REPLICA])+1
+            print "Requests: ", NITER
+            print "Total time: ", total
+            print "Per request: ", total/NITER
             obj.count += 1
             sys.stdout.flush()
-            obj.signalend()
-            time.sleep(2)
+            profile_off()
+            pprint(get_profile_stats())
+            time.sleep(10)
             os._exit(0)
         else:
             obj.count += 1
@@ -126,7 +133,7 @@ class Replica(Node):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
         to the managements of the Paxos protocol) with a delay of WINDOW commands."""
-        print "---> SlotNo: %d Command: %s DoMetaOnly: %s" % (slotno, self.decisions[slotno], dometaonly)
+        logger("---> SlotNo: %d Command: %s DoMetaOnly: %s" % (slotno, self.decisions[slotno], dometaonly))
         command = self.decisions[slotno]
         commandlist = command.command.split()
         commandname = commandlist[0]
@@ -169,7 +176,6 @@ class Replica(Node):
                     send_result_to_client = True
                 self.lock.acquire()
         except (TypeError, AttributeError) as t:
-            print t
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
             clientreplycode = CR_EXCEPTION
@@ -178,7 +184,7 @@ class Replica(Node):
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
             if send_result_to_client and self.type == NODE_LEADER and command.client.id() in self.clientpool.poolbypeer.keys():
-                print "Sending REPLY to CLIENT"
+                logger("Sending REPLY to CLIENT")
                 clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=givenresult, replycode=clientreplycode, inresponseto=command.clientcommandnumber)
                 clientconn = self.clientpool.get_connection_by_peer(command.client)
                 if clientconn.thesocket == None:
@@ -230,7 +236,6 @@ class Replica(Node):
                 self.stateuptodate = True
                 return
             updatemessage = UpdateMessage(MSG_UPDATE, self.me)
-            #print "Sending Update Message to ", msg.source
             self.send(updatemessage, peer=msg.source)
 
     def msg_heloreply(self, conn, msg):
@@ -445,6 +450,10 @@ class Replica(Node):
         if self.type == NODE_LEADER:
             self.clientpool.add_connection_to_peer(msg.source, conn)
             self.handle_client_command(msg.command)
+        #if self.firststarttime == 0:
+        #    self.firststarttime = time.time()
+        #elif self.secondstarttime == 0:
+        #    self.secondstarttime = time.time()
 
     def msg_clientreply(self, conn, msg):
         """this only occurs in response to commands initiated by the shell"""
@@ -570,7 +579,7 @@ class Replica(Node):
                 if self.proposals[prc.commandnumber] != prc.proposal:
                     self.do_command_propose(prc.proposal)
                 for chosencommandnumber,chosenproposal in self.proposals.iteritems():
-                    print "Sending PROPOSE for %d, %s" % (chosencommandnumber, chosenproposal)
+                    logger("Sending PROPOSE for %d, %s" % (chosencommandnumber, chosenproposal))
                     newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, chosencommandnumber, chosenproposal)
                     self.outstandingproposes[chosencommandnumber] = newprc
                     propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotnumber,commandnumber=chosencommandnumber,proposal=chosenproposal)
@@ -644,9 +653,7 @@ class Replica(Node):
                     # now we can perform this action on the replicas
                     performmessage = PaxosMessage(MSG_PERFORM,self.me,commandnumber=prc.commandnumber,proposal=prc.proposal)
                     try:
-                        print "Sending PERFORM!"
-                        print str(self.groups[NODE_NAMESERVER])
-                        print str(self.groups[NODE_TRACKER]) 
+                        logger("Sending PERFORM!")
                         self.send(performmessage, group=self.groups[NODE_REPLICA])
                         self.send(performmessage, group=self.groups[NODE_LEADER])
                         self.send(performmessage, group=self.groups[NODE_NAMESERVER])
@@ -753,7 +760,6 @@ class Replica(Node):
 def main():
     theReplica = Replica(Bank())
     theReplica.startservice()
-    theReplica.waituntilend()
-
+    
 if __name__=='__main__':
     main()
