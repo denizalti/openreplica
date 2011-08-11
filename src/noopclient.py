@@ -75,28 +75,26 @@ class Client():
             print "Client Message about to be sent:", cm
             starttime = time.time()
             self.conn.settimeout(CLIENTRESENDTIMEOUT)
-            
-            while not replied:
-                success = self.conn.send(cm)
-                # problem with the connection, try another bootstrap
-                if not success:
+            success = self.conn.send(cm)
+            # problem with the connection, try another bootstrap
+            if not success:
+                currentbootstrap = self.bootstraplist.pop(0)
+                self.bootstraplist.append(currentbootstrap)
+                self.connecttobootstrap()
+                continue
+            reply = self.conn.receive()
+            if reply and (reply.type == MSG_CLIENTREPLY or reply.type == MSG_CLIENTMETAREPLY) and reply.inresponseto == mynumber:
+                if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
                     currentbootstrap = self.bootstraplist.pop(0)
                     self.bootstraplist.append(currentbootstrap)
                     self.connecttobootstrap()
                     continue
-                reply = self.conn.receive()
-                if reply and (reply.type == MSG_CLIENTREPLY or reply.type == MSG_CLIENTMETAREPLY) and reply.inresponseto == mynumber:
-                    if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
-                        currentbootstrap = self.bootstraplist.pop(0)
-                        self.bootstraplist.append(currentbootstrap)
-                        self.connecttobootstrap()
-                        continue
-                    elif reply.replycode == CR_INPROGRESS:
-                        continue
-                    else:
-                        replied = True   
-                if time.time() - starttime > CLIENTRESENDTIMEOUT:
-                    if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
+                elif reply.replycode == CR_INPROGRESS:
+                    continue
+                else:
+                    replied = True   
+            if time.time() - starttime > CLIENTRESENDTIMEOUT:
+                if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                         replied = True
         
 theClient = Client(options.bootstrap)

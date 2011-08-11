@@ -14,19 +14,19 @@ p_start_time = None
 
 def profiler(frame, event, arg):
     if event not in ('call','return'): return profiler
-    #### gather stats ####
+    # gather stats
     rusage = getrusage(RUSAGE_SELF)
     t_cpu = rusage[0] + rusage[1] # user time + system time
     code = frame.f_code 
     fun = (code.co_name, code.co_filename, code.co_firstlineno)
-    #### get stack with functions entry stats ####
+    # get stack with functions entry stats
     ct = threading.currentThread()
     try:
         p_stack = ct.p_stack
     except AttributeError:
         ct.p_stack = deque()
         p_stack = ct.p_stack
-    #### handle call and return ####
+    # handle call and return
     if event == 'call':
         p_stack.append((time.time(), t_cpu, fun))
     elif event == 'return':

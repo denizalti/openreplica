@@ -63,7 +63,9 @@ def endtiming(fn):
             obj.count += 1
             sys.stdout.flush()
             profile_off()
-            pprint(get_profile_stats())
+            profilerdict = get_profile_stats()
+            for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
+                print "%s: %s" % (key, value)
             time.sleep(10)
             os._exit(0)
         else:
@@ -109,14 +111,21 @@ class Replica(Node):
         """
         Node.__init__(self, nodetype)
         self.object = replicatedobject
+        self.leader_initializing = False
         self.nexttoexecute = 1
+        # decided commands
         self.decisions = {}
         self.decidedcommandset = set()
+        # executed commands
         self.executed = {}
+        # commands that are proposed
         self.proposals = {}
+        # commands that are received, not yet proposed
         self.pendingcommands = {}
-        self.leader_initializing = False
-
+        # commandnumbers known to be in use
+        self.usedcommandnumbers = set()
+        self.calls = 0
+        
         # Measurement Variables
         self.firststarttime = 0
         self.firststoptime = 0
@@ -157,7 +166,7 @@ class Replica(Node):
                 # meta command, but the window has not passed yet, 
                 # so just mark it as executed without actually executing it
                 # the real execution will take place when the window has expired
-                self.executed[self.decisions[slotno]] = META
+                self.add_to_executed(self.decisions[slotno], META)
                 return
             elif not dometaonly and not ismeta:
                 # this is the workhorse case that executes most normal commands
@@ -180,7 +189,7 @@ class Replica(Node):
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
             clientreplycode = CR_EXCEPTION
-        self.executed[self.decisions[slotno]] = givenresult
+        self.add_to_executed(self.decisions[slotno], givenresult)
         
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
@@ -197,8 +206,7 @@ class Replica(Node):
     def perform(self, msg, designated=False):
         """Take a given PERFORM message, add it to the set of decided commands, and call performcore to execute."""
         if msg.commandnumber not in self.decisions:
-            self.decisions[msg.commandnumber] = msg.proposal
-            self.decidedcommandset.add(msg.proposal)
+            self.add_to_decisions(msg.commandnumber, msg.proposal)
         else:
             print "This commandnumber has been decided before.."
         # If replica was using this commandnumber for a different proposal, initiate it again
@@ -257,8 +265,10 @@ class Replica(Node):
         for key,value in self.decisions.iteritems():
             if msg.decisions.has_key(key):
                 assert self.decisions[key] == msg.decisions[key], "Update Error"
+        # update decisions cumulatively
         self.decisions.update(msg.decisions)
         self.decidedcommandset = set(self.decisions.values())
+        self.usedcommandnumbers = self.usedcommandnumbers.union(set(self.decisions.keys()))
         self.stateuptodate = True
 
     def do_noop(self):
@@ -355,12 +365,12 @@ class Replica(Node):
             
     def find_leader(self):
         """returns the minimum peer as the leader"""
-        minpeer = self.me
-        for peer in self.groups[NODE_REPLICA]:
-            if peer < minpeer:
-                minpeer = peer
+        minpeer =  self.me
+        if len(self.groups[NODE_REPLICA].members) > 0:
+            if self.groups[NODE_REPLICA].members[0] < minpeer:
+                minpeer = self.groups[NODE_REPLICA].members[0]
         return minpeer
-
+        
     def check_leader_promotion(self):
         """checks which node is the leader and changes the state of the caller if necessary"""
         chosenleader = self.find_leader()
@@ -388,13 +398,46 @@ class Replica(Node):
     def find_commandnumber(self):
         """returns the first gap in proposals, decisions and pendingcommands combined"""
         commandgap = 1
-        proposals = set(self.proposals.keys() + self.decisions.keys() + self.pendingcommands.keys())
-        while commandgap <= len(proposals):
-            if commandgap in proposals:
+        while commandgap <= len(self.usedcommandnumbers):
+            if commandgap in self.usedcommandnumbers:
                 commandgap += 1
             else:
                 return commandgap
         return commandgap
+
+    def add_to_executed(self, key, value):
+        self.executed[key] = value
+        self.usedcommandnumbers.add(key)
+
+    def add_to_decisions(self, key, value):
+        self.decisions[key] = value
+        self.decidedcommandset.add(value)
+        self.usedcommandnumbers.add(key)
+
+    def add_to_proposals(self, key, value):
+        self.proposals[key] = value
+        self.usedcommandnumbers.add(key)
+
+    def add_to_pendingcommands(self, key, value):
+        self.pendingcommands[key] = value
+        self.usedcommandnumbers.add(key)
+
+    def remove_from_executed(self, key):
+        del self.executed[key]
+        self.usedcommandnumbers.remove(key)
+
+    def remove_from_decisions(self, key):
+        self.decidedcommandset.remove(self.decisions[key])
+        del self.decisions[key]
+        self.usedcommandnumbers.remove(key)
+
+    def remove_from_proposals(self, key):
+        del self.proposals[key]
+        self.usedcommandnumbers.remove(key)
+
+    def remove_from_pendingcommands(self, key):
+        del self.pendingcommands[key]
+        self.usedcommandnumbers.remove(key)
 
     def handle_client_command(self, givencommand, prepare=False):
         """handle the received client request
@@ -439,6 +482,7 @@ class Replica(Node):
         - if not leader: reject
         - if leader: add connection to client connections and handle request"""
         self.check_leader_promotion()
+        self.calls += 1
         if self.type != NODE_LEADER:
             logger("not leader.. request rejected..")
             clientreply = ClientReplyMessage(MSG_CLIENTREPLY,self.me,replycode=CR_REJECTED,inresponseto=msg.command.clientcommandnumber)
@@ -451,10 +495,6 @@ class Replica(Node):
         if self.type == NODE_LEADER:
             self.clientpool.add_connection_to_peer(msg.source, conn)
             self.handle_client_command(msg.command)
-        #if self.firststarttime == 0:
-        #    self.firststarttime = time.time()
-        #elif self.secondstarttime == 0:
-        #    self.secondstarttime = time.time()
 
     def msg_clientreply(self, conn, msg):
         """this only occurs in response to commands initiated by the shell"""
@@ -465,7 +505,7 @@ class Replica(Node):
         removes the command from pending and transfers it to proposals
         if there are no acceptors present, sets the lists back and returns"""
         givenproposal = self.pendingcommands[givencommandnumber]
-        self.proposals[givencommandnumber] = givenproposal
+        self.add_to_proposals(givencommandnumber, givenproposal)
         del self.pendingcommands[givencommandnumber]
         recentballotnumber = self.ballotnumber
         logger("proposing command: %d:%s with ballotnumber %s and %d acceptors" % (givencommandnumber,givenproposal,str(recentballotnumber),len(self.groups[NODE_ACCEPTOR])))
@@ -474,7 +514,7 @@ class Replica(Node):
         if len(prc.acceptors) == 0:
             print "There are no acceptors!"
             self.pendingcommands[givencommandnumber] = givenproposal
-            del self.proposals[givencommandnumber]
+            self.remove_from_proposals(givencommandnumber)
             return
         self.outstandingproposes[givencommandnumber] = prc
         propose = PaxosMessage(MSG_PROPOSE,self.me,recentballotnumber,commandnumber=givencommandnumber,proposal=givenproposal)
@@ -500,7 +540,7 @@ class Replica(Node):
         removes the command from pending and transfers it to proposals
         if there are no acceptors present, sets the lists back and returns"""
         givenproposal = self.pendingcommands[givencommandnumber]
-        self.proposals[givencommandnumber] = givenproposal
+        self.add_to_proposals(givencommandnumber, givenproposal)
         del self.pendingcommands[givencommandnumber]
         newballotnumber = self.ballotnumber
         logger("preparing command: %d:%s with ballotnumber %s" % (givencommandnumber, givenproposal,str(newballotnumber)))
@@ -508,7 +548,7 @@ class Replica(Node):
         if len(prc.acceptors) == 0:
             print "There are no acceptors!"
             self.pendingcommands[givencommandnumber] = givenproposal
-            del self.proposals[givencommandnumber]
+            self.remove_from_proposals(givencommandnumber)
             return
         self.outstandingprepares[newballotnumber] = prc
         prepare = PaxosMessage(MSG_PREPARE,self.me,newballotnumber)
@@ -574,7 +614,7 @@ class Replica(Node):
                 # choose pvalues with distinctive commandnumbers and highest ballotnumbers
                 pmaxset = prc.possiblepvalueset.pmax()
                 for commandnumber,proposal in pmaxset.iteritems():
-                    self.proposals[commandnumber] = proposal
+                    self.add_to_proposals(commandnumber, proposal)
                 # If the commandnumber we were planning to use is overwritten
                 # we should try proposing with a new commandnumber
                 if self.proposals[prc.commandnumber] != prc.proposal:
@@ -647,7 +687,7 @@ class Replica(Node):
                 if len(prc.received) >= prc.nquorum:
                     logger("WE AGREE!")
                     # take this response collector out of the outstanding propose set
-                    self.proposals[prc.commandnumber] = prc.proposal
+                    self.add_to_proposals(prc.commandnumber, prc.proposal)
                     del self.outstandingproposes[msg.commandnumber]
                     # now we can perform this action on the replicas
                     performmessage = PaxosMessage(MSG_PERFORM,self.me,commandnumber=prc.commandnumber,proposal=prc.proposal)
@@ -689,7 +729,7 @@ class Replica(Node):
                 # update the ballot number
                 self.update_ballotnumber(msg.ballotnumber)
                 #remove the proposal from proposals
-                #del self.proposals[msg.commandnumber]
+                #self.remove_from_proposals(msg.commandnumber)
 
                 leader_causing_reject = self.detect_colliding_leader(msg.ballotnumber)
                 if leader_causing_reject < self.me:
