@@ -258,7 +258,7 @@ class Replica(Node):
             if msg.decisions.has_key(key):
                 assert self.decisions[key] == msg.decisions[key], "Update Error"
         self.decisions.update(msg.decisions)
-        # XXX self.decidedcommandset
+        self.decidedcommandset = set(self.decisions.values())
         self.stateuptodate = True
 
     def do_noop(self):
@@ -478,7 +478,6 @@ class Replica(Node):
             return
         self.outstandingproposes[givencommandnumber] = prc
         propose = PaxosMessage(MSG_PROPOSE,self.me,recentballotnumber,commandnumber=givencommandnumber,proposal=givenproposal)
-        print "XXXXXXXXXXXXXX %s" % str(propose)
         self.send(propose,group=prc.acceptors)
         
     # Paxos Methods
@@ -513,7 +512,6 @@ class Replica(Node):
             return
         self.outstandingprepares[newballotnumber] = prc
         prepare = PaxosMessage(MSG_PREPARE,self.me,newballotnumber)
-        print "XXXXXXXXXXXXXX %s" % str(prepare)
         self.send(prepare,group=prc.acceptors)
 
     def do_command_prepare(self, givenproposal):
