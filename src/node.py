@@ -37,6 +37,7 @@ DO_PERIODIC_PINGS = False
 def signal_handler(signal, frame):
         print 'BYE!'
         sys.stdout.flush()
+	sys.stderr.flush()
         os._exit(0)
 
 class Node():
