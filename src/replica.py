@@ -10,9 +10,10 @@ import random
 import math
 import sys
 import os
+import signal
 
 from pprint import pprint
-from node import Node
+from node import *
 from enums import *
 from utils import *
 from connection import Connection, ConnectionPool
@@ -804,6 +805,8 @@ class Replica(Node):
 def main():
     theReplica = Replica(Bank())
     theReplica.startservice()
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.pause()
     
 if __name__=='__main__':
     main()

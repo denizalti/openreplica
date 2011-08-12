@@ -1,6 +1,7 @@
 import socket
 import select
 from threading import Thread, Timer
+import signal
 
 from utils import *
 from enums import *
@@ -79,6 +80,8 @@ class Tracker(Replica):
 def main():
     membershipnode = Tracker()
     membershipnode.startservice()
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.pause()
 
 if __name__=='__main__':
     main()

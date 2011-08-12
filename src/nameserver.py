@@ -2,6 +2,7 @@ import socket
 import select
 from threading import Thread, Timer
 from time import strftime
+import signal
 
 from utils import *
 from enums import *
@@ -147,6 +148,8 @@ class Nameserver(Tracker):
 def main():
     nameservernode = Nameserver()
     nameservernode.startservice()
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.pause()
 
 if __name__=='__main__':
     main()

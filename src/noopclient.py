@@ -101,7 +101,6 @@ class Client():
         
 theClient = Client(options.bootstrap)
 theClient.clientloop()
-
   
 
 

@@ -5,10 +5,11 @@
 """
 from threading import Thread
 from random import randint
+import signal
 
 from enums import *
 from utils import *
-from node import Node
+from node import *
 from connection import ConnectionPool
 from group import Group
 from peer import Peer
@@ -85,6 +86,8 @@ class Acceptor(Node):
 def main():
     theAcceptor = Acceptor()
     theAcceptor.startservice()
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.pause()
 
 if __name__=='__main__':
     main()

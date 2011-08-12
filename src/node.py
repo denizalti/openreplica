@@ -34,6 +34,11 @@ parser.add_option("-d", "--debug", action="store_true", dest="debug", default=Fa
 
 DO_PERIODIC_PINGS = False
 
+def signal_handler(signal, frame):
+        print 'BYE!'
+        sys.stdout.flush()
+        os._exit(0)
+
 class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.

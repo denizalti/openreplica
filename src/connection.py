@@ -129,7 +129,12 @@ class Connection():
             return False
     
     def settimeout(self, timeout):
-        self.thesocket.settimeout(timeout)
+        try:
+            self.thesocket.settimeout(timeout)
+        except socket.error, e:
+            if isinstance(e.args, tuple):
+                if e[0] == errno.EBADF:
+                    print "socket closed"
 
     def close(self):
         """Close the Connection"""
