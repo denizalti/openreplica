@@ -397,7 +397,7 @@ class Replica(Node):
 
     def find_commandnumber(self):
         """returns the first gap in proposals, decisions and pendingcommands combined"""
-        commandgap = 1
+        commandgap = 1 ### Global last gap
         while commandgap <= len(self.usedcommandnumbers):
             if commandgap in self.usedcommandnumbers:
                 commandgap += 1
@@ -505,16 +505,18 @@ class Replica(Node):
         removes the command from pending and transfers it to proposals
         if there are no acceptors present, sets the lists back and returns"""
         givenproposal = self.pendingcommands[givencommandnumber]
-        self.add_to_proposals(givencommandnumber, givenproposal)
+        # XXX this is a bug!
         del self.pendingcommands[givencommandnumber]
+        # Right way: self.remove_from_pendingcommands(givencommandnumber)
+        self.add_to_proposals(givencommandnumber, givenproposal)
         recentballotnumber = self.ballotnumber
         logger("proposing command: %d:%s with ballotnumber %s and %d acceptors" % (givencommandnumber,givenproposal,str(recentballotnumber),len(self.groups[NODE_ACCEPTOR])))
         # since we never propose a commandnumber that is beyond the window, we can simply use the current acceptor set here
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, givencommandnumber, givenproposal)
         if len(prc.acceptors) == 0:
             print "There are no acceptors!"
-            self.pendingcommands[givencommandnumber] = givenproposal
             self.remove_from_proposals(givencommandnumber)
+            self.add_to_pendingcommands(givencommandnumber, givenproposal)
             return
         self.outstandingproposes[givencommandnumber] = prc
         propose = PaxosMessage(MSG_PROPOSE,self.me,recentballotnumber,commandnumber=givencommandnumber,proposal=givenproposal)
@@ -529,7 +531,7 @@ class Replica(Node):
             print "Not a Leader.."
             return
         givencommandnumber = self.find_commandnumber()
-        self.pendingcommands[givencommandnumber] = givenproposal
+        self.add_to_pendingcommands(givencommandnumber, givenproposal)
         # if we're too far in the future, i.e. past window, do not issue the command
         if givencommandnumber - self.nexttoexecute >= WINDOW:
             return
@@ -540,15 +542,15 @@ class Replica(Node):
         removes the command from pending and transfers it to proposals
         if there are no acceptors present, sets the lists back and returns"""
         givenproposal = self.pendingcommands[givencommandnumber]
+        self.remove_from_pendingcommands(givencommandnumber)
         self.add_to_proposals(givencommandnumber, givenproposal)
-        del self.pendingcommands[givencommandnumber]
         newballotnumber = self.ballotnumber
         logger("preparing command: %d:%s with ballotnumber %s" % (givencommandnumber, givenproposal,str(newballotnumber)))
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], newballotnumber, givencommandnumber, givenproposal)
         if len(prc.acceptors) == 0:
             print "There are no acceptors!"
-            self.pendingcommands[givencommandnumber] = givenproposal
             self.remove_from_proposals(givencommandnumber)
+            self.add_to_pendingcommands(givencommandnumber, givenproposal)
             return
         self.outstandingprepares[newballotnumber] = prc
         prepare = PaxosMessage(MSG_PREPARE,self.me,newballotnumber)
@@ -571,7 +573,7 @@ class Replica(Node):
             return
 
         givencommandnumber = self.find_commandnumber()
-        self.pendingcommands[givencommandnumber] = givenproposal
+        self.add_to_pendingcommands(givencommandnumber, givenproposal)
         # if we're too far in the future, i.e. past window, do not issue the command
         if givencommandnumber - self.nexttoexecute >= WINDOW:
             return
@@ -698,6 +700,7 @@ class Replica(Node):
                         self.send(performmessage, group=self.groups[NODE_NAMESERVER])
                         self.send(performmessage, group=self.groups[NODE_TRACKER])
                         self.send(performmessage, group=self.groups[NODE_COORDINATOR])
+                        #XXX Minimize the number of replica classes
                     except:
                         pass
                     self.perform(performmessage, designated=True)
@@ -721,14 +724,15 @@ class Replica(Node):
         if self.outstandingproposes.has_key(msg.commandnumber):
             prc = self.outstandingproposes[msg.commandnumber]
             if msg.inresponseto == prc.ballotnumber:
-                logger("got a reject for proposal ballotno %s commandno %s proposal %s still %d out of %d accepts" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
+                logger("got a reject for proposal ballotno %s commandno %s proposal %s still %d out of %d accepts" % \
+                       (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
                 # take this response collector out of the outstanding propose set
                 del self.outstandingproposes[msg.commandnumber]
                 # become inactive
                 self.active = False
                 # update the ballot number
                 self.update_ballotnumber(msg.ballotnumber)
-                #remove the proposal from proposals
+                # remove the proposal from proposals XXX why
                 #self.remove_from_proposals(msg.commandnumber)
 
                 leader_causing_reject = self.detect_colliding_leader(msg.ballotnumber)
