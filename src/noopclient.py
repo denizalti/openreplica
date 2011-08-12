@@ -14,6 +14,7 @@ from message import ClientMessage, Message, PaxosMessage, HandshakeMessage, AckM
 from command import Command
 from pvalue import PValue, PValueSet
 import os
+import sys
 import time
 
 parser = OptionParser(usage="usage: %prog -b bootstrap")
@@ -96,6 +97,7 @@ class Client():
             if time.time() - starttime > CLIENTRESENDTIMEOUT:
                 if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                         replied = True
+            sys.stdout.flush()
         
 theClient = Client(options.bootstrap)
 theClient.clientloop()

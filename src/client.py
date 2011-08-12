@@ -121,6 +121,7 @@ class Client():
                             if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                                 replied = True
                         time.sleep(1)
+                        sys.stdout.flush()
             except ( IOError, EOFError ):
                 os._exit(0)
         

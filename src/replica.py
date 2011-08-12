@@ -67,6 +67,7 @@ def endtiming(fn):
             for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
                 print "%s: %s" % (key, value)
             time.sleep(10)
+            sys.stdout.flush()
             os._exit(0)
         else:
             obj.count += 1
