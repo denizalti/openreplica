@@ -158,7 +158,8 @@ class Coordinator(Replica):
 def main():
     coordinatornode = Coordinator()
     coordinatornode.startservice()
-    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGINT, coordinatornode.interrupt_handler)
+    signal.signal(signal.SIGTERM, coordinatornode.terminate_handler)
     signal.pause()
 
 if __name__=='__main__':

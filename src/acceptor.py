@@ -84,9 +84,10 @@ class Acceptor(Node):
         print self.accepted
         
 def main():
-    theAcceptor = Acceptor()
-    theAcceptor.startservice()
-    signal.signal(signal.SIGINT, signal_handler)
+    acceptornode = Acceptor()
+    acceptornode.startservice()
+    signal.signal(signal.SIGINT, acceptornode.interrupt_handler)
+    signal.signal(signal.SIGTERM, acceptornode.terminate_handler)
     signal.pause()
 
 if __name__=='__main__':

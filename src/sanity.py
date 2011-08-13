@@ -65,7 +65,7 @@ class SanityChecker():
         self.output("Replicas: %s" % str(self.replicas))
         self.output("Acceptors: %s" % str(self.acceptors))
         self.output("Clients: %s" % str(self.clients))
-        sleep(15)
+        sleep(5)
         self.kill_all()
         self.close_all_files()
 
@@ -108,7 +108,7 @@ class SanityChecker():
     def kill_all(self):
         phandles = self.clients.keys() + self.acceptors.keys() + self.replicas.keys()
         for phandle in phandles:
-            phandle.kill()
+            phandle.terminate()
 
         self.output("All processes killed.")
         

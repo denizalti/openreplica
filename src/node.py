@@ -34,12 +34,6 @@ parser.add_option("-d", "--debug", action="store_true", dest="debug", default=Fa
 
 DO_PERIODIC_PINGS = False
 
-def signal_handler(signal, frame):
-        print 'BYE!'
-        sys.stdout.flush()
-	sys.stderr.flush()
-        os._exit(0)
-
 class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
@@ -381,3 +375,17 @@ class Node():
                 connection.send(message)
                 message = copy.copy(message)
                 message.assignuniqueid()
+
+
+    # asynchronous event handlers
+    def terminate_handler(self, signal, frame):
+        print self.me, "exiting.."
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(0)
+
+    def interrupt_handler(self, signal, frame):
+	print 'BYE!'
+        sys.stdout.flush()
+	sys.stderr.flush()
+        os._exit(0)

@@ -802,10 +802,17 @@ class Replica(Node):
         for cmdnum,command in self.pendingcommands.iteritems():
             print "%d: %s" % (cmdnum,str(command))
 
+    def output_handler(self, signal, frame):
+        print "SIGNAL!!!!", self.me
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(0)
+
 def main():
-    theReplica = Replica(Bank())
-    theReplica.startservice()
-    signal.signal(signal.SIGINT, signal_handler)
+    replicanode = Replica(Bank())
+    replicanode.startservice()
+    signal.signal(signal.SIGINT, replicanode.interrupt_handler)
+    signal.signal(signal.SIGTERM, replicanode.terminate_handler)
     signal.pause()
     
 if __name__=='__main__':

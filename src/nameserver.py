@@ -148,7 +148,8 @@ class Nameserver(Tracker):
 def main():
     nameservernode = Nameserver()
     nameservernode.startservice()
-    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGINT, nameservernode.interrupt_handler)
+    signal.signal(signal.SIGTERM, nameservernode.terminate_handler)
     signal.pause()
 
 if __name__=='__main__':

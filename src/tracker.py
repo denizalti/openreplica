@@ -80,7 +80,8 @@ class Tracker(Replica):
 def main():
     membershipnode = Tracker()
     membershipnode.startservice()
-    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGINT, membershipnode.interrupt_handler)
+    signal.signal(signal.SIGTERM, membershipnode.terminate_handler)
     signal.pause()
 
 if __name__=='__main__':
