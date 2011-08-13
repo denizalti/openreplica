@@ -802,8 +802,13 @@ class Replica(Node):
         for cmdnum,command in self.pendingcommands.iteritems():
             print "%d: %s" % (cmdnum,str(command))
 
-    def output_handler(self, signal, frame):
-        print "SIGNAL!!!!", self.me
+    def terminate_handler(self, signal, frame):
+        ofile = file('testoutput/%s'%self.me, 'w')
+        ofile.write(str(self.object))
+        decisions = sorted(self.executed.keys())
+        for decision in decisions:
+            ofile.write("%s: %s" % (str(decision), str(self.executed[decision])))
+        ofile.close()
         sys.stdout.flush()
         sys.stderr.flush()
         os._exit(0)

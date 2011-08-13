@@ -4,28 +4,10 @@
 @date: August 11, 2011
 '''
 from optparse import OptionParser
-from threading import Thread, RLock, Lock, Condition, Timer
 from time import sleep,time
 import os
 import signal
 import subprocess
-import time
-import random
-import socket
-import select
-import copy
-import fcntl
-
-from enums import *
-from utils import *
-from node import *
-from connection import ConnectionPool,Connection
-from group import Group
-from peer import Peer
-from message import Message, PaxosMessage, HandshakeMessage, AckMessage, MessageInfo
-from command import Command
-from pvalue import PValue, PValueSet
-from concoordprofiler import *
 
 parser = OptionParser(usage="usage: %prog -r replicas -a acceptors -c clients")
 parser.add_option("-r", "--replica", action="store", dest="numreplicas", type="int", default=1, help="number of replicas")
@@ -56,7 +38,7 @@ class SanityChecker():
         except:
             pass
         subprocess.call(['mkdir', 'testoutput'])
-        
+
         # start nodes
         self.start_replicas()
         self.start_acceptors()
@@ -77,11 +59,12 @@ class SanityChecker():
         sleep(1)
         self.output("Replica 0 started.")
         for i in range(self.replicacount-1):
-            fhandle = file("testoutput/replica%doutput" %i, 'w')
+            rid = i+1
+            fhandle = file("testoutput/replica%doutput" % rid, 'w')
             phandle = subprocess.Popen(['python', 'replica.py', '-b', '127.0.0.1:6668', '-l'], shell=False, stdin=None, stdout=fhandle, stderr=fhandle)
             self.replicas[phandle] = fhandle
             sleep(0.5)
-            self.output("Replica %d started." % i+1)
+            self.output("Replica %d started." % rid)
             
     def start_acceptors(self):
         for i in range(self.acceptorcount):
