@@ -66,7 +66,7 @@ class Node():
         self.done = False
         self.donecond = Condition()
         # profiler
-        profile_on()
+        # profile_on()
 
         # create server socket and bind to a port
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)

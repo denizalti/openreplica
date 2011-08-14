@@ -14,6 +14,7 @@ from message import ClientMessage, Message, PaxosMessage, HandshakeMessage, AckM
 from command import Command
 from pvalue import PValue, PValueSet
 import os
+import sys
 import time
 
 parser = OptionParser(usage="usage: %prog -b bootstrap")
@@ -107,6 +108,7 @@ class Client():
                             self.connecttobootstrap()
                             continue
                         reply = self.conn.receive()
+                        print "Received: ", reply
                         if reply and (reply.type == MSG_CLIENTREPLY or reply.type == MSG_CLIENTMETAREPLY) and reply.inresponseto == mynumber:
                             if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
                                 currentbootstrap = self.bootstraplist.pop(0)
@@ -120,7 +122,6 @@ class Client():
                         if time.time() - starttime > CLIENTRESENDTIMEOUT:
                             if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                                 replied = True
-                        time.sleep(1)
                         sys.stdout.flush()
             except ( IOError, EOFError ):
                 os._exit(0)

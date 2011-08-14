@@ -12,7 +12,7 @@ class Bank():
     def open(self, args, **kwargs):
         accountid = args[0]
         if self.accounts.has_key(accountid):
-            return "FAILURE"
+            return "ACCT %s ALREADY EXISTS" % accountid
         else:
             self.accounts[accountid] = Account(accountid)
             return "ACCT %s OPENED" % accountid
@@ -23,7 +23,7 @@ class Bank():
             del self.accounts[accountid]
             return "ACCT %s CLOSED" % accountid
         else:
-            return "FAILURE"
+            return "ACCT %s DOES NOT EXIST" % accountid
         
     def debit(self, args, **kwargs):
         accountid = args[0]
@@ -31,7 +31,7 @@ class Bank():
             self.accounts[accountid].debit()
             return "DEBIT SUCCESSFUL: %.2f" % self.accounts[accountid].balance
         else:
-            return "FAILURE"
+            return "ACCT %s DOES NOT EXIST" % accountid
         
     def deposit(self, args, **kwargs):
         accountid = args[0]
@@ -39,17 +39,17 @@ class Bank():
             self.accounts[accountid].deposit()
             return "DEPOSIT SUCCESSFUL: %.2f" % self.accounts[accountid].balance
         else:
-            return "FAILURE"
+            return "ACCT %s DOES NOT EXIST" % accountid
         
     def balance(self, args, **kwargs):
         accountid = args[0]
         if self.accounts.has_key(accountid):
             return "CURRENT BALANCE: %.2f" % self.accounts[accountid].balance
         else:
-            return "FAILURE"
+            return "ACCT %s DOES NOT EXIST" % accountid
     
     def __str__(self):
-        temp = "**Bank**\n"
+        temp = "BANK\n"
         for account in self.accounts.values():
             temp += str(account)+"\n"
         return temp

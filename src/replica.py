@@ -63,6 +63,7 @@ def endtiming(fn):
             print "Per request: ", total/NITER
             obj.count += 1
             sys.stdout.flush()
+            """
             profile_off()
             profilerdict = get_profile_stats()
             for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
@@ -70,6 +71,7 @@ def endtiming(fn):
             time.sleep(10)
             sys.stdout.flush()
             os._exit(0)
+            """
         else:
             obj.count += 1
         return ret
@@ -177,7 +179,7 @@ class Replica(Node):
                 self.lock.release()
                 try:
                     givenresult = method(commandargs, _concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
-                    clientreplycode = CR_METAREPLY
+                    clientreplycode = CR_OK
                     send_result_to_client = True
                 except UnusualReturn:
                     clientreplycode = CR_METAREPLY
@@ -244,6 +246,7 @@ class Replica(Node):
         self.perform(msg)
 
         if not self.stateuptodate and self.type == NODE_REPLICA:
+            print "HAS TO UPDATE!"
             if msg.commandnumber == 1:
                 self.stateuptodate = True
                 return
@@ -457,7 +460,7 @@ class Replica(Node):
             # Check if the request has been executed
             if givencommand in self.decidedcommandset:
                 if self.executed.has_key(givencommand) and self.executed[givencommand]!= CR_METAREPLY:
-                    clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=self.executed[givencommand], inresponseto=givencommand.clientcommandnumber)
+                    clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=self.executed[givencommand], replycode=CR_OK, inresponseto=givencommand.clientcommandnumber)
                     conn = self.clientpool.get_connection_by_peer(givencommand.client)
                     if conn is not None:
                         conn.send(clientreply)
@@ -487,7 +490,7 @@ class Replica(Node):
         self.calls += 1
         if self.type != NODE_LEADER:
             logger("not leader.. request rejected..")
-            clientreply = ClientReplyMessage(MSG_CLIENTREPLY,self.me,replycode=CR_REJECTED,inresponseto=msg.command.clientcommandnumber)
+            clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_REJECTED, inresponseto=msg.command.clientcommandnumber)
             conn.send(clientreply)
             return
         # Leader should accept a request even if it's not ready as this way it will make itself ready during the prepare stage.
@@ -803,12 +806,15 @@ class Replica(Node):
             print "%d: %s" % (cmdnum,str(command))
 
     def terminate_handler(self, signal, frame):
-        ofile = file('testoutput/%s'%self.me, 'w')
-        ofile.write(str(self.object))
-        decisions = sorted(self.executed.keys())
-        for decision in decisions:
-            ofile.write("%s: %s" % (str(decision), str(self.executed[decision])))
-        ofile.close()
+        orepfile = file('testoutput/rep/%s%d'% (self.me.addr, self.me.port), 'a')
+        executedkeys = sorted(self.executed.keys())
+        for key in executedkeys:
+            orepfile.write("%s: %s" % (str(key), str(self.executed[key])))
+        orepfile.close()
+        objfile = file('testoutput/obj/%s%d'% (self.me.addr, self.me.port), 'a')
+        print str(self.object)
+        objfile.write(str(self.object))
+        objfile.close()
         sys.stdout.flush()
         sys.stderr.flush()
         os._exit(0)
