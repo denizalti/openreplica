@@ -47,6 +47,8 @@ class SanityChecker():
         # start nodes
         self._start_replicas()
         self._start_acceptors()
+        self._start_coordinatorclient()
+        sleep(10)
         self._start_clients()
         # wait 20 seconds
         sleep(20)
@@ -59,6 +61,8 @@ class SanityChecker():
         # start nodes
         self._start_replicas()
         self._start_acceptors()
+        self._start_coordinatorclient()
+        sleep(10)
         self._start_clients()
         # wait 10 seconds
         sleep(10)
@@ -76,6 +80,8 @@ class SanityChecker():
         # start nodes
         self._start_replicas()
         self._start_acceptors()
+        self._start_coordinatorclient()
+        sleep(10)
         self._start_clients()
         # wait 10 seconds
         sleep(10)
@@ -171,11 +177,10 @@ class SanityChecker():
             self.output("Acceptor %d started." % i)
 
     def _start_coordinatorclient(self):
-        fhandle = file("testoutput/client%doutput" %i, 'w')
-        phandle = subprocess.Popen(['python', 'client.py', '-b', '127.0.0.1:6668,127.0.0.1:6669,127.0.0.1:6670,127.0.0.1:6671', '-f', '%s' % self.clientinput], shell=False,  stdin=None, stdout=fhandle, stderr=fhandle)
+        fhandle = file("testoutput/clientcoordoutput", 'w')
+        phandle = subprocess.Popen(['python', 'client.py', '-b', '127.0.0.1:6668,127.0.0.1:6669,127.0.0.1:6670,127.0.0.1:6671', '-f', 'ports'], shell=False,  stdin=None, stdout=fhandle, stderr=fhandle)
         self.clients[phandle] = fhandle
-        self.output("Client %d started." % i)
-
+        self.output("Coordinator Client started.")
 
     def _start_clients(self):
         for i in range(self.clientcount):
@@ -232,8 +237,9 @@ class SanityChecker():
         phandles = self.clients.keys() + self.acceptors.keys() + self.replicas.keys()
         for phandle in phandles:
             phandle.terminate()
-
+            
         self.output("All processes killed.")
+        subprocess.call(['rm', '-rf', 'ports'])
         
     def output(self, text):
         print "[Test] %s" % text
