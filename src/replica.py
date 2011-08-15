@@ -495,6 +495,8 @@ class Replica(Node):
             logger("not leader.. request rejected..")
             clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_REJECTED, inresponseto=msg.command.clientcommandnumber)
             conn.send(clientreply)
+            # Check the Leader
+            self.ping_leader_once()
             return
         # Leader should accept a request even if it's not ready as this way it will make itself ready during the prepare stage.
         if self.leader_initializing:
@@ -768,6 +770,17 @@ class Replica(Node):
                     self.groups[NODE_REPLICA].remove(currentleader)
 
             time.sleep(LIVENESSTIMEOUT)
+
+    def ping_leader_once(self):
+        currentleader = self.find_leader()
+        if currentleader != self.me:
+            logger("Sending PING to %s" % currentleader)
+            helomessage = HandshakeMessage(MSG_HELO, self.me)
+            try:
+                self.send(helomessage, peer=currentleader)
+            except:
+                logger("removing current leader from the replicalist")
+                self.groups[NODE_REPLICA].remove(currentleader)
 
     # Debug Methods
     def cmd_command(self, args):

@@ -82,7 +82,7 @@ class Node():
 
         # append port number to controlfile
         try:
-            if self.type == NODE_ACCEPTOR or self.type == NODE_REPLICA:
+            if self.type == NODE_ACCEPTOR or self.type == NODE_REPLICA or self.type == NODE_COORDINATOR:
                 f = open('ports', 'a')
                 # XXX This lock blocks on NFS
                 #fcntl.flock(f,fcntl.LOCK_EX)
@@ -192,7 +192,6 @@ class Node():
                     if time.time() - timestamp > NASCENTTIMEOUT:
                         # expired -- if it's not already in the set, it should be closed
                         if s not in socketset:
-                            logger("removing %s from the nascentset" % s)
                             nascentset.remove((s,timestamp))
                             s.close()
                     elif s not in socketset:
@@ -216,7 +215,6 @@ class Node():
                         # s is closed, take it out of nascentset and connection pool
                         for sock,timestamp in nascentset:
                             if sock == s:
-                                logger("removing %s from the nascentset" % s)
                                 nascentset.remove((sock,timestamp))
                         self.connectionpool.del_connection_by_socket(s)
                         s.close()

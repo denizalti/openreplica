@@ -10,12 +10,12 @@ import sys
 import signal
 import subprocess
 
-parser = OptionParser(usage="usage: %prog -r replicas -o coordinators -a acceptors -c clients -i clientinput")
+parser = OptionParser(usage="usage: %prog -r replicas -o coordinators -a acceptors -c clients")
 parser.add_option("-r", "--replicas", action="store", dest="numreplicas", type="int", default=1, help="number of replicas")
 parser.add_option("-o", "--coordinators", action="store", dest="numcoords", type="int", default=1, help="number of coordinators")
 parser.add_option("-a", "--acceptors", action="store", dest="numacceptors", type="int", default=1, help="number of acceptors")
 parser.add_option("-c", "--clients", action="store", dest="numclients", type="int", default=1, help="number of clients")
-parser.add_option("-i", "--clientinput", action="store", dest="clientinput", default="clientinputs/noop", help="client input file")
+#parser.add_option("-i", "--clientinput", action="store", dest="clientinput", default="clientinputs/noop", help="client input file")
 
 (options, args) = parser.parse_args()
 
@@ -23,12 +23,11 @@ parser.add_option("-i", "--clientinput", action="store", dest="clientinput", def
 # Acceptors and Clients and runs multiple commands
 # and compares the outputs of Replicas
 class SanityChecker():
-    def __init__(self, numreplicas, numcoords, numacceptors, numclients, clientinput):
+    def __init__(self, numreplicas, numcoords, numacceptors, numclients):
         self.replicacount = numreplicas
         self.coordinatorcount = numcoords
         self.acceptorcount = numacceptors
         self.clientcount = numclients
-        self.clientinput = clientinput
         # keep the leader for failure test
         self.leader = None
         self.leaderfilename = '127.0.0.16668'
@@ -54,7 +53,7 @@ class SanityChecker():
         self._start_acceptors()
         self._start_coordinatorclient()
         self.run(10)
-        self._start_clients()
+        self._start_clients("clientinputs/test1")
         # wait 20 seconds
         self.run(20)
         # terminate
@@ -68,13 +67,13 @@ class SanityChecker():
         self._start_acceptors()
         self._start_coordinatorclient()
         self.run(10)
-        self._start_clients()
+        self._start_clients("clientinputs/test2")
         # wait 10 seconds
-        self.run(10)
+        self.run(5)
         # terminate
         self._kill_leader()
         # wait 10 seconds
-        self.run(20)
+        self.run(300)
         # terminate
         self._kill_all()
 
@@ -87,7 +86,7 @@ class SanityChecker():
         self._start_acceptors()
         self._start_coordinatorclient()
         self.run(10)
-        self._start_clients()
+        self._start_clients("clientinputs/test3")
         # wait 10 seconds
         self.run(10)
         # terminate
@@ -200,16 +199,16 @@ class SanityChecker():
             sleep(0.5)
             self.output("Coordinator %d started." % i)
 
-    def _start_coordinatorclient(self):
+    def _start_coordinatorclient(self, clientinput="ports"):
         fhandle = file("testoutput/clientcoordoutput", 'w')
-        phandle = subprocess.Popen(['python', 'client.py', '-b', '127.0.0.1:6668,127.0.0.1:6669,127.0.0.1:6670,127.0.0.1:6671', '-f', 'ports'], shell=False,  stdin=None, stdout=fhandle, stderr=fhandle)
+        phandle = subprocess.Popen(['python', 'client.py', '-b', '127.0.0.1:6668,127.0.0.1:6669,127.0.0.1:6670,127.0.0.1:6671', '-f', '%s' % clientinput], shell=False,  stdin=None, stdout=fhandle, stderr=fhandle)
         self.clients[phandle] = fhandle
         self.output("Coordinator Client started.")
 
-    def _start_clients(self):
+    def _start_clients(self, clientinput):
         for i in range(self.clientcount):
             fhandle = file("testoutput/client%doutput" %i, 'w')
-            phandle = subprocess.Popen(['python', 'client.py', '-b', '127.0.0.1:6668,127.0.0.1:6669,127.0.0.1:6670,127.0.0.1:6671', '-f', '%s' % self.clientinput], shell=False,  stdin=None, stdout=fhandle, stderr=fhandle)
+            phandle = subprocess.Popen(['python', 'client.py', '-b', '127.0.0.1:6668,127.0.0.1:6669,127.0.0.1:6670,127.0.0.1:6671', '-f', '%s' % clientinput], shell=False,  stdin=None, stdout=fhandle, stderr=fhandle)
             self.clients[phandle] = fhandle
             self.output("Client %d started." % i)
 
@@ -272,15 +271,15 @@ class SanityChecker():
         print "[Test] %s" % text
     
 def main():
-    tester = SanityChecker(numreplicas=options.numreplicas, numcoords=options.numcoords, numacceptors=options.numacceptors, numclients=options.numclients, clientinput=options.clientinput)
+    tester = SanityChecker(numreplicas=options.numreplicas, numcoords=options.numcoords, numacceptors=options.numacceptors, numclients=options.numclients)
     tester.output("Starting Test 1...")
     tester.test1()
     sleep(1)
     tester.test1_check()
-#    tester.output("Starting Test 2...")
-#    tester.test2()
-#    tester.test2_check()
-#    sleep(1)
+    tester.output("Starting Test 2...")
+    tester.test2()
+    sleep(1)
+    tester.test2_check()
 #    tester.output("Starting Test 3...")
 #    tester.test3()
 #    tester.test3_check()
