@@ -6,13 +6,15 @@
 from optparse import OptionParser
 from time import sleep,time
 import os
+import sys
 import signal
 import subprocess
 
-parser = OptionParser(usage="usage: %prog -r replicas -a acceptors -c clients")
-parser.add_option("-r", "--replica", action="store", dest="numreplicas", type="int", default=1, help="number of replicas")
-parser.add_option("-a", "--acceptor", action="store", dest="numacceptors", type="int", default=1, help="number of acceptors")
-parser.add_option("-c", "--client", action="store", dest="numclients", type="int", default=1, help="number of clients")
+parser = OptionParser(usage="usage: %prog -r replicas -o coordinators -a acceptors -c clients -i clientinput")
+parser.add_option("-r", "--replicas", action="store", dest="numreplicas", type="int", default=1, help="number of replicas")
+parser.add_option("-o", "--coordinators", action="store", dest="numcoords", type="int", default=1, help="number of coordinators")
+parser.add_option("-a", "--acceptors", action="store", dest="numacceptors", type="int", default=1, help="number of acceptors")
+parser.add_option("-c", "--clients", action="store", dest="numclients", type="int", default=1, help="number of clients")
 parser.add_option("-i", "--clientinput", action="store", dest="clientinput", default="clientinputs/noop", help="client input file")
 
 (options, args) = parser.parse_args()
@@ -21,8 +23,9 @@ parser.add_option("-i", "--clientinput", action="store", dest="clientinput", def
 # Acceptors and Clients and runs multiple commands
 # and compares the outputs of Replicas
 class SanityChecker():
-    def __init__(self, numreplicas, numacceptors, numclients, clientinput):
+    def __init__(self, numreplicas, numcoords, numacceptors, numclients, clientinput):
         self.replicacount = numreplicas
+        self.coordinatorcount = numcoords
         self.acceptorcount = numacceptors
         self.clientcount = numclients
         self.clientinput = clientinput
@@ -33,6 +36,7 @@ class SanityChecker():
         self.replicas = {}
         self.acceptors = {}
         self.clients = {}
+        self.coordinators = {}
         # rm old outputs create new output folder
         try:
             subprocess.call(['rm', '-rf', 'testoutput'])
@@ -46,56 +50,56 @@ class SanityChecker():
         # no failures
         # start nodes
         self._start_replicas()
+        self._start_coordinators()
         self._start_acceptors()
         self._start_coordinatorclient()
-        sleep(10)
+        self.run(10)
         self._start_clients()
         # wait 20 seconds
-        sleep(20)
+        self.run(20)
         # terminate
         self._kill_all()
-        self._close_all_files()
 
     def test2(self):
         # leader fails at t=10s+
         # start nodes
         self._start_replicas()
+        self._start_coordinators()
         self._start_acceptors()
         self._start_coordinatorclient()
-        sleep(10)
+        self.run(10)
         self._start_clients()
         # wait 10 seconds
-        sleep(10)
+        self.run(10)
         # terminate
         self._kill_leader()
         # wait 10 seconds
-        sleep(20)
+        self.run(20)
         # terminate
         self._kill_all()
-        self._close_all_files()
 
     def test3(self):
         # leader fails at t=10s+
         # leader recovers at t=30s+
         # start nodes
         self._start_replicas()
+        self._start_coordinators()
         self._start_acceptors()
         self._start_coordinatorclient()
-        sleep(10)
+        self.run(10)
         self._start_clients()
         # wait 10 seconds
-        sleep(10)
+        self.run(10)
         # terminate
         self._kill_leader()
         # wait 20 seconds
-        sleep(20)
+        self.run(20)
         # recover leader
         self._restart_leader()
         # wait 20 seconds
-        sleep(20)
+        self.run(20)
         # terminate
         self._kill_all()
-        self._close_all_files()
 
     def test1_check(self):
         success1 = self._check_file_equality('testoutput/rep')
@@ -124,6 +128,16 @@ class SanityChecker():
         else:
             self.output("Test 3 FAILED!")
 
+    def run(self, seconds):
+        sys.stdout.write("[Test] Running")
+        sys.stdout.flush()
+        for i in range(seconds):
+            sys.stdout.write(".")
+            sys.stdout.flush()
+            sleep(1)
+        sys.stdout.write("\n")
+        sys.stdout.flush()
+
     def _check_file_equality_with_leader_failure(self, path):
         # check if all files under the given path are equal
         success = True
@@ -148,6 +162,7 @@ class SanityChecker():
         success = True
         replicafilestr = subprocess.check_output(['ls', path])
         replicafilelist = replicafilestr.strip('\n').split('\n')
+        print replicafilelist
         for i in range(len(replicafilelist)-1):
             try:
                 output = subprocess.check_output(['diff', '--brief', 'testoutput/rep/'+replicafilelist[i], path+'/'+replicafilelist[i+1]])
@@ -176,6 +191,15 @@ class SanityChecker():
             sleep(0.5)
             self.output("Acceptor %d started." % i)
 
+            
+    def _start_coordinators(self):
+        for i in range(self.coordinatorcount):
+            fhandle = file("testoutput/coordinator%doutput" %i, 'w')
+            phandle = subprocess.Popen(['python', 'coordinator.py', '-b', '127.0.0.1:6668', '-l'], shell=False, stdin=None, stdout=fhandle, stderr=fhandle)
+            self.coordinators[phandle] = fhandle
+            sleep(0.5)
+            self.output("Coordinator %d started." % i)
+
     def _start_coordinatorclient(self):
         fhandle = file("testoutput/clientcoordoutput", 'w')
         phandle = subprocess.Popen(['python', 'client.py', '-b', '127.0.0.1:6668,127.0.0.1:6669,127.0.0.1:6670,127.0.0.1:6671', '-f', 'ports'], shell=False,  stdin=None, stdout=fhandle, stderr=fhandle)
@@ -189,13 +213,6 @@ class SanityChecker():
             self.clients[phandle] = fhandle
             self.output("Client %d started." % i)
 
-    def _close_all_files(self):
-        fhandles = self.replicas.values() + self.acceptors.values() + self.clients.values()
-        for fhandle in fhandles:
-            fhandle.close()
-
-        self.output("All files closed.")
-
     def _kill_leader(self):
         self.leader.terminate()
         self.replicas[self.leader].close()
@@ -204,7 +221,7 @@ class SanityChecker():
 
     def _start_leader(self):
         fhandle = file("testoutput/replica0output", 'w')
-        phandle = subprocess.Popen(['python', 'replica.py', '-l'], shell=False, stdin=None, stdout=fhandle, stderr=fhandle)
+        phandle = subprocess.Popen(['python', 'replica.py', '-l', '-d'], shell=False, stdin=None, stdout=fhandle, stderr=fhandle)
         self.leader = phandle
         self.replicas[phandle] = fhandle
 
@@ -227,6 +244,12 @@ class SanityChecker():
             fhandle.close()
             del self.replicas[phandle]
 
+    def _kill_a_coordinator(self):
+        for phandle, fhandle in self.coordinators.iteritems():
+            phandle.terminate()
+            fhandle.close()
+            del self.coordinators[phandle]
+
     def _kill_a_client(self):
         for phandle, fhandle in self.clients.iteritems():
             phandle.terminate()
@@ -234,25 +257,29 @@ class SanityChecker():
             del self.clients[phandle]
 
     def _kill_all(self):
-        phandles = self.clients.keys() + self.acceptors.keys() + self.replicas.keys()
+        phandles = self.clients.keys() + self.acceptors.keys() + self.coordinators.keys() + self.replicas.keys()
+        fhandles = self.replicas.values() + self.acceptors.values() + self.clients.values() + self.coordinators.values()
         for phandle in phandles:
             phandle.terminate()
-            
         self.output("All processes killed.")
+        for fhandle in fhandles:
+            fhandle.close()
+        self.output("All files closed.")        
+        self.clients = self.acceptors = self.replicas = self.coordinators ={}
         subprocess.call(['rm', '-rf', 'ports'])
         
     def output(self, text):
         print "[Test] %s" % text
     
 def main():
-    tester = SanityChecker(numreplicas=options.numreplicas, numacceptors=options.numacceptors, numclients=options.numclients, clientinput=options.clientinput)
+    tester = SanityChecker(numreplicas=options.numreplicas, numcoords=options.numcoords, numacceptors=options.numacceptors, numclients=options.numclients, clientinput=options.clientinput)
     tester.output("Starting Test 1...")
     tester.test1()
-    tester.test1_check()
     sleep(1)
-    tester.output("Starting Test 2...")
-    tester.test2()
-    tester.test2_check()
+    tester.test1_check()
+#    tester.output("Starting Test 2...")
+#    tester.test2()
+#    tester.test2_check()
 #    sleep(1)
 #    tester.output("Starting Test 3...")
 #    tester.test3()

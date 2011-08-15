@@ -28,17 +28,20 @@ class Group():
         """Removes the given peer from the Group"""
         if peer in self.members:
             self.members.remove(peer)
+            self.members.sort()
 
     def add(self,peer):
         """Adds the given peer to the Group if it's not the owner itself"""
         if peer != self.owner:
+            if peer not in self.members:
             self.members.append(peer)
             self.members.sort()
 
     def union(self,othergroup):
         """Unionizes the members of given Group with the members of the Group"""
         for peer in othergroup.members:
-            self.members.append(peer)
+            if peer not in self.members:
+                self.members.append(peer)
         self.members.sort()
 
     def haspeer(self,peer):

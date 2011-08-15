@@ -165,7 +165,7 @@ class Replica(Node):
             elif dometaonly and ismeta:
                 # execute a metacommand when the window has expired
                 method = getattr(self, commandname)
-                givenresult = method(commandargs, _concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
+                givenresult = method(commandargs)
             elif not dometaonly and ismeta:
                 # meta command, but the window has not passed yet, 
                 # so just mark it as executed without actually executing it
@@ -296,6 +296,9 @@ class Replica(Node):
         args = args[0].split(":")
         replica = Peer(args[0],int(args[1]),NODE_REPLICA)
         self.groups[NODE_REPLICA].add(replica)
+        print "***********************************************"
+        print self.groups[NODE_REPLICA]
+        print "***********************************************"
         if self.type == NODE_LEADER:
             heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, self.groups)
             self.send(heloreplymessage, peer=replica)
@@ -809,10 +812,10 @@ class Replica(Node):
         orepfile = file('testoutput/rep/%s%d'% (self.me.addr, self.me.port), 'a')
         executedkeys = sorted(self.executed.keys())
         for key in executedkeys:
-            orepfile.write("%s: %s" % (str(key), str(self.executed[key])))
+            orepfile.write("%s: %s\n" % (str(key), str(self.executed[key])))
+        #orepfile.write("%d" % (len(self.executed.keys())))
         orepfile.close()
         objfile = file('testoutput/obj/%s%d'% (self.me.addr, self.me.port), 'a')
-        print str(self.object)
         objfile.write(str(self.object))
         objfile.close()
         sys.stdout.flush()

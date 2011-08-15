@@ -154,6 +154,11 @@ class Coordinator(Replica):
         operation = "add_%s %s:%d" % (nodetype, node.addr, node.port)
         command = Command(self.me, mynumber, operation)
         return command
+
+    def terminate_handler(self, signal, frame):
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(0)
         
 def main():
     coordinatornode = Coordinator()
