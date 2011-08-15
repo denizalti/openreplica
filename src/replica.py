@@ -810,10 +810,10 @@ class Replica(Node):
 
     def terminate_handler(self, signal, frame):
         orepfile = file('testoutput/rep/%s%d'% (self.me.addr, self.me.port), 'a')
-        executedkeys = sorted(self.executed.keys())
-        for key in executedkeys:
-            orepfile.write("%s: %s\n" % (str(key), str(self.executed[key])))
-        #orepfile.write("%d" % (len(self.executed.keys())))
+        #executedkeys = sorted(self.executed.keys())
+        #for key in executedkeys:
+        #    orepfile.write("%s: %s\n" % (str(key), str(self.executed[key])))
+        orepfile.write("%d" % (len(self.executed.keys())))
         orepfile.close()
         objfile = file('testoutput/obj/%s%d'% (self.me.addr, self.me.port), 'a')
         objfile.write(str(self.object))

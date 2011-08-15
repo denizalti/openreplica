@@ -162,10 +162,10 @@ class SanityChecker():
         success = True
         replicafilestr = subprocess.check_output(['ls', path])
         replicafilelist = replicafilestr.strip('\n').split('\n')
-        print replicafilelist
+        print path, " | ", replicafilelist
         for i in range(len(replicafilelist)-1):
             try:
-                output = subprocess.check_output(['diff', '--brief', 'testoutput/rep/'+replicafilelist[i], path+'/'+replicafilelist[i+1]])
+                output = subprocess.check_output(['diff', '--brief', path+'/'+replicafilelist[i], path+'/'+replicafilelist[i+1]])
             except:
                 success = False
         return success
