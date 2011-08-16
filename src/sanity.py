@@ -49,10 +49,10 @@ class SanityChecker():
         # no failures
         # start nodes
         self._start_replicas()
-        self._start_coordinators()
+        #self._start_coordinators()
         self._start_acceptors()
         self._start_coordinatorclient()
-        self.run(10)
+        self.run(30)
         self._start_clients("clientinputs/test1")
         # wait 20 seconds
         self.run(20)
@@ -63,17 +63,17 @@ class SanityChecker():
         # leader fails at t=10s+
         # start nodes
         self._start_replicas()
-        self._start_coordinators()
+        #self._start_coordinators()
         self._start_acceptors()
         self._start_coordinatorclient()
-        self.run(10)
+        self.run(30)
         self._start_clients("clientinputs/test2")
         # wait 10 seconds
         self.run(5)
         # terminate
         self._kill_leader()
         # wait 10 seconds
-        self.run(300)
+        self.run(600)
         # terminate
         self._kill_all()
 
@@ -82,7 +82,7 @@ class SanityChecker():
         # leader recovers at t=30s+
         # start nodes
         self._start_replicas()
-        self._start_coordinators()
+        #self._start_coordinators()
         self._start_acceptors()
         self._start_coordinatorclient()
         self.run(10)
@@ -185,7 +185,7 @@ class SanityChecker():
     def _start_acceptors(self):
         for i in range(self.acceptorcount):
             fhandle = file("testoutput/acceptor%doutput" %i, 'w')
-            phandle = subprocess.Popen(['python', 'acceptor.py', '-b', '127.0.0.1:6668', '-l'], shell=False, stdin=None, stdout=fhandle, stderr=fhandle)
+            phandle = subprocess.Popen(['python', 'acceptor.py', '-b', '127.0.0.1:6668', '-l', '-d'], shell=False, stdin=None, stdout=fhandle, stderr=fhandle)
             self.acceptors[phandle] = fhandle
             sleep(0.5)
             self.output("Acceptor %d started." % i)
@@ -250,22 +250,28 @@ class SanityChecker():
             del self.coordinators[phandle]
 
     def _kill_a_client(self):
-        for phandle, fhandle in self.clients.iteritems():
-            phandle.terminate()
-            fhandle.close()
-            del self.clients[phandle]
-
+        try:
+            for phandle, fhandle in self.clients.iteritems():
+                phandle.terminate()
+                fhandle.close()
+                del self.clients[phandle]
+        except:
+            pass
+        
     def _kill_all(self):
-        phandles = self.clients.keys() + self.acceptors.keys() + self.coordinators.keys() + self.replicas.keys()
-        fhandles = self.replicas.values() + self.acceptors.values() + self.clients.values() + self.coordinators.values()
-        for phandle in phandles:
-            phandle.terminate()
-        self.output("All processes killed.")
-        for fhandle in fhandles:
-            fhandle.close()
-        self.output("All files closed.")        
-        self.clients = self.acceptors = self.replicas = self.coordinators ={}
-        subprocess.call(['rm', '-rf', 'ports'])
+        try:
+            phandles = self.clients.keys() + self.acceptors.keys() + self.coordinators.keys() + self.replicas.keys()
+            fhandles = self.replicas.values() + self.acceptors.values() + self.clients.values() + self.coordinators.values()
+            for phandle in phandles:
+                phandle.terminate()
+            self.output("All processes killed.")
+            for fhandle in fhandles:
+                fhandle.close()
+            self.output("All files closed.")        
+            self.clients = self.acceptors = self.replicas = self.coordinators ={}
+            subprocess.call(['rm', '-rf', 'ports'])
+        except:
+            pass
         
     def output(self, text):
         print "[Test] %s" % text

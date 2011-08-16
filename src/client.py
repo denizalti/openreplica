@@ -80,6 +80,9 @@ class Client():
             try:
                 if self.file and not EOF:
                     shellinput = f.readline().strip()
+                elif EOF:
+                    sys.stdout.flush()
+                    os._exit(0)
                 else:
                     shellinput = raw_input("client-shell> ")
                     

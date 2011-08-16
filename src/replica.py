@@ -62,8 +62,8 @@ def endtiming(fn):
             print "Total time: ", total
             print "Per request: ", total/NITER
             obj.count += 1
+            '''
             sys.stdout.flush()
-            """
             profile_off()
             profilerdict = get_profile_stats()
             for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
@@ -71,7 +71,7 @@ def endtiming(fn):
             time.sleep(10)
             sys.stdout.flush()
             os._exit(0)
-            """
+            '''
         else:
             obj.count += 1
         return ret
@@ -99,7 +99,7 @@ class ResponseCollector():
         self.acceptors = acceptors
         self.received = {}
         self.ntotal = len(self.acceptors)
-        self.nquorum = min(math.ceil(float(self.ntotal)/2+1), self.ntotal)
+        self.nquorum = self.ntotal/2+1
         self.possiblepvalueset = PValueSet()
 
 class Replica(Node):
@@ -631,12 +631,18 @@ class Replica(Node):
                 # we should try proposing with a new commandnumber
                 if self.proposals[prc.commandnumber] != prc.proposal:
                     self.do_command_propose(prc.proposal)
+                print "ACCEPTORS: ", prc.acceptors
                 for chosencommandnumber,chosenproposal in self.proposals.iteritems():
                     logger("Sending PROPOSE for %d, %s" % (chosencommandnumber, chosenproposal))
                     newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, chosencommandnumber, chosenproposal)
                     self.outstandingproposes[chosencommandnumber] = newprc
                     propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotnumber,commandnumber=chosencommandnumber,proposal=chosenproposal)
+                    print "Sending to ", newprc.acceptors
                     self.send(propose,group=newprc.acceptors)
+                    print time.time()
+                    #print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                    #print self.
+                    #print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                 # As leader collected all proposals from acceptors its state is up-to-date and it is done initializing
                 self.leader_initializing = False
                 self.stateuptodate = True
