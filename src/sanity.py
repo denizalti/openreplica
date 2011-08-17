@@ -73,7 +73,7 @@ class SanityChecker():
         # terminate
         self._kill_leader()
         # wait 10 seconds
-        self.run(600)
+        self.run(60)
         # terminate
         self._kill_all()
 
