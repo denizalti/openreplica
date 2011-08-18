@@ -296,9 +296,6 @@ class Replica(Node):
         args = args[0].split(":")
         replica = Peer(args[0],int(args[1]),NODE_REPLICA)
         self.groups[NODE_REPLICA].add(replica)
-        print "***********************************************"
-        print self.groups[NODE_REPLICA]
-        print "***********************************************"
         if self.type == NODE_LEADER:
             heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, self.groups)
             self.send(heloreplymessage, peer=replica)
@@ -347,6 +344,7 @@ class Replica(Node):
             self.receivedclientrequests = {} # indexed by (client,clientcommandnumber)
             self.clientpool = ConnectionPool()
             self.backoff = 0
+            self.commandgap = 1
             backoff_thread = Thread(target=self.update_backoff)
             backoff_event.clear()
             backoff_thread.start()
@@ -405,13 +403,12 @@ class Replica(Node):
 
     def find_commandnumber(self):
         """returns the first gap in proposals, decisions and pendingcommands combined"""
-        commandgap = 1 ### Global last gap
-        while commandgap <= len(self.usedcommandnumbers):
-            if commandgap in self.usedcommandnumbers:
-                commandgap += 1
+        while self.commandgap <= len(self.usedcommandnumbers):
+            if self.commandgap in self.usedcommandnumbers:
+                self.commandgap += 1
             else:
-                return commandgap
-        return commandgap
+                return self.commandgap
+        return self.commandgap
 
     def add_to_executed(self, key, value):
         self.executed[key] = value
@@ -515,9 +512,7 @@ class Replica(Node):
         removes the command from pending and transfers it to proposals
         if there are no acceptors present, sets the lists back and returns"""
         givenproposal = self.pendingcommands[givencommandnumber]
-        # XXX this is a bug!
-        del self.pendingcommands[givencommandnumber]
-        # Right way: self.remove_from_pendingcommands(givencommandnumber)
+        self.remove_from_pendingcommands(givencommandnumber)
         self.add_to_proposals(givencommandnumber, givenproposal)
         recentballotnumber = self.ballotnumber
         logger("proposing command: %d:%s with ballotnumber %s and %d acceptors" % (givencommandnumber,givenproposal,str(recentballotnumber),len(self.groups[NODE_ACCEPTOR])))
@@ -640,9 +635,10 @@ class Replica(Node):
                     print "Sending to ", newprc.acceptors
                     self.send(propose,group=newprc.acceptors)
                     print time.time()
-                    #print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    #print self.
-                    #print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                    print self.pendingcommands
+                    print self.groups
+                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                 # As leader collected all proposals from acceptors its state is up-to-date and it is done initializing
                 self.leader_initializing = False
                 self.stateuptodate = True

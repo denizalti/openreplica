@@ -69,7 +69,7 @@ class SanityChecker():
         self.run(30)
         self._start_clients("clientinputs/test2")
         # wait 10 seconds
-        self.run(5)
+        self.run(1)
         # terminate
         self._kill_leader()
         # wait 10 seconds
@@ -278,10 +278,10 @@ class SanityChecker():
     
 def main():
     tester = SanityChecker(numreplicas=options.numreplicas, numcoords=options.numcoords, numacceptors=options.numacceptors, numclients=options.numclients)
-    tester.output("Starting Test 1...")
-    tester.test1()
-    sleep(1)
-    tester.test1_check()
+#    tester.output("Starting Test 1...")
+#    tester.test1()
+#    sleep(1)
+#    tester.test1_check()
     tester.output("Starting Test 2...")
     tester.test2()
     sleep(1)
