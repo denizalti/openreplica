@@ -139,6 +139,12 @@ class Coordinator(Replica):
 
             time.sleep(LIVENESSTIMEOUT)
 
+    def msg_refer(self, conn, msg):
+        """A peer is referred by its bootstrap node"""
+        referredpeer = msg.referredpeer
+        addcommand = self.create_add_command(referredpeer)
+        self.do_command_prepare(addcommand)
+
     def create_delete_command(self, node):
         mynumber = self.coordinatorcommandnumber
         self.coordinatorcommandnumber += 1

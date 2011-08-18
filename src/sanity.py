@@ -49,7 +49,7 @@ class SanityChecker():
         # no failures
         # start nodes
         self._start_replicas()
-        #self._start_coordinators()
+        self._start_coordinators()
         self._start_acceptors()
         self._start_coordinatorclient()
         self.run(30)
@@ -278,10 +278,10 @@ class SanityChecker():
     
 def main():
     tester = SanityChecker(numreplicas=options.numreplicas, numcoords=options.numcoords, numacceptors=options.numacceptors, numclients=options.numclients)
-#    tester.output("Starting Test 1...")
-#    tester.test1()
-#    sleep(1)
-#    tester.test1_check()
+    tester.output("Starting Test 1...")
+    tester.test1()
+    sleep(1)
+    tester.test1_check()
     tester.output("Starting Test 2...")
     tester.test2()
     sleep(1)

@@ -116,6 +116,14 @@ class AckMessage(Message):
         Message.__init__(self, msgtype, myname)
         self.ackid = ackid
 
+class ReferMessage(Message):
+    def __init__(self, msgtype, myname, referredpeer=None):
+        Message.__init__(self, msgtype, myname)
+        self.referredpeer = referredpeer
+
+    def __str__(self):
+        return "%s referredpeer: %s" % (Message.__str__(self), str(self.referredpeer))
+
 class QueryMessage(Message):
     def __init__(self,msgtype, myname, peers=None):
         Message.__init__(self, msgtype, myname)

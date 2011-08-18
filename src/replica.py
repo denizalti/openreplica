@@ -70,9 +70,8 @@ def endtiming(fn):
                 print "%s: %s" % (key, value)
             time.sleep(10)
             sys.stdout.flush()
-            '''
             os._exit(0)
-            
+            '''
         else:
             obj.count += 1
         return ret

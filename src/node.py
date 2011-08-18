@@ -262,7 +262,7 @@ class Node():
     # message handlers
     #
     def msg_helo(self, conn, msg):
-        """Add the other peer into the connection pool and group"""
+        """Add the other peer into the matching group"""
         self.groups[msg.source.type].add(msg.source)
 
     def msg_bye(self, conn, msg):
