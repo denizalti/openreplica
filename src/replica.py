@@ -62,16 +62,17 @@ def endtiming(fn):
             print "Total time: ", total
             print "Per request: ", total/NITER
             obj.count += 1
-            '''
             sys.stdout.flush()
+            '''
             profile_off()
             profilerdict = get_profile_stats()
             for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
                 print "%s: %s" % (key, value)
             time.sleep(10)
             sys.stdout.flush()
-            os._exit(0)
             '''
+            os._exit(0)
+            
         else:
             obj.count += 1
         return ret
@@ -626,7 +627,6 @@ class Replica(Node):
                 # we should try proposing with a new commandnumber
                 if self.proposals[prc.commandnumber] != prc.proposal:
                     self.do_command_propose(prc.proposal)
-                print "ACCEPTORS: ", prc.acceptors
                 for chosencommandnumber,chosenproposal in self.proposals.iteritems():
                     logger("Sending PROPOSE for %d, %s" % (chosencommandnumber, chosenproposal))
                     newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, chosencommandnumber, chosenproposal)
@@ -634,11 +634,6 @@ class Replica(Node):
                     propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotnumber,commandnumber=chosencommandnumber,proposal=chosenproposal)
                     print "Sending to ", newprc.acceptors
                     self.send(propose,group=newprc.acceptors)
-                    print time.time()
-                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    print self.pendingcommands
-                    print self.groups
-                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                 # As leader collected all proposals from acceptors its state is up-to-date and it is done initializing
                 self.leader_initializing = False
                 self.stateuptodate = True
@@ -695,11 +690,11 @@ class Replica(Node):
             prc = self.outstandingproposes[msg.commandnumber]
             if msg.inresponseto == prc.ballotnumber:
                 prc.received[msg.source] = msg
-                logger("got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts" % \
-                       (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
-                assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PROPOSE_ACCEPT can't have non-matching ballotnumber" % self
+                #logger("got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts" % \
+                #       (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
+                #assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PROPOSE_ACCEPT can't have non-matching ballotnumber" % self
                 if len(prc.received) >= prc.nquorum:
-                    logger("WE AGREE!")
+                    #logger("WE AGREE!")
                     # take this response collector out of the outstanding propose set
                     self.add_to_proposals(prc.commandnumber, prc.proposal)
                     del self.outstandingproposes[msg.commandnumber]
@@ -709,17 +704,16 @@ class Replica(Node):
                         logger("Sending PERFORM!")
                         self.send(performmessage, group=self.groups[NODE_REPLICA])
                         self.send(performmessage, group=self.groups[NODE_LEADER])
-                        self.send(performmessage, group=self.groups[NODE_NAMESERVER])
-                        self.send(performmessage, group=self.groups[NODE_TRACKER])
+                        #self.send(performmessage, group=self.groups[NODE_NAMESERVER])
                         self.send(performmessage, group=self.groups[NODE_COORDINATOR])
                         #XXX Minimize the number of replica classes
                     except:
                         pass
                     self.perform(performmessage, designated=True)
-            else:
-                logger("there is no response collector for %s cmdno:%d" % (str(msg.inresponseto), msg.commandnumber))
-        else:
-            logger("there is no response collector for %s cmdno:%d" % (str(msg.inresponseto), msg.commandnumber))
+            #else:
+            #    logger("there is no response collector for %s cmdno:%d" % (str(msg.inresponseto), msg.commandnumber))
+        #else:
+        #    logger("there is no response collector for %s cmdno:%d" % (str(msg.inresponseto), msg.commandnumber))
 
     def msg_propose_reject(self, conn, msg):
         """MSG_PROPOSE_REJECT is handled only if it belongs to an outstanding MSG_PROPOSE,
