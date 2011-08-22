@@ -20,6 +20,7 @@ class Coordinator(Replica):
         self.outstandingprepares = {}
         self.outstandingproposes = {}
         self.clientpool = ConnectionPool()
+        self.commandgap = 1
         self.backoff = 0
         backoff_thread = Thread(target=self.update_backoff)
         backoff_event.clear()
@@ -141,6 +142,7 @@ class Coordinator(Replica):
 
     def msg_refer(self, conn, msg):
         """A peer is referred by its bootstrap node"""
+        logger("Got a referral for %s" % msg.referredpeer)
         referredpeer = msg.referredpeer
         addcommand = self.create_add_command(referredpeer)
         self.do_command_prepare(addcommand)

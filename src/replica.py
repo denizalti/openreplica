@@ -11,6 +11,7 @@ import math
 import sys
 import os
 import signal
+import objectgenerator
 
 from pprint import pprint
 from node import *
@@ -104,7 +105,7 @@ class ResponseCollector():
 
 class Replica(Node):
     """Replica receives MSG_PERFORM from Leaders and execute corresponding commands."""
-    def __init__(self, replicatedobject=None, nodetype=NODE_REPLICA, port=None,  bootstrap=None):
+    def __init__(self, nodetype=NODE_REPLICA, port=None,  bootstrap=None):
         """Replica State
         - object: the object that Replica is replicating
 	- nexttoexecute: the commandnumber that relica is waiting for to execute
@@ -114,7 +115,7 @@ class Replica(Node):
         - pendingcommands: Set of unissiued commands that are waiting for the window to roll over to be issued
         """
         Node.__init__(self, nodetype)
-        self.object = replicatedobject
+        self.object = objectgenerator.getobjectfromname(self.objectname)
         self.leader_initializing = False
         self.nexttoexecute = 1
         # decided commands
@@ -831,7 +832,7 @@ class Replica(Node):
         os._exit(0)
 
 def main():
-    replicanode = Replica(Bank())
+    replicanode = Replica()
     replicanode.startservice()
     signal.signal(signal.SIGINT, replicanode.interrupt_handler)
     signal.signal(signal.SIGTERM, replicanode.terminate_handler)

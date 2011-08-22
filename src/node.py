@@ -24,9 +24,10 @@ from command import Command
 from pvalue import PValue, PValueSet
 from concoordprofiler import *
 
-parser = OptionParser(usage="usage: %prog -p port -b bootstrap -l -d")
+parser = OptionParser(usage="usage: %prog -p port -b bootstrap -o object -l -d")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
+parser.add_option("-o", "--object", action="store", dest="object", default=None, help="replicated object")
 parser.add_option("-l", "--local", action="store_true", dest="local", default=False, help="initiates the node at localhost")
 parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
 
@@ -38,7 +39,7 @@ class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
     """ 
-    def __init__(self, nodetype, port=options.port, bootstrap=options.bootstrap, local=options.local, debugoption=options.debug):
+    def __init__(self, nodetype, port=options.port, bootstrap=options.bootstrap, local=options.local, debugoption=options.debug, replicatedobject=options.object):
         """Node State
         - addr: hostname for Node, detected automatically
         - port: port for Node, can be taken from the commandline (-p [port]) or
@@ -60,6 +61,8 @@ class Node():
         self.port = port
         self.connectionpool = ConnectionPool()
         self.type = nodetype
+        if self.type == NODE_REPLICA:
+            self.objectname = replicatedobject
         self.outstandingmessages_lock = RLock()
         self.outstandingmessages = {}
         self.lock = Lock()

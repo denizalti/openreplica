@@ -177,7 +177,7 @@ class SanityChecker():
         for i in range(self.replicacount-1):
             rid = i+1
             fhandle = file("testoutput/replica%doutput" % rid, 'w')
-            phandle = subprocess.Popen(['python', 'replica.py', '-b', '127.0.0.1:6668', '-l', '-d'], shell=False, stdin=None, stdout=fhandle, stderr=fhandle)
+            phandle = subprocess.Popen(['python', 'replica.py', '-o', 'bank', '-b', '127.0.0.1:6668', '-l', '-d'], shell=False, stdin=None, stdout=fhandle, stderr=fhandle)
             self.replicas[phandle] = fhandle
             sleep(0.5)
             self.output("Replica %d started." % rid)
@@ -220,13 +220,13 @@ class SanityChecker():
 
     def _start_leader(self):
         fhandle = file("testoutput/replica0output", 'w')
-        phandle = subprocess.Popen(['python', 'replica.py', '-l', '-d'], shell=False, stdin=None, stdout=fhandle, stderr=fhandle)
+        phandle = subprocess.Popen(['python', 'replica.py', '-o', 'bank', '-l', '-d'], shell=False, stdin=None, stdout=fhandle, stderr=fhandle)
         self.leader = phandle
         self.replicas[phandle] = fhandle
 
     def _restart_leader(self):
         fhandle = file("testoutput/replica0output", 'w')
-        phandle = subprocess.Popen(['python', 'replica.py', '-b', '127.0.0.1:6669', '-l'], shell=False, stdin=None, stdout=fhandle, stderr=fhandle)
+        phandle = subprocess.Popen(['python', 'replica.py', '-o', 'bank', '-b', '127.0.0.1:6669', '-l'], shell=False, stdin=None, stdout=fhandle, stderr=fhandle)
         self.leader = phandle
         self.replicas[phandle] = fhandle
         self.output("Leader restarted.")
