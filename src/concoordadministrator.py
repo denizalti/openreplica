@@ -35,11 +35,11 @@ class ConCoordAdministrator():
         bootstrapport = 6668
         bootstrap = "127.0.0.1:6668"
         # Start a bootstrap
-        self._start_bootstrap(bootstrapport, logfile)
+        self._start_bootstrap(bootstrapport, clientobject, logfile)
         
         # Start replicas
         for port in replicaports:
-            self._start_replica(bootstrap, port, logfile)
+            self._start_replica(bootstrap, port, clientobject, logfile)
 
         # Start nameservers
         for port in nameserverports:
@@ -53,12 +53,12 @@ class ConCoordAdministrator():
         proxyhandle = objectgenerator.createproxyfromname(clientobject)
         
 
-    def _start_bootstrap(self, port, logfile):
-        phandle = subprocess.Popen(['python', 'replica.py', '-p', port, '-l', '-d'], shell=False, stdin=None, stdout=logfile, stderr=logfile)
+    def _start_bootstrap(self, port, object, logfile):
+        phandle = subprocess.Popen(['python', 'replica.py', '-o', object, '-p', port, '-l', '-d'], shell=False, stdin=None, stdout=logfile, stderr=logfile)
         
-    def _start_replica(self, bootstrap, port, logfile):
+    def _start_replica(self, bootstrap, port, object, logfile):
         # start a Replica as a background process
-        phandle = subprocess.Popen(['python', 'replica.py', '-b', bootstrap, '-p', port, '-l', '-d'], shell=False, stdin=None, stdout=logfile, stderr=logfile)
+        phandle = subprocess.Popen(['python', 'replica.py', '-b', bootstrap, '-o', object, '-p', port, '-l', '-d'], shell=False, stdin=None, stdout=logfile, stderr=logfile)
         self.output("Replica started.")
 
     def _start_nameserver(self, bootstrap, port, logfile):
