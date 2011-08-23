@@ -8,13 +8,16 @@ from utils import *
 from enums import *
 from tracker import *
 from node import *
-import dns.exception
-import dns.message
-import dns.rcode
-import dns.opcode
-import dns.rdatatype
-import dns.name
-from dns.flags import *
+try:
+    import dns.exception
+    import dns.message
+    import dns.rcode
+    import dns.opcode
+    import dns.rdatatype
+    import dns.name
+    from dns.flags import *
+except:
+    logger("Install dnspython: http://www.dnspython.org/")
 
 DOMAIN = ['groups','openreplica','org','']
 RRTYPE = ['','A','NS','MD','MF','CNAME','SOA']
@@ -27,9 +30,9 @@ class Nameserver(Tracker):
     QUERY messages from dnsserver."""
     def __init__(self):
         Tracker.__init__(self, nodetype=NODE_NAMESERVER, port=5000, bootstrap=options.bootstrap)
-        self.name = dns.name.Name(['herbivore']+DOMAIN)
+        self.name = dns.name.Name(['test']+DOMAIN)
         # XXX: How to keep this dictionary up-to-date
-        self.registerednames = {dns.name.Name(['paxi']+DOMAIN):'127.0.0.1'} # <name:nameserver> mappings
+        self.registerednames = {dns.name.Name(['test']+DOMAIN):'127.0.0.1'} # <name:nameserver> mappings
         self.nameserverconnections = {}  # <nameserver:connection> mappings
         self.udpport = 53 #DNS port: 53
         self.udpsocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)

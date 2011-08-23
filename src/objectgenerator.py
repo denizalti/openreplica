@@ -1,13 +1,7 @@
 import inspect, types
-from optparse import OptionParser
-
 from obj import *
 
 INDENT = '\t'
-
-parser = OptionParser(usage="usage: %prog -o --obj objectname")
-parser.add_option("-o", "--obj", action="store", dest="objectname", help="name of the object to be converted to a proxy")
-(options, args) = parser.parse_args()
 
 def get_functions_of_obj(classobj):
     templist = dir(classobj)
@@ -40,14 +34,9 @@ get_class = lambda x: globals()[x]
 
 def createproxyfromname(objectname):
     moduleobject = get_class(objectname)
-    classobject = getattr(moduleobject, options.objectname.capitalize())
+    classobject = getattr(moduleobject, objectname.capitalize())
     return create_file(classobject)
 
 def getobjectfromname(objectname):
     moduleobject = get_class(objectname)
     return getattr(moduleobject, objectname.capitalize())
-
-# Main to test
-#moduleobject = get_class(options.objectname)
-#classobject = getattr(moduleobject, options.objectname.capitalize())
-#create_file(classobject)

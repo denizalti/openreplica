@@ -1,0 +1,100 @@
+Exception in thread Thread-2:
+Traceback (most recent call last):
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 552, in __bootstrap_inner
+    self.run()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 505, in run
+    self.__target(*self.__args, **self.__kwargs)
+  File "/Users/denizalti/paxi/src/node.py", line 341, in get_inputs
+    input = raw_input("paxos-shell> ")
+IOError: [Errno 5] Input/output error
+
+Exception in thread Thread-2:
+Traceback (most recent call last):
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 552, in __bootstrap_inner
+    self.run()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 505, in run
+    self.__target(*self.__args, **self.__kwargs)
+  File "/Users/denizalti/paxi/src/node.py", line 341, in get_inputs
+    input = raw_input("paxos-shell> ")
+IOError: [Errno 5] Input/output error
+
+Exception in thread Thread-2:
+Traceback (most recent call last):
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 552, in __bootstrap_inner
+    self.run()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 505, in run
+    self.__target(*self.__args, **self.__kwargs)
+  File "/Users/denizalti/paxi/src/node.py", line 341, in get_inputs
+    input = raw_input("paxos-shell> ")
+IOError: [Errno 5] Input/output error
+
+Exception in thread Thread-2:
+Traceback (most recent call last):
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 552, in __bootstrap_inner
+    self.run()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 505, in run
+    self.__target(*self.__args, **self.__kwargs)
+  File "/Users/denizalti/paxi/src/node.py", line 341, in get_inputs
+    input = raw_input("paxos-shell> ")
+IOError: [Errno 5] Input/output error
+
+Exception in thread Thread-2:
+Traceback (most recent call last):
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 552, in __bootstrap_inner
+    self.run()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 505, in run
+    self.__target(*self.__args, **self.__kwargs)
+  File "/Users/denizalti/paxi/src/node.py", line 341, in get_inputs
+    input = raw_input("paxos-shell> ")
+IOError: [Errno 5] Input/output error
+
+Exception in thread Thread-2:
+Traceback (most recent call last):
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 552, in __bootstrap_inner
+    self.run()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 505, in run
+    self.__target(*self.__args, **self.__kwargs)
+  File "/Users/denizalti/paxi/src/node.py", line 341, in get_inputs
+    input = raw_input("paxos-shell> ")
+IOError: [Errno 5] Input/output error
+
+Exception in thread Thread-2:
+Traceback (most recent call last):
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 552, in __bootstrap_inner
+    self.run()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 505, in run
+    self.__target(*self.__args, **self.__kwargs)
+  File "/Users/denizalti/paxi/src/node.py", line 341, in get_inputs
+    input = raw_input("paxos-shell> ")
+IOError: [Errno 5] Input/output error
+
+Exception in thread Thread-2:
+Traceback (most recent call last):
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 552, in __bootstrap_inner
+    self.run()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 505, in run
+    self.__target(*self.__args, **self.__kwargs)
+  File "/Users/denizalti/paxi/src/node.py", line 341, in get_inputs
+    input = raw_input("paxos-shell> ")
+IOError: [Errno 5] Input/output error
+
+Exception in thread Thread-2:
+Traceback (most recent call last):
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 552, in __bootstrap_inner
+    self.run()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 505, in run
+    self.__target(*self.__args, **self.__kwargs)
+  File "/Users/denizalti/paxi/src/node.py", line 341, in get_inputs
+    input = raw_input("paxos-shell> ")
+IOError: [Errno 5] Input/output error
+
+Exception in thread Thread-2:
+Traceback (most recent call last):
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 552, in __bootstrap_inner
+    self.run()
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 505, in run
+    self.__target(*self.__args, **self.__kwargs)
+  File "/Users/denizalti/paxi/src/node.py", line 341, in get_inputs
+    input = raw_input("paxos-shell> ")
+IOError: [Errno 5] Input/output error
+

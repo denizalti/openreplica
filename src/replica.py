@@ -115,7 +115,8 @@ class Replica(Node):
         - pendingcommands: Set of unissiued commands that are waiting for the window to roll over to be issued
         """
         Node.__init__(self, nodetype)
-        self.object = objectgenerator.getobjectfromname(self.objectname)
+        if nodetype == NODE_REPLICA:
+            self.object = objectgenerator.getobjectfromname(self.objectname)
         self.leader_initializing = False
         self.nexttoexecute = 1
         # decided commands

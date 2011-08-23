@@ -61,6 +61,7 @@ class Node():
         self.port = port
         self.connectionpool = ConnectionPool()
         self.type = nodetype
+        print self.type
         if self.type == NODE_REPLICA:
             self.objectname = replicatedobject
         self.outstandingmessages_lock = RLock()
