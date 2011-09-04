@@ -286,9 +286,9 @@ def main():
     tester.test2()
     sleep(1)
     tester.test2_check()
-#    tester.output("Starting Test 3...")
-#    tester.test3()
-#    tester.test3_check()
+    tester.output("Starting Test 3...")
+    tester.test3()
+    tester.test3_check()
     
 if __name__=='__main__':
     main()

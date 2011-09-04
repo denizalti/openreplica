@@ -47,7 +47,7 @@ def starttiming(fn):
 
 def endtiming(fn):
     """Decorator used to end timing. Keeps track of the count for the first and second calls."""
-    NITER = 1000
+    NITER = 10000
     def new(*args, **kw):
         ret = fn(*args, **kw)
         obj = args[0]
@@ -58,21 +58,24 @@ def endtiming(fn):
         elif obj.count == NITER:
             now = time.time()
             total = now - obj.secondstarttime
-            print "Replicas: ", len(obj.groups[NODE_REPLICA])+1
-            print "Requests: ", NITER
-            print "Total time: ", total
-            print "Per request: ", total/NITER
+            perrequest = total/NITER
+            filename = "output/%s-%s" % (str(len(obj.groups[NODE_REPLICA])+1),str(len(obj.groups[NODE_ACCEPTOR])))
+            try:
+                outputfile = open("/home/deniz/"+filename, "a")
+            except:
+                outputfile = open("./"+filename, "a")
+            # numreplicas #numacceptors #perrequest #total
+            outputfile.write("%s\t%s\t%s\t%s\n" % (str(len(obj.groups[NODE_REPLICA])+1), str(len(obj.groups[NODE_ACCEPTOR])), str(perrequest), str(total)))
+            outputfile.close()
             obj.count += 1
             sys.stdout.flush()
-            '''
-            profile_off()
-            profilerdict = get_profile_stats()
-            for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
-                print "%s: %s" % (key, value)
-            time.sleep(10)
-            sys.stdout.flush()
+            #profile_off()
+            #profilerdict = get_profile_stats()
+            #for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
+            #    print "%s: %s" % (key, value)
+            #time.sleep(10)
+            #sys.stdout.flush()
             os._exit(0)
-            '''
         else:
             obj.count += 1
         return ret
@@ -116,7 +119,10 @@ class Replica(Node):
         """
         Node.__init__(self, nodetype)
         if nodetype == NODE_REPLICA:
-            self.object = objectgenerator.getobjectfromname(self.objectname)
+            try:
+                self.object = objectgenerator.getobjectfromname(self.objectname)()
+            except:
+                print("Object cannot be found.")
         self.leader_initializing = False
         self.nexttoexecute = 1
         # decided commands
@@ -248,7 +254,7 @@ class Replica(Node):
         self.perform(msg)
 
         if not self.stateuptodate and self.type == NODE_REPLICA:
-            print "HAS TO UPDATE!"
+            logger("HAS TO UPDATE!")
             if msg.commandnumber == 1:
                 self.stateuptodate = True
                 return
@@ -633,7 +639,6 @@ class Replica(Node):
                     newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, chosencommandnumber, chosenproposal)
                     self.outstandingproposes[chosencommandnumber] = newprc
                     propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotnumber,commandnumber=chosencommandnumber,proposal=chosenproposal)
-                    print "Sending to ", newprc.acceptors
                     self.send(propose,group=newprc.acceptors)
                 # As leader collected all proposals from acceptors its state is up-to-date and it is done initializing
                 self.leader_initializing = False

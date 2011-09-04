@@ -61,7 +61,6 @@ class Node():
         self.port = port
         self.connectionpool = ConnectionPool()
         self.type = nodetype
-        print self.type
         if self.type == NODE_REPLICA:
             self.objectname = replicatedobject
         self.outstandingmessages_lock = RLock()
@@ -97,7 +96,7 @@ class Node():
                 fcntl.flock(f,fcntl.LOCK_UN)
                 f.close()
         except IOError:
-            print "Error opening port file"
+            logger("Error opening port file")
         
         # initialize empty groups
         self.me = Peer(self.addr,self.port,self.type)
@@ -117,6 +116,7 @@ class Node():
             self.groups[NODE_REPLICA].add(bootpeer)
         if self.type == NODE_REPLICA or self.type == NODE_TRACKER or self.type == NODE_NAMESERVER or self.type == NODE_COORDINATOR:
             self.stateuptodate = False
+        print self.id
 
     def startservice(self):
         """Starts the background services associated with a node."""
@@ -314,7 +314,7 @@ class Node():
                         now = time.time()
                         if messageinfo.messagestate == ACK_NOTACKED and (messageinfo.timestamp + ACKTIMEOUT) < now:
                             #resend NOTACKED message
-                            #logger("re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
+                            logger("re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
                             self.send(messageinfo.message, peer=messageinfo.destination, isresend=True)
                             messageinfo.timestamp = time.time()
                         elif DO_PERIODIC_PINGS and messageinfo.messagestate == ACK_ACKED and \
@@ -338,7 +338,7 @@ class Node():
         """
         while self.alive:
             try:
-                input = raw_input("paxos-shell> ")
+                input = raw_input("")
                 if len(input) == 0:
                     continue
                 else:

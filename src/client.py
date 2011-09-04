@@ -55,7 +55,6 @@ class Client():
     def connecttobootstrap(self):
         for bootpeer in self.bootstraplist:
             try:
-                print "Connecting to new bootstrap: ", bootpeer.addr,bootpeer.port
                 self.socket.close()
                 self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
                 self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
@@ -80,11 +79,9 @@ class Client():
             try:
                 if self.file and not EOF:
                     shellinput = f.readline().strip()
-                elif EOF:
-                    sys.stdout.flush()
-                    os._exit(0)
                 else:
-                    shellinput = raw_input("client-shell> ")
+                    shellinput = raw_input("")
+#                    shellinput = raw_input("client-shell> ")
                     
                 if len(shellinput) == 0:
                     if self.file:
@@ -98,7 +95,6 @@ class Client():
                     command = Command(self.me, mynumber, shellinput)
                     cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
                     replied = False
-                    print "Client Message about to be sent:", cm
                     starttime = time.time()
                     self.conn.settimeout(CLIENTRESENDTIMEOUT)
 
@@ -111,7 +107,6 @@ class Client():
                             self.connecttobootstrap()
                             continue
                         reply = self.conn.receive()
-                        print "Received: ", reply
                         if reply and (reply.type == MSG_CLIENTREPLY or reply.type == MSG_CLIENTMETAREPLY) and reply.inresponseto == mynumber:
                             if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
                                 currentbootstrap = self.bootstraplist.pop(0)
