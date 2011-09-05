@@ -15,15 +15,16 @@ fi
 
 RUNFILE=./runningon
 
-# REPLICA_0: sys01
+# REPLICA_0: sys15
 # ACCEPTORS: sys04, 05, 07, 08, 09
 # REPLICAS: sys10, 11, 12, 13, 14
+# CLIENT: sys01
 
 let "numreplicas = $1 - 1"
 let "numacceptors = $2"
 
-ssh sys01 ./start_concoord.sh
-echo sys01 >> ${RUNFILE}
+ssh sys15 ./start_concoord.sh
+echo sys15 >> ${RUNFILE}
 sleep 2
 
 for (( x=0; x<$numreplicas; x++ )); do
@@ -46,5 +47,5 @@ for (( x=0; x<$numacceptors; x++ )); do
 done
 sleep 5
 
-ssh sys15 ./start_concoord.sh
-echo sys15 >> ${RUNFILE}
+ssh sys01 ./start_concoord.sh
+echo sys01 >> ${RUNFILE}
