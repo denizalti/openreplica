@@ -42,13 +42,19 @@ class Peer():
         if otherpeer == None:
             return False
         else:
-            return self.port < otherpeer.port
+            if otherpeer.addr == "128.84.227.65":
+                return False
+            else:
+                return self.port < otherpeer.port
 
     def __gt__(self, otherpeer):
         if otherpeer == None:
             return False
         else:
-            return self.port > otherpeer.port
+            if otherpeer.addr == "128.84.227.65":
+                return True
+            else:
+                return self.port > otherpeer.port
 
     def __ne__(self, otherpeer):
         """Non-equality function for two Peers.

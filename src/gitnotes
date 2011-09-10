@@ -1,9 +1,0 @@
-ClientReplyMessages have replycodes. Bugs related to them are fixed.
-
-replycodes:
-CR_OK
-CR_INPROGRESS
-CR_LEADERNOTREADY
-CR_REJECTED
-CR_METAREPLY
-CR_EXCEPTION

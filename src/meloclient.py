@@ -113,30 +113,22 @@ class Client():
                             self.connecttobootstrap()
                             continue
                         reply = self.conn.receive()
-                        if reply and (reply.type == MSG_CLIENTREPLY or reply.type == MSG_CLIENTMETAREPLY) and reply.inresponseto == mynumber:
-                            if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
-                                currentbootstrap = self.bootstraplist.pop(0)
-                                self.bootstraplist.append(currentbootstrap)
-                                self.connecttobootstrap()
-                                continue
-                            elif reply.replycode == CR_INPROGRESS:
-                                continue
-                            else:
-                                replied = True
-                                self.numbers.append(time.time()-starttime)
-                                if inputcount == 1000:
-                                    filename = "output/%s-%s" % (str(self.numreplicas),str(self.numacceptors))
-                                    try:
-                                        outputfile = open("/home/deniz/concoord/"+filename, "a")
-                                    except:
-                                        outputfile = open("./"+filename, "a")
-                                    for perrequest in self.numbers:
-                                        # numreplicas #numacceptors #perrequest
-                                        outputfile.write("%s\t%s\t%s\n" % (str(self.numreplicas), str(self.numacceptors), str(perrequest)))
-                                    outputfile.close()
+                        if reply and reply.type == MSG_MELOREPLY and reply.inresponseto == mynumber:
+                            replied = True
+                            self.numbers.append(time.time()-starttime)
+                            if inputcount == 1000:
+                                filename = "output/%s-%s" % (str(self.numreplicas),str(self.numacceptors))
+                                try:
+                                    outputfile = open("/home/deniz/concoord/"+filename, "a")
+                                except:
+                                    outputfile = open("./"+filename, "a")
+                                for perrequest in self.numbers:
+                                    # numreplicas #numacceptors #perrequest
+                                    outputfile.write("%s\t%s\t%s\n" % (str(self.numreplicas), str(self.numacceptors), str(perrequest)))
+                                outputfile.close()
                         if time.time() - starttime > CLIENTRESENDTIMEOUT:
                             print "5 seconds past"
-                            if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
+                            if reply and reply.type == MSG_MELOREPLY and reply.inresponseto == mynumber:
                                 replied = True
                         sys.stdout.flush()
             except ( IOError, EOFError ):

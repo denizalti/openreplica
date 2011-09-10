@@ -231,6 +231,7 @@ class Node():
         """Receives a message and calls the corresponding message handler"""
         connection = self.connectionpool.get_connection_by_socket(clientsock)
         message = connection.receive()
+        
         if message == None:
             return False
         else:
@@ -267,6 +268,8 @@ class Node():
     #
     def msg_helo(self, conn, msg):
         """Add the other peer into the matching group"""
+        heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, groups=self.groups)
+        self.send(heloreplymessage, peer=msg.source)
         self.groups[msg.source.type].add(msg.source)
 
     def msg_bye(self, conn, msg):

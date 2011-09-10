@@ -61,7 +61,7 @@ def endtiming(fn):
             perrequest = total/NITER
             filename = "output/%s-%s" % (str(len(obj.groups[NODE_REPLICA])+1),str(len(obj.groups[NODE_ACCEPTOR])))
             try:
-                outputfile = open("/home/deniz/"+filename, "a")
+                outputfile = open("/home/deniz/concoord/"+filename, "a")
             except:
                 outputfile = open("./"+filename, "a")
             # numreplicas #numacceptors #perrequest #total
@@ -267,7 +267,7 @@ class Replica(Node):
             self.groups[NODE_ACCEPTOR].add(acceptor)
         for replica in msg.groups[NODE_REPLICA]:
             self.groups[NODE_REPLICA].add(replica)
-
+            
     def msg_update(self, conn, msg):
         """someone needs to be updated on the set of past decisions, send our decisions"""
         updatereplymessage = UpdateMessage(MSG_UPDATEREPLY, self.me, self.decisions)
@@ -507,6 +507,10 @@ class Replica(Node):
         if self.leader_initializing:
             self.clientpool.add_connection_to_peer(msg.source, conn)
             self.handle_client_command(msg.command, prepare=True)
+            meloreplymessage = FakeHandshakeMessage(MSG_MELOREPLY, self.me, inresponseto=msg.command.clientcommandnumber)
+            conn = self.clientpool.get_connection_by_peer(msg.source)
+            if conn is not None:
+                conn.send(meloreplymessage)
         if self.type == NODE_LEADER:
             self.clientpool.add_connection_to_peer(msg.source, conn)
             self.handle_client_command(msg.command)
