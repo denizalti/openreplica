@@ -112,7 +112,7 @@ class Client():
                             self.bootstraplist.append(currentbootstrap)
                             self.connecttobootstrap()
                             continue
-                        reply = self.conn.receive()
+                        timestamp, reply = self.conn.receive()
                         if reply and (reply.type == MSG_CLIENTREPLY or reply.type == MSG_CLIENTMETAREPLY) and reply.inresponseto == mynumber:
                             if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
                                 currentbootstrap = self.bootstraplist.pop(0)
@@ -124,8 +124,14 @@ class Client():
                             else:
                                 replied = True
                                 self.numbers.append(time.time()-starttime)
+                                print inputcount
                                 if inputcount == 1000:
-                                    filename = "output/%s-%s" % (str(self.numreplicas),str(self.numacceptors))
+                                    outputmessage = Message(MSG_OUTPUT, self.me)
+                                    success = self.conn.send(outputmessage)
+                                    if not success:
+                                        print "Can't send output message."
+                                    
+                                    filename = "output/client/%s-%s" % (str(self.numreplicas),str(self.numacceptors))
                                     try:
                                         outputfile = open("/home/deniz/concoord/"+filename, "a")
                                     except:

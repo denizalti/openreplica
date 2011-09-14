@@ -15,6 +15,7 @@ class PValueSet():
         if pvalue not in self.pvalues:
             self.pvalues.add(pvalue)
 
+    ######### XXX ############ This could be faster.
     def add_highest(self,pvalue):
         """Adds given PValue to the PValueSet overwriting matching
         (commandnumber,proposal) if it exists

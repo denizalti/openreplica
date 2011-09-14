@@ -20,13 +20,13 @@ class Peer():
         self.port = peerport
         self.addr = peeraddr
 
-    def id(self):
+    def getid(self):
         """Returns the id (addr:port) of the Peer"""
         return "%s:%d" % (self.addr, self.port)
     
     def __hash__(self):
         """Returns the hashed id"""
-        return self.id().__hash__()
+        return self.getid().__hash__()
 
     def __eq__(self, otherpeer):
         """Equality function for two Peers.
@@ -42,7 +42,7 @@ class Peer():
         if otherpeer == None:
             return False
         else:
-            if otherpeer.addr == "128.84.227.65":
+            if otherpeer.addr == "128.84.96.226":
                 return False
             else:
                 return self.port < otherpeer.port
@@ -51,7 +51,7 @@ class Peer():
         if otherpeer == None:
             return False
         else:
-            if otherpeer.addr == "128.84.227.65":
+            if otherpeer.addr == "128.84.96.226":
                 return True
             else:
                 return self.port > otherpeer.port

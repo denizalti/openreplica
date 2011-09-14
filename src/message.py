@@ -18,7 +18,7 @@ class Message():
     """Message encloses the basic state that is shared
     by all types of messages in the system.
     """
-    def __init__(self,msgtype,myname):
+    def __init__(self, msgtype, myname):
         """Initialize Message
 
         Message State
@@ -41,7 +41,7 @@ class Message():
         return self
 
     def fullid(self):
-        return "%s+%d" % (self.source.id(), self.id)
+        return "%s+%d" % (self.source.getid(), self.id)
 
     def __str__(self):
         """Return Message information"""

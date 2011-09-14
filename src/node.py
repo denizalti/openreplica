@@ -34,6 +34,7 @@ parser.add_option("-d", "--debug", action="store_true", dest="debug", default=Fa
 (options, args) = parser.parse_args()
 
 DO_PERIODIC_PINGS = False
+x = 0
 
 class Node():
     """Node encloses the basic Node behaviour and state that
@@ -100,7 +101,7 @@ class Node():
         
         # initialize empty groups
         self.me = Peer(self.addr,self.port,self.type)
-        self.id = self.me.id()
+        self.id = self.me.getid()
         if debugoption:
             setlogprefix("%s %s" % (node_names[self.type],self.id))
         logger("Ready!")
@@ -170,6 +171,7 @@ class Node():
         - inputready: sockets that are ready for reading
         - exceptready: sockets that are ready according to an *exceptional condition*
         """
+        global x
         self.socket.listen(10)
         nascentset = []
         while self.alive:
@@ -203,7 +205,11 @@ class Node():
                         socketset.append(s)
 
                 assert len(socketset) == len(set(socketset)), "[%s] socketset has Duplicates." % self
+                x = random.randint(1,10000000)
+                starttimer(x, 11)
                 inputready,outputready,exceptready = select.select(socketset,[],socketset)
+                endtimer(x, 11)
+                x = random.randint(1,10000000)
                 
                 for s in exceptready:
                     print "EXCEPTION ", s
@@ -230,8 +236,8 @@ class Node():
     def handle_connection(self, clientsock):
         """Receives a message and calls the corresponding message handler"""
         connection = self.connectionpool.get_connection_by_socket(clientsock)
-        message = connection.receive()
-        
+        timestamp,message = connection.receive()
+        #print timestamp, " <--- ", message, "\n"
         if message == None:
             return False
         else:
@@ -244,7 +250,7 @@ class Node():
                 self.connectionpool.add_connection_to_peer(message.source, connection)
             if message.type == MSG_ACK:
                 with self.outstandingmessages_lock:
-                    ackid = "%s+%d" % (self.me.id(), message.ackid)
+                    ackid = "%s+%d" % (self.me.getid(), message.ackid)
                     if self.outstandingmessages.has_key(ackid):
                         #logger("deleting outstanding message %s" % ackid)
                         del self.outstandingmessages[ackid]
@@ -271,6 +277,13 @@ class Node():
         heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, groups=self.groups)
         self.send(heloreplymessage, peer=msg.source)
         self.groups[msg.source.type].add(msg.source)
+
+    def msg_heloreply(self, conn, msg):
+        """add acceptors and replicas carried in the HELOREPLY message"""
+        for acceptor in msg.groups[NODE_ACCEPTOR]:
+            self.groups[NODE_ACCEPTOR].add(acceptor)
+        for replica in msg.groups[NODE_REPLICA]:
+            self.groups[NODE_REPLICA].add(replica)
 
     def msg_bye(self, conn, msg):
         """Deletes the source of MSG_BYE from groups"""
@@ -380,7 +393,6 @@ class Node():
                 connection.send(message)
                 message = copy.copy(message)
                 message.assignuniqueid()
-
 
     # asynchronous event handlers
     def terminate_handler(self, signal, frame):

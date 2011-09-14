@@ -1,5 +1,6 @@
 import socket, errno
 import struct
+import time
 import cPickle as pickle
 import random
 
@@ -16,12 +17,12 @@ class ConnectionPool():
         
     def add_connection_to_peer(self, peer, conn):
         """Adds a Connection to the ConnectionPool by its Peer"""
-        connectionkey = peer.id()
+        connectionkey = peer.getid()
         self.poolbypeer[connectionkey] = conn
         
     def del_connection_by_peer(self, peer):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
-        connectionkey = peer.id()
+        connectionkey = peer.getid()
         if self.poolbypeer.has_key(connectionkey):
             conn = self.poolbypeer[connectionkey]
             del self.poolbypeer[connectionkey]
@@ -48,7 +49,7 @@ class ConnectionPool():
         A new Connection is created and added to the
         ConnectionPool if it doesn't exist.
         """
-        connectionkey = peer.id()
+        connectionkey = peer.getid()
         if self.poolbypeer.has_key(connectionkey):
             return self.poolbypeer[connectionkey]
         else:
@@ -94,7 +95,7 @@ class Connection():
             returnstring = self.thesocket.recv(4)
             if len(returnstring) < 4:
                 print "receive too short"
-                return None
+                return (0,None)
             msg_length = struct.unpack("I", returnstring[0:4])[0]
             msgstr = ''
             while len(msgstr) != msg_length:
@@ -103,11 +104,12 @@ class Connection():
                     break
                 msgstr += chunk
             if len(msgstr) != msg_length:
-                return None
-            return pickle.loads(msgstr)
+                return (0,None)
+            # XXX
+            return (time.time(), pickle.loads(msgstr))
         except IOError as inst:
             print "Receive Error: ", inst
-            return None
+            return (0,None)
     
     def send(self, msg):
         """pickle and send a message on the Connection"""
@@ -118,6 +120,7 @@ class Connection():
         messagelength = struct.pack("I", len(messagestr))
         try:
             self.thesocket.send(messagelength + messagestr)
+            #print time.time(), " ---> ", msg, "\n"
             return True
         except socket.error, e:
              if isinstance(e.args, tuple):
