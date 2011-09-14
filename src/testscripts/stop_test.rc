@@ -1,0 +1,33 @@
+#!/opt/local/bin/rc
+
+BOOTSTRAP=sys15
+ACCEPTORS=(sys04 sys05 sys07 sys08 sys09)
+REPLICAS=(sys10 sys11 sys12 sys13 sys14)
+CLIENT=sys01
+DOMAINSUFFIX=.systems.cs.cornell.edu
+BASE=/local/concoord-deniz
+CONCOORDDIR=/home/deniz/concoord
+PYTHON=python
+
+#### YOU SHOULD NOT HAVE TO CHANGE ANYTHING BELOW THIS LINE
+
+BOOTSTRAP=$BOOTSTRAP^$DOMAINSUFFIX
+ACCEPTORS=$ACCEPTORS^$DOMAINSUFFIX
+REPLICAS=$REPLICAS^$DOMAINSUFFIX
+CLIENT=$CLIENT^$DOMAINSUFFIX
+
+HOSTS=($BOOTSTRAP $ACCEPTORS $REPLICAS $CLIENT)
+
+#
+# execute the given command on the host, redirecting output appropriately
+#
+fn dokill {
+    host=$1
+    LOGFILE=$BASE/concoord.log.$host
+    cmd='killall -q -9 python; rm -f ' ^ $LOGFILE
+    ssh deniz@$host $cmd 
+}
+
+for(host in $HOSTS) {
+    dokill $host
+}
