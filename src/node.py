@@ -75,6 +75,8 @@ class Node():
         # create server socket and bind to a port
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+        self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
+
         for i in range(30):
             try:
                 self.socket.bind((self.addr,self.port))
@@ -205,12 +207,12 @@ class Node():
                         socketset.append(s)
 
                 assert len(socketset) == len(set(socketset)), "[%s] socketset has Duplicates." % self
+                
+                endtimer(x, 11)
+                inputready,outputready,exceptready = select.select(socketset,[],socketset)
                 x = random.randint(1,10000000)
                 starttimer(x, 11)
-                inputready,outputready,exceptready = select.select(socketset,[],socketset)
-                endtimer(x, 11)
-                x = random.randint(1,10000000)
-                
+                                
                 for s in exceptready:
                     print "EXCEPTION ", s
                 for s in inputready:

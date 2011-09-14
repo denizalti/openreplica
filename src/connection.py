@@ -54,6 +54,7 @@ class ConnectionPool():
             return self.poolbypeer[connectionkey]
         else:
             thesocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            thesocket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
             thesocket.connect((peer.addr, peer.port))
             conn = Connection(thesocket)
             self.poolbypeer[connectionkey] = conn

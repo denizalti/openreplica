@@ -69,19 +69,19 @@ class Acceptor(Node):
         - MSG_PROPOSE_REJECT carries the highest ballotnumber Acceptor has seen and the
         commandnumber that is received.
         """
-        starttimer(self.x, 12)
         if msg.ballotnumber >= self.ballotnumber:
             logger("propose received with acceptable ballotnumber %s" % str(msg.ballotnumber))
             self.ballotnumber = msg.ballotnumber
             newpvalue = PValue(msg.ballotnumber,msg.commandnumber,msg.proposal)
+            starttimer(self.x, 12)
             self.accepted.add_highest(newpvalue)
+            endtimer(self.x, 12)
             self.x += 1
             replymsg = PaxosMessage(MSG_PROPOSE_ACCEPT,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,commandnumber=msg.commandnumber)
         else:
             logger("propose received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))
             replymsg = PaxosMessage(MSG_PROPOSE_REJECT,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,commandnumber=msg.commandnumber)
         self.send(replymsg,peer=msg.source)
-        endtimer(self.x, 12)
 
     def cmd_paxos(self, args):
         """Shell command [paxos]: Print the paxos state of the Acceptor."""

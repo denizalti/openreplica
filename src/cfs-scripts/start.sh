@@ -12,8 +12,6 @@ then
   exit $E_BADARGS
 fi
 
-RUNFILE=./runningon
-
 # REPLICA_0: cfs29
 # ACCEPTORS: cfs30-34
 # REPLICAS: cfs35-39

@@ -2,16 +2,10 @@
 
 BASE=/local/concoord-deniz
 LOGFILE=${BASE}/concoord.log.${HOSTNAME}
-PIDFILE=${BASE}/concoord.pid
 CONCOORDR=/home/deniz/concoord/replica.py
 CONCOORDA=/home/deniz/concoord/acceptor.py
-CONCOORDC=/home/deniz/concoord/noopclient.py
+CONCOORDC=/home/deniz/concoord/client.py
 PYTHON=python
-
-if [[ -f ${PIDFILE} ]]
-then
-    echo $HOSTNAME ": ConCoord PIDFILE exists."
-fi
 
 ulimit -c unlimited
 cd ${BASE}
@@ -27,5 +21,3 @@ NAME} = "sys13" ] || [ ${HOSTNAME} = "sys14" ]; then
 elif [ ${HOSTNAME} = "sys01" ]; then
     nohup ${PYTHON} ${CONCOORDC} -b 128.84.227.65:6668 >> ${LOGFILE} 2>&1 &
 fi
-
-echo $! >> ${PIDFILE}

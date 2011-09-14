@@ -37,6 +37,7 @@ class Client():
         """
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+        self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
         self.initializebootstraplist(givenbootstraplist)
         self.connecttobootstrap()
         myaddr = findOwnIP()
@@ -125,7 +126,7 @@ class Client():
                                 replied = True
                                 self.numbers.append(time.time()-starttime)
                                 print inputcount
-                                if inputcount == 1000:
+                                if inputcount == 10000:
                                     outputmessage = Message(MSG_OUTPUT, self.me)
                                     success = self.conn.send(outputmessage)
                                     if not success:

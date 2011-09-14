@@ -20,7 +20,7 @@ if (test $#* -ne 2) {
 
 CONCOORDR=$CONCOORDDIR/replica.py
 CONCOORDA=$CONCOORDDIR/acceptor.py
-CONCOORDC=$CONCOORDDIR/noopclient.py
+CONCOORDC=$CONCOORDDIR/client.py
 
 BOOTSTRAP=$BOOTSTRAP^$DOMAINSUFFIX
 ACCEPTORS=$ACCEPTORS^$DOMAINSUFFIX
@@ -43,13 +43,13 @@ numreplicas=`{expr $1 - 1}
 numacceptors=$2
 
 echo Spawning bootstrap node on $BOOTSTRAP:6668
-docmd $BOOTSTRAP 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDR ^ ' -o bank -d'
+docmd $BOOTSTRAP 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDR ^ ' -o bank'
 sleep 2
 
 echo Spawning $numreplicas replicas
 while(expr $numreplicas '>' 0 >/dev/null) {
     hostindex=`{expr $numreplicas % $#REPLICAS + 1}
-    docmd $REPLICAS($hostindex) 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDR ^ ' -b ' ^ $BOOTSTRAP ^ ':6668 -d'
+    docmd $REPLICAS($hostindex) 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDR ^ ' -b 128.84.227.65' ^ ':6668'
     numreplicas=`{expr $numreplicas - 1}
 }
 sleep 2
@@ -57,10 +57,10 @@ sleep 2
 echo Spawning $numacceptors acceptors
 while(expr $numacceptors '>' 0 >/dev/null) {
     hostindex=`{expr $numacceptors % $#ACCEPTORS + 1}
-    docmd $ACCEPTORS($hostindex) 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDA ^ ' -b ' ^ $BOOTSTRAP ^ ':6668 -d'
+    docmd $ACCEPTORS($hostindex) 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDA ^ ' -b 128.84.227.65' ^ ':6668'
     numacceptors=`{expr $numacceptors - 1}
 }
 sleep 2
 
 echo Starting client 
-docmd $CLIENT 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDC ^ ' -b ' ^ $BOOTSTRAP ^ ':6668 ' ^ $1 ^ ' ' ^ $2
+docmd $CLIENT 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDC ^ ' -b 128.84.227.65' ^ ':6668 ' ^ '<' ^ $CONCOORDDIR ^ '/clientinputs/bank'

@@ -44,16 +44,8 @@ def dumptimers(numreplicas, numacceptors, ownertype):
         outputfile = open("/home/deniz/concoord/"+filename, "w")
     except:
         outputfile = open("./"+filename, "w")
-    behaviourdict = {}
     for index,numbers in timers.iteritems():
         timerkey, timerno = index.rsplit("-")
         if not numbers[1]-numbers[0] < 0:
-            if timerno == "12":
-                behaviourdict[string.atoi(timerkey)] = numbers[1]-numbers[0]
-            else:
-                outputfile.write("%s:\t%s\t%s\t%s\n"  % (str(timerno), str(numreplicas), str(numacceptors), str(numbers[1]-numbers[0])))
-    keylist = behaviourdict.keys()
-    keylist.sort()
-    for entry in keylist:
-        outputfile.write("%s:\t%s\t%s\t%s\n"  % ("12", str(numreplicas), str(numacceptors), str(behaviourdict[entry])))
+            outputfile.write("%s:\t%s\t%s\t%s\n"  % (str(timerno), str(numreplicas), str(numacceptors), str(numbers[1]-numbers[0])))
     outputfile.close()

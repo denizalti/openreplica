@@ -42,7 +42,8 @@ class Peer():
         if otherpeer == None:
             return False
         else:
-            if otherpeer.addr == "128.84.96.226":
+            # XXX
+            if otherpeer.addr == "128.84.96.226" or otherpeer.addr == "128.84.227.65":
                 return False
             else:
                 return self.port < otherpeer.port
@@ -51,7 +52,8 @@ class Peer():
         if otherpeer == None:
             return False
         else:
-            if otherpeer.addr == "128.84.96.226":
+            # XXX
+            if otherpeer.addr == "128.84.96.226"or otherpeer.addr == "128.84.227.65":
                 return True
             else:
                 return self.port > otherpeer.port
