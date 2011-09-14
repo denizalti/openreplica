@@ -427,7 +427,7 @@ class Replica(Node):
 
     def add_to_pendingcommands(self, key, value):
         self.pendingcommands[key] = value
-        self.usedcommandnumbers.add(key)
+#        self.usedcommandnumbers.add(key)
 
     def remove_from_executed(self, key):
         del self.executed[key]
@@ -444,7 +444,7 @@ class Replica(Node):
 
     def remove_from_pendingcommands(self, key):
         del self.pendingcommands[key]
-        self.usedcommandnumbers.remove(key)
+#        self.usedcommandnumbers.remove(key)
 
     def handle_client_command(self, givencommand, prepare=False):
         """handle the received client request
@@ -479,12 +479,13 @@ class Replica(Node):
             logger("initiating a new command")
             logger("leader is active: %s" % self.active)
             proposal = givencommand
-            if self.active and not prepare:
-                starttimer(givencommand, 6)
-                self.do_command_propose(proposal)
-                endtimer(givencommand, 6)
-            else:
-                self.do_command_prepare(proposal)
+            # XXX
+            #if self.active and not prepare:
+            #    starttimer(givencommand, 6)
+            #    self.do_command_propose(proposal)
+            #    endtimer(givencommand, 6)
+            #else:
+            self.do_command_prepare(proposal)
 
 #    @starttiming
     def msg_clientrequest(self, conn, msg):
@@ -671,6 +672,7 @@ class Replica(Node):
         State Updates:
         - kill the PREPARE STAGE that received a MSG_PREPARE_PREEMPTED
         -- remove the old ResponseCollector from the outstanding prepare set
+        - remove the command from proposals, add it to pendingcommands
         - update the ballotnumber
         - call do_command_prepare() to start a new PREPARE STAGE:
         """
@@ -683,14 +685,15 @@ class Replica(Node):
             self.active = False
             # update the ballot number
             self.update_ballotnumber(msg.ballotnumber)
+            self.remove_from_proposals(prc.commandnumber)
+            self.add_to_pendingcommands(prc.commandnumber, prc.proposal)
             # backoff -- we're holding the node lock, so no other state machine code can make progress
             leader_causing_reject = self.detect_colliding_leader(msg.ballotnumber)
             if leader_causing_reject < self.me:
                 # if I lost to someone whose name precedes mine, back off more than he does
                 self.backoff += BACKOFFINCREASE
             time.sleep(self.backoff)
-        else:
-            logger("there is no response collector")
+            self.do_command_prepare(prc.proposal)
 
     def msg_propose_accept(self, conn, msg):
         """MSG_PROPOSE_ACCEPT is handled only if it belongs to an outstanding MSG_PREPARE,
@@ -735,11 +738,7 @@ class Replica(Node):
                         pass
                     self.perform(performmessage, designated=True)
         endtimer(msg.commandnumber, 7)
-            #else:
-            #    logger("there is no response collector for %s cmdno:%d" % (str(msg.inresponseto), msg.commandnumber))
-        #else:
-        #    logger("there is no response collector for %s cmdno:%d" % (str(msg.inresponseto), msg.commandnumber))
-
+        
     def msg_propose_reject(self, conn, msg):
         """MSG_PROPOSE_REJECT is handled only if it belongs to an outstanding MSG_PROPOSE,
         otherwise it is discarded.
@@ -749,6 +748,7 @@ class Replica(Node):
         State Updates:
         - kill the PROPOSE STAGE that received a MSG_PROPOSE_REJECT
         -- remove the old ResponseCollector from the outstanding prepare set
+        - remove the command from proposals, add it to pendingcommands
         - update the ballotnumber
         - call do_command_prepare() to start a new PREPARE STAGE:
         """
@@ -763,19 +763,15 @@ class Replica(Node):
                 self.active = False
                 # update the ballot number
                 self.update_ballotnumber(msg.ballotnumber)
-                # remove the proposal from proposals XXX why
-                #self.remove_from_proposals(msg.commandnumber)
-
+                # remove the proposal from proposal
+                self.remove_from_proposals(prc.commandnumber)
+                self.add_to_pendingcommands(prc.commandnumber, prc.proposal)
                 leader_causing_reject = self.detect_colliding_leader(msg.ballotnumber)
                 if leader_causing_reject < self.me:
                     # if I lost to someone whose name precedes mine, back off more than he does
                     self.backoff += BACKOFFINCREASE
                 time.sleep(self.backoff)
-
-            else:
-                logger("there is no response collector for %s" % str(msg.inresponseto))
-        else:
-            logger("there is no response collector for %s" % str(msg.inresponseto))
+                self.do_command_prepare(prc.proposal)
 
     def ping_leader(self):
         """used by the ping_thread to ping the current leader periodically"""
@@ -841,6 +837,23 @@ class Replica(Node):
         """prints pending commands"""
         for cmdnum,command in self.pendingcommands.iteritems():
             print "%d: %s" % (cmdnum,str(command))
+
+    def printlists(self):
+        print "-- DECISIONS --"
+        for i, j in self.decisions.iteritems():
+            print i, "\t", j
+        print "-- EXECUTED --"
+        for i, j in self.executed.iteritems():
+            print i, "\t", j
+        print "-- PROPOSALS --"
+        for i, j in self.proposals.iteritems():
+            print i, "\t", j
+        print "-- PENDING COMMANDS --"
+        for i, j in self.pendingcommands.iteritems():
+            print i, "\t", j
+        print "-- USED COMMANDNUMBERS --"
+        for i in self.usedcommandnumbers:
+            print i
 
     def terminate_handler(self, signal, frame):
         orepfile = file('testoutput/rep/%s%d'% (self.me.addr, self.me.port), 'a')
