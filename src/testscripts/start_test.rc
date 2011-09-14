@@ -1,14 +1,13 @@
-#!/usr/bin/rc
+#!/opt/local/bin/rc
 
 BOOTSTRAP=sys15
-ACCEPTORS=(sys04 sys05 sys07 sys08 sys09 cfs13 cfs18)
+ACCEPTORS=(sys04 sys05 sys07 sys08 sys09)
 REPLICAS=(sys10 sys11 sys12 sys13 sys14)
 CLIENT=sys01
 DOMAINSUFFIX=.systems.cs.cornell.edu
 BASE=/local/concoord-deniz
 CONCOORDDIR=/home/deniz/concoord
 PYTHON=python
-RUNFILE=./runningon
 
 #### YOU SHOULD NOT HAVE TO CHANGE ANYTHING BELOW THIS LINE
 
@@ -34,14 +33,13 @@ CLIENT=$CLIENT^$DOMAINSUFFIX
 fn docmd {
     host=$1
     cmd=$2
-    LOGFILE=$BASE/concoord.log.host
-    cmd= $cmd ^ ' >>' ^ $LOGFILE ^ ' 2>&1 &'
-    echo '   ' ^ Spawning on $host
-    ssh $host $cmd
-    echo $host >> $RUNFILE
+    LOGFILE=$BASE/concoord.log.$host
+    cmd= $cmd ^ ' >' ^ $LOGFILE ^ ' 2>&1 &'
+    echo '   ' ^ Spawning on $host $cmd
+    ssh deniz@$host $cmd
 }
 
-numreplicas=$1
+numreplicas=`{expr $1 - 1}
 numacceptors=$2
 
 echo Spawning bootstrap node on $BOOTSTRAP:6668
