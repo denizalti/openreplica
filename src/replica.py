@@ -480,12 +480,12 @@ class Replica(Node):
             logger("leader is active: %s" % self.active)
             proposal = givencommand
             # XXX
-            #if self.active and not prepare:
-            #    starttimer(givencommand, 6)
-            #    self.do_command_propose(proposal)
-            #    endtimer(givencommand, 6)
-            #else:
-            self.do_command_prepare(proposal)
+            if self.active and not prepare:
+                starttimer(givencommand, 6)
+                self.do_command_propose(proposal)
+                endtimer(givencommand, 6)
+            else:
+                self.do_command_prepare(proposal)
 
 #    @starttiming
     def msg_clientrequest(self, conn, msg):
@@ -633,10 +633,9 @@ class Replica(Node):
             prc.received[msg.source] = msg
             logger("got an accept for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
             assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PREPARE_ADOPTED can't have non-matching ballotnumber" % self
-            # collect all the p-values from the response
+            # add all the p-values from the response to the possiblepvalueset
             if msg.pvalueset is not None:
-                for pvalue in msg.pvalueset.pvalues:
-                    prc.possiblepvalueset.add(pvalue)
+                prc.possiblepvalueset.union(msg.pvalueset)
 
             if len(prc.received) >= prc.nquorum:
                 logger("suffiently many accepts on prepare!")

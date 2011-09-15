@@ -126,28 +126,30 @@ class Client():
                                 replied = True
                                 self.numbers.append(time.time()-starttime)
                                 print inputcount
-                                if inputcount == 10000:
-                                    outputmessage = Message(MSG_OUTPUT, self.me)
-                                    success = self.conn.send(outputmessage)
-                                    if not success:
-                                        print "Can't send output message."
-                                    
-                                    filename = "output/client/%s-%s" % (str(self.numreplicas),str(self.numacceptors))
-                                    try:
-                                        outputfile = open("/home/deniz/concoord/"+filename, "a")
-                                    except:
-                                        outputfile = open("./"+filename, "a")
-                                    for perrequest in self.numbers:
-                                        # numreplicas #numacceptors #perrequest
-                                        outputfile.write("%s\t%s\t%s\n" % (str(self.numreplicas), str(self.numacceptors), str(perrequest)))
-                                    outputfile.close()
                         if time.time() - starttime > CLIENTRESENDTIMEOUT:
                             print "5 seconds past"
                             if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                                 replied = True
                         sys.stdout.flush()
             except ( IOError, EOFError ):
+                self.output()
                 os._exit(0)
+
+    def output(self):
+        outputmessage = Message(MSG_OUTPUT, self.me)
+        success = self.conn.send(outputmessage)
+        if not success:
+            print "Can't send output message."
+            
+        filename = "output/client/%s-%s" % (str(self.numreplicas),str(self.numacceptors))
+        try:
+            outputfile = open("/home/deniz/concoord/"+filename, "a")
+        except:
+            outputfile = open("./"+filename, "a")
+        for perrequest in self.numbers:
+            # numreplicas #numacceptors #perrequest
+            outputfile.write("%s\t%s\t%s\n" % (str(self.numreplicas), str(self.numacceptors), str(perrequest)))
+        outputfile.close()
         
 theClient = Client(options.bootstrap, options.filename)
 theClient.clientloop()

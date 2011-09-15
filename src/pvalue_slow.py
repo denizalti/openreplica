@@ -5,17 +5,17 @@ class PValueSet():
     def __init__(self):
         self.pvalues = set()
 
-    def remove(self,pvalue):
+    def remove(self, pvalue):
         """Removes given pvalue from the PValueSet"""
         if pvalue in self.pvalues:
             self.pvalues.remove(pvalue)
 
-    def add(self,pvalue):
+    def add(self, pvalue):
         """Adds given PValue to the PValueSet"""
         if pvalue not in self.pvalues:
             self.pvalues.add(pvalue)
 
-    def add_highest(self,pvalue):
+    def add_highest(self, pvalue):
         """Adds given PValue to the PValueSet overwriting matching
         (commandnumber,proposal) if it exists
         """
@@ -25,11 +25,10 @@ class PValueSet():
                 if pvalue.ballotnumber > oldpvalue.ballotnumber:
                     self.pvalues.remove(oldpvalue)
                     break
-                    
-    def union(self,otherpvalueset):
-        """Unionizes the pvalues of given PValueSet with the pvalues of the PValueSet"""
-        return self.pvalues | otherpvalueset.pvalues
 
+    def union(self, otherpvalueset):
+        self.pvalues = self.pvalues | otherpvalueset.pvalues
+                    
     def pmax(self):
         """Returns a  mapping from command numbers to proposals with the highest ballotnumbers"""
         commandnumbers = [pvalue.commandnumber for pvalue in self.pvalues]
