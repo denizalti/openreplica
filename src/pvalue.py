@@ -3,44 +3,44 @@ class PValueSet():
     set functions.
     """
     def __init__(self):
-        self.pvalues = set()
+        self.pvalues = {} # indexed by (commandnumber,proposal): pvalue
 
-    def remove(self,pvalue):
-        """Removes given pvalue from the PValueSet"""
-        if pvalue in self.pvalues:
-            self.pvalues.remove(pvalue)
-
-    def add(self,pvalue):
-        """Adds given PValue to the PValueSet"""
-        if pvalue not in self.pvalues:
-            self.pvalues.add(pvalue)
-
-    ######### XXX ############ This could be faster.
-    def add_highest(self,pvalue):
+    def add(self, pvalue):
         """Adds given PValue to the PValueSet overwriting matching
-        (commandnumber,proposal) if it exists
+        (commandnumber,proposal) if it exists and has a smaller ballotnumber
         """
-        self.pvalues.add(pvalue)
-        for oldpvalue in self.pvalues:
-            if pvalue.commandnumber == oldpvalue.commandnumber and pvalue.proposal == oldpvalue.proposal:
-                if pvalue.ballotnumber > oldpvalue.ballotnumber:
-                    self.pvalues.remove(oldpvalue)
-                    break
-                    
-    def union(self,otherpvalueset):
-        """Unionizes the pvalues of given PValueSet with the pvalues of the PValueSet"""
-        return self.pvalues | otherpvalueset.pvalues
+        index = (pvalue.commandnumber,pvalue.proposal)
+        try:
+            if self.pvalues[index].ballotnumber < pvalue.ballotnumber:
+                self.pvalues[index] = pvalue
+        except KeyError:
+            self.pvalues[index] = pvalue
+        print str(self.pvalues[index])
+
+    def remove(self, pvalue):
+        index = (pvalue.commandnumber,pvalue.proposal)
+        del self.pvalues[index]
+        
+    def add_highest(self, pvalue):
+        """Adds given PValue to the PValueSet overwriting matching
+        (commandnumber,proposal) if it exists and has a smaller ballotnumber
+        """
+        index = (pvalue.commandnumber,pvalue.proposal)
+        if self.pvalues.has_key(index):
+            if self.pvalues[index].ballotnumber < pvalue.ballotnumber:
+                self.pvalues[index] = pvalue
+        else:
+            self.pvalues[index] = pvalue
+            
+    def union(self, otherpvalueset):
+        """Unionizes the pvalues of givenPValueSet with the pvalues of the PValueSet"""
+        return self.pvalues.update(otherpvalueset.pvalues)
 
     def pmax(self):
-        """Returns a  mapping from command numbers to proposals with the highest ballotnumbers"""
-        commandnumbers = [pvalue.commandnumber for pvalue in self.pvalues]
+        """Returns a mapping from command numbers to proposals with the highest ballotnumbers"""
         pmaxresult = {}
-        for c in commandnumbers:
-            maxballotnumberpvalue = PValue()
-            for pvalue in self.pvalues:
-                if pvalue.commandnumber == c and pvalue.ballotnumber > maxballotnumberpvalue.ballotnumber:
-                    maxballotnumberpvalue = pvalue
-            pmaxresult[c] = maxballotnumberpvalue.proposal
+        for (commandnumber,proposal) in self.pvalues.keys():
+            pmaxresult[commandnumber] = proposal
         return pmaxresult
 
     def __len__(self):
