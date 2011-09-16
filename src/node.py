@@ -7,6 +7,7 @@ from optparse import OptionParser
 from threading import Thread, RLock, Lock, Condition, Timer
 from time import sleep,time
 import os
+import sys
 import time
 import random
 import socket
@@ -113,6 +114,7 @@ class Node():
         if bootstrap:
             logger("connecting to %s" % bootstrap)
             bootaddr,bootport = bootstrap.split(":")
+            bootaddr = socket.gethostbyname(bootaddr)
             bootpeer = Peer(bootaddr,int(bootport), NODE_REPLICA)
             helomessage = HandshakeMessage(MSG_HELO, self.me)
             self.send(helomessage, peer=bootpeer)
@@ -173,7 +175,6 @@ class Node():
         - inputready: sockets that are ready for reading
         - exceptready: sockets that are ready according to an *exceptional condition*
         """
-        global x
         self.socket.listen(10)
         nascentset = []
         while self.alive:
@@ -184,7 +185,8 @@ class Node():
                 for conn in self.connectionpool.poolbypeer.itervalues():
                     sock = conn.thesocket
                     if sock is not None:
-                        socketset.append(sock)
+                        if sock not in socketset:
+                            socketset.append(sock)
                 # add clientsockets if they exist
                 try:
                     for conn in self.clientpool.poolbypeer.itervalues():

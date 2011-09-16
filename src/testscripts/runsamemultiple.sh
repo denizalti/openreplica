@@ -9,9 +9,9 @@ then
   exit $E_BADARGS
 fi
 
-for (( i=1; i<3; i++ )); do
-	./start_test.sh $1 $2
+for (( i=1; i<10; i++ )); do
+	./start_test.rc $1 $2
 	echo "Run " $i
-	sleep 400
-	./stop_test.sh
+	sleep 100
+	./stop_test.rc
 done
