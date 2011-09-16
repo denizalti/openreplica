@@ -643,6 +643,7 @@ class Replica(Node):
                 # choose pvalues with distinctive commandnumbers and highest ballotnumbers
                 pmaxset = prc.possiblepvalueset.pmax()
                 for commandnumber,proposal in pmaxset.iteritems():
+                    print commandnumber, ": ", proposal # XXX
                     self.add_to_proposals(commandnumber, proposal)
                 # If the commandnumber we were planning to use is overwritten
                 # we should try proposing with a new commandnumber

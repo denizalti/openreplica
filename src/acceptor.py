@@ -74,7 +74,8 @@ class Acceptor(Node):
             self.ballotnumber = msg.ballotnumber
             newpvalue = PValue(msg.ballotnumber,msg.commandnumber,msg.proposal)
             starttimer(self.x, 12)
-            self.accepted.add_highest(newpvalue)
+            # XXX self.accepted.add_highest(newpvalue) 
+            self.accepted.add(newpvalue)
             endtimer(self.x, 12)
             self.x += 1
             replymsg = PaxosMessage(MSG_PROPOSE_ACCEPT,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,commandnumber=msg.commandnumber)

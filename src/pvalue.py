@@ -1,56 +1,3 @@
-class PValueSet():
-    """PValueSet encloses a set of pvalues and supports corresponding
-    set functions.
-    """
-    def __init__(self):
-        self.pvalues = {} # indexed by (commandnumber,proposal): pvalue
-
-    def add(self, pvalue):
-        """Adds given PValue to the PValueSet overwriting matching
-        (commandnumber,proposal) if it exists and has a smaller ballotnumber
-        """
-        index = (pvalue.commandnumber,pvalue.proposal)
-        try:
-            if self.pvalues[index].ballotnumber < pvalue.ballotnumber:
-                self.pvalues[index] = pvalue
-        except KeyError:
-            self.pvalues[index] = pvalue
-        print str(self.pvalues[index])
-
-    def remove(self, pvalue):
-        index = (pvalue.commandnumber,pvalue.proposal)
-        del self.pvalues[index]
-        
-    def add_highest(self, pvalue):
-        """Adds given PValue to the PValueSet overwriting matching
-        (commandnumber,proposal) if it exists and has a smaller ballotnumber
-        """
-        index = (pvalue.commandnumber,pvalue.proposal)
-        if self.pvalues.has_key(index):
-            if self.pvalues[index].ballotnumber < pvalue.ballotnumber:
-                self.pvalues[index] = pvalue
-        else:
-            self.pvalues[index] = pvalue
-            
-    def union(self, otherpvalueset):
-        """Unionizes the pvalues of givenPValueSet with the pvalues of the PValueSet"""
-        return self.pvalues.update(otherpvalueset.pvalues)
-
-    def pmax(self):
-        """Returns a mapping from command numbers to proposals with the highest ballotnumbers"""
-        pmaxresult = {}
-        for (commandnumber,proposal) in self.pvalues.keys():
-            pmaxresult[commandnumber] = proposal
-        return pmaxresult
-
-    def __len__(self):
-        """Returns the number of PValues in the PValueSet"""
-        return len(self.pvalues)
-
-    def __str__(self):
-        """Returns PValueSet information"""
-        return "\n".join(str(pvalue) for pvalue in self.pvalues)
-
 class PValue():
     """PValue encloses a ballotnumber, commandnumber and proposal.
     PValue is used to keep Paxos state in Acceptor and Leader nodes.
@@ -85,4 +32,52 @@ class PValue():
     
     def __str__(self):
         """Returns PValue information"""
-        return 'PValue(%s,%d,%s)' % (str(self.ballotnumber),self.commandnumber,self.proposal)
+        #return 'PValue(%s,%d,%s)' % (str(self.ballotnumber),self.commandnumber,self.proposal)
+        return "--PValue--\nB: %s\nC: %d\nP: %s\n" % (str(self.ballotnumber),self.commandnumber,self.proposal)
+
+# PValueSet is used to keep the PValues with highest ballotnumber (always).
+class PValueSet():
+    """PValueSet encloses a set of pvalues and supports corresponding
+    set functions.
+    """
+    def __init__(self):
+        # always keeps the (commandnumber,proposal) with the highest ballotnumber
+        self.pvalues = {} # indexed by (commandnumber,proposal): pvalue
+        
+    def add(self, pvalue):
+        """Adds given PValue to the PValueSet overwriting matching
+        (commandnumber,proposal) if it exists and has a smaller ballotnumber
+        """
+        index = (pvalue.commandnumber,pvalue.proposal)
+        if self.pvalues.has_key(index):
+            if self.pvalues[index].ballotnumber < pvalue.ballotnumber:
+                self.pvalues[index] = pvalue
+        else:
+            self.pvalues[index] = pvalue
+
+    def remove(self, pvalue):
+        index = (pvalue.commandnumber,pvalue.proposal)
+        del self.pvalues[index]
+                    
+    def union(self, otherpvalueset):
+        """Unionizes the pvalues of givenPValueSet with the pvalues of the
+        PValueSet overwriting the (commandnumber,proposal) pairs with lower
+        ballotnumber
+        """
+        for candidate in otherpvalueset.pvalues.itervalues():
+            self.add(candidate)
+
+    def pmax(self):
+        """Returns a mapping from command numbers to proposals with the highest ballotnumbers"""
+        pmaxresult = {}
+        for (commandnumber,proposal) in self.pvalues.keys():
+            pmaxresult[commandnumber] = proposal
+        return pmaxresult
+
+    def __len__(self):
+        """Returns the number of PValues in the PValueSet"""
+        return len(self.pvalues)
+
+    def __str__(self):
+        """Returns PValueSet information"""
+        return "\n".join(str(pvalue) for pvalue in self.pvalues.itervalues())
