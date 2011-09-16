@@ -4,7 +4,6 @@
 @date: February 1, 2011
 """
 from threading import Thread
-from random import randint
 import signal
 
 from enums import *
@@ -73,10 +72,9 @@ class Acceptor(Node):
             logger("propose received with acceptable ballotnumber %s" % str(msg.ballotnumber))
             self.ballotnumber = msg.ballotnumber
             newpvalue = PValue(msg.ballotnumber,msg.commandnumber,msg.proposal)
-            starttimer(self.x, 12)
-            # XXX self.accepted.add_highest(newpvalue) 
+            #starttimer(self.x, 12)
             self.accepted.add(newpvalue)
-            endtimer(self.x, 12)
+            #endtimer(self.x, 12)
             self.x += 1
             replymsg = PaxosMessage(MSG_PROPOSE_ACCEPT,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,commandnumber=msg.commandnumber)
         else:

@@ -479,11 +479,8 @@ class Replica(Node):
             logger("initiating a new command")
             logger("leader is active: %s" % self.active)
             proposal = givencommand
-            # XXX
             if self.active and not prepare:
-                starttimer(givencommand, 6)
                 self.do_command_propose(proposal)
-                endtimer(givencommand, 6)
             else:
                 self.do_command_prepare(proposal)
 
@@ -493,9 +490,7 @@ class Replica(Node):
         - if not leader: reject
         - if leader: add connection to client connections and handle request"""
         starttimer(msg.command, 1)
-        starttimer(msg.command, 3)
         self.check_leader_promotion()
-        endtimer(msg.command, 3)
         self.calls += 1
         if self.type != NODE_LEADER:
             logger("not leader.. request rejected..")
@@ -508,13 +503,9 @@ class Replica(Node):
         if self.type == NODE_LEADER:
             self.clientpool.add_connection_to_peer(msg.source, conn)
             if self.leader_initializing:
-                starttimer(msg.command, 4)
                 self.handle_client_command(msg.command, prepare=True)
-                endtimer(msg.command, 4)
             else:
-                starttimer(msg.command, 5)
                 self.handle_client_command(msg.command)
-                endtimer(msg.command, 5)
             
     def msg_clientreply(self, conn, msg):
         """this only occurs in response to commands initiated by the shell"""
@@ -553,12 +544,7 @@ class Replica(Node):
         if self.type != NODE_LEADER and self.type != NODE_COORDINATOR:
             print "Not a Leader.."
             return
-        x = random.randint(1, 1000000)
-        starttimer(x, 10)
         givencommandnumber = self.find_commandnumber()
-        endtimer(x, 10)
-        starttimer(givencommandnumber, 8)
-        starttimer(givencommandnumber, 9)
         self.add_to_pendingcommands(givencommandnumber, givenproposal)
         # if we're too far in the future, i.e. past window, do not issue the command
         if givencommandnumber - self.nexttoexecute >= WINDOW:
@@ -643,7 +629,6 @@ class Replica(Node):
                 # choose pvalues with distinctive commandnumbers and highest ballotnumbers
                 pmaxset = prc.possiblepvalueset.pmax()
                 for commandnumber,proposal in pmaxset.iteritems():
-                    print commandnumber, ": ", proposal # XXX
                     self.add_to_proposals(commandnumber, proposal)
                 # If the commandnumber we were planning to use is overwritten
                 # we should try proposing with a new commandnumber
@@ -709,20 +694,15 @@ class Replica(Node):
         -- send MSG_PERFORM to all Replicas and Leaders
         -- execute the command
         """
-        starttimer(msg.commandnumber, 7)
         if self.outstandingproposes.has_key(msg.commandnumber):
             prc = self.outstandingproposes[msg.commandnumber]
             if msg.inresponseto == prc.ballotnumber:
                 prc.received[msg.source] = msg
-                #logger("got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts" % \
-                #       (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
-                #assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PROPOSE_ACCEPT can't have non-matching ballotnumber" % self
-                if len(prc.received) == 3:
-                    endtimer(msg.commandnumber, 8)
+                logger("got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts" % \
+                       (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
                 if len(prc.received) >= prc.nquorum:
-                    #logger("WE AGREE!")
+                    logger("WE AGREE!")
                     # take this response collector out of the outstanding propose set
-                    endtimer(msg.commandnumber, 9)
                     self.add_to_proposals(prc.commandnumber, prc.proposal)
                     del self.outstandingproposes[msg.commandnumber]
                     # now we can perform this action on the replicas
@@ -737,7 +717,6 @@ class Replica(Node):
                     except:
                         pass
                     self.perform(performmessage, designated=True)
-        endtimer(msg.commandnumber, 7)
         
     def msg_propose_reject(self, conn, msg):
         """MSG_PROPOSE_REJECT is handled only if it belongs to an outstanding MSG_PROPOSE,

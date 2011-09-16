@@ -208,10 +208,7 @@ class Node():
 
                 assert len(socketset) == len(set(socketset)), "[%s] socketset has Duplicates." % self
                 
-                endtimer(x, 11)
                 inputready,outputready,exceptready = select.select(socketset,[],socketset)
-                x = random.randint(1,10000000)
-                starttimer(x, 11)
                                 
                 for s in exceptready:
                     print "EXCEPTION ", s
