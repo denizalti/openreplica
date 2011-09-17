@@ -297,10 +297,11 @@ class Replica(Node):
         """add given replica to groups: args = addr:port"""
         args = args[0].split(":")
         replica = Peer(args[0],int(args[1]),NODE_REPLICA)
-        self.groups[NODE_REPLICA].add(replica)
-        if self.type == NODE_LEADER:
-            heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, self.groups)
-            self.send(heloreplymessage, peer=replica)
+        if replica.getid() != self.me.getid():
+            self.groups[NODE_REPLICA].add(replica)
+            if self.type == NODE_LEADER:
+                heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, self.groups)
+                self.send(heloreplymessage, peer=replica)
         
     def del_replica(self, args):
         """remove given replica from groups: args = addr:port"""
