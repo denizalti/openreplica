@@ -62,15 +62,17 @@ class Client():
     def connecttobootstrap(self):
         for bootpeer in self.bootstraplist:
             try:
+                print "Connecting..."
                 self.socket.close()
                 self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
                 self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+                self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
                 self.socket.connect((bootpeer.addr,bootpeer.port))
                 self.conn = Connection(self.socket)
                 print "Connected to new bootstrap: ", bootpeer.addr,bootpeer.port
                 break
             except socket.error, e:
-#                print e
+                print e
                 continue
     
     def clientloop(self):
@@ -88,7 +90,6 @@ class Client():
                     shellinput = f.readline().strip()
                 else:
                     shellinput = raw_input("")
-#                    shellinput = raw_input("client-shell> ")
                     
                 if len(shellinput) == 0:
                     if self.file:
@@ -103,7 +104,6 @@ class Client():
                     cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
                     replied = False
                     starttime = time.time()
-                    self.conn.settimeout(CLIENTRESENDTIMEOUT)
                     
                     while not replied:
                         success = self.conn.send(cm)
@@ -112,20 +112,26 @@ class Client():
                             currentbootstrap = self.bootstraplist.pop(0)
                             self.bootstraplist.append(currentbootstrap)
                             self.connecttobootstrap()
+                            print "CAN'T SEND"
                             continue
                         timestamp, reply = self.conn.receive()
                         if reply and (reply.type == MSG_CLIENTREPLY or reply.type == MSG_CLIENTMETAREPLY) and reply.inresponseto == mynumber:
-                            if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
+                            if reply.replycode == CR_REJECTED:
                                 currentbootstrap = self.bootstraplist.pop(0)
                                 self.bootstraplist.append(currentbootstrap)
                                 self.connecttobootstrap()
+                                print "REJECTED"
                                 continue
-                            elif reply.replycode == CR_INPROGRESS:
+                            elif reply.replycode == CR_LEADERNOTREADY or reply.replycode == CR_INPROGRESS:
+                                print "LEADERNOTREADY or INPROGRESS"
                                 continue
                             else:
+                                print "REPLIED"
                                 replied = True
                                 self.numbers.append(time.time()-starttime)
                                 print inputcount
+                        else:
+                            print "REPLY: ", reply
                         if time.time() - starttime > CLIENTRESENDTIMEOUT:
                             print "5 seconds past"
                             if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:

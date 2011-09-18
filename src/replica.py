@@ -198,7 +198,7 @@ class Replica(Node):
                     send_result_to_client = True
                 self.lock.acquire()
         except (TypeError, AttributeError) as t:
-            print "command not supported: %s" % (command)
+            logger("command not supported: %s" % (command))
             givenresult = 'COMMAND NOT SUPPORTED'
             clientreplycode = CR_EXCEPTION
         self.add_to_executed(self.decisions[slotno], givenresult)
@@ -220,8 +220,6 @@ class Replica(Node):
         """Take a given PERFORM message, add it to the set of decided commands, and call performcore to execute."""
         if msg.commandnumber not in self.decisions:
             self.add_to_decisions(msg.commandnumber, msg.proposal)
-        else:
-            print "This commandnumber has been decided before.."
         # If replica was using this commandnumber for a different proposal, initiate it again
         if self.proposals.has_key(msg.commandnumber) and msg.proposal != self.proposals[msg.commandnumber]:
             self.do_command_propose(self.proposals[msg.commandnumber])
@@ -299,9 +297,6 @@ class Replica(Node):
         replica = Peer(args[0],int(args[1]),NODE_REPLICA)
         if replica.getid() != self.me.getid():
             self.groups[NODE_REPLICA].add(replica)
-            if self.type == NODE_LEADER:
-                heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, self.groups)
-                self.send(heloreplymessage, peer=replica)
         
     def del_replica(self, args):
         """remove given replica from groups: args = addr:port"""
@@ -678,6 +673,7 @@ class Replica(Node):
             if leader_causing_reject < self.me:
                 # if I lost to someone whose name precedes mine, back off more than he does
                 self.backoff += BACKOFFINCREASE
+            print "WILL SLEEP"
             time.sleep(self.backoff)
             self.do_command_prepare(prc.proposal)
 
@@ -750,6 +746,7 @@ class Replica(Node):
                 if leader_causing_reject < self.me:
                     # if I lost to someone whose name precedes mine, back off more than he does
                     self.backoff += BACKOFFINCREASE
+                print "WILL SLEEP"
                 time.sleep(self.backoff)
                 self.do_command_prepare(prc.proposal)
 

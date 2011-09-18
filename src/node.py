@@ -97,7 +97,7 @@ class Node():
                 f.write("add_%s %s:%d\n" % (t, self.addr, self.port))
                 for i in range (WINDOW):
                     f.write("noop\n")
-                fcntl.flock(f,fcntl.LOCK_UN)
+                #fcntl.flock(f,fcntl.LOCK_UN)
                 f.close()
         except IOError:
             logger("Error opening port file")
