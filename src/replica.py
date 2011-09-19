@@ -125,14 +125,14 @@ class Replica(Node):
                 print("Object cannot be found.")
         self.leader_initializing = False
         self.nexttoexecute = 1
-        # decided commands
+        # decided commands: <commandnumber:command>
         self.decisions = {}
         self.decidedcommandset = set()
-        # executed commands
+        # executed commands: <command:(replycode,commandresult,unblockedclients{})>
         self.executed = {}
-        # commands that are proposed
+        # commands that are proposed: <commandnumber:command>
         self.proposals = {}
-        # commands that are received, not yet proposed
+        # commands that are received, not yet proposed: <commandnumber:command>
         self.pendingcommands = {}
         # commandnumbers known to be in use
         self.usedcommandnumbers = set()
@@ -163,6 +163,8 @@ class Replica(Node):
         ismeta = (commandname in METACOMMANDS)
         noop = (commandname == "noop")
         send_result_to_client = True
+        # Result triple
+        clientreplycode, givenresult, unblockedclients = (None, None, {})
         try:
             if dometaonly and not ismeta:
                 return
@@ -170,15 +172,18 @@ class Replica(Node):
                 method = getattr(self, NOOP)
                 givenresult = "NOOP"
                 clientreplycode = CR_OK
+                unblockedclients = {}
             elif dometaonly and ismeta:
                 # execute a metacommand when the window has expired
                 method = getattr(self, commandname)
                 givenresult = method(commandargs)
+                clientreplycode = META
+                unblockedclients = {}
             elif not dometaonly and ismeta:
                 # meta command, but the window has not passed yet, 
                 # so just mark it as executed without actually executing it
                 # the real execution will take place when the window has expired
-                self.add_to_executed(self.decisions[slotno], META)
+                self.add_to_executed(self.decisions[slotno], (META, META, {}))
                 return
             elif not dometaonly and not ismeta:
                 # this is the workhorse case that executes most normal commands
@@ -188,32 +193,40 @@ class Replica(Node):
                 try:
                     givenresult = method(commandargs, _concoord_designated=designated, _concoord_owner=self, _concoord_command=command)
                     clientreplycode = CR_OK
+                    unblockedclients = {}
                     send_result_to_client = True
                 except UnusualReturn:
-                    clientreplycode = CR_METAREPLY
-                    send_result_to_client = False
+                    givenresult = "XXX"
+                    clientreplycode = CR_BLOCK
+                    send_result_to_client = True
+                    unblockedclients = {}
                 except Exception as e:
                     givenresult = e
                     clientreplycode = CR_EXCEPTION
                     send_result_to_client = True
+                    unblockedclients = {}
                 self.lock.acquire()
         except (TypeError, AttributeError) as t:
             logger("command not supported: %s" % (command))
             givenresult = 'COMMAND NOT SUPPORTED'
             clientreplycode = CR_EXCEPTION
-        self.add_to_executed(self.decisions[slotno], givenresult)
+            unblockedclients = {}
+        self.add_to_executed(self.decisions[slotno], (clientreplycode,givenresult,unblockedclients))
         
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
             if send_result_to_client and self.type == NODE_LEADER and command.client.getid() in self.clientpool.poolbypeer.keys():
-                logger("Sending REPLY to CLIENT")
                 endtimer(command, 1)
-                clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=givenresult, replycode=clientreplycode, inresponseto=command.clientcommandnumber)
-                clientconn = self.clientpool.get_connection_by_peer(command.client)
-                if clientconn.thesocket == None:
-                    print "Client disconnected.."
-                    return
-                clientconn.send(clientreply)
+                self.send_reply_to_client(givenresult, clientreplycode, command)
+
+    def send_reply_to_client(self, givenresult, clientreplycode, command):
+        logger("Sending REPLY to CLIENT")
+        clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=givenresult, replycode=clientreplycode, inresponseto=command.clientcommandnumber)
+        clientconn = self.clientpool.get_connection_by_peer(command.client)
+        if clientconn.thesocket == None:
+            print "Client disconnected.."
+            return
+        clientconn.send(clientreply)
 
     #@endtiming
     def perform(self, msg, designated=False):
@@ -226,7 +239,16 @@ class Replica(Node):
             
         while self.decisions.has_key(self.nexttoexecute):
             if self.decisions[self.nexttoexecute] in self.executed:
-                logger("skipping command %d." % self.nexttoexecute)
+                logger("previously executed command %d." % self.nexttoexecute)
+                # If we are a leader, we should send a reply to the client for this command
+                # in case the client didn't receive the reply from the previous leader
+                if self.type == NODE_LEADER:
+                    prevresult, prevrcode, prevunblocked = self.executed[self.decisions[self.nexttoexecute]]
+                    if prevrcode == CR_BLOCK:
+                        # Scan through the UNBLOCKED and find out if this client has been already unblocked.
+                        pass
+                    logger("Sending previous result to client.")
+                    self.send_reply_to_client(prevresult, prevrcode, self.decisions[self.nexttoexecute])
                 self.nexttoexecute += 1
                 # the window just got bumped by one
                 # check if there are pending commands, and issue one of them
@@ -410,7 +432,6 @@ class Replica(Node):
 
     def add_to_executed(self, key, value):
         self.executed[key] = value
-        self.usedcommandnumbers.add(key)
 
     def add_to_decisions(self, key, value):
         self.decisions[key] = value
@@ -423,11 +444,9 @@ class Replica(Node):
 
     def add_to_pendingcommands(self, key, value):
         self.pendingcommands[key] = value
-#        self.usedcommandnumbers.add(key)
 
     def remove_from_executed(self, key):
         del self.executed[key]
-        self.usedcommandnumbers.remove(key)
 
     def remove_from_decisions(self, key):
         self.decidedcommandset.remove(self.decisions[key])
@@ -440,7 +459,6 @@ class Replica(Node):
 
     def remove_from_pendingcommands(self, key):
         del self.pendingcommands[key]
-#        self.usedcommandnumbers.remove(key)
 
     def handle_client_command(self, givencommand, prepare=False):
         """handle the received client request
@@ -451,15 +469,17 @@ class Replica(Node):
         if self.type != NODE_LEADER:
             logger("got a request but not a leader..")
             return
-        
+
+        # XXX: Here we don't really have to make sure that WE received this clientrequest.
+        # XXX: If it is in the executed set, we can send a reply.
         if self.receivedclientrequests.has_key((givencommand.client, givencommand.clientcommandnumber)):
-            #logger("client request received previously")
+            logger("client request received previously")
             resultsent = False
             # Check if the request has been executed
             if givencommand in self.decidedcommandset:
-                if self.executed.has_key(givencommand) and self.executed[givencommand]!= CR_METAREPLY:
+                if self.executed.has_key(givencommand) and self.executed[givencommand][RCODE]!= CR_METAREPLY:
                     endtimer(givencommand,1)
-                    clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=self.executed[givencommand], replycode=CR_OK, inresponseto=givencommand.clientcommandnumber)
+                    clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=self.executed[givencommand][RESULT], replycode=CR_OK, inresponseto=givencommand.clientcommandnumber)
                     conn = self.clientpool.get_connection_by_peer(givencommand.client)
                     if conn is not None:
                         conn.send(clientreply)
@@ -492,7 +512,7 @@ class Replica(Node):
             logger("not leader.. request rejected..")
             clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_REJECTED, inresponseto=msg.command.clientcommandnumber)
             conn.send(clientreply)
-            # Check the Leader
+            # Check the Leader to see if the Client had a reason to think that we are the leader
             self.ping_leader_once()
             return
         # Leader should accept a request even if it's not ready as this way it will make itself ready during the prepare stage.
@@ -834,9 +854,6 @@ class Replica(Node):
 
     def terminate_handler(self, signal, frame):
         orepfile = file('testoutput/rep/%s%d'% (self.me.addr, self.me.port), 'a')
-        #executedkeys = sorted(self.executed.keys())
-        #for key in executedkeys:
-        #    orepfile.write("%s: %s\n" % (str(key), str(self.executed[key])))
         orepfile.write("%d" % (len(self.executed.keys())))
         orepfile.close()
         objfile = file('testoutput/obj/%s%d'% (self.me.addr, self.me.port), 'a')
