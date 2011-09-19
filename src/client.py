@@ -112,26 +112,23 @@ class Client():
                             currentbootstrap = self.bootstraplist.pop(0)
                             self.bootstraplist.append(currentbootstrap)
                             self.connecttobootstrap()
-                            print "CAN'T SEND"
                             continue
                         timestamp, reply = self.conn.receive()
-                        if reply and (reply.type == MSG_CLIENTREPLY or reply.type == MSG_CLIENTMETAREPLY) and reply.inresponseto == mynumber:
+                        if reply:
+                            print reply
+                        if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                             if reply.replycode == CR_REJECTED:
                                 currentbootstrap = self.bootstraplist.pop(0)
                                 self.bootstraplist.append(currentbootstrap)
                                 self.connecttobootstrap()
-                                print "REJECTED"
                                 continue
-                            elif reply.replycode == CR_LEADERNOTREADY or reply.replycode == CR_INPROGRESS:
-                                print "LEADERNOTREADY or INPROGRESS"
+                            elif reply.replycode == CR_LEADERNOTREADY or reply.replycode == CR_INPROGRESS or reply.replycode == CR_BLOCK:
+                                print "Waiting.."
                                 continue
-                            else:
-                                print "REPLIED"
+                            else: # CR_OK, CR_UNBLOCK
                                 replied = True
                                 self.numbers.append(time.time()-starttime)
                                 print inputcount
-                        else:
-                            print "REPLY: ", reply
                         if time.time() - starttime > CLIENTRESENDTIMEOUT:
                             print "5 seconds past"
                             if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:

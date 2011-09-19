@@ -1,4 +1,3 @@
-from returntypes import *
 from exception import *
 from threading import Lock
 from thread import error

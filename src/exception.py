@@ -16,6 +16,13 @@ class Timeout(ConCoordException):
     """The operation timed out."""
     pass
 
-class UnusualReturn(ConCoordException):
-    """Unusual Return"""
-    pass
+class UnblockingReturn(ConCoordException):
+    """Unblocking Return"""
+    def __init__(self, returnvalue, unblockeddict):
+        self.returnvalue = returnvalue
+        self.unblocked = unblockeddict
+
+class BlockingReturn(ConCoordException):
+    """Blocking Return"""
+    def __init__(self, returnvalue):
+        self.returnvalue = returnvalue

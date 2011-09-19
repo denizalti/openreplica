@@ -253,12 +253,8 @@ class Node():
                 with self.outstandingmessages_lock:
                     ackid = "%s+%d" % (self.me.getid(), message.ackid)
                     if self.outstandingmessages.has_key(ackid):
-                        #logger("deleting outstanding message %s" % ackid)
                         del self.outstandingmessages[ackid]
-                    #else:
-                        # logger("acked message %s not in outstanding messages" % ackid)
             else:
-                #logger("got message (about to ack) %s" % message.fullid())
                 if message.type != MSG_CLIENTREQUEST:
                     connection.send(AckMessage(MSG_ACK,self.me,message.id))
                 mname = "msg_%s" % msg_names[message.type].lower()

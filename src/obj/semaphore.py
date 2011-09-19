@@ -10,14 +10,22 @@ class Semaphore():
         self.semaphore = DSemaphore()
 
     def create(self, args, **kwargs):
-        count = args[0]
-        self.semaphore = DSemaphore(count)
-
+        if len(args) > 0:
+            self.semaphore = DSemaphore(args[0])
+        else:
+            self.semaphore = DSemaphore()
+            
     def acquire(self, args, **kwargs):
-        self.semaphore.acquire(kwargs)
+        try:
+            return self.semaphore.acquire(kwargs)
+        except Exception as e:
+            raise e
         
     def release(self, args, **kwargs):
-        self.semaphore.release(kwargs)
+        try:
+            return self.semaphore.release(kwargs)
+        except Exception as e:
+            raise e
     
     def __str__(self):
         return str(self.semaphore)
