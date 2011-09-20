@@ -127,12 +127,14 @@ class Connection():
                 chunk = self.thesocket.recv(min(1024, msg_length-len(msgstr)))
             except IOError, e:
                 if isinstance(e.args, tuple):
-                    print e.args, errno.EDEADLK, errno.EAGAIN, errno.EBUSY
+                    #print e.args, errno.EDEADLK, errno.EAGAIN, errno.EBUSY
                     if e[0] == errno.EAGAIN:
                         continue
-                    else:
-                        print "Error during receive!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-                        raise e
+                print "Error during receive!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                raise e
+            if len(chunk) == 0:
+                print "Connection closed............................................"
+                raise IOError
             msgstr += chunk
         return msgstr
     
