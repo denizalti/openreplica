@@ -137,8 +137,8 @@ class Node():
         main_thread = Thread(target=self.handle_messages)
         main_thread.start()
         # Start a thread that waits for inputs
-        input_thread = Thread(target=self.get_inputs)
-        input_thread.start()
+        #input_thread = Thread(target=self.get_inputs)
+        #input_thread.start()
         # Start a thread that pings neighbors
         timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
         timer_thread.start()
@@ -222,7 +222,7 @@ class Node():
                     c = self.connectionpool.get_connection_by_socket(s)
                     print str(c)
                 print "#######################################################"
-                inputready,outputready,exceptready = select.select(socketset,[],socketset)
+                inputready,outputready,exceptready = select.select(socketset,[],socketset,0.1)
                 print "------------------> INPUT READY"
                 for s in inputready:
                     c = self.connectionpool.get_connection_by_socket(s)

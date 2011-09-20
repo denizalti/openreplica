@@ -15,74 +15,80 @@ class ConnectionPool():
         """Initialize ConnectionPool"""
         self.poolbypeer = {}
         self.poolbysocket = {}
+        self.pool_lock = Lock()
         
     def add_connection_to_peer(self, peer, conn):
         """Adds a Connection to the ConnectionPool by its Peer"""
-        connectionkey = peer.getid()
-        self.poolbypeer[connectionkey] = conn
-        print "************************** add connection to peer ************************"
-        conn.peerid = connectionkey
-        
+        with self.pool_lock:
+            connectionkey = peer.getid()
+            self.poolbypeer[connectionkey] = conn
+            print "************************** add connection to peer ************************"
+            conn.peerid = connectionkey
+            
     def del_connection_by_peer(self, peer):
-        """ Deletes a Connection from the ConnectionPool by its Peer"""
-        print "-------------------------- del connection by peer --------------------------"
-        connectionkey = peer.getid()
-        if self.poolbypeer.has_key(connectionkey):
-            conn = self.poolbypeer[connectionkey]
-            del self.poolbypeer[connectionkey]
-            del self.poolbysocket[conn.thesocket]
-            conn.close()
-            print "Removed connection to ", connectionkey
-            print "----------------------------------------------------------------------------"
-        else:
-            print "trying to delete a non-existent connection from the conn pool"
-
+        """ Deletes a Connection from the ConnectionPool by its Peer"""        
+        with self.pool_lock:
+            print "-------------------------- del connection by peer --------------------------"
+            connectionkey = peer.getid()
+            if self.poolbypeer.has_key(connectionkey):
+                conn = self.poolbypeer[connectionkey]
+                del self.poolbypeer[connectionkey]
+                del self.poolbysocket[conn.thesocket]
+                conn.close()
+                print "Removed connection to ", connectionkey
+                print "----------------------------------------------------------------------------"
+            else:
+                print "trying to delete a non-existent connection from the conn pool"
+        
     def del_connection_by_socket(self, thesocket):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
-        print "-------------------------- del connection by socket --------------------------"
-        if self.poolbysocket.has_key(thesocket):
-            daconn = self.poolbysocket[thesocket]
-            for connkey,conn in self.poolbypeer.iteritems():
-                if conn == daconn:
-                    del self.poolbypeer[connkey]
-                    print "Removed connection to ", connkey
-                    print "----------------------------------------------------------------------------"
-                    break
-            del self.poolbysocket[daconn.thesocket]
-            daconn.close()
-        else:
-            print "trying to delete a non-existent socket from the conn pool"
+        with self.pool_lock:
+            print "-------------------------- del connection by socket --------------------------"
+            if self.poolbysocket.has_key(thesocket):
+                daconn = self.poolbysocket[thesocket]
+                for connkey,conn in self.poolbypeer.iteritems():
+                    if conn == daconn:
+                        del self.poolbypeer[connkey]
+                        print "Removed connection to ", connkey
+                        print "----------------------------------------------------------------------------"
+                        break
+                del self.poolbysocket[daconn.thesocket]
+                daconn.close()
+            else:
+                print "trying to delete a non-existent socket from the conn pool"
 
     def get_connection_by_peer(self, peer):
         """Returns a Connection given corresponding Peer.
         A new Connection is created and added to the
         ConnectionPool if it doesn't exist.
         """
-        connectionkey = peer.getid()
-        if self.poolbypeer.has_key(connectionkey):
-            return self.poolbypeer[connectionkey]
-        else:
-            print "************************** get connection by peer ************************"
-            thesocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            thesocket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
-            thesocket.connect((peer.addr, peer.port))
-            thesocket.setblocking(0)
-            conn = Connection(thesocket, connectionkey)
-            self.poolbypeer[connectionkey] = conn
-            self.poolbysocket[thesocket] = conn
-            return conn
+        with self.pool_lock:
+            connectionkey = peer.getid()
+            if self.poolbypeer.has_key(connectionkey):
+                return self.poolbypeer[connectionkey]
+            else:
+                print "************************** get connection by peer ************************"
+                thesocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                thesocket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
+                thesocket.connect((peer.addr, peer.port))
+                thesocket.setblocking(0)
+                conn = Connection(thesocket, connectionkey)
+                self.poolbypeer[connectionkey] = conn
+                self.poolbysocket[thesocket] = conn
+                return conn
 
     def get_connection_by_socket(self, thesocket):
         """Returns a Connection given corresponding socket.
         A new Connection is created and added to the
         ConnectionPool if it doesn't exist.
         """
-        if self.poolbysocket.has_key(thesocket):
-            return self.poolbysocket[thesocket]
-        else:
-            conn = Connection(thesocket)
-            self.poolbysocket[thesocket] = conn
-            return conn
+        with self.pool_lock:
+            if self.poolbysocket.has_key(thesocket):
+                return self.poolbysocket[thesocket]
+            else:
+                conn = Connection(thesocket)
+                self.poolbysocket[thesocket] = conn
+                return conn
 
     def __str__(self):
         """Returns ConnectionPool information"""
@@ -120,6 +126,7 @@ class Connection():
                 return (0,None)
 
     def receive_n_bytes(self, msg_length):
+        print "Waiting for %d bytes..." % msg_length
         msgstr = ''
         while len(msgstr) != msg_length:
             try:
