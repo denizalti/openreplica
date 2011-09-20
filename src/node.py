@@ -35,7 +35,6 @@ parser.add_option("-d", "--debug", action="store_true", dest="debug", default=Fa
 (options, args) = parser.parse_args()
 
 DO_PERIODIC_PINGS = False
-x = 0
 
 class Node():
     """Node encloses the basic Node behaviour and state that
@@ -65,8 +64,13 @@ class Node():
         self.type = nodetype
         if self.type == NODE_REPLICA:
             self.objectname = replicatedobject
-        self.outstandingmessages_lock = RLock()
+
+        self.receivedmessages_cond = Condition()
+        self.receivedmessages = []
+        
+        self.outstandingmessages_lock =RLock()
         self.outstandingmessages = {}
+        
         self.lock = Lock()
         self.done = False
         self.donecond = Condition()
@@ -126,9 +130,12 @@ class Node():
 
     def startservice(self):
         """Starts the background services associated with a node."""
+        # Start a thread that waits for inputs
+        receiver_thread = Thread(target=self.server_loop)
+        receiver_thread.start()
         # Start a thread with the server which will start a thread for each request
-        server_thread = Thread(target=self.server_loop)
-        server_thread.start()
+        main_thread = Thread(target=self.handle_messages)
+        main_thread.start()
         # Start a thread that waits for inputs
         input_thread = Thread(target=self.get_inputs)
         input_thread.start()
@@ -247,6 +254,20 @@ class Node():
         if message == None:
             return False
         else:
+            if message.type == MSG_ACK:
+                with self.outstandingmessages_lock:
+                    ackid = "%s+%d" % (self.me.getid(), message.ackid)
+                    if self.outstandingmessages.has_key(ackid):
+                        del self.outstandingmessages[ackid]
+            else:
+                # Send ACK
+                if message.type != MSG_CLIENTREQUEST:
+                    connection.send(AckMessage(MSG_ACK,self.me,message.id))
+                # Add to received messages
+                with self.receivedmessages_cond:
+                    print "Appending to receivedmessages.."
+                    self.receivedmessages.append((timestamp,message,connection))
+                    self.receivedmessages_cond.notify()
             if message.type == MSG_CLIENTREQUEST:
                 try:
                     self.clientpool.add_connection_to_peer(message.source, connection)
@@ -254,23 +275,37 @@ class Node():
                     pass
             else:
                 self.connectionpool.add_connection_to_peer(message.source, connection)
-            if message.type == MSG_ACK:
-                with self.outstandingmessages_lock:
-                    ackid = "%s+%d" % (self.me.getid(), message.ackid)
-                    if self.outstandingmessages.has_key(ackid):
-                        del self.outstandingmessages[ackid]
-            else:
-                if message.type != MSG_CLIENTREQUEST:
-                    connection.send(AckMessage(MSG_ACK,self.me,message.id))
-                mname = "msg_%s" % msg_names[message.type].lower()
-                try:
-                    method = getattr(self, mname)
-                except AttributeError:
-                    logger("message not supported: %s" % message)
-                    return False
-                with self.lock:
-                    method(connection, message)
         return True
+
+    def handle_messages(self):
+        while True:
+            print "0000000999999000000099999900000009999990000000999999000000099999900000009999990000000999999"
+            with self.receivedmessages_cond:
+                while len(self.receivedmessages) == 0:
+                    self.receivedmessages_cond.wait()
+                print self.receivedmessages
+                print "0000000999999000000099999900000009999990000000999999000000099999900000009999990000000999999"
+                (timestamp, message_to_process, connection) = self.receivedmessages.pop()
+            self.process_message(message_to_process, connection)
+        return
+
+    def process_message(self, message, connection):
+        """Process message loop that takes messages out of the receives_messages
+        list and handles them.
+        """
+        if message == None:
+            return False
+        else:
+            mname = "msg_%s" % msg_names[message.type].lower()
+            try:
+                method = getattr(self, mname)
+            except AttributeError:
+                logger("message not supported: %s" % message)
+                return False
+            with self.lock:
+                method(connection, message)
+        return True
+    
     #
     # message handlers
     #
