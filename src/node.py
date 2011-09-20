@@ -77,7 +77,8 @@ class Node():
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
-
+        self.socket.setblocking(0)
+        
         for i in range(30):
             try:
                 self.socket.bind((self.addr,self.port))
@@ -209,7 +210,11 @@ class Node():
                         socketset.append(s)
 
                 assert len(socketset) == len(set(socketset)), "[%s] socketset has Duplicates." % self
-                
+                print "######################SOCKETSET########################"
+                for s in socketset:
+                    c = Connection(s)
+                    print str(c)
+                print "#######################################################"
                 inputready,outputready,exceptready = select.select(socketset,[],socketset)
                                 
                 for s in exceptready:
@@ -373,6 +378,7 @@ class Node():
     # There are 3 basic send types: peer.send, conn.send and group.send
     # def __init__(self, message, destination, messagestate=ACK_NOTACKED, timestamp=0):
     def send(self, message, peer=None, group=None, isresend=False):
+        logger("XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n%s\nXXXXXXXXXXXXXXXXXXXXXXXXXXX" %str(self.connectionpool))
         if peer:
             connection = self.connectionpool.get_connection_by_peer(peer)
             if not isresend:

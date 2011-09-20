@@ -30,7 +30,6 @@ class Acceptor(Node):
         self.ballotnumber = (0,0)
         self.last_accept_msg_id = -1
         self.accepted = PValueSet()
-        self.x = 1
         
     def msg_prepare(self, conn, msg):
         """Handler for MSG_PREPARE.
@@ -72,10 +71,7 @@ class Acceptor(Node):
             logger("propose received with acceptable ballotnumber %s" % str(msg.ballotnumber))
             self.ballotnumber = msg.ballotnumber
             newpvalue = PValue(msg.ballotnumber,msg.commandnumber,msg.proposal)
-            #starttimer(self.x, 12)
             self.accepted.add(newpvalue)
-            #endtimer(self.x, 12)
-            self.x += 1
             replymsg = PaxosMessage(MSG_PROPOSE_ACCEPT,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,commandnumber=msg.commandnumber)
         else:
             logger("propose received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))

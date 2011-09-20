@@ -4,6 +4,7 @@ import time
 import cPickle as pickle
 import random
 
+from threading import Lock
 DEBUG=False
 DROPRATE=0.3
 
@@ -17,8 +18,12 @@ class ConnectionPool():
         
     def add_connection_to_peer(self, peer, conn):
         """Adds a Connection to the ConnectionPool by its Peer"""
+        print "_____________________________________________"
+        print "ADDING CONNECTION TO PEER"
         connectionkey = peer.getid()
         self.poolbypeer[connectionkey] = conn
+        print self
+        print "_____________________________________________"
         
     def del_connection_by_peer(self, peer):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
@@ -49,6 +54,10 @@ class ConnectionPool():
         A new Connection is created and added to the
         ConnectionPool if it doesn't exist.
         """
+        print "_____________________________________________"
+        print "GET CONNECTION TO PEER: ", peer
+        print self
+        print "_____________________________________________"
         connectionkey = peer.getid()
         if self.poolbypeer.has_key(connectionkey):
             return self.poolbypeer[connectionkey]
@@ -56,6 +65,7 @@ class ConnectionPool():
             thesocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             thesocket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
             thesocket.connect((peer.addr, peer.port))
+            thesocket.setblocking(0)
             conn = Connection(thesocket)
             self.poolbypeer[connectionkey] = conn
             self.poolbysocket[thesocket] = conn
@@ -66,6 +76,10 @@ class ConnectionPool():
         A new Connection is created and added to the
         ConnectionPool if it doesn't exist.
         """
+        print "_____________________________________________"
+        print "GET CONNECTION BY SOCKET: ", thesocket
+        print self
+        print "_____________________________________________"
         if self.poolbysocket.has_key(thesocket):
             return self.poolbysocket[thesocket]
         else:
@@ -75,9 +89,9 @@ class ConnectionPool():
 
     def __str__(self):
         """Returns ConnectionPool information"""
-        peerstr= "\n".join([str(peer) for peer,conn in self.poolbypeer.iteritems()])
-        socketstr= "\n".join([str(socket) for socket,conn in self.poolbysocket.iteritems()])
-        temp = "Connection to Peers:\n%sConnection to Sockets:\n%s" %(peerstr, socketstr)
+        peerstr= "\n".join(["%s: %s" % (str(peer), str(conn)) for peer,conn in self.poolbypeer.iteritems()])
+        socketstr= "\n".join(["%s: %s" % (str(socket), str(conn)) for socket,conn in self.poolbysocket.iteritems()])
+        temp = "Connection to Peers:\n%s\nConnection to Sockets:\n%s" %(peerstr, socketstr)
         return temp
         
 class Connection():
@@ -85,62 +99,88 @@ class Connection():
     def __init__(self, socket):
         """Initialize Connection"""
         self.thesocket = socket
+        self.lock = Lock()
     
     def __str__(self):
         """Return Connection information"""
-        return "Connection to Peer at addr: %s port: %d" % (self.thesocket.getpeername())
+        try:
+            return "Connection to Peer at addr: %s port: %d" % (self.thesocket.getpeername())
+        except:
+            return "NAMELESS SOCKET"
     
     def receive(self):
-        """receive a message on the Connection"""
-        try:
-            returnstring = self.thesocket.recv(4)
-            if len(returnstring) < 4:
-                print "receive too short"
+        with self.lock:
+            """receive a message on the Connection"""
+            try:
+                returnstring = self.receive_n_bytes(4)
+                msg_length = struct.unpack("I", returnstring[0:4])[0]
+                msgstr = self.receive_n_bytes(msg_length)
+                return (time.time(), pickle.loads(msgstr))
+            except IOError as inst:
+                print "Receive Error: ", inst            
                 return (0,None)
-            msg_length = struct.unpack("I", returnstring[0:4])[0]
-            msgstr = ''
-            while len(msgstr) != msg_length:
+
+    def receive_n_bytes(self, msg_length):
+        msgstr = ''
+        while len(msgstr) != msg_length:
+            try:
                 chunk = self.thesocket.recv(min(1024, msg_length-len(msgstr)))
-                if len(chunk) == 0:
-                    break
-                msgstr += chunk
-            if len(msgstr) != msg_length:
-                return (0,None)
-            # XXX
-            return (time.time(), pickle.loads(msgstr))
-        except IOError as inst:
-            print "Receive Error: ", inst
-            return (0,None)
+            except IOError, e:
+                if isinstance(e.args, tuple):
+                    print e.args, errno.EDEADLK, errno.EAGAIN, errno.EBUSY
+                    if e[0] == errno.EAGAIN:
+                        continue
+                    else:
+                        print "Error during receive!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                        raise e
+            msgstr += chunk
+        return msgstr
     
     def send(self, msg):
-        """pickle and send a message on the Connection"""
-        if DEBUG and random.random() <= DROPRATE:
-            print "dropping message..."
-            return
-        messagestr = pickle.dumps(msg)
-        messagelength = struct.pack("I", len(messagestr))
-        try:
-            self.thesocket.send(messagelength + messagestr)
-            #print time.time(), " ---> ", msg, "\n"
-            return True
-        except socket.error, e:
-             if isinstance(e.args, tuple):
-                 if e[0] == errno.EPIPE:
-                     print "Remote disconnect"
-                     return False
-        except IOError, e:
-            print "Send Error: ", e
+        with self.lock:
+            """pickle and send a message on the Connection"""
+            if DEBUG and random.random() <= DROPRATE:
+                print "dropping message..."
+                return
+            messagestr = pickle.dumps(msg)
+            messagelength = struct.pack("I", len(messagestr))
+            print "MESSAGETOTAL: ", 4 + len(messagestr)
+            try:
+                totalsent = 0
+                while totalsent < (4 + len(messagestr)):
+                    print "Writing to ", str(self)
+                    try:
+                        bytesent = self.thesocket.send((messagelength + messagestr)[totalsent:])
+                        print "Wrote %d bytes!" % bytesent
+                        totalsent += bytesent
+                        print "Total %d bytes!" % totalsent
+                    except IOError, e:
+                        if isinstance(e.args, tuple):
+                            if e[0] == errno.EAGAIN:
+                                continue
+                            else:
+                                raise e
+                return True
+            except socket.error, e:
+                 if isinstance(e.args, tuple):
+                     if e[0] == errno.EPIPE:
+                         print "Remote disconnect"
+                         return False
+            except IOError, e:
+                print "Send Error: ", e
             return False
     
     def settimeout(self, timeout):
-        try:
-            self.thesocket.settimeout(timeout)
-        except socket.error, e:
-            if isinstance(e.args, tuple):
-                if e[0] == errno.EBADF:
-                    print "socket closed"
+        with self.lock:
+            try:
+                self.thesocket.settimeout(timeout)
+            except socket.error, e:
+                if isinstance(e.args, tuple):
+                    if e[0] == errno.EBADF:
+                        print "socket closed"
 
     def close(self):
-        """Close the Connection"""
-        self.thesocket.close()
-        self.thesocket = None
+        with self.lock:
+            """Close the Connection"""
+            self.thesocket.close()
+            self.thesocket = None

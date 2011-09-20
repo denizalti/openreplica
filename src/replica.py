@@ -165,26 +165,28 @@ class Replica(Node):
         noop = (commandname == "noop")
         send_result_to_client = True
         # Result triple
-        clientreplycode, givenresult, unblocked = (None, None, {})
+        clientreplycode, givenresult, unblocked = (-1, None, {})
         try:
             if dometaonly and not ismeta:
                 return
             elif noop:
                 method = getattr(self, NOOP)
-                givenresult = "NOOP"
                 clientreplycode = CR_OK
+                givenresult = "NOOP"
                 unblocked = {}
+                send_result_to_client = True
             elif dometaonly and ismeta:
                 # execute a metacommand when the window has expired
                 method = getattr(self, commandname)
-                clientreplycode = META
+                clientreplycode = CR_META
                 givenresult = method(commandargs)
                 unblocked = {}
+                send_result_to_client = False
             elif not dometaonly and ismeta:
                 # meta command, but the window has not passed yet, 
                 # so just mark it as executed without actually executing it
                 # the real execution will take place when the window has expired
-                self.add_to_executed(self.decisions[slotno], (META, META, {}))
+                self.add_to_executed(self.decisions[slotno], (CR_META, META, {}))
                 return
             elif not dometaonly and not ismeta:
                 # this is the workhorse case that executes most normal commands
@@ -222,6 +224,7 @@ class Replica(Node):
             givenresult = 'COMMAND NOT SUPPORTED'
             clientreplycode = CR_EXCEPTION
             unblocked = {}
+            send_result_to_client = True
         self.add_to_executed(self.decisions[slotno], (clientreplycode,givenresult,unblocked))
         
         if commandname not in METACOMMANDS:
@@ -493,6 +496,7 @@ class Replica(Node):
             if givencommand in self.decidedcommandset:
                 if self.executed.has_key(givencommand):
                     endtimer(givencommand,1)
+                    #if self.executed[givencommand][RCODE] is not META -> XXX: When connectivity is not provided by a setup client.
                     clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=self.executed[givencommand][RESULT], \
                                                      replycode=self.executed[givencommand][RCODE], inresponseto=givencommand.clientcommandnumber)
                     conn = self.clientpool.get_connection_by_peer(givencommand.client)

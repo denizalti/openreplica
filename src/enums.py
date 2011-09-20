@@ -35,7 +35,7 @@ RCODE, RESULT, UNBLOCKED = range(3)
 ACK_NOTACKED, ACK_ACKED = range(2)
 
 # client reply codes
-CR_OK, CR_INPROGRESS, CR_LEADERNOTREADY, CR_REJECTED, CR_EXCEPTION, CR_BLOCK, CR_UNBLOCK = range(7)
+CR_OK, CR_INPROGRESS, CR_LEADERNOTREADY, CR_REJECTED, CR_EXCEPTION, CR_BLOCK, CR_UNBLOCK, CR_META = range(8)
 
 # timeouts
 ACKTIMEOUT = 1
@@ -53,7 +53,7 @@ BALLOTNODE = 1
 BACKOFFINCREASE = 0.1
 
 METACOMMANDS = set(["add_acceptor", "del_acceptor", "add_replica", "del_replica"])
-WINDOW = 20
+WINDOW = 200
 
 NOOP = "do_noop"
 
