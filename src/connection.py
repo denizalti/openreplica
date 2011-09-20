@@ -25,22 +25,28 @@ class ConnectionPool():
         
     def del_connection_by_peer(self, peer):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
+        print "-------------------------- del connection by peer --------------------------"
         connectionkey = peer.getid()
         if self.poolbypeer.has_key(connectionkey):
             conn = self.poolbypeer[connectionkey]
             del self.poolbypeer[connectionkey]
             del self.poolbysocket[conn.thesocket]
             conn.close()
+            print "Removed connection to ", connectionkey
+            print "----------------------------------------------------------------------------"
         else:
             print "trying to delete a non-existent connection from the conn pool"
 
     def del_connection_by_socket(self, thesocket):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
+        print "-------------------------- del connection by socket --------------------------"
         if self.poolbysocket.has_key(thesocket):
             daconn = self.poolbysocket[thesocket]
             for connkey,conn in self.poolbypeer.iteritems():
                 if conn == daconn:
                     del self.poolbypeer[connkey]
+                    print "Removed connection to ", connkey
+                    print "----------------------------------------------------------------------------"
                     break
             del self.poolbysocket[daconn.thesocket]
             daconn.close()
@@ -117,7 +123,9 @@ class Connection():
         msgstr = ''
         while len(msgstr) != msg_length:
             try:
+                print "receive from %s" % (str(self))
                 chunk = self.thesocket.recv(min(1024, msg_length-len(msgstr)))
+                print "read %d bytes" % (len(chunk))
             except IOError, e:
                 if isinstance(e.args, tuple):
                     if e[0] == errno.EAGAIN:
@@ -145,6 +153,7 @@ class Connection():
                         bytesent = self.thesocket.send(message)
                         print "send to %s: wrote %d bytes" % (str(self), bytesent)
                         message = message[bytesent:]
+                        print "left %d bytes" % len(message)
                     except IOError, e:
                         if isinstance(e.args, tuple):
                             if e[0] == errno.EAGAIN:

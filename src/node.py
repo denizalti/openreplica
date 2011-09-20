@@ -223,6 +223,15 @@ class Node():
                     print str(c)
                 print "#######################################################"
                 inputready,outputready,exceptready = select.select(socketset,[],socketset)
+                print "------------------> INPUT READY"
+                for s in inputready:
+                    c = self.connectionpool.get_connection_by_socket(s)
+                    print str(c)
+                print "------------------> EXCEPT READY"
+                for s in exceptready:
+                    c = self.connectionpool.get_connection_by_socket(s)
+                    print str(c)
+                print "#######################################################"
                                 
                 for s in exceptready:
                     print "EXCEPTION ", s
