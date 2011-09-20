@@ -18,12 +18,11 @@ class ConnectionPool():
         
     def add_connection_to_peer(self, peer, conn):
         """Adds a Connection to the ConnectionPool by its Peer"""
-        print "_____________________________________________"
-        print "ADDING CONNECTION TO PEER"
         connectionkey = peer.getid()
         self.poolbypeer[connectionkey] = conn
-        print self
-        print "_____________________________________________"
+        print "************************** add connection to peer ************************"
+        conn.peerid = connectionkey
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX %s", self
         
     def del_connection_by_peer(self, peer):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
@@ -54,19 +53,17 @@ class ConnectionPool():
         A new Connection is created and added to the
         ConnectionPool if it doesn't exist.
         """
-        print "_____________________________________________"
-        print "GET CONNECTION TO PEER: ", peer
-        print self
-        print "_____________________________________________"
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX %s", self
         connectionkey = peer.getid()
         if self.poolbypeer.has_key(connectionkey):
             return self.poolbypeer[connectionkey]
         else:
+            print "************************** get connection by peer ************************"
             thesocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             thesocket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
             thesocket.connect((peer.addr, peer.port))
             thesocket.setblocking(0)
-            conn = Connection(thesocket)
+            conn = Connection(thesocket, connectionkey)
             self.poolbypeer[connectionkey] = conn
             self.poolbysocket[thesocket] = conn
             return conn
@@ -76,10 +73,6 @@ class ConnectionPool():
         A new Connection is created and added to the
         ConnectionPool if it doesn't exist.
         """
-        print "_____________________________________________"
-        print "GET CONNECTION BY SOCKET: ", thesocket
-        print self
-        print "_____________________________________________"
         if self.poolbysocket.has_key(thesocket):
             return self.poolbysocket[thesocket]
         else:
@@ -91,25 +84,27 @@ class ConnectionPool():
         """Returns ConnectionPool information"""
         peerstr= "\n".join(["%s: %s" % (str(peer), str(conn)) for peer,conn in self.poolbypeer.iteritems()])
         socketstr= "\n".join(["%s: %s" % (str(socket), str(conn)) for socket,conn in self.poolbysocket.iteritems()])
-        temp = "Connection to Peers:\n%s\nConnection to Sockets:\n%s" %(peerstr, socketstr)
+        temp = "=======================Connection to Peers:\n%s\n=======================Connection to Sockets:\n%s" %(peerstr, socketstr)
         return temp
         
 class Connection():
     """Connection encloses the socket and send/receive functions for a connection."""
-    def __init__(self, socket):
+    def __init__(self, socket, peerid=None):
         """Initialize Connection"""
         self.thesocket = socket
-        self.lock = Lock()
+        self.peerid = peerid
+        self.readlock = Lock()
+        self.writelock = Lock()
     
     def __str__(self):
         """Return Connection information"""
         try:
-            return "Connection to Peer at addr: %s port: %d" % (self.thesocket.getpeername())
+            return "Connection to Peer %s local socket %s:%d to remote socket %s:%d:" % (self.peerid, self.thesocket.getsockname()[0], self.thesocket.getsockname()[1], self.thesocket.getpeername()[0], self.thesocket.getpeername()[1])
         except:
-            return "NAMELESS SOCKET"
+            return "Connection to NAMELESS local socket %s:%d" % (self.thesocket.getsockname())
     
     def receive(self):
-        with self.lock:
+        with self.readlock:
             """receive a message on the Connection"""
             try:
                 returnstring = self.receive_n_bytes(4)
@@ -127,10 +122,9 @@ class Connection():
                 chunk = self.thesocket.recv(min(1024, msg_length-len(msgstr)))
             except IOError, e:
                 if isinstance(e.args, tuple):
-                    #print e.args, errno.EDEADLK, errno.EAGAIN, errno.EBUSY
                     if e[0] == errno.EAGAIN:
                         continue
-                print "Error during receive!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                print "Error during receive!"
                 raise e
             if len(chunk) == 0:
                 print "Connection closed............................................"
@@ -139,23 +133,20 @@ class Connection():
         return msgstr
     
     def send(self, msg):
-        with self.lock:
+        with self.writelock:
             """pickle and send a message on the Connection"""
             if DEBUG and random.random() <= DROPRATE:
                 print "dropping message..."
                 return
             messagestr = pickle.dumps(msg)
-            messagelength = struct.pack("I", len(messagestr))
-            print "MESSAGETOTAL: ", 4 + len(messagestr)
+            message = struct.pack("I", len(messagestr)) + messagestr
+            print "send to %s: want to write %d bytes" % (str(self), len(message))
             try:
-                totalsent = 0
-                while totalsent < (4 + len(messagestr)):
-                    print "Writing to ", str(self)
+                while len(message) > 0:
                     try:
-                        bytesent = self.thesocket.send((messagelength + messagestr)[totalsent:])
-                        print "Wrote %d bytes!" % bytesent
-                        totalsent += bytesent
-                        print "Total %d bytes!" % totalsent
+                        bytesent = self.thesocket.send(message)
+                        print "send to %s: wrote %d bytes" % (str(self), bytesent)
+                        message = message[bytesent:]
                     except IOError, e:
                         if isinstance(e.args, tuple):
                             if e[0] == errno.EAGAIN:
@@ -173,7 +164,7 @@ class Connection():
             return False
     
     def settimeout(self, timeout):
-        with self.lock:
+        with self.writelock:
             try:
                 self.thesocket.settimeout(timeout)
             except socket.error, e:
@@ -182,7 +173,7 @@ class Connection():
                         print "socket closed"
 
     def close(self):
-        with self.lock:
+        with self.writelock:
             """Close the Connection"""
             self.thesocket.close()
             self.thesocket = None
