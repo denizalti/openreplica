@@ -18,12 +18,8 @@ class ConnectionPool():
         
     def add_connection_to_peer(self, peer, conn):
         """Adds a Connection to the ConnectionPool by its Peer"""
-        print "_____________________________________________"
-        print "ADDING CONNECTION TO PEER"
         connectionkey = peer.getid()
         self.poolbypeer[connectionkey] = conn
-        print self
-        print "_____________________________________________"
         
     def del_connection_by_peer(self, peer):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
@@ -54,10 +50,6 @@ class ConnectionPool():
         A new Connection is created and added to the
         ConnectionPool if it doesn't exist.
         """
-        print "_____________________________________________"
-        print "GET CONNECTION TO PEER: ", peer
-        print self
-        print "_____________________________________________"
         connectionkey = peer.getid()
         if self.poolbypeer.has_key(connectionkey):
             return self.poolbypeer[connectionkey]
@@ -76,10 +68,6 @@ class ConnectionPool():
         A new Connection is created and added to the
         ConnectionPool if it doesn't exist.
         """
-        print "_____________________________________________"
-        print "GET CONNECTION BY SOCKET: ", thesocket
-        print self
-        print "_____________________________________________"
         if self.poolbysocket.has_key(thesocket):
             return self.poolbysocket[thesocket]
         else:
@@ -130,10 +118,10 @@ class Connection():
                     #print e.args, errno.EDEADLK, errno.EAGAIN, errno.EBUSY
                     if e[0] == errno.EAGAIN:
                         continue
-                print "Error during receive!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                print "Error during receive!!"
                 raise e
             if len(chunk) == 0:
-                print "Connection closed............................................"
+                print "Connection closed.."
                 raise IOError
             msgstr += chunk
         return msgstr
