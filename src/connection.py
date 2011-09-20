@@ -108,6 +108,8 @@ class Connection():
     
     def __str__(self):
         """Return Connection information"""
+        if self.thesocket is None:
+            return "None SOCKET!!!!!!!"
         try:
             return "Connection to Peer %s local socket %s:%d to remote socket %s:%d:" % (self.peerid, self.thesocket.getsockname()[0], self.thesocket.getsockname()[1], self.thesocket.getpeername()[0], self.thesocket.getpeername()[1])
         except:
@@ -160,7 +162,7 @@ class Connection():
                         bytesent = self.thesocket.send(message)
                         print "send to %s: wrote %d bytes" % (str(self), bytesent)
                         message = message[bytesent:]
-                        print "left %d bytes" % len(message)
+                        print "send: left %d bytes" % len(message)
                     except IOError, e:
                         if isinstance(e.args, tuple):
                             if e[0] == errno.EAGAIN:
@@ -178,16 +180,14 @@ class Connection():
             return False
     
     def settimeout(self, timeout):
-        with self.writelock:
-            try:
-                self.thesocket.settimeout(timeout)
-            except socket.error, e:
-                if isinstance(e.args, tuple):
-                    if e[0] == errno.EBADF:
-                        print "socket closed"
+        try:
+            self.thesocket.settimeout(timeout)
+        except socket.error, e:
+            if isinstance(e.args, tuple):
+                if e[0] == errno.EBADF:
+                    print "socket closed"
 
     def close(self):
-        with self.writelock:
-            """Close the Connection"""
-            self.thesocket.close()
-            self.thesocket = None
+        """Close the Connection"""
+        self.thesocket.close()
+        self.thesocket = None

@@ -217,22 +217,10 @@ class Node():
                         socketset.append(s)
 
                 assert len(socketset) == len(set(socketset)), "[%s] socketset has Duplicates." % self
-                print "######################SOCKETSET########################"
-                for s in socketset:
-                    c = self.connectionpool.get_connection_by_socket(s)
-                    print str(c)
-                print "#######################################################"
-                inputready,outputready,exceptready = select.select(socketset,[],socketset,0.1)
-                print "------------------> INPUT READY"
-                for s in inputready:
-                    c = self.connectionpool.get_connection_by_socket(s)
-                    print str(c)
-                print "------------------> EXCEPT READY"
-                for s in exceptready:
-                    c = self.connectionpool.get_connection_by_socket(s)
-                    print str(c)
-                print "#######################################################"
-                                
+                inputready,outputready,exceptready = select.select(socketset,[],socketset,1)
+                
+                sys.stdout.write("#")
+                sys.stdout.flush()
                 for s in exceptready:
                     print "EXCEPTION ", s
                 for s in inputready:
@@ -263,20 +251,11 @@ class Node():
         if message == None:
             return False
         else:
-            if message.type == MSG_ACK:
-                with self.outstandingmessages_lock:
-                    ackid = "%s+%d" % (self.me.getid(), message.ackid)
-                    if self.outstandingmessages.has_key(ackid):
-                        del self.outstandingmessages[ackid]
-            else:
-                # Send ACK
-                if message.type != MSG_CLIENTREQUEST:
-                    connection.send(AckMessage(MSG_ACK,self.me,message.id))
-                # Add to received messages
-                with self.receivedmessages_cond:
-                    print "Appending to receivedmessages.."
-                    self.receivedmessages.append((timestamp,message,connection))
-                    self.receivedmessages_cond.notify()
+            # Add to received messages
+            with self.receivedmessages_cond:
+                print "Appending to receivedmessages.."
+                self.receivedmessages.append((timestamp,message,connection))
+                self.receivedmessages_cond.notify()
             if message.type == MSG_CLIENTREQUEST:
                 try:
                     self.clientpool.add_connection_to_peer(message.source, connection)
@@ -299,17 +278,25 @@ class Node():
         """Process message loop that takes messages out of the receives_messages
         list and handles them.
         """
-        if message == None:
+        # check to see if it's an ack
+        if message.type == MSG_ACK:
+            #take it out of outstanding messages, but do not ack an ack
+            ackid = "%s+%d" % (self.me.getid(), message.ackid)
+            with self.outstandingmessages_lock:
+                if self.outstandingmessages.has_key(ackid):
+                    del self.outstandingmessages[ackid]
+            return True
+        elif message.type != MSG_CLIENTREQUEST:
+            # Send ACK
+            connection.send(AckMessage(MSG_ACK,self.me,message.id))
+        mname = "msg_%s" % msg_names[message.type].lower()
+        try:
+            method = getattr(self, mname)
+        except AttributeError:
+            logger("message not supported: %s" % message)
             return False
-        else:
-            mname = "msg_%s" % msg_names[message.type].lower()
-            try:
-                method = getattr(self, mname)
-            except AttributeError:
-                logger("message not supported: %s" % message)
-                return False
-            with self.lock:
-                method(connection, message)
+        with self.lock:
+            method(connection, message)
         return True
     
     #
@@ -369,17 +356,18 @@ class Node():
 
             try:
                 with self.outstandingmessages_lock:
-                    for id, messageinfo in self.outstandingmessages.iteritems():
-                        now = time.time()
-                        if messageinfo.messagestate == ACK_NOTACKED and (messageinfo.timestamp + ACKTIMEOUT) < now:
-                            #resend NOTACKED message
-                            logger("re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
-                            self.send(messageinfo.message, peer=messageinfo.destination, isresend=True)
-                            messageinfo.timestamp = time.time()
-                        elif DO_PERIODIC_PINGS and messageinfo.messagestate == ACK_ACKED and \
-                                (messageinfo.timestamp + LIVENESSTIMEOUT) < now and \
-                                messageinfo.destination in checkliveness:
-                            checkliveness.remove(messageinfo.destination)
+                    msgs = self.outstandingmessages.values()
+                for messageinfo in msgs:
+                    now = time.time()
+                    if messageinfo.messagestate == ACK_NOTACKED and (messageinfo.timestamp + ACKTIMEOUT) < now:
+                        #resend NOTACKED message
+                        logger("re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
+                        self.send(messageinfo.message, peer=messageinfo.destination, isresend=True)
+                        messageinfo.timestamp = time.time()
+                    elif DO_PERIODIC_PINGS and messageinfo.messagestate == ACK_ACKED and \
+                            (messageinfo.timestamp + LIVENESSTIMEOUT) < now and \
+                            messageinfo.destination in checkliveness:
+                        checkliveness.remove(messageinfo.destination)
             except Exception as ec:
                 logger("exception in resend: %s" % ec)
                 
@@ -419,7 +407,6 @@ class Node():
     # There are 3 basic send types: peer.send, conn.send and group.send
     # def __init__(self, message, destination, messagestate=ACK_NOTACKED, timestamp=0):
     def send(self, message, peer=None, group=None, isresend=False):
-        logger("XXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n%s\nXXXXXXXXXXXXXXXXXXXXXXXXXXX" %str(self.connectionpool))
         if peer:
             connection = self.connectionpool.get_connection_by_peer(peer)
             if not isresend:
@@ -431,8 +418,8 @@ class Node():
             assert not isresend, "performing a resend to a group"
             for peer in group.members:
                 connection = self.connectionpool.get_connection_by_peer(peer)
+                msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
                 with self.outstandingmessages_lock:
-                    msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
                     self.outstandingmessages[message.fullid()] = msginfo
                 connection.send(message)
                 message = copy.copy(message)
