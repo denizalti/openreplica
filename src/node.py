@@ -219,7 +219,7 @@ class Node():
                 assert len(socketset) == len(set(socketset)), "[%s] socketset has Duplicates." % self
                 print "######################SOCKETSET########################"
                 for s in socketset:
-                    c = Connection(s)
+                    c = self.connectionpool.get_connection_by_socket(s)
                     print str(c)
                 print "#######################################################"
                 inputready,outputready,exceptready = select.select(socketset,[],socketset)
@@ -279,12 +279,9 @@ class Node():
 
     def handle_messages(self):
         while True:
-            print "0000000999999000000099999900000009999990000000999999000000099999900000009999990000000999999"
             with self.receivedmessages_cond:
                 while len(self.receivedmessages) == 0:
                     self.receivedmessages_cond.wait()
-                print self.receivedmessages
-                print "0000000999999000000099999900000009999990000000999999000000099999900000009999990000000999999"
                 (timestamp, message_to_process, connection) = self.receivedmessages.pop()
             self.process_message(message_to_process, connection)
         return
