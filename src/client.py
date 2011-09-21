@@ -114,8 +114,6 @@ class Client():
                             self.connecttobootstrap()
                             continue
                         timestamp, reply = self.conn.receive()
-                        if reply:
-                            print reply
                         if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                             if reply.replycode == CR_REJECTED:
                                 currentbootstrap = self.bootstraplist.pop(0)
@@ -128,7 +126,7 @@ class Client():
                             else: # CR_OK, CR_UNBLOCK
                                 replied = True
                                 self.numbers.append(time.time()-starttime)
-                                print inputcount
+                                print inputcountself.numbers
                         if time.time() - starttime > CLIENTRESENDTIMEOUT:
                             print "5 seconds past"
                             if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:

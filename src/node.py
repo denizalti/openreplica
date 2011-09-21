@@ -112,7 +112,6 @@ class Node():
         self.id = self.me.getid()
         if debugoption:
             setlogprefix("%s %s" % (node_names[self.type],self.id))
-        logger("Ready!")
         self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_LEADER:Group(self.me), \
                        NODE_TRACKER:Group(self.me), NODE_COORDINATOR:Group(self.me), NODE_NAMESERVER:Group(self.me)}
         # connect to the bootstrap node
@@ -218,9 +217,7 @@ class Node():
 
                 assert len(socketset) == len(set(socketset)), "[%s] socketset has Duplicates." % self
                 inputready,outputready,exceptready = select.select(socketset,[],socketset,1)
-                
-                sys.stdout.write("#")
-                sys.stdout.flush()
+  
                 for s in exceptready:
                     print "EXCEPTION ", s
                 for s in inputready:
@@ -247,13 +244,11 @@ class Node():
         """Receives a message and calls the corresponding message handler"""
         connection = self.connectionpool.get_connection_by_socket(clientsock)
         timestamp,message = connection.receive()
-        #print timestamp, " <--- ", message, "\n"
         if message == None:
             return False
         else:
             # Add to received messages
             with self.receivedmessages_cond:
-                print "Appending to receivedmessages.."
                 self.receivedmessages.append((timestamp,message,connection))
                 self.receivedmessages_cond.notify()
             if message.type == MSG_CLIENTREQUEST:

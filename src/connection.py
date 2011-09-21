@@ -22,35 +22,28 @@ class ConnectionPool():
         with self.pool_lock:
             connectionkey = peer.getid()
             self.poolbypeer[connectionkey] = conn
-            print "************************** add connection to peer ************************"
             conn.peerid = connectionkey
             
     def del_connection_by_peer(self, peer):
         """ Deletes a Connection from the ConnectionPool by its Peer"""        
         with self.pool_lock:
-            print "-------------------------- del connection by peer --------------------------"
             connectionkey = peer.getid()
             if self.poolbypeer.has_key(connectionkey):
                 conn = self.poolbypeer[connectionkey]
                 del self.poolbypeer[connectionkey]
                 del self.poolbysocket[conn.thesocket]
                 conn.close()
-                print "Removed connection to ", connectionkey
-                print "----------------------------------------------------------------------------"
             else:
                 print "trying to delete a non-existent connection from the conn pool"
         
     def del_connection_by_socket(self, thesocket):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
         with self.pool_lock:
-            print "-------------------------- del connection by socket --------------------------"
             if self.poolbysocket.has_key(thesocket):
                 daconn = self.poolbysocket[thesocket]
                 for connkey,conn in self.poolbypeer.iteritems():
                     if conn == daconn:
                         del self.poolbypeer[connkey]
-                        print "Removed connection to ", connkey
-                        print "----------------------------------------------------------------------------"
                         break
                 del self.poolbysocket[daconn.thesocket]
                 daconn.close()
@@ -67,7 +60,6 @@ class ConnectionPool():
             if self.poolbypeer.has_key(connectionkey):
                 return self.poolbypeer[connectionkey]
             else:
-                print "************************** get connection by peer ************************"
                 thesocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 thesocket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
                 thesocket.connect((peer.addr, peer.port))
@@ -94,7 +86,7 @@ class ConnectionPool():
         """Returns ConnectionPool information"""
         peerstr= "\n".join(["%s: %s" % (str(peer), str(conn)) for peer,conn in self.poolbypeer.iteritems()])
         socketstr= "\n".join(["%s: %s" % (str(socket), str(conn)) for socket,conn in self.poolbysocket.iteritems()])
-        temp = "=======================Connection to Peers:\n%s\n=======================Connection to Sockets:\n%s" %(peerstr, socketstr)
+        temp = "Connection to Peers:\n%s\nConnection to Sockets:\n%s" %(peerstr, socketstr)
         return temp
         
 class Connection():
@@ -109,11 +101,8 @@ class Connection():
     def __str__(self):
         """Return Connection information"""
         if self.thesocket is None:
-            return "None SOCKET!!!!!!!"
-        try:
-            return "Connection to Peer %s local socket %s:%d to remote socket %s:%d:" % (self.peerid, self.thesocket.getsockname()[0], self.thesocket.getsockname()[1], self.thesocket.getpeername()[0], self.thesocket.getpeername()[1])
-        except:
-            return "Connection to NAMELESS local socket %s:%d" % (self.thesocket.getsockname())
+            return ""
+        return "Connection to Peer %s" % (self.peerid)
     
     def receive(self):
         with self.readlock:
@@ -128,18 +117,14 @@ class Connection():
                 return (0,None)
 
     def receive_n_bytes(self, msg_length):
-        print "Waiting for %d bytes..." % msg_length
         msgstr = ''
         while len(msgstr) != msg_length:
             try:
-                print "receive from %s" % (str(self))
                 chunk = self.thesocket.recv(min(1024, msg_length-len(msgstr)))
-                print "read %d bytes" % (len(chunk))
             except IOError, e:
                 if isinstance(e.args, tuple):
                     if e[0] == errno.EAGAIN:
                         continue
-                print "Error during receive!"
                 raise e
             if len(chunk) == 0:
                 print "Connection closed.."
@@ -155,14 +140,11 @@ class Connection():
                 return
             messagestr = pickle.dumps(msg)
             message = struct.pack("I", len(messagestr)) + messagestr
-            print "send to %s: want to write %d bytes" % (str(self), len(message))
             try:
                 while len(message) > 0:
                     try:
                         bytesent = self.thesocket.send(message)
-                        print "send to %s: wrote %d bytes" % (str(self), bytesent)
                         message = message[bytesent:]
-                        print "send: left %d bytes" % len(message)
                     except IOError, e:
                         if isinstance(e.args, tuple):
                             if e[0] == errno.EAGAIN:
