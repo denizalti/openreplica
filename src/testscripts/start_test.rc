@@ -42,12 +42,12 @@ fn docmd {
 numreplicas=`{expr $1 - 1}
 numacceptors= $2
 
-docmd $BOOTSTRAP 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDR ^ ' -o bank -d'
+docmd $BOOTSTRAP 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDR ^ ' -o bank'
 sleep 2
 
 while(expr $numreplicas '>' 0 >/dev/null) {
     hostindex=`{expr $numreplicas % $#REPLICAS + 1}
-    docmd $REPLICAS($hostindex) 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDR ^ ' -b ' ^ $BOOTSTRAP ^ ':6668' ^ ' -o bank -d'
+    docmd $REPLICAS($hostindex) 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDR ^ ' -b ' ^ $BOOTSTRAP ^ ':6668' ^ ' -o bank'
     numreplicas=`{expr $numreplicas - 1}
 }
 sleep 2
@@ -59,4 +59,4 @@ while(expr $numacceptors '>' 0 >/dev/null) {
 }
 sleep 2
 
-#docmd $CLIENT 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDC ^ ' -b ' ^ $BOOTSTRAP ^ ':6668 ' ^ '<' ^ $CONCOORDDIR ^ '/clientinputs/bank'
+docmd $CLIENT 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDC ^ ' -b ' ^ $BOOTSTRAP ^ ':6668 ' ^ '<' ^ $CONCOORDDIR ^ '/clientinputs/bank'

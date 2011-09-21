@@ -69,12 +69,12 @@ def endtiming(fn):
             outputfile.close()
             obj.count += 1
             sys.stdout.flush()
-            #profile_off()
-            #profilerdict = get_profile_stats()
-            #for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
-            #    print "%s: %s" % (key, value)
-            #time.sleep(10)
-            #sys.stdout.flush()
+            profile_off()
+            profilerdict = get_profile_stats()
+            for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
+                print "%s: %s" % (key, value)
+            time.sleep(10)
+            sys.stdout.flush()
             os._exit(0)
         else:
             obj.count += 1
@@ -546,8 +546,14 @@ class Replica(Node):
         print "==================>", msg
 
     def msg_output(self, conn, msg):
-        self.send(msg, self.groups[NODE_ACCEPTOR].members[0])
-        dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
+        profile_off()
+        profilerdict = get_profile_stats()
+        for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
+            print "%s: %s" % (key, value)
+        time.sleep(10)
+        sys.stdout.flush()
+#        self.send(msg, self.groups[NODE_ACCEPTOR].members[0])
+#        dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
         os._exit(0)
 
     def do_command_propose_frompending(self, givencommandnumber):

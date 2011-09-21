@@ -4,8 +4,9 @@
 @date: February 1, 2011
 '''
 from optparse import OptionParser
-from threading import Thread, RLock, Lock, Condition, Timer
+from threading import Thread, RLock, Lock, Condition, Timer, Semaphore
 from time import sleep,time
+from Queue import Queue
 import os
 import sys
 import time
@@ -65,7 +66,7 @@ class Node():
         if self.type == NODE_REPLICA:
             self.objectname = replicatedobject
 
-        self.receivedmessages_cond = Condition()
+        self.receivedmessages_semaphore = Semaphore(0)
         self.receivedmessages = []
         
         self.outstandingmessages_lock =RLock()
@@ -75,7 +76,7 @@ class Node():
         self.done = False
         self.donecond = Condition()
         # profiler
-        # profile_on()
+        profile_on()
 
         # create server socket and bind to a port
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -248,9 +249,8 @@ class Node():
             return False
         else:
             # Add to received messages
-            with self.receivedmessages_cond:
-                self.receivedmessages.append((timestamp,message,connection))
-                self.receivedmessages_cond.notify()
+            self.receivedmessages.append((timestamp,message,connection))
+            self.receivedmessages_semaphore.release()
             if message.type == MSG_CLIENTREQUEST:
                 try:
                     self.clientpool.add_connection_to_peer(message.source, connection)
@@ -262,10 +262,8 @@ class Node():
 
     def handle_messages(self):
         while True:
-            with self.receivedmessages_cond:
-                while len(self.receivedmessages) == 0:
-                    self.receivedmessages_cond.wait()
-                (timestamp, message_to_process, connection) = self.receivedmessages.pop()
+            self.receivedmessages_semaphore.acquire()
+            (timestamp, message_to_process, connection) = self.receivedmessages.pop(0)
             self.process_message(message_to_process, connection)
         return
 

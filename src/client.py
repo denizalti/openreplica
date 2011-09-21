@@ -126,7 +126,7 @@ class Client():
                             else: # CR_OK, CR_UNBLOCK
                                 replied = True
                                 self.numbers.append(time.time()-starttime)
-                                print inputcountself.numbers
+                                print inputcount
                         if time.time() - starttime > CLIENTRESENDTIMEOUT:
                             print "5 seconds past"
                             if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
