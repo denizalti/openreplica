@@ -112,8 +112,7 @@ class Connection():
                 msg_length = struct.unpack("I", returnstring[0:4])[0]
                 msgstr = self.receive_n_bytes(msg_length)
                 return (time.time(), pickle.loads(msgstr))
-            except IOError as inst:
-                print "Receive Error: ", inst            
+            except IOError as inst:           
                 return (0,None)
 
     def receive_n_bytes(self, msg_length):

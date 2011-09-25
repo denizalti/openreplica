@@ -76,7 +76,7 @@ class Node():
         self.done = False
         self.donecond = Condition()
         # profiler
-        profile_on()
+        #profile_on()
 
         # create server socket and bind to a port
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -199,7 +199,7 @@ class Node():
                 try:
                     for conn in self.clientpool.poolbypeer.itervalues():
                         sock = conn.thesocket
-                        if sock is not None:
+                        if sock is not None and sock not in socketset:
                             socketset.append(sock)
                 except AttributeError:
                     pass

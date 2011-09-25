@@ -9,17 +9,16 @@ class DCondition():
         self.lock = DLock()
         self.__waiters = []
     
-    def acquire(self, kwargs):
+    def acquire(self, _concoord_command):
         try:
             return self.lock.acquire(kwargs)
         except UnusualReturn:
             raise UnusualReturn
 
-    def release(self, kwargs):
+    def release(self, _concoord_command):
         return self.lock.release(kwargs)
 
-    def wait(self, kwargs):
-        _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
+    def wait(self, _concoord_command):
         # put the caller on waitinglist and take the lock away
         with self.atomic:
             if self.lock.locked == True and self.lock.holder == _concoord_command.client:
@@ -29,8 +28,7 @@ class DCondition():
             else:
                 raise RuntimeError("cannot wait on un-acquired lock")
 
-    def notify(self, kwargs):
-        _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
+    def notify(self, _concoord_command):
         # Notify the next client on the wait list
         with self.atomic:
             if self.lock.locked == True and self.lock.holder == _concoord_command.client:
@@ -40,8 +38,7 @@ class DCondition():
             else:
                 raise RuntimeError("cannot notify on un-acquired lock")         
 
-    def notifyAll(self, kwargs):
-        _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
+    def notifyAll(self, _concoord_command):
         # Notify every client on the wait list
         with self.atomic:
             if self.lock.locked == True and self.lock.holder == _concoord_command.client:

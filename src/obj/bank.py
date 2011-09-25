@@ -12,53 +12,49 @@ class Bank():
     def open(self, args, **kwargs):
         accountid = args[0]
         if self.accounts.has_key(accountid):
-            return "ACCT %s ALREADY EXISTS" % accountid
+            return False
         else:
             self.accounts[accountid] = Account(accountid)
-            return "ACCT %s OPENED" % accountid
+            return True
         
     def close(self, args, **kwargs):
         accountid = args[0]
         if self.accounts.has_key(accountid):
             del self.accounts[accountid]
-            return "ACCT %s CLOSED" % accountid
+            return True
         else:
-            return "ACCT %s DOES NOT EXIST" % accountid
+            return False #XXX raise KeyError
         
     def debit(self, args, **kwargs):
         accountid = args[0]
         if self.accounts.has_key(accountid):
             self.accounts[accountid].debit()
-            return "DEBIT SUCCESSFUL: %.2f" % self.accounts[accountid].balance
+            return self.accounts[accountid].balance
         else:
-            return "ACCT %s DOES NOT EXIST" % accountid
+            return False #XXX raise KeyError
         
     def deposit(self, args, **kwargs):
         accountid = args[0]
         if self.accounts.has_key(accountid):
             self.accounts[accountid].deposit()
-            return "DEPOSIT SUCCESSFUL: %.2f" % self.accounts[accountid].balance
+            return self.accounts[accountid].balance
         else:
-            return "ACCT %s DOES NOT EXIST" % accountid
+            return False #XXX raise KeyError
         
     def balance(self, args, **kwargs):
         accountid = args[0]
         if self.accounts.has_key(accountid):
-            return "CURRENT BALANCE: %.2f" % self.accounts[accountid].balance
+            return self.accounts[accountid].balance
         else:
-            return "ACCT %s DOES NOT EXIST" % accountid
+            return False #XXX raise KeyError
     
     def __str__(self):
-        temp = "BANK\n"
-        for account in self.accounts.values():
-            temp += str(account)+"\n"
-        return temp
+        return "\n".join(["%s" % (str(account)) for account in self.accounts.values()])
 
 class Account():
     def __init__(self, id):
         self.id = id
         self.balance = 100
-        self.commands = {} # dictionary indexed by commandnumber storing commands
         
     def __str__(self):
         return "Account %s: balance = %.2f" % (self.id, self.balance)

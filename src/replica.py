@@ -240,7 +240,7 @@ class Replica(Node):
         if clientconn.thesocket == None:
             print "Client disconnected.."
             return
-        clientconn.send(clientreply) # XXX: Not added to the outstandingmessages
+        clientconn.send(clientreply)
 
     #@endtiming
     def perform(self, msg, designated=False):
@@ -501,14 +501,14 @@ class Replica(Node):
                                                      replycode=self.executed[givencommand][RCODE], inresponseto=givencommand.clientcommandnumber)
                     conn = self.clientpool.get_connection_by_peer(givencommand.client)
                     if conn is not None:
-                        conn.send(clientreply) # XXX: Not added to the outstandingmessages
+                        conn.send(clientreply)
                     resultsent = True
             # If request not executed yet, send IN PROGRESS
             if not resultsent:
                 clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_INPROGRESS, inresponseto=givencommand.clientcommandnumber)
                 conn = self.clientpool.get_connection_by_peer(givencommand.client)
                 if conn is not None:
-                    conn.send(clientreply) # XXX: Not added to the outstandingmessages
+                    conn.send(clientreply)
         else:
             self.receivedclientrequests[(givencommand.client,givencommand.clientcommandnumber)] = givencommand
             logger("initiating a new command")
@@ -529,7 +529,7 @@ class Replica(Node):
         if self.type != NODE_LEADER:
             logger("not leader.. request rejected..")
             clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_REJECTED, inresponseto=msg.command.clientcommandnumber)
-            conn.send(clientreply) # XXX: Not added to the outstandingmessages
+            conn.send(clientreply)
             # Check the Leader to see if the Client had a reason to think that we are the leader
             self.ping_leader_once()
             return
@@ -546,14 +546,14 @@ class Replica(Node):
         print "==================>", msg
 
     def msg_output(self, conn, msg):
-        profile_off()
-        profilerdict = get_profile_stats()
-        for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
-            print "%s: %s" % (key, value)
-        time.sleep(10)
-        sys.stdout.flush()
-#        self.send(msg, self.groups[NODE_ACCEPTOR].members[0])
-#        dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
+#        profile_off()
+#        profilerdict = get_profile_stats()
+#        for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
+#            print "%s: %s" % (key, value)
+#        time.sleep(10)
+#        sys.stdout.flush()
+        self.send(msg, self.groups[NODE_ACCEPTOR].members[0])
+        dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
         os._exit(0)
 
     def do_command_propose_frompending(self, givencommandnumber):
