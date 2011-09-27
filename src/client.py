@@ -142,7 +142,7 @@ class Client():
         if not success:
             print "Can't send output message."
             
-        filename = "output/client/%s-%s" % (str(self.numreplicas),str(self.numacceptors))
+        filename = "output/client/%s-%s:%s" % (str(self.numreplicas),str(self.numacceptors), str(self.me.port))
         try:
             outputfile = open("/home/deniz/concoord/"+filename, "a")
         except:
