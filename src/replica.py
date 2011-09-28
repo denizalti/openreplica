@@ -552,10 +552,12 @@ class Replica(Node):
 #            print "%s: %s" % (key, value)
 #        time.sleep(10)
 #        sys.stdout.flush()
-        self.send(msg, self.groups[NODE_ACCEPTOR].members[0])
-        dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
-        os._exit(0)
-
+##        self.send(msg, self.groups[NODE_ACCEPTOR].members[0])
+##        dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
+        numclients = len(self.clientpool.poolbypeer.keys())
+        sys.stdout.flush()
+        dumptimers(str(numclients), str(len(self.groups[NODE_ACCEPTOR])), self.type)
+        
     def do_command_propose_frompending(self, givencommandnumber):
         """initiates the givencommandnumber from pendingcommands list
         removes the command from pending and transfers it to proposals

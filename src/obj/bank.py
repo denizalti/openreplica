@@ -7,63 +7,68 @@ class Bank():
     - balance: returns balance of Account with given id
     """
     def __init__(self):
-        self.accounts = {}  # dictionary indexed by accountid storing accounts
+        self.accounts = {}
 
     def open(self, args, **kwargs):
-        accountid = args[0]
-        if self.accounts.has_key(accountid):
+        accntno = args[0]
+        if self.accounts.has_key(accntno):
             return False
         else:
-            self.accounts[accountid] = Account(accountid)
+            self.accounts[accntno] = Account(accntno)
             return True
         
     def close(self, args, **kwargs):
-        accountid = args[0]
-        if self.accounts.has_key(accountid):
-            del self.accounts[accountid]
+        accntno = args[0]
+        if self.accounts.has_key(accntno):
+            del self.accounts[accntno]
             return True
         else:
-            return False #XXX raise KeyError
+            raise KeyError
         
     def debit(self, args, **kwargs):
-        accountid = args[0]
-        if self.accounts.has_key(accountid):
-            self.accounts[accountid].debit()
-            return self.accounts[accountid].balance
+        accntno, amount = args
+        if self.accounts.has_key(accntno):
+            return self.accounts[accntno].debit(amount)
         else:
-            return False #XXX raise KeyError
+            raise KeyError
         
     def deposit(self, args, **kwargs):
-        accountid = args[0]
-        if self.accounts.has_key(accountid):
-            self.accounts[accountid].deposit()
-            return self.accounts[accountid].balance
+        accntno, amount = args
+        if self.accounts.has_key(accntno):
+            return self.accounts[accntno].deposit(amount)
         else:
-            return False #XXX raise KeyError
+            raise KeyError
         
     def balance(self, args, **kwargs):
-        accountid = args[0]
-        if self.accounts.has_key(accountid):
-            return self.accounts[accountid].balance
+        accntno = args[0]
+        if self.accounts.has_key(accntno):
+            return self.accounts[accntno].balance
         else:
-            return False #XXX raise KeyError
+            raise KeyError
     
     def __str__(self):
         return "\n".join(["%s" % (str(account)) for account in self.accounts.values()])
 
 class Account():
-    def __init__(self, id):
-        self.id = id
-        self.balance = 100
+    def __init__(self, number):
+        self.number = number
+        self.balance = 0
         
     def __str__(self):
-        return "Account %s: balance = %.2f" % (self.id, self.balance)
+        return "Account %s: balance = $%.2f" % (self.id, self.balance)
     
-    def debit(self):
-        self.balance = self.balance*0.9
+    def debit(self, amount):
+        amount = float(amount)
+        if amount >= self.balance:
+            self.balance = self.balance - amount
+            return self.balance
+        else:
+            return False
         
-    def deposit(self):
-        self.balance = self.balance*1.1
+    def deposit(self, amount):
+        amount = float(amount)
+        self.balance = self.balance + amount
+        return self.balance
         
     
         

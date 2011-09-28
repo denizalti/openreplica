@@ -43,7 +43,7 @@ numreplicas=`{expr $1 - 1}
 numacceptors= $2
 numclients= $3
 
-docmd $BOOTSTRAP 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDR ^ ' -o bank'
+docmd $BOOTSTRAP 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDR ^ ' -o bank -d'
 sleep 2
 
 while(expr $numreplicas '>' 0 >/dev/null) {

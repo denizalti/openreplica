@@ -150,6 +150,8 @@ class Connection():
                                 continue
                             else:
                                 raise e
+                    except AttributeError, e:
+                        raise e
                 return True
             except socket.error, e:
                  if isinstance(e.args, tuple):
@@ -158,6 +160,8 @@ class Connection():
                          return False
             except IOError, e:
                 print "Send Error: ", e
+            except AttributeError, e:
+                print "Socket deleted."
             return False
     
     def settimeout(self, timeout):

@@ -22,6 +22,7 @@ parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="addres
 parser.add_option("-f", "--file", action="store", dest="filename", default=None, help="inputfile")
 parser.add_option("-r", "--replica", action="store", dest="replicanum", default=1, help="numreplicas for testing")
 parser.add_option("-a", "--acceptor", action="store", dest="acceptornum", default=1, help="numacceptors for testing")
+parser.add_option("-c", "--client", action="store", dest="clientnum", default=1, help="numclients for testing")
 (options, args) = parser.parse_args()
 
 class Client():
@@ -50,6 +51,7 @@ class Client():
         self.numbers = []
         self.numreplicas = options.replicanum
         self.numacceptors = options.acceptornum
+        self.numclients = options.clientnum
         
     def initializebootstraplist(self,givenbootstraplist):
         bootstrapstrlist = givenbootstraplist.split(",")
@@ -140,9 +142,9 @@ class Client():
         outputmessage = Message(MSG_OUTPUT, self.me)
         success = self.conn.send(outputmessage)
         if not success:
-            print "Can't send output message."
-            
-        filename = "output/client/%s-%s:%s" % (str(self.numreplicas),str(self.numacceptors), str(self.me.port))
+            print "Can't send output message."   
+        #filename = "output/client/%s-%s" % (str(self.numreplicas),str(self.numacceptors))
+        filename = "output/client/%s:%s" % (str(self.numclients), str(self.me.port))
         try:
             outputfile = open("/home/deniz/concoord/"+filename, "a")
         except:
