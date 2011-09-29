@@ -57,6 +57,6 @@ while(expr $numacceptors '>' 0 >/dev/null) {
     docmd $ACCEPTORS($hostindex) 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDA ^ ' -b ' ^ $BOOTSTRAP ^ ':6668'
     numacceptors=`{expr $numacceptors - 1}
 }
-sleep 2
+sleep 10
 
 docmd $CLIENT 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDC ^ ' -b ' ^ $BOOTSTRAP ^ ':6668 ' ^ '<' ^ $CONCOORDDIR ^ '/clientinputs/bank'
