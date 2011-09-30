@@ -146,6 +146,11 @@ class Replica(Node):
         self.secondstoptime = 0
         self.count = 0
 
+        #Throughput Variables
+        self.throughput_runs = 0
+        self.throughput_stop = 0
+        self.throughput_start = 0 
+
     def startservice(self):
         """Start the background services associated with a replica."""
         Node.startservice(self)
@@ -174,7 +179,7 @@ class Replica(Node):
                 clientreplycode = CR_OK
                 givenresult = "NOOP"
                 unblocked = {}
-                send_result_to_client = True
+                send_result_to_client = False
             elif dometaonly and ismeta:
                 # execute a metacommand when the window has expired
                 method = getattr(self, commandname)
@@ -230,10 +235,11 @@ class Replica(Node):
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
             if send_result_to_client and self.type == NODE_LEADER and command.client.getid() in self.clientpool.poolbypeer.keys():
-                endtimer(command, 1)
+                #endtimer(command, 1)
                 self.send_reply_to_client(clientreplycode, givenresult, command)
 
     def send_reply_to_client(self, clientreplycode, givenresult, command):
+        return
         logger("Sending REPLY to CLIENT")
         clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=givenresult, replycode=clientreplycode, inresponseto=command.clientcommandnumber)
         clientconn = self.clientpool.get_connection_by_peer(command.client)
@@ -387,6 +393,7 @@ class Replica(Node):
             backoff_thread = Thread(target=self.update_backoff)
             backoff_event.clear()
             backoff_thread.start()
+            logger("Now leader..")
             
     def unbecome_leader(self):
         """stop being a leader and change type to NODE_REPLICA"""
@@ -495,7 +502,7 @@ class Replica(Node):
             # Check if the request has been executed
             if givencommand in self.decidedcommandset:
                 if self.executed.has_key(givencommand):
-                    endtimer(givencommand,1)
+                    #endtimer(givencommand,1)
                     #if self.executed[givencommand][RCODE] is not META -> XXX: When connectivity is not provided by a setup client.
                     clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=self.executed[givencommand][RESULT], \
                                                      replycode=self.executed[givencommand][RCODE], inresponseto=givencommand.clientcommandnumber)
@@ -518,12 +525,24 @@ class Replica(Node):
             else:
                 self.do_command_prepare(givencommand)
 
+    def handle_client_command_tput(self, givencommand, prepare=False):
+        """handle the received client request
+        - if it has been received before check if it has been executed
+        -- if it has been executed send the result
+        -- if it has not been executed yet send INPROGRESS
+        - if this request has not been received before initiate a paxos round for the command"""
+        self.receivedclientrequests[(givencommand.client,givencommand.clientcommandnumber)] = givencommand
+        if self.active and not prepare:
+            self.do_command_propose(givencommand)
+        else:
+            self.do_command_prepare(givencommand)
+
 #    @starttiming
     def msg_clientrequest(self, conn, msg):
         """handles the request from the client if the node is a leader
         - if not leader: reject
         - if leader: add connection to client connections and handle request"""
-        starttimer(msg.command, 1)
+        #starttimer(msg.command, 1)
         self.check_leader_promotion()
         self.calls += 1
         if self.type != NODE_LEADER:
@@ -540,6 +559,22 @@ class Replica(Node):
                 self.handle_client_command(msg.command, prepare=True)
             else:
                 self.handle_client_command(msg.command)
+
+    def throughput_test(self):
+        self.throughput_runs += 1
+        if self.throughput_runs == 1:
+            self.throughput_start = time.time()
+        elif self.throughput_runs == 30001:
+            self.throughput_stop = time.time()
+            totaltime = self.throughput_stop - self.throughput_start
+            print "********************************************"
+            print "TOTAL: ", totaltime
+            print "TPUT: ", 30000/totaltime, "req/s"
+            print "********************************************"
+            sys.stdout.flush()
+            os._exit(1)
+        command = Command(client=self.me, clientcommandnumber=random.randint(1,10000000), command='noop')
+        self.handle_client_command_tput(command)
             
     def msg_clientreply(self, conn, msg):
         """this only occurs in response to commands initiated by the shell"""
@@ -747,6 +782,7 @@ class Replica(Node):
                     # take this response collector out of the outstanding propose set
                     self.add_to_proposals(prc.commandnumber, prc.proposal)
                     del self.outstandingproposes[msg.commandnumber]
+                    self.throughput_test()
                     # now we can perform this action on the replicas
                     performmessage = PaxosMessage(MSG_PERFORM,self.me,commandnumber=prc.commandnumber,proposal=prc.proposal)
                     try:

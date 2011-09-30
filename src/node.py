@@ -137,8 +137,8 @@ class Node():
         main_thread = Thread(target=self.handle_messages)
         main_thread.start()
         # Start a thread that waits for inputs
-        #input_thread = Thread(target=self.get_inputs)
-        #input_thread.start()
+        input_thread = Thread(target=self.get_inputs)
+        input_thread.start()
         # Start a thread that pings neighbors
         timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
         timer_thread.start()
@@ -378,7 +378,7 @@ class Node():
         """
         while self.alive:
             try:
-                input = raw_input("")
+                input = raw_input(">")
                 if len(input) == 0:
                     continue
                 else:
