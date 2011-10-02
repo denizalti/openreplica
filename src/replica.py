@@ -782,7 +782,6 @@ class Replica(Node):
                     # take this response collector out of the outstanding propose set
                     self.add_to_proposals(prc.commandnumber, prc.proposal)
                     del self.outstandingproposes[msg.commandnumber]
-                    self.throughput_test()
                     # now we can perform this action on the replicas
                     performmessage = PaxosMessage(MSG_PERFORM,self.me,commandnumber=prc.commandnumber,proposal=prc.proposal)
                     try:
