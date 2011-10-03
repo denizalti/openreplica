@@ -61,6 +61,6 @@ while(expr $numacceptors '>' 0 >/dev/null) {
 sleep 2
 
 while(expr $numclients '>' 0 >/dev/null) {
-    docmd $CLIENT 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDC ^ ' -b ' ^ $BOOTSTRAP ^ ':6668 ' ^ '<' ^ $CONCOORDDIR ^ '/clientinputs/bank'
+    docmd $CLIENT 'nohup ' ^ $PYTHON ^ ' ' ^ $CONCOORDC ^ ' -b ' ^ $BOOTSTRAP ^ ':6668 ' ^ '<' ^ $CONCOORDDIR ^ '/clientinputs/bank -c ' ^ $3
     numclients=`{expr $numclients - 1}
 }

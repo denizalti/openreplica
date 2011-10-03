@@ -239,7 +239,6 @@ class Replica(Node):
                 self.send_reply_to_client(clientreplycode, givenresult, command)
 
     def send_reply_to_client(self, clientreplycode, givenresult, command):
-        return
         logger("Sending REPLY to CLIENT")
         clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=givenresult, replycode=clientreplycode, inresponseto=command.clientcommandnumber)
         clientconn = self.clientpool.get_connection_by_peer(command.client)
@@ -580,15 +579,15 @@ class Replica(Node):
         """this only occurs in response to commands initiated by the shell"""
         print "==================>", msg
 
-    def msg_output(self, conn, msg):
+#    def msg_output(self, conn, msg):
 #        profile_off()
 #        profilerdict = get_profile_stats()
 #        for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
 #            print "%s: %s" % (key, value)
 #        time.sleep(10)
 #        sys.stdout.flush()
-        self.send(msg, self.groups[NODE_ACCEPTOR].members[0])
-        dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
+#        self.send(msg, self.groups[NODE_ACCEPTOR].members[0])
+#        dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
 ###        numclients = len(self.clientpool.poolbypeer.keys())
 ###        dumptimers(str(numclients), str(len(self.groups[NODE_ACCEPTOR])), self.type)
         
