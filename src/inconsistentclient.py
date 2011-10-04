@@ -49,12 +49,11 @@ class Client():
         self.file = inputfile
         # timing
         self.numbers = []
+        self.start = 0
+        self.end = 0
         self.numreplicas = options.replicanum
         self.numacceptors = options.acceptornum
         self.numclients = options.clientnum
-
-        self.start = 0
-        self.end = 0
         
     def initializebootstraplist(self,givenbootstraplist):
         bootstrapstrlist = givenbootstraplist.split(",")
@@ -106,7 +105,7 @@ class Client():
                     self.clientcommandnumber += 1
                     # create command from input
                     command = Command(self.me, mynumber, shellinput)
-                    cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
+                    cm = ClientMessage(MSG_INCCLIENTREQUEST, self.me, command)
                     replied = False
                     starttime = time.time()
                     if inputcount == 5:
@@ -132,6 +131,7 @@ class Client():
                                 continue
                             else: # CR_OK, CR_UNBLOCK
                                 replied = True
+                                #self.numbers.append(time.time()-starttime)
                                 if inputcount == 1005:
                                     self.end = time.time()
                                     filename = "output/client/%s:%s" % (str(self.numclients), str(self.me.port))
@@ -141,6 +141,7 @@ class Client():
                                         outputfile = open("./"+filename, "a")
                                     outputfile.write("%s\t1000\t%s\n" % (str(self.numclients), str(self.end-self.start)))
                                     outputfile.close()
+            
                         if time.time() - starttime > CLIENTRESENDTIMEOUT:
                             print "5 seconds past"
                             if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:

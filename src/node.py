@@ -251,7 +251,7 @@ class Node():
             # Add to received messages
             self.receivedmessages.append((timestamp,message,connection))
             self.receivedmessages_semaphore.release()
-            if message.type == MSG_CLIENTREQUEST:
+            if message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
                 try:
                     self.clientpool.add_connection_to_peer(message.source, connection)
                 except AttributeError:
@@ -279,7 +279,7 @@ class Node():
                 if self.outstandingmessages.has_key(ackid):
                     del self.outstandingmessages[ackid]
             return True
-        elif message.type != MSG_CLIENTREQUEST:
+        elif message.type != MSG_CLIENTREQUEST and message.type != MSG_INCCLIENTREQUEST:
             # Send ACK
             connection.send(AckMessage(MSG_ACK,self.me,message.id))
         mname = "msg_%s" % msg_names[message.type].lower()

@@ -138,6 +138,8 @@ class Replica(Node):
         # commandnumbers known to be in use
         self.usedcommandnumbers = set()
         self.calls = 0
+
+        self.clientpool = ConnectionPool()
         
         # Measurement Variables
         self.firststarttime = 0
@@ -386,7 +388,6 @@ class Replica(Node):
             self.outstandingprepares = {}
             self.outstandingproposes = {}
             self.receivedclientrequests = {} # indexed by (client,clientcommandnumber)
-            self.clientpool = ConnectionPool()
             self.backoff = 0
             self.commandgap = 1
             backoff_thread = Thread(target=self.update_backoff)
@@ -559,6 +560,53 @@ class Replica(Node):
             else:
                 self.handle_client_command(msg.command)
 
+    def msg_incclientrequest(self, conn, msg):
+        """handles inconsistent requests from the client"""
+        if self.calls == 0:
+            starttimer("A", 1)
+        self.calls += 1
+        command = msg.command
+        commandlist = command.command.split()
+        commandname = commandlist[0]
+        commandargs = commandlist[1:]
+        send_result_to_client = True
+        try:
+            method = getattr(self.object, commandname)
+            #print method
+            try:
+                givenresult = method(commandargs, _concoord_command=command)
+                clientreplycode = CR_OK
+                send_result_to_client = True
+            except BlockingReturn as blockingretexp:
+                givenresult = blockingretexp.returnvalue
+                clientreplycode = CR_BLOCK
+                send_result_to_client = True
+            except UnblockingReturn as unblockingretexp:
+                # Get the information about the method call
+                # These will be used to update executed and
+                # to send reply message to the caller client
+                givenresult = unblockingretexp.returnvalue
+                unblocked = unblockingretexp.unblocked
+                clientreplycode = CR_OK
+                send_result_to_client = True
+                # If there are clients to be unblocked that have
+                # been blocked previously send them unblock messages
+                for unblockedclientcommand in unblocked.iterkeys():
+                    self.send_reply_to_client(CR_UNBLOCK, None, unblockedclientcommand)
+            except Exception as e:
+                givenresult = e
+                clientreplycode = CR_EXCEPTION
+                send_result_to_client = True
+                unblocked = {}
+        except (TypeError, AttributeError) as t:
+            logger("command not supported: %s" % (command))
+            givenresult = 'COMMAND NOT SUPPORTED'
+            clientreplycode = CR_EXCEPTION
+            unblocked = {}
+            send_result_to_client = True
+        if commandname not in METACOMMANDS and send_result_to_client:
+            self.send_reply_to_client(clientreplycode, givenresult, command)
+
     def throughput_test(self):
         self.throughput_runs += 1
         if self.throughput_runs == 1:
@@ -588,8 +636,8 @@ class Replica(Node):
 #        sys.stdout.flush()
 #        self.send(msg, self.groups[NODE_ACCEPTOR].members[0])
 #        dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
-###        numclients = len(self.clientpool.poolbypeer.keys())
-###        dumptimers(str(numclients), str(len(self.groups[NODE_ACCEPTOR])), self.type)
+#        numclients = len(self.clientpool.poolbypeer.keys())
+#        dumptimers(str(numclients), str(len(self.groups[NODE_ACCEPTOR])), self.type)
         
     def do_command_propose_frompending(self, givencommandnumber):
         """initiates the givencommandnumber from pendingcommands list
