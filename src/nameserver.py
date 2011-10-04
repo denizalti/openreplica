@@ -146,8 +146,6 @@ class Nameserver(Tracker):
             additionalstr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[rrtype]), str(name))
         return additionalstr
 
-    
-        
 def main():
     nameservernode = Nameserver()
     nameservernode.startservice()
