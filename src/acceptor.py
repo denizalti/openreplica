@@ -30,6 +30,7 @@ class Acceptor(Node):
         self.ballotnumber = (0,0)
         self.last_accept_msg_id = -1
         self.accepted = PValueSet()
+        self.objectsnapshot = (0,None,None)
         
     def msg_prepare(self, conn, msg):
         """Handler for MSG_PREPARE.
@@ -78,6 +79,14 @@ class Acceptor(Node):
             replymsg = PaxosMessage(MSG_PROPOSE_REJECT,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,commandnumber=msg.commandnumber)
         self.send(replymsg,peer=msg.source)
 
+    def msg_garbagecollect(self, conn, msg):
+        # XXX needs some checks
+        # update saved object snapshot
+        self.objectsnapshot = (msg.commandnumber,msg.proposal,msg.snapshot) 
+        # truncate history
+        self.accepted.truncateto(msg.commandnumber)
+        
+    # debug functions
     def cmd_paxos(self, args):
         """Shell command [paxos]: Print the paxos state of the Acceptor."""
         print self.accepted

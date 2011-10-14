@@ -572,7 +572,6 @@ class Replica(Node):
         send_result_to_client = True
         try:
             method = getattr(self.object, commandname)
-            #print method
             try:
                 givenresult = method(commandargs, _concoord_command=command)
                 clientreplycode = CR_OK
@@ -627,17 +626,14 @@ class Replica(Node):
         """this only occurs in response to commands initiated by the shell"""
         print "==================>", msg
 
-#    def msg_output(self, conn, msg):
-#        profile_off()
-#        profilerdict = get_profile_stats()
-#        for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
-#            print "%s: %s" % (key, value)
-#        time.sleep(10)
-#        sys.stdout.flush()
-#        self.send(msg, self.groups[NODE_ACCEPTOR].members[0])
-#        dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
-#        numclients = len(self.clientpool.poolbypeer.keys())
-#        dumptimers(str(numclients), str(len(self.groups[NODE_ACCEPTOR])), self.type)
+    def msg_output(self, conn, msg):
+        profile_off()
+        profilerdict = get_profile_stats()
+        for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
+            print "%s: %s" % (key, value)
+        time.sleep(10)
+        sys.stdout.flush()
+        dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
         
     def do_command_propose_frompending(self, givencommandnumber):
         """initiates the givencommandnumber from pendingcommands list
@@ -768,8 +764,6 @@ class Replica(Node):
                 self.stateuptodate = True
                 # become active
                 self.active = True
-        else:
-            logger("there is no response collector")
 
     def msg_prepare_preempted(self, conn, msg):
         """MSG_PREPARE_PREEMPTED is handled only if it belongs to an outstanding MSG_PREPARE,
@@ -873,7 +867,7 @@ class Replica(Node):
                 if leader_causing_reject < self.me:
                     # if I lost to someone whose name precedes mine, back off more than he does
                     self.backoff += BACKOFFINCREASE
-                print "WILL SLEEP"
+                logger("Backing off")
                 time.sleep(self.backoff)
                 self.do_command_prepare(prc.proposal)
 
@@ -889,7 +883,6 @@ class Replica(Node):
                 except:
                     logger("removing current leader from the replicalist")
                     self.groups[NODE_REPLICA].remove(currentleader)
-
             time.sleep(LIVENESSTIMEOUT)
 
     def ping_leader_once(self):
