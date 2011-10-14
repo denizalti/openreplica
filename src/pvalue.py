@@ -58,6 +58,13 @@ class PValueSet():
     def remove(self, pvalue):
         index = (pvalue.commandnumber,pvalue.proposal)
         del self.pvalues[index]
+
+    def truncateto(self,commandnumber):
+        # Truncate the history up to given commandnumber
+        allkeys = self.pvalues.keys()
+        for (cmdno,proposal) in allkeys:
+            if cmdno < commandnumber:
+                del self.pvalues[(cmdno,proposal)]
                     
     def union(self, otherpvalueset):
         """Unionizes the pvalues of givenPValueSet with the pvalues of the
