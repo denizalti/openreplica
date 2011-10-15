@@ -34,53 +34,6 @@ from concoordprofiler import *
 
 backoff_event = Event()
 
-def starttiming(fn):
-    """Decorator used to start timing. Keeps track of the count for the first and second calls."""
-    def new(*args, **kw):
-        obj = args[0]
-        if obj.firststarttime == 0:
-            obj.firststarttime = time.time()
-        elif obj.secondstarttime == 0:
-            obj.secondstarttime = time.time()
-        return fn(*args, **kw)
-    return new
-
-def endtiming(fn):
-    """Decorator used to end timing. Keeps track of the count for the first and second calls."""
-    NITER = 10000
-    def new(*args, **kw):
-        ret = fn(*args, **kw)
-        obj = args[0]
-        if obj.firststoptime == 0:
-            obj.firststoptime = time.time()
-        elif obj.secondstoptime == 0:
-            obj.secondstoptime = time.time()
-        elif obj.count == NITER:
-            now = time.time()
-            total = now - obj.secondstarttime
-            perrequest = total/NITER
-            filename = "output/%s-%s" % (str(len(obj.groups[NODE_REPLICA])+1),str(len(obj.groups[NODE_ACCEPTOR])))
-            try:
-                outputfile = open("/home/deniz/concoord/"+filename, "a")
-            except:
-                outputfile = open("./"+filename, "a")
-            # numreplicas #numacceptors #perrequest #total
-            outputfile.write("%s\t%s\t%s\t%s\n" % (str(len(obj.groups[NODE_REPLICA])+1), str(len(obj.groups[NODE_ACCEPTOR])), str(perrequest), str(total)))
-            outputfile.close()
-            obj.count += 1
-            sys.stdout.flush()
-            profile_off()
-            profilerdict = get_profile_stats()
-            for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
-                print "%s: %s" % (key, value)
-            time.sleep(10)
-            sys.stdout.flush()
-            os._exit(0)
-        else:
-            obj.count += 1
-        return ret
-    return new
-
 # Class used to collect responses to both PREPARE and PROPOSE messages
 class ResponseCollector():
     """ResponseCollector keeps the state related to both MSG_PREPARE and
