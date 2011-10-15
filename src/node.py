@@ -21,7 +21,7 @@ from utils import *
 from connection import ConnectionPool,Connection
 from group import Group
 from peer import Peer
-from message import Message, PaxosMessage, HandshakeMessage, AckMessage, MessageInfo
+from message import Message, HandshakeMessage, AckMessage, MessageInfo
 from command import Command
 from pvalue import PValue, PValueSet
 from concoordprofiler import *

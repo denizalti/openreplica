@@ -117,13 +117,13 @@ class AckMessage(Message):
         self.ackid = ackid
 
 class GarbageCollectMessage(Message):
-    def __init__(self, msgtype, myname, commandnumber=0, snaphot=None):
+    def __init__(self, msgtype, myname, commandnumber=0, snapshot=None):
         Message.__init__(self, msgtype, myname)
         self.commandnumber = commandnumber
-        self.snapshot = snaphot
+        self.snapshot = snapshot
 
     def __str__(self):
-        return "%s commandnumber: %d snaphot: %s" % (Message.__str__(self), self.commandnumber, str(self.snaphot))
+        return "%s commandnumber: %d snapshot: %s" % (Message.__str__(self), self.commandnumber, str(self.snapshot))
 
 
 class ReferMessage(Message):

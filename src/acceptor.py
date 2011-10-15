@@ -12,7 +12,7 @@ from node import *
 from connection import ConnectionPool
 from group import Group
 from peer import Peer
-from message import Message, PaxosMessage, HandshakeMessage, AckMessage
+from message import Message, PaxosMessage, GarbageCollectMessage
 from pvalue import PValue, PValueSet
 
 class Acceptor(Node):
@@ -30,7 +30,7 @@ class Acceptor(Node):
         self.ballotnumber = (0,0)
         self.last_accept_msg_id = -1
         self.accepted = PValueSet()
-        self.objectsnapshot = (0,None,None)
+        self.objectsnapshot = (0,None)
         
     def msg_prepare(self, conn, msg):
         """Handler for MSG_PREPARE.
@@ -80,15 +80,17 @@ class Acceptor(Node):
         self.send(replymsg,peer=msg.source)
 
     def msg_garbagecollect(self, conn, msg):
+        print("RECEIVED GARBAGE COLLECTION MESSAGE!")
         success = self.accepted.truncateto(msg.commandnumber)
         if success:
-            self.objectsnapshot = (msg.commandnumber,msg.proposal,msg.snapshot)
+            self.objectsnapshot = (msg.commandnumber,msg.snapshot)
         else:
             logger("Garbege Collection failed.")
         
     def cmd_paxos(self, args):
         """Shell command [paxos]: Print the paxos state of the Acceptor."""
-        print self.accepted
+        keytuples = self.accepted.pvalues.keys()
+        print sorted(keytuples, key=lambda keytuple: keytuple[0])
 
     def msg_output(self, conn, msg):
         dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)

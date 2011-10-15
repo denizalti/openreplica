@@ -147,7 +147,7 @@ class Client():
                                 replied = True
                         sys.stdout.flush()
             except ( IOError, EOFError ):
-                self.output()
+                #self.output()
                 os._exit(0)
 
     def output(self):
