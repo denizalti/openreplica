@@ -80,13 +80,12 @@ class Acceptor(Node):
         self.send(replymsg,peer=msg.source)
 
     def msg_garbagecollect(self, conn, msg):
-        # XXX needs some checks
-        # update saved object snapshot
-        self.objectsnapshot = (msg.commandnumber,msg.proposal,msg.snapshot) 
-        # truncate history
-        self.accepted.truncateto(msg.commandnumber)
+        success = self.accepted.truncateto(msg.commandnumber)
+        if success:
+            self.objectsnapshot = (msg.commandnumber,msg.proposal,msg.snapshot)
+        else:
+            logger("Garbege Collection failed.")
         
-    # debug functions
     def cmd_paxos(self, args):
         """Shell command [paxos]: Print the paxos state of the Acceptor."""
         print self.accepted

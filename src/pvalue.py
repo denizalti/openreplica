@@ -61,10 +61,19 @@ class PValueSet():
 
     def truncateto(self,commandnumber):
         # Truncate the history up to given commandnumber
-        allkeys = self.pvalues.keys()
+        keytuples = self.pvalues.keys()
+        allkeys = sorted(keytuples, key=lambda keytuple: keytuple[0])
+        lastkey = allkeys[0]
         for (cmdno,proposal) in allkeys:
-            if cmdno < commandnumber:
-                del self.pvalues[(cmdno,proposal)]
+            if cmdno == lastkey:
+                if cmdno < commandnumber:
+                    del self.pvalues[(cmdno,proposal)]
+                    lastkey += 1
+                else:
+                    break
+            else:
+                return False
+        return True
                     
     def union(self, otherpvalueset):
         """Unionizes the pvalues of givenPValueSet with the pvalues of the

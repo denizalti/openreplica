@@ -352,6 +352,10 @@ class Replica(Node):
         replica = Peer(args[0],int(args[1]),NODE_REPLICA)
         self.groups[NODE_REPLICA].remove(replica)
 
+    def garbage_collect(self, args):
+        """ garbage collect """
+        pass
+
     def cmd_showobject(self, args):
         """shell command [showobject]: print replicated object information""" 
         print self.object
