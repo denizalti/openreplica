@@ -33,7 +33,6 @@ from obj.condition import Condition
 from concoordprofiler import *
 
 backoff_event = Event()
-
 # Class used to collect responses to both PREPARE and PROPOSE messages
 class ResponseCollector():
     """ResponseCollector keeps the state related to both MSG_PREPARE and
@@ -90,8 +89,10 @@ class Replica(Node):
         self.pendingcommands = {}
         # commandnumbers known to be in use
         self.usedcommandnumbers = set()
-        self.calls = 0
-
+        # number for metacommands initiated from this replica
+        self.metacommandnumber = 0
+        # inconsistent client reads
+        self.callsfromclient = 0
         self.clientpool = ConnectionPool()
         
         # Measurement Variables
@@ -112,12 +113,12 @@ class Replica(Node):
         leaderping_thread = Timer(LIVENESSTIMEOUT, self.ping_leader)
         leaderping_thread.start()
 
-    def performcore(self, msg, slotno, dometaonly=False, designated=False):
+    def performcore(self, msg, slotnumber, dometaonly=False, designated=False):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
         to the managements of the Paxos protocol) with a delay of WINDOW commands."""
-        logger("---> SlotNo: %d Command: %s DoMetaOnly: %s" % (slotno, self.decisions[slotno], dometaonly))
-        command = self.decisions[slotno]
+        logger("---> SlotNumber: %d Command: %s DoMetaOnly: %s" % (slotnumber, self.decisions[slotnumber], dometaonly))
+        command = self.decisions[slotnumber]
         commandlist = command.command.split()
         commandname = commandlist[0]
         commandargs = commandlist[1:]
@@ -146,7 +147,7 @@ class Replica(Node):
                 # meta command, but the window has not passed yet, 
                 # so just mark it as executed without actually executing it
                 # the real execution will take place when the window has expired
-                self.add_to_executed(self.decisions[slotno], (CR_META, META, {}))
+                self.add_to_executed(self.decisions[slotnumber], (CR_META, META, {}))
                 return
             elif not dometaonly and not ismeta:
                 # this is the workhorse case that executes most normal commands
@@ -185,13 +186,21 @@ class Replica(Node):
             clientreplycode = CR_EXCEPTION
             unblocked = {}
             send_result_to_client = True
-        self.add_to_executed(self.decisions[slotno], (clientreplycode,givenresult,unblocked))
+        self.add_to_executed(self.decisions[slotnumber], (clientreplycode,givenresult,unblocked))
         
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
             if send_result_to_client and self.type == NODE_LEADER and command.client.getid() in self.clientpool.poolbypeer.keys():
                 #endtimer(command, 1)
                 self.send_reply_to_client(clientreplycode, givenresult, command)
+
+        if slotnumber % GARBAGEPERIOD == 0 and self.type == NODE_LEADER:
+            garbagecommand = Command(self.me, self.metacommandnumber, "garbage_collect")
+            self.metacommandnumber += 1
+            if self.leader_initializing:
+                self.handle_client_command(garbagecommand, prepare=True)
+            else:
+                self.handle_client_command(garbagecommand)
 
     def send_reply_to_client(self, clientreplycode, givenresult, command):
         logger("Sending REPLY to CLIENT")
@@ -501,7 +510,7 @@ class Replica(Node):
         - if leader: add connection to client connections and handle request"""
         #starttimer(msg.command, 1)
         self.check_leader_promotion()
-        self.calls += 1
+        self.callsfromclient += 1
         if self.type != NODE_LEADER:
             logger("not leader.. request rejected..")
             clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_REJECTED, inresponseto=msg.command.clientcommandnumber)
@@ -519,9 +528,9 @@ class Replica(Node):
 
     def msg_incclientrequest(self, conn, msg):
         """handles inconsistent requests from the client"""
-        if self.calls == 0:
+        if self.callsfromclient == 0:
             starttimer("A", 1)
-        self.calls += 1
+        self.callsfromclient += 1
         command = msg.command
         commandlist = command.command.split()
         commandname = commandlist[0]
