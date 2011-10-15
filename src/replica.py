@@ -11,7 +11,7 @@ import math
 import sys
 import os
 import signal
-import objectgenerator
+from proxygenerator import proxygenerator
 
 from pprint import pprint
 from node import *
@@ -20,7 +20,7 @@ from utils import *
 from connection import Connection, ConnectionPool
 from group import Group
 from peer import Peer
-from message import Message, PaxosMessage, HandshakeMessage, AckMessage, ClientMessage, ClientReplyMessage, UpdateMessage
+from message import Message, PaxosMessage, HandshakeMessage, AckMessage, ClientMessage, ClientReplyMessage, UpdateMessage, GarbageCollectMessage
 from command import Command
 from pvalue import PValue, PValueSet
 from exception import *
@@ -72,7 +72,7 @@ class Replica(Node):
         Node.__init__(self, nodetype)
         if nodetype == NODE_REPLICA:
             try:
-                self.object = objectgenerator.getobjectfromname(self.objectname)()
+                self.object = proxygenerator.getobjectfromname(self.objectname)()
             except Exception as e:
                 print e
                 print("Object cannot be found.")
@@ -195,7 +195,7 @@ class Replica(Node):
                 self.send_reply_to_client(clientreplycode, givenresult, command)
 
         if slotnumber % GARBAGEPERIOD == 0 and self.type == NODE_LEADER:
-            garbagecommand = Command(self.me, self.metacommandnumber, "garbage_collect")
+            garbagecommand = Command(self.me, self.metacommandnumber, "garbage_collect %d" % slotnumber)
             self.metacommandnumber += 1
             if self.leader_initializing:
                 self.handle_client_command(garbagecommand, prepare=True)
@@ -316,7 +316,13 @@ class Replica(Node):
 
     def garbage_collect(self, args):
         """ garbage collect """
-        pass
+        garbagecommandnumber = int(args[0])
+        print "Garbage Collection.."
+        garbagemsg = GarbageCollectMessage(MSG_GARBAGECOLLECT,self.me,commandnumber=garbagecommandnumber,snapshot=self.object)
+        print "Sending messages to "
+        for a in self.groups[NODE_ACCEPTOR]:
+            print a
+        self.send(garbagemsg,group=self.groups[NODE_ACCEPTOR])
 
     def cmd_showobject(self, args):
         """shell command [showobject]: print replicated object information""" 
@@ -329,7 +335,7 @@ class Replica(Node):
         for (commandnumber,command) in self.decisions.iteritems():
             temp = "%d:\t%s" %  (commandnumber, command)
             if command in self.executed:
-                temp += "\t%s\n" % (self.executed[command])
+                temp += "\t%s\n" % (str(self.executed[command]))
             print temp
             
 # LEADER STATE

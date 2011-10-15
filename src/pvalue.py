@@ -59,14 +59,15 @@ class PValueSet():
         index = (pvalue.commandnumber,pvalue.proposal)
         del self.pvalues[index]
 
-    def truncateto(self,commandnumber):
+    def truncateto(self, commandnumber):
         # Truncate the history up to given commandnumber
         keytuples = self.pvalues.keys()
         allkeys = sorted(keytuples, key=lambda keytuple: keytuple[0])
-        lastkey = allkeys[0]
+        lastkey = allkeys[0][0]
         for (cmdno,proposal) in allkeys:
             if cmdno == lastkey:
                 if cmdno < commandnumber:
+                    print "Deleting ", cmdno, ".."
                     del self.pvalues[(cmdno,proposal)]
                     lastkey += 1
                 else:
