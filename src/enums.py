@@ -55,6 +55,7 @@ BACKOFFINCREASE = 0.1
 
 METACOMMANDS = set(["add_acceptor", "del_acceptor", "add_replica", "del_replica", "garbage_collect"])
 WINDOW = 600000
+GARBAGEPERIOD = 10000
 
 NOOP = "do_noop"
 
