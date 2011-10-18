@@ -63,19 +63,24 @@ class PValueSet():
         # Truncate the history up to given commandnumber
         keytuples = self.pvalues.keys()
         allkeys = sorted(keytuples, key=lambda keytuple: keytuple[0])
+        # Sanity checking
         lastkey = allkeys[0][0]
+        candelete = True
         for (cmdno,proposal) in allkeys:
             if cmdno == lastkey:
-                if cmdno < commandnumber:
-                    print "Deleting ", cmdno, ".."
-                    del self.pvalues[(cmdno,proposal)]
-                    lastkey += 1
-                else:
-                    break
+                lastkey += 1
             else:
-                return False
+                candelete = False
+                break
+        # Truncating
+        if not candelete:
+            return False
+        for (cmdno,proposal) in allkeys:
+            if cmdno < commandnumber:
+                print "Deleting ", cmdno, ".."
+                del self.pvalues[(cmdno,proposal)]
         return True
-                    
+    
     def union(self, otherpvalueset):
         """Unionizes the pvalues of givenPValueSet with the pvalues of the
         PValueSet overwriting the (commandnumber,proposal) pairs with lower
