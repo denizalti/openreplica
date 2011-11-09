@@ -81,21 +81,26 @@ class Visitor(ast.NodeVisitor):
                     isopen = True
                 elif fvalue.id == 'setattr':
                     issetattr = True
+                    print "Can't setattr --> EXIT"
                 elif fvalue.id == 'getattr':
                     isgetattr = True
+                    print "Can't getattr --> EXIT"
                 elif fvalue.id == 'compile':
                     iscompile = True
+                    print "Can't compile --> EXIT"
                 elif fvalue.id == 'execfile':
                     isexec = True
+                    print "Can't execute --> EXIT"
                 elif fvalue.id == 'eval':
                     iseval = True
+                    print "Can't evaluate --> EXIT"
             if fname == 'args' and type(fvalue).__name__ == 'Str':
                 for arg in fvalue:
-                    if arg.__dict__['s'] == 'w' and isopen:
+                    if arg.__dict__['s'] == 'w' or arg.__dict__['s'] == 'a' and isopen:
                         print "Writing to file.. --> EXIT"
             if fname == 'args' and type(fvalue).__name__ == 'Name':
                 for arg in fvalue:
-                    if arg.__dict__['n'] == 'w' and isopen:
+                    if arg.__dict__['n'] == 'w' or arg.__dict__['s'] == 'a' and isopen:
                         print "Writing to file.. --> EXIT"
         os._exit(0)
 def main():
