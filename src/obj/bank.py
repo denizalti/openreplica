@@ -4,10 +4,6 @@ class Bank():
     def __init__(self):
         self.accounts = {}
 
-    def dene(self, args):
-        dene = 'w'
-        f = open('/deneme', dene)
-
     def open(self, args, **kwargs):
         accntno = args[0]
         if self.accounts.has_key(accntno):

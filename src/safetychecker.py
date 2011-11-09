@@ -9,15 +9,22 @@ parser.add_option("-n", "--objectname", action="store", dest="objectname", help=
 parser.add_option("-o", "--objectcode", action="store", dest="objectcode", help="client object code")
 (options, args) = parser.parse_args()
 
-DEBUG = True
+DEBUG = False
 
 class Visitor(ast.NodeVisitor):
     def generic_visit(self, node):
-        print "---", ast.dump(node)
+        if DEBUG:
+            print "---", ast.dump(node)
         ast.NodeVisitor.generic_visit(self, node)
 
     def visit_Import(self, node):
-        print "No imports allowed.. --> EXIT"
+        print "No imports allowed: %s --> EXIT" % node.names[0].name
+
+    def visit_ImportFrom(self, node):
+        print "No imports allowed: %s --> EXIT" % node.module
+
+    def visit_Exec(self, node):
+        print "Exec not allowed --> EXIT"
         
     def visit_Call(self, node):
         if DEBUG:
@@ -45,6 +52,7 @@ class Visitor(ast.NodeVisitor):
     def visit_Assign(self, node):
         if DEBUG:
             print "Assign :"
+        self.check_assignment(node)
         self.generic_visit(node)
 
     def visit_Expr(self, node):
@@ -52,71 +60,39 @@ class Visitor(ast.NodeVisitor):
             print "Expr :"
         self.generic_visit(node)
 
-    def addassignment(self, node):
-        global assignments
-        print "Adding assignment.."
-        for target in node.targets:
-            if type(target).__name__ == 'Name':
-               if type(node.value).__name__ == 'Name':
-                   assignments[target.id] = assignments[node.value.id]
-            elif type(target).__name__ == 'Attribute':
-                pass
-                
-        for fname,fvalue in ast.iter_fields(node):
-            if DEBUG:
-                print fname, " ", fvalue
+    def check_assignment(self, node):
+        if DEBUG:
+            print "Checking assignment.."
+        inapplicable = ["open","setattr","getattr","compile","exec","eval","execfile"]
+        if type(node.value).__name__ == 'Name':
+            if node.value.id in inapplicable:
+                print "Function assignment: %s --> EXIT" % node.value.id
 
     def check_functioncall(self, node):
         if DEBUG:
             print "Checking function call.."
-        isopen=issetattr=isgetattr=iscompile=isexec=iseval= False
+        inapplicable = ["setattr","getattr","compile","exec","eval","execfile"]
+        isopen = False
         for fname,fvalue in ast.iter_fields(node):
             if DEBUG:
                 print fname, " ", fvalue
-            #XXX: Do this in a more pythonic way
-            if type(fvalue).__name__ == 'Name':
-                #XXX: The Name doesn't have to be the original
-                #XXX: could be overwritten
+            if fname == 'func' and type(fvalue).__name__ == 'Name':
                 if fvalue.id == 'open':
                     isopen = True
-                elif fvalue.id == 'setattr':
-                    issetattr = True
-                    print "Can't setattr --> EXIT"
-                elif fvalue.id == 'getattr':
-                    isgetattr = True
-                    print "Can't getattr --> EXIT"
-                elif fvalue.id == 'compile':
-                    iscompile = True
-                    print "Can't compile --> EXIT"
-                elif fvalue.id == 'execfile':
-                    isexec = True
-                    print "Can't execute --> EXIT"
-                elif fvalue.id == 'eval':
-                    iseval = True
-                    print "Can't evaluate --> EXIT"
-            if fname == 'args' and type(fvalue).__name__ == 'Str':
+                elif fvalue.id in inapplicable:
+                    print "Forbidden function call: %s --> EXIT" % fvalue.id
+            if fname == 'args':
                 for arg in fvalue:
-                    if arg.__dict__['s'] == 'w' or arg.__dict__['s'] == 'a' and isopen:
-                        print "Writing to file.. --> EXIT"
-            if fname == 'args' and type(fvalue).__name__ == 'Name':
-                for arg in fvalue:
-                    if arg.__dict__['n'] == 'w' or arg.__dict__['s'] == 'a' and isopen:
-                        print "Writing to file.. --> EXIT"
-        os._exit(0)
+                    if type(arg).__name__ == 'Str':
+                        if arg.__dict__['s'] == 'w' or arg.__dict__['s'] == 'a' and isopen:
+                            print "Write to file --> EXIT"
+                    elif type(arg).__name__ == 'Name':
+                        print "File operation with variable argument: %s --> EXIT" % arg.id
 def main():
-    path = "/Users/denizalti/paxi/src/obj/bank.py"
+    path = "/Users/denizalti/paxi/src/safetytest.py"
     astnode = compile(open(path, 'rU').read(),"<string>","exec",_ast.PyCF_ONLY_AST)
-
     v = Visitor()
     v.visit(astnode)
-
-    #print astnode.body[0].names[0].name
-    #for child in ast.iter_child_nodes(astnode):
-    #    print ast.dump(child)
-
-    #astnode = compiler.parse(open(path, 'rU').read())
-    #print astnode.getChildren()
-    #print str(astnode)
 
 def check_imports(path):
     finder = ModuleFinder()
