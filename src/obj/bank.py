@@ -1,13 +1,12 @@
+import sys
+
 class Bank():
-    """Bank object that supports following functions:
-    - open: creates an Account with given id
-    - close: deletes an Account with given id
-    - debit: debits money from Account with given id
-    - deposit: deposits to Account with given id
-    - balance: returns balance of Account with given id
-    """
     def __init__(self):
         self.accounts = {}
+
+    def dene(self, args):
+        dene = 'w'
+        f = open('/deneme', dene)
 
     def open(self, args, **kwargs):
         accntno = args[0]
