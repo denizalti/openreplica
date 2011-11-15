@@ -1,3 +1,9 @@
+'''
+@author: denizalti
+@note: The profiler shows the performance of ConCoord.
+@date: May, 2011
+'''
+
 import time
 import threading
 import sys
