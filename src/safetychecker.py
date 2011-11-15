@@ -1,25 +1,36 @@
 import ast, _ast
-DEBUG = False
+DEBUG = True
 
-class Visitor(ast.NodeVisitor):
+class SafetyVisitor(ast.NodeVisitor):
+    def __init__(self):
+        self.safe = True
+    
     def generic_visit(self, node):
         if DEBUG:
             print "---", ast.dump(node)
         ast.NodeVisitor.generic_visit(self, node)
 
     def visit_Import(self, node):
+        self.safe = False
         print "%d | No imports allowed: %s --> EXIT" % (node.lineno,node.names[0].name)
 
     def visit_ImportFrom(self, node):
+        self.safe = False
         print "%d | No imports allowed: %s --> EXIT" % (node.lineno,node.module)
 
     def visit_Exec(self, node):
+        self.safe = False
         print "%d | Exec not allowed --> EXIT" % node.lineno
         
     def visit_Call(self, node):
         if DEBUG:
             print 'Call : '
         self.check_functioncall(node)
+        self.generic_visit(node)
+
+    def visit_ClassDef(self, node):
+        if DEBUG:
+            print 'ClassDef : ', node.name
         self.generic_visit(node)
 
     def visit_Name(self, node):
@@ -56,6 +67,7 @@ class Visitor(ast.NodeVisitor):
         inapplicable = ["open","setattr","getattr","compile","exec","eval","execfile"]
         if type(node.value).__name__ == 'Name':
             if node.value.id in inapplicable:
+                self.safe = False
                 print "%d | Function assignment: %s --> EXIT" % (node.lineno,node.value.id)
 
     def check_functioncall(self, node):
@@ -70,18 +82,22 @@ class Visitor(ast.NodeVisitor):
                 if fvalue.id == 'open':
                     isopen = True
                 elif fvalue.id in inapplicable:
+                    self.safe = False
                     print "%d | Forbidden function call: %s --> EXIT" % (node.lineno,fvalue.id)
             if fname == 'args':
                 for arg in fvalue:
                     if type(arg).__name__ == 'Str':
                         if arg.__dict__['s'] == 'w' or arg.__dict__['s'] == 'a' and isopen:
+                            self.safe = False
                             print "%d | Write to file --> EXIT" % node.lineno
                     elif type(arg).__name__ == 'Name':
+                        self.safe = False
                         print "%d | File operation with variable argument: %s --> EXIT" % (node.lineno,arg.id)
+
 def main():
     path = "/Users/denizalti/paxi/src/safetytest.py"
     astnode = compile(open(path, 'rU').read(),"<string>","exec",_ast.PyCF_ONLY_AST)
-    v = Visitor()
+    v = SafetyVisitor()
     v.visit(astnode)
 
 if __name__=='__main__':
