@@ -16,17 +16,6 @@ parser.add_option("-o", "--objectcode", action="store", dest="objectcode", help=
 parser.add_option("-r", "--replicas", action="store", dest="replicanum", default=1, help="number of replicas")
 (options, args) = parser.parse_args()
 
-def main():
-    objectfile = create_objectfile(options.objectfilename, options.objectcode)
-    if objectfile:
-        print "Objectfile cannot be created. Check permissions."
-        os._exit(0)
-    if not check_object(objectfile):
-        os._exit(0)
-    start_system(options.subdomain, objectfile, options.replicanum)
-    clientproxy = create_proxy(objectfile)
-    return clientproxy
-
 def create_objectfile(objectfilename, objectcode):
     print "creating object.."
     try:
@@ -50,13 +39,23 @@ def start_system(subdomain, objectfile, replicanum):
     i = Initializer()
     i.start_concoord(subdomain, objectfile, replicanum)
     
-    
 def create_proxy(objectfile):
     print "creating proxy.."
     proxyfile = createproxyfromname(objectname)
     f = open(proxyfile.name, 'r')
     proxystring = f.read()
     return proxystring
+
+def main():
+    objectfile = create_objectfile(options.objectfilename, options.objectcode)
+    if objectfile:
+        print "Objectfile cannot be created. Check permissions."
+        os._exit(0)
+    if not check_object(objectfile):
+        os._exit(0)
+    start_system(options.subdomain, objectfile, options.replicanum)
+    clientproxy = create_proxy(objectfile)
+    return clientproxy
 
 if __name__=='__main__':
     main()

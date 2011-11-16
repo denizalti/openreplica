@@ -1,5 +1,5 @@
 import ast, _ast
-DEBUG = True
+DEBUG = False
 
 class SafetyVisitor(ast.NodeVisitor):
     def __init__(self):
