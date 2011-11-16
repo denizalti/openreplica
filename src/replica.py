@@ -11,7 +11,7 @@ import math
 import sys
 import os
 import signal
-from proxygenerator import proxygenerator
+import proxygenerator
 
 from pprint import pprint
 from node import *

@@ -7,7 +7,7 @@ from time import sleep,time
 import os
 import sys
 import subprocess
-import objectgenerator
+import proxygenerator
 import time
 
 # The Initializer gets the subdomain, number of replicas to be initialized 
