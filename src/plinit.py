@@ -2,14 +2,10 @@ import xmlrpclib
 import sys
 
 s = xmlrpclib.ServerProxy('https://www.planet-lab.org/PLCAPI/', allow_none=True)
-
-# Create an empty dictionary (XML-RPC struct)
-auth = {}
 # Specify password authentication
-auth['Username'] = 'denizalti@gmail.com'
-auth['AuthString'] = '11235813'
-auth['AuthMethod'] = 'password'
-
+auth = {'Username': 'denizalti@gmail.com',
+        'AuthString': '11235813',
+        'AuthMethod': 'password'}
 authorized = s.AuthCheck(auth)
 if not authorized:
     print 'Authorization failed!'
