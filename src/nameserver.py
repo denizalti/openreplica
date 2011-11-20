@@ -84,16 +84,14 @@ class Nameserver(Tracker):
         return txtstr
     
     def handle_query(self, data, addr):
-        f = open("nameserverlog", 'a')
         query = dns.message.from_wire(data)
         response = dns.message.make_response(query)
-        f.write(strftime("%Y-%m-%d %H:%M:%S")+'\n')
         for question in query.question:
-            f.write("\nReceived Query for %s\n" % question.name)
+            logger("Received Query for %s\n" % question.name)
             print "Question Name: ", question.name
             print "My Domain: ", self.mydomain
             if question.rdtype in [dns.rdatatype.A, dns.rdatatype.TXT] and self.ismyname(question.name):
-                f.write("This is me %s" % str(question)) 
+                logger("This is me %s" % str(question)) 
                 flagstr = 'QR AA RD' # response, authoritative, recursion
                 answerstr = ''    
                 # A Queries --> List all Replicas starting with the Leader
@@ -107,7 +105,7 @@ class Nameserver(Tracker):
                 print responsestr
                 response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.NS and self.ismyname(question.name):
-                f.write("This is for my name server %s" % str(question)) 
+                logger("This is for my name server %s" % str(question)) 
                 flagstr = 'QR AA RD' # response, authoritative, recursion
                 answerstr = ''    
                 for address in self.nsresponse(question):
@@ -117,12 +115,11 @@ class Nameserver(Tracker):
                 print responsestr
                 response = dns.message.from_text(responsestr)
             else:
-                f.write("Name Error\n")
+                logger("Name Error\n")
                 flags = QR + AA + RD + dns.rcode.NXDOMAIN
                 response.flags = flags
-        f.write( "\nRESPONSE:\n%s\n---\n" % response)
+        logger( "RESPONSE:\n%s\n---\n" % response)
         self.udpsocket.sendto(response.to_wire(), addr)
-        f.close()
 
     def create_response(self, id, opcode=0, rcode=0, flags='', question='', answer='', authority='', additional=''):
         responsestr = "id %s\nopcode %s\nrcode %s\nflags %s\n;QUESTION\n%s\n;ANSWER\n%s\n;AUTHORITY\n%s\n;ADDITIONAL\n%s\n" % (str(id), OPCODES[opcode], RCODES[rcode], flags, question, answer, authority, additional)
