@@ -1,4 +1,4 @@
 #!/bin/sh
-
-tar -xvzf openreplica.tar.gz
-rm -rf openreplica.tar.gz
+# This is the script that will setup the concoord code
+unzip concoord.zip
+ls

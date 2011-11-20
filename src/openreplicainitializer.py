@@ -65,7 +65,8 @@ def start_nodes(subdomain, clientobjectfile, numreplicas):
         print node
     # upload concoord bundle
     print "[4] uploading files"
-    pathtoconcoordbundle = os.path.abspath("test.zip")
+    os.system('make -q')
+    pathtoconcoordbundle = os.path.abspath("concoord.tar.gz")
     pathtodnstester = os.path.abspath("testdnsport.py")
     pathtoshscript = os.path.abspath("plopenreplica.sh")
     print "bundle under ", pathtoconcoordbundle
@@ -82,7 +83,7 @@ def start_nodes(subdomain, clientobjectfile, numreplicas):
     if dnssuccess:
         print "DNS Port available."
     print "[6] initializing"
-    initsuccess,returnvalues = plconn.executecommand("rm *")
+    initsuccess,returnvalues = plconn.executecommand("tar xzf concoord.tar.gz")
     if initsuccess:
         print "Initialization done!"
     
