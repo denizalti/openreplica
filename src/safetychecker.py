@@ -84,10 +84,10 @@ class SafetyVisitor(ast.NodeVisitor):
                 elif fvalue.id in inapplicable:
                     self.safe = False
                     print "%d | Forbidden function call: %s --> EXIT" % (node.lineno,fvalue.id)
-            if fname == 'args':
+            if fname == 'args' and isopen:
                 for arg in fvalue:
                     if type(arg).__name__ == 'Str':
-                        if arg.__dict__['s'] == 'w' or arg.__dict__['s'] == 'a' and isopen:
+                        if arg.__dict__['s'] == 'w' or arg.__dict__['s'] == 'a':
                             self.safe = False
                             print "%d | Write to file --> EXIT" % node.lineno
                     elif type(arg).__name__ == 'Name':
