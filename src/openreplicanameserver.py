@@ -1,23 +1,32 @@
 from nameserver import *
 
 class OpenReplicaNameserver(Nameserver):
-    def __init__(self, domain):
-        Nameserver.__init__(self, domain=options.dnsname)
+    def __init__(self):
+        Nameserver.__init__(self, domain='openreplica.org')
+        self.specialdomain = dns.name.Name(['ipaddr','openreplica','org',''])
         self.nodes = {}
 
     def ismyname(self, name):
-        return name == self.mydomain or self.ismysubdomainname(name)
+        return name == self.mydomain or name.is_subdomain(self.specialdomain) or self.ismysubdomainname(name)
 
     def ismysubdomainname(self, name):
         for subdomain in self.nodes.keys():
             if name == dns.name.Name([subdomain, 'openreplica', 'org', '']):
                 return True
         return False
+
+    def aresponse(self, question):
+        if question.name.is_subdomain(self.specialdomain):
+            yield question.name.split(4)[0].to_text()
+        else:
+            for gname in [NODE_LEADER, NODE_REPLICA]:
+                for address in self.groups[gname].get_addresses():
+                    yield address
     
     def nsresponse(self, question):
-        if question.name == self.mydomain:
+        if question.name == self.mydomain or question.name.is_subdomain(self.specialdomain):
             for address in self.groups[NODE_NAMESERVER].get_addresses():
-                yield address+".foof." #XXX Can't pass only IP address
+                yield address+".ipaddr.openreplica.org."
         for subdomain in self.nodes.keys():
             if name == dns.name.Name([subdomain, 'openreplica', 'org', '']):
                 for node in self.nodes[subdomain]:
@@ -56,7 +65,7 @@ class OpenReplicaNameserver(Nameserver):
         return self.nodes.keys()
     
 def main():
-    nameservernode = OpenReplicaNameserver('openreplica.org')
+    nameservernode = OpenReplicaNameserver()
     nameservernode.startservice()
     signal.signal(signal.SIGINT, nameservernode.interrupt_handler)
     signal.signal(signal.SIGTERM, nameservernode.terminate_handler)

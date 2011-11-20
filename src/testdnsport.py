@@ -16,12 +16,9 @@ def testdnsport():
     try:
         thesocket.bind((addr,port))
     except socket.error:
-        return False
+        return 1
     thesocket.close()
-    return True
-    
-def main():
-    print testdnsport()
+    return 0
     
 if __name__=='__main__':
-    sys.exit(main())
+    sys.exit(testdnsport())
