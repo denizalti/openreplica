@@ -9,6 +9,7 @@ import os, sys, time
 import ast, _ast
 import subprocess
 from proxygenerator import *
+from openreplicacoordobj import *
 from plmanager import *
 from safetychecker import *
 
@@ -56,13 +57,11 @@ def start_nodes(subdomain, clientobjectfile, numreplicas):
     plconn = PLConnection()
     plconn.connect(numreplicas)
     # add nodes to open replica coordinator object
-    #openreplicacoordobj = OpenReplicaCoord()
-    #openreplicacoordobj.addsubdomain(subdomain)
-    #openreplicacoordobj.addnodestosubdomain(subdomain, plconn.getHosts())
-    nodes = {}
-    nodes[subdomain] = plconn.getHosts()
+    openreplicacoordobj = OpenReplicaCoord()
+    openreplicacoordobj.addsubdomain(subdomain)
+    openreplicacoordobj.addnodestosubdomain(subdomain, plconn.getHosts())
     print "Picked nodes: "
-    for node in nodes[subdomain]:
+    for node in openreplicacoordobj.nodes[subdomain]:
         print node
     # upload concoord bundle
     print "[4] uploading files"
@@ -79,11 +78,16 @@ def start_nodes(subdomain, clientobjectfile, numreplicas):
     plconn.upload(pathtoshscript)
     # initialize nodes
     print "[5] trying to bind to DNS port"
-    plconn.executecommand("sudo python testdnsport.py")
+    dnssuccess,returnvalues = plconn.executecommand("sudo python testdnsport.py")
+    if dnssuccess:
+        print "DNS Port available."
     print "[6] initializing"
+    initsuccess,returnvalues = plconn.executecommand("rm *")
+    if initsuccess:
+        print "Initialization done!"
     
 def create_proxy(objectfile, classname):
-    print "[6] creating proxy"
+    print "[7] creating proxy"
     modulename = os.path.basename(objectfile.name).rsplit(".")[0]
     proxyfile = createproxyfromname(modulename, classname)
     f = open(proxyfile.name, 'r')
