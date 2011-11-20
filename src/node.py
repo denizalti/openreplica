@@ -42,7 +42,7 @@ class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
     """ 
-    def __init__(self, nodetype, port=options.port, bootstrap=options.bootstrap, local=options.local, debugoption=options.debug, replicatedobject=options.object, dnsname=options.dnsname):
+    def __init__(self, nodetype, port=options.port, bootstrap=options.bootstrap, local=options.local, debugoption=options.debug, replicatedobject=options.object, dnsname=options.dnsname, instantiateobj=False):
         """Node State
         - addr: hostname for Node, detected automatically
         - port: port for Node, can be taken from the commandline (-p [port]) or
@@ -64,7 +64,7 @@ class Node():
         self.port = port
         self.connectionpool = ConnectionPool()
         self.type = nodetype
-        if self.type == NODE_REPLICA:
+        if instantiateobj:
             self.objectfilename, self.objectname = replicatedobject.split(".")
 
         self.receivedmessages_semaphore = Semaphore(0)

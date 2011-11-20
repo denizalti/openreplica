@@ -2,9 +2,17 @@ from nameserver import *
 
 class OpenReplicaNameserver(Nameserver):
     def __init__(self):
-        Nameserver.__init__(self, domain='openreplica.org')
+        Nameserver.__init__(self, domain='openreplica.org', instantiateobj=True)
         self.specialdomain = dns.name.Name(['ipaddr','openreplica','org',''])
-        self.nodes = {}
+
+    def performcore(self, msg, slotno, dometaonly=False, designated=False):
+        Replica.performcore(self, msg, slotno, dometaonly, designated)
+
+    def perform(self, msg):
+        Replica.perform(self, msg)
+            
+    def msg_perform(self, conn, msg):
+        Replica.msg_perform(self, conn, msg)
 
     def ismyname(self, name):
         return name == self.mydomain or name.is_subdomain(self.specialdomain) or self.ismysubdomainname(name)
@@ -31,39 +39,7 @@ class OpenReplicaNameserver(Nameserver):
             if name == dns.name.Name([subdomain, 'openreplica', 'org', '']):
                 for node in self.nodes[subdomain]:
                     yield node
-                
-    def addsubdomain(self, subdomain):
-         notexists = subdomain not in self.nodes
-         if notexists:
-            self.nodes[subdomain] = set()
-         return notexists
-     
-    def addnodestosubdomain(self, subdomain, nodes):
-        exists = subdomain in self.nodes
-        if exists:
-            for node in nodes:
-                self.nodes[subdomain].add(node)
-        return exists
-
-    def delsubdomain(self, subdomain):
-        exists = subdomain in self.nodes
-        if exists:
-            del self.nodes[subdomain]
-        return exists
-        
-    def delnodesfromsubdomain(self, subdomain, nodes):
-        exists = subdomain in self.nodes
-        if exists:
-            for node in nodes:
-                self.nodes[subdomain].remove(node)
-        return exists
-
-    def getnodes(self, subdomain):
-        return self.nodes[subdomain]
-
-    def getsubdomains(self):
-        return self.nodes.keys()
-    
+                    
 def main():
     nameservernode = OpenReplicaNameserver()
     nameservernode.startservice()
