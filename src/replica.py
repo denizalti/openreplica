@@ -72,7 +72,7 @@ class Replica(Node):
         Node.__init__(self, nodetype)
         if nodetype == NODE_REPLICA:
             try:
-                self.object = proxygenerator.getobjectfromname(self.objectname)()
+                self.object = proxygenerator.getobjectfromname(self.objectfilename, self.objectname)()
             except Exception as e:
                 print e
                 print("Object cannot be found.")
@@ -300,6 +300,18 @@ class Replica(Node):
         args = args[0].split(":")
         acceptor = Peer(args[0],int(args[1]),NODE_REPLICA)
         self.groups[NODE_ACCEPTOR].remove(acceptor)
+
+    def add_nameserver(self, args):
+        """add given acceptor to groups: args = addr:port"""
+        args = args[0].split(":")
+        node = Peer(args[0],int(args[1]),NODE_NAMESERVER)
+        self.groups[NODE_NAMESERVER].add(node)
+        
+    def del_nameserver(self, args):
+        """remove given acceptor from groups: args = addr:port"""
+        args = args[0].split(":")
+        node = Peer(args[0],int(args[1]),NODE_NAMESERVER)
+        self.groups[NODE_NAMESERVER].remove(node)
     
     def add_replica(self, args):
         """add given replica to groups: args = addr:port"""

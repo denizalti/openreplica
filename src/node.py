@@ -7,11 +7,11 @@ from optparse import OptionParser
 from threading import Thread, RLock, Lock, Condition, Timer, Semaphore
 from time import sleep,time
 from Queue import Queue
+import socket
 import os
 import sys
 import time
 import random
-import socket
 import select
 import copy
 import fcntl
@@ -32,6 +32,7 @@ parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="addres
 parser.add_option("-o", "--object", action="store", dest="object", default=None, help="replicated object")
 parser.add_option("-l", "--local", action="store_true", dest="local", default=False, help="initiates the node at localhost")
 parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
+parser.add_option("-n", "--name", action="store", dest="dnsname", default='', help="dns name")
 
 (options, args) = parser.parse_args()
 
@@ -41,7 +42,7 @@ class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
     """ 
-    def __init__(self, nodetype, port=options.port, bootstrap=options.bootstrap, local=options.local, debugoption=options.debug, replicatedobject=options.object):
+    def __init__(self, nodetype, port=options.port, bootstrap=options.bootstrap, local=options.local, debugoption=options.debug, replicatedobject=options.object, dnsname=options.dnsname):
         """Node State
         - addr: hostname for Node, detected automatically
         - port: port for Node, can be taken from the commandline (-p [port]) or
@@ -64,7 +65,7 @@ class Node():
         self.connectionpool = ConnectionPool()
         self.type = nodetype
         if self.type == NODE_REPLICA:
-            self.objectname = replicatedobject
+            self.objectfilename, self.objectname = replicatedobject.split(".")
 
         self.receivedmessages_semaphore = Semaphore(0)
         self.receivedmessages = []
@@ -303,10 +304,9 @@ class Node():
 
     def msg_heloreply(self, conn, msg):
         """add acceptors and replicas carried in the HELOREPLY message"""
-        for acceptor in msg.groups[NODE_ACCEPTOR]:
-            self.groups[NODE_ACCEPTOR].add(acceptor)
-        for replica in msg.groups[NODE_REPLICA]:
-            self.groups[NODE_REPLICA].add(replica)
+        for gname in msg.groups.keys():
+            for node in msg.groups[gname]:
+                self.groups[gname].add(node)
 
     def msg_bye(self, conn, msg):
         """Deletes the source of MSG_BYE from groups"""

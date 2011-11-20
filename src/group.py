@@ -21,7 +21,6 @@ class Group():
         - members: set of Peers that are in the Group
         """
         self.owner = owner
-        #self.members = set()
         self.members = []
 
     def remove(self,peer):
