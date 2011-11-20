@@ -10,10 +10,10 @@ from node import *
 
 class Tracker(Replica):
     """Tracker keeps track of the connectivity state of the system"""
-    def __init__(self, nodetype=NODE_TRACKER, port=None,  bootstrap=None):
-        Replica.__init__(self, nodetype=nodetype, port=5010, bootstrap=options.bootstrap)
+    def __init__(self, nodetype=NODE_TRACKER, instantiateobj=False, port=None,  bootstrap=None):
+        Replica.__init__(self, nodetype=nodetype, instantiateobj=instantiateobj, port=5010, bootstrap=options.bootstrap)
         
-    def performcore(self, msg, slotno, dometaonly=False):
+    def performcore(self, msg, slotno, dometaonly=False, designated=False):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
         to the managements of the Paxos protocol) with a delay of WINDOW commands."""

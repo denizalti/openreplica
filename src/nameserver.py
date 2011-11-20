@@ -27,8 +27,8 @@ RCODES = ['NOERROR','FORMERR','SERVFAIL','NXDOMAIN','NOTIMP','REFUSED']
 class Nameserver(Tracker):
     """Nameserver keeps track of the connectivity state of the system and replies to
     QUERY messages from dnsserver."""
-    def __init__(self, domain):
-        Tracker.__init__(self, nodetype=NODE_NAMESERVER, port=5000, bootstrap=options.bootstrap)
+    def __init__(self, domain, instantiateobj=False):
+        Tracker.__init__(self, nodetype=NODE_NAMESERVER, instantiateobj=instantiateobj, port=5000, bootstrap=options.bootstrap)
         self.mydomain = dns.name.Name((domain+".").split("."))
         self.udpport = 53
         self.udpsocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)

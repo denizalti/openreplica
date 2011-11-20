@@ -11,8 +11,8 @@ from node import *
 class Coordinator(Replica):
     """Coordinator keeps track of failures, it sends PING messages periodically and takes failed nodes
     out of the configuration"""
-    def __init__(self):
-        Replica.__init__(self, nodetype=NODE_COORDINATOR, port=5020, bootstrap=options.bootstrap)
+    def __init__(self,instantiateobj=False):
+        Replica.__init__(self, nodetype=NODE_COORDINATOR, instantiateobj=instantiateobj, port=5020, bootstrap=options.bootstrap)
 
         self.coordinatorcommandnumber = 1
         self.active = False

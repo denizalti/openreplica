@@ -60,7 +60,7 @@ class ResponseCollector():
 
 class Replica(Node):
     """Replica receives MSG_PERFORM from Leaders and execute corresponding commands."""
-    def __init__(self, nodetype=NODE_REPLICA, port=None,  bootstrap=None):
+    def __init__(self, nodetype=NODE_REPLICA, instantiateobj=True, port=None,  bootstrap=None):
         """Replica State
         - object: the object that Replica is replicating
 	- nexttoexecute: the commandnumber that relica is waiting for to execute
@@ -69,8 +69,8 @@ class Replica(Node):
         - proposals: proposals that are made by this replica kept as <commandnumber:command> mappings
         - pendingcommands: Set of unissiued commands that are waiting for the window to roll over to be issued
         """
-        Node.__init__(self, nodetype)
-        if nodetype == NODE_REPLICA:
+        Node.__init__(self, nodetype, instantiateobj=True)
+        if instantiateobj:
             try:
                 self.object = proxygenerator.getobjectfromname(self.objectfilename, self.objectname)()
             except Exception as e:
@@ -122,6 +122,7 @@ class Replica(Node):
         commandlist = command.command.split()
         commandname = commandlist[0]
         commandargs = commandlist[1:]
+        print "XXXXXXXXXXXXX", commandname, "   " ,commandargs
         ismeta = (commandname in METACOMMANDS)
         noop = (commandname == "noop")
         send_result_to_client = True
@@ -152,10 +153,12 @@ class Replica(Node):
             elif not dometaonly and not ismeta:
                 # this is the workhorse case that executes most normal commands
                 method = getattr(self.object, commandname)
+                print "Calling method: ", method
                 # Watch out for the lock release and acquire!
                 self.lock.release()
                 try:
                     givenresult = method(commandargs, _concoord_command=command)
+                    print "RESULT: ", givenresult
                     clientreplycode = CR_OK
                     send_result_to_client = True
                 except BlockingReturn as blockingretexp:
@@ -175,6 +178,7 @@ class Replica(Node):
                     for unblockedclientcommand in unblocked.iterkeys():
                         self.send_reply_to_client(CR_UNBLOCK, None, unblockedclientcommand)
                 except Exception as e:
+                    print e
                     givenresult = e
                     clientreplycode = CR_EXCEPTION
                     send_result_to_client = True
@@ -813,7 +817,7 @@ class Replica(Node):
                         logger("Sending PERFORM!")
                         self.send(performmessage, group=self.groups[NODE_REPLICA])
                         self.send(performmessage, group=self.groups[NODE_LEADER])
-                        #self.send(performmessage, group=self.groups[NODE_NAMESERVER])
+                        self.send(performmessage, group=self.groups[NODE_NAMESERVER])
                         self.send(performmessage, group=self.groups[NODE_COORDINATOR])
                         #XXX Minimize the number of replica classes
                     except:
