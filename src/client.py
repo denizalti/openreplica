@@ -14,19 +14,23 @@ from message import ClientMessage, Message, PaxosMessage, HandshakeMessage, AckM
 from command import Command
 from pvalue import PValue, PValueSet
 
-parser = OptionParser(usage="usage: %prog -b bootstrap -f file -d debug")
+parser = OptionParser(usage="usage: %prog -b bootstrap -f file -n serverdomainname -d debug")
 parser.add_option("-b", "--bootstrap", action="store", dest="bootstrap", help="address:port tuples separated with commas for bootstrap peers")
 parser.add_option("-f", "--file", action="store", dest="filename", default=None, help="inputfile")
+parser.add_option("-n", "--name", action="store", dest="name", default=None, help="domain name of the concoord instance")
 parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
 (options, args) = parser.parse_args()
 
 class Client():
     """Client sends requests and receives responses"""
-    def __init__(self, givenbootstraplist, inputfile, debug):
+    def __init__(self, givenbootstraplist, inputfile, debug, domainname):
+        self.servicedomainname = domainname
+        self.bootstraplist = []
         self.debug = debug
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
+        # XXX When we have the DNS running we won't need this function
         self.initializebootstraplist(givenbootstraplist)
         self.connecttobootstrap()
         myaddr = findOwnIP()
@@ -36,13 +40,20 @@ class Client():
         self.clientcommandnumber = 1
         self.file = inputfile
         
-    def initializebootstraplist(self,givenbootstraplist):
+    def initializebootstraplist(self, givenbootstraplist):
         bootstrapstrlist = givenbootstraplist.split(",")
-        self.bootstraplist = []
         for bootstrap in bootstrapstrlist:
             bootaddr,bootport = bootstrap.split(":")
             bootpeer = Peer(bootaddr,int(bootport),NODE_REPLICA)
             self.bootstraplist.append(bootpeer)
+
+    def refreshbootstraplist(self):
+        # XXX port number should be changed
+        nodes = self.socket.getaddrinfo(self.servicedomainname, 53)
+        tmplist = []
+        for node in nodes:
+            tmplist.append(Peer(node[4][0], int(node[4][1]), NODE_REPLICA))
+        self.bootstraplist = tmplist
 
     def connecttobootstrap(self):
         for bootpeer in self.bootstraplist:
@@ -102,7 +113,7 @@ class Client():
                         try:
                             timestamp, reply = self.conn.receive()
                         except KeyboardInterrupt:
-                            self.exit()
+                            self.graceexit()
                         if reply and (reply.type == MSG_CLIENTREPLY or reply.type == MSG_CLIENTMETAREPLY) and reply.inresponseto == mynumber:
                             if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
                                 currentbootstrap = self.bootstraplist.pop(0)
@@ -120,12 +131,14 @@ class Client():
                                 replied = True
                         sys.stdout.flush()
             except ( IOError, EOFError ):
-                os._exit(0)
+                self.graceexit()
+            except KeyboardInterrupt:
+                self.graceexit()
 
     def terminate_handler(self, signal, frame):
-        self.exit()
+        self.graceexit()
         
-    def exit(self):
+    def graceexit(self):
         if self.debug:
             print "Exiting.."
         sys.stdout.flush()
@@ -133,7 +146,7 @@ class Client():
         os._exit(0)
 
         
-theClient = Client(options.bootstrap, options.filename, options.debug)
+theClient = Client(options.bootstrap, options.filename, options.name, options.debug)
 theClient.clientloop()
 signal.signal(signal.SIGINT, theClient.terminate_handler)
 signal.signal(signal.SIGTERM, theClient.terminate_handler)
