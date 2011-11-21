@@ -74,8 +74,7 @@ class Replica(Node):
             try:
                 self.object = proxygenerator.getobjectfromname(self.objectfilename, self.objectname)()
             except Exception as e:
-                print e
-                print("Object cannot be found.")
+                logger("Object cannot be found.")
         self.leader_initializing = False
         self.nexttoexecute = 1
         # decided commands: <commandnumber:command>
@@ -122,7 +121,6 @@ class Replica(Node):
         commandlist = command.command.split()
         commandname = commandlist[0]
         commandargs = commandlist[1:]
-        print "XXXXXXXXXXXXX", commandname, "   " ,commandargs
         ismeta = (commandname in METACOMMANDS)
         noop = (commandname == "noop")
         send_result_to_client = True
@@ -153,12 +151,10 @@ class Replica(Node):
             elif not dometaonly and not ismeta:
                 # this is the workhorse case that executes most normal commands
                 method = getattr(self.object, commandname)
-                print "Calling method: ", method
                 # Watch out for the lock release and acquire!
                 self.lock.release()
                 try:
-                    givenresult = method(commandargs, _concoord_command=command)
-                    print "RESULT: ", givenresult
+                    givenresult = method(*commandargs, _concoord_command=command)
                     clientreplycode = CR_OK
                     send_result_to_client = True
                 except BlockingReturn as blockingretexp:
@@ -178,7 +174,7 @@ class Replica(Node):
                     for unblockedclientcommand in unblocked.iterkeys():
                         self.send_reply_to_client(CR_UNBLOCK, None, unblockedclientcommand)
                 except Exception as e:
-                    print e
+                    logger("Error during method invocation: %s" % e)
                     givenresult = e
                     clientreplycode = CR_EXCEPTION
                     send_result_to_client = True
@@ -211,7 +207,7 @@ class Replica(Node):
         clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=givenresult, replycode=clientreplycode, inresponseto=command.clientcommandnumber)
         clientconn = self.clientpool.get_connection_by_peer(command.client)
         if clientconn.thesocket == None:
-            print "Client disconnected.."
+            logger("Client disconnected.")
             return
         clientconn.send(clientreply)
 
@@ -333,11 +329,8 @@ class Replica(Node):
     def garbage_collect(self, args):
         """ garbage collect """
         garbagecommandnumber = int(args[0])
-        print "Garbage Collection.."
+        logger("Initiating garbage collection.")
         garbagemsg = GarbageCollectMessage(MSG_GARBAGECOLLECT,self.me,commandnumber=garbagecommandnumber,snapshot=self.object)
-        print "Sending messages to "
-        for a in self.groups[NODE_ACCEPTOR]:
-            print a
         self.send(garbagemsg,group=self.groups[NODE_ACCEPTOR])
 
     def cmd_showobject(self, args):
@@ -635,7 +628,7 @@ class Replica(Node):
         # since we never propose a commandnumber that is beyond the window, we can simply use the current acceptor set here
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, givencommandnumber, givenproposal)
         if len(prc.acceptors) == 0:
-            print "There are no acceptors!"
+            logger("There are no acceptors!")
             self.remove_from_proposals(givencommandnumber)
             self.add_to_pendingcommands(givencommandnumber, givenproposal)
             return
@@ -649,7 +642,7 @@ class Replica(Node):
         A command is proposed by running the PROPOSE stage of Paxos Protocol for the command.
         """
         if self.type != NODE_LEADER and self.type != NODE_COORDINATOR:
-            print "Not a Leader.."
+            logger("Ignoring received propose: not a leader.")
             return
         givencommandnumber = self.find_commandnumber()
         self.add_to_pendingcommands(givencommandnumber, givenproposal)
@@ -669,7 +662,7 @@ class Replica(Node):
         logger("preparing command: %d:%s with ballotnumber %s" % (givencommandnumber, givenproposal,str(newballotnumber)))
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], newballotnumber, givencommandnumber, givenproposal)
         if len(prc.acceptors) == 0:
-            print "There are no acceptors!"
+            print "There are no acceptors."
             self.remove_from_proposals(givencommandnumber)
             self.add_to_pendingcommands(givencommandnumber, givenproposal)
             return
@@ -782,7 +775,6 @@ class Replica(Node):
             if leader_causing_reject < self.me:
                 # if I lost to someone whose name precedes mine, back off more than he does
                 self.backoff += BACKOFFINCREASE
-            print "WILL SLEEP"
             time.sleep(self.backoff)
             self.do_command_prepare(prc.proposal)
 
@@ -941,12 +933,6 @@ class Replica(Node):
             print i
 
     def terminate_handler(self, signal, frame):
-        orepfile = file('testoutput/rep/%s%d'% (self.me.addr, self.me.port), 'a')
-        orepfile.write("%d" % (len(self.executed.keys())))
-        orepfile.close()
-        objfile = file('testoutput/obj/%s%d'% (self.me.addr, self.me.port), 'a')
-        objfile.write(str(self.object))
-        objfile.close()
         sys.stdout.flush()
         sys.stderr.flush()
         os._exit(0)
