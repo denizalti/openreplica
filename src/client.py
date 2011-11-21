@@ -44,16 +44,9 @@ class Client():
         bootstrapstrlist = givenbootstraplist.split(",")
         for bootstrap in bootstrapstrlist:
             bootaddr,bootport = bootstrap.split(":")
-            bootpeer = Peer(bootaddr,int(bootport),NODE_REPLICA)
-            self.bootstraplist.append(bootpeer)
-
-    def refreshbootstraplist(self):
-        # XXX port number should be changed
-        nodes = self.socket.getaddrinfo(self.servicedomainname, 53)
-        tmplist = []
-        for node in nodes:
-            tmplist.append(Peer(node[4][0], int(node[4][1]), NODE_REPLICA))
-        self.bootstraplist = tmplist
+            for node in self.socket.getaddrinfo(bootaddr, int(bootport)):
+                bootpeer = Peer(node[4][0],int(bootport),NODE_REPLICA)
+                self.bootstraplist.append(bootpeer)
 
     def connecttobootstrap(self):
         for bootpeer in self.bootstraplist:
