@@ -52,6 +52,12 @@ class Group():
             addresses.append(peer.addr)
         return addresses
 
+    def get_addrports(self):
+        addrports = []
+        for peer in self.members:
+            addrports.append((peer.addr,peer.port))
+        return addrports
+
     def __iter__(self):
         for peer in self.members:
             yield peer

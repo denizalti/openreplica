@@ -55,7 +55,7 @@ BACKOFFINCREASE = 0.1
 
 #XXX Fix METACOMMAND to start with _del....
 METACOMMANDS = set(["add_acceptor", "del_acceptor", "add_replica", "del_replica", "add_nameserver", "del_nameserver", "garbage_collect"])
-WINDOW = 20
+WINDOW = 1
 GARBAGEPERIOD = 100
 
 NOOP = "do_noop"

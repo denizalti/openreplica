@@ -19,10 +19,13 @@ try:
 except:
     logger("Install dnspython: http://www.dnspython.org/")
 
-RRTYPE = ['','A','NS','MD','MF','CNAME','SOA', 'MB', 'MG', 'MR', 'NULL', 'WKS', 'PTR', 'HINFO', 'MINFO', 'MX', 'TXT', 'RP']
+RRTYPE = ['','A','NS','MD','MF','CNAME','SOA', 'MB', 'MG', 'MR', 'NULL', 'WKS', 'PTR', 'HINFO', 'MINFO', 'MX', 'TXT', 'RP', 'AFSDB', 'X25', 'ISDN', 'RT', 'NSAP', 'NSAP_PTR', 'SIG', 'KEY', 'PX', 'GPOS', 'AAAA', 'LOC', 'NXT', '', '', 'SRV']
 RRCLASS = ['','IN','CS','CH','HS']
 OPCODES = ['QUERY','IQUERY','STATUS']
 RCODES = ['NOERROR','FORMERR','SERVFAIL','NXDOMAIN','NOTIMP','REFUSED']
+
+IPCONVERTER = '.ipaddr.openreplica.org.'
+SRVNAME = '_concoord._tcp.'
 
 class Nameserver(Tracker):
     """Nameserver keeps track of the connectivity state of the system and replies to
@@ -30,6 +33,7 @@ class Nameserver(Tracker):
     def __init__(self, domain, instantiateobj=False):
         Tracker.__init__(self, nodetype=NODE_NAMESERVER, instantiateobj=instantiateobj, port=5000, bootstrap=options.bootstrap)
         self.mydomain = dns.name.Name((domain+".").split("."))
+        self.mysrvdomain = dns.name.Name((SRVNAME+domain+".").split("."))
         self.udpport = 53
         self.udpsocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         try:
@@ -74,6 +78,11 @@ class Nameserver(Tracker):
     def nsresponse(self, question):
         for address in self.groups[NODE_NAMESERVER].get_addresses():
             yield address
+
+    def srvresponse(self, question):
+        for gname in [NODE_LEADER, NODE_REPLICA]:
+            for addr,port in self.groups[gname].get_addrports():
+                yield addr+IPCONVERTER,port
         
     def txtresponse(self, question):
         txtstr = ''
@@ -109,8 +118,16 @@ class Nameserver(Tracker):
                 flagstr = 'QR AA RD' # response, authoritative, recursion
                 answerstr = ''    
                 for address in self.nsresponse(question):
-                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", address
                     answerstr += self.create_answer_section(question, addr=address)
+                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+                print responsestr
+                response = dns.message.from_text(responsestr)
+            elif question.rdtype == dns.rdatatype.SRV and question.name == self.mysrvdomain:
+                logger("This is for me %s" % str(question)) 
+                flagstr = 'QR AA RD' # response, authoritative, recursion
+                answerstr = ''    
+                for address,port in self.srvresponse(question):
+                    answerstr += self.create_srv_answer_section(question, addr=address, port=port)
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 print responsestr
                 response = dns.message.from_text(responsestr)
@@ -125,6 +142,10 @@ class Nameserver(Tracker):
         responsestr = "id %s\nopcode %s\nrcode %s\nflags %s\n;QUESTION\n%s\n;ANSWER\n%s\n;AUTHORITY\n%s\n;ADDITIONAL\n%s\n" % (str(id), OPCODES[opcode], RCODES[rcode], flags, question, answer, authority, additional)
         return responsestr
 
+    def create_srv_answer_section(self, question, ttl=3600, rrclass=1, priority=0, weight=100, port='', addr=''):
+        answerstr = "%s %d %s %s %d %d %d %s\n" % (str(question.name), ttl, RRCLASS[rrclass], RRTYPE[question.rdtype], priority, weight, port, addr)
+        return answerstr
+
     def create_answer_section(self, question, ttl='3600', rrclass=1, addr='', name='', txt=None):
         if question.rdtype == dns.rdatatype.A or dns.rdatatype.TXT:
             answerstr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[question.rdtype]), str(addr) if txt is None else '"%s"' % txt)
@@ -133,14 +154,14 @@ class Nameserver(Tracker):
         return answerstr
     
     def create_authority_section(self, question, ttl='3600', rrclass=1, rrtype=1, addr='', name=''):
-        if rrtype == dns.rdatatype.A:
+        if rrtype == dns.rdatatype.A or dns.rdatatype.TXT:
             authoritystr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[rrtype]), str(addr))
         elif rrtype == dns.rdatatype.NS:
             authoritystr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[rrtype]), str(name))
         return authoritystr
 
     def create_additional_section(self, question, ttl='3600', rrclass=1, rrtype=1, addr='', name=''):
-        if rrtype == dns.rdatatype.A:
+        if rrtype == dns.rdatatype.A or dns.rdatatype.TXT:
             additionalstr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[rrtype]), str(addr))
         elif rrtype == dns.rdatatype.NS:
             additionalstr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[rrtype]), str(name))

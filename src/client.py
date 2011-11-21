@@ -44,7 +44,7 @@ class Client():
         bootstrapstrlist = givenbootstraplist.split(",")
         for bootstrap in bootstrapstrlist:
             bootaddr,bootport = bootstrap.split(":")
-            for node in self.socket.getaddrinfo(bootaddr, int(bootport)):
+            for node in socket.getaddrinfo(bootaddr, int(bootport)):
                 bootpeer = Peer(node[4][0],int(bootport),NODE_REPLICA)
                 self.bootstraplist.append(bootpeer)
 
