@@ -3,7 +3,7 @@
 @note: The Client
 @date: February 1, 2011
 '''
-import socket
+import socket, os, sys, time
 from optparse import OptionParser
 from threading import Thread, Lock, Condition
 from enums import *
@@ -14,12 +14,12 @@ from peer import Peer
 from message import ClientMessage, Message, PaxosMessage, HandshakeMessage, AckMessage
 from command import Command
 from pvalue import PValue, PValueSet
-import os
-import time
 
-parser = OptionParser(usage="usage: %prog -b bootstrap")
+parser = OptionParser(usage="usage: %prog -b bootstrap -f file -n serverdomainname -d debug")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port tuples separated with commas for bootstrap peers")
 parser.add_option("-f", "--file", action="store", dest="filename", default=None, help="inputfile")
+parser.add_option("-n", "--name", action="store", dest="name", default=None, help="domain name of the concoord instance")
+parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
 (options, args) = parser.parse_args()
 
 REPLY = 0
@@ -27,27 +27,22 @@ CONDITION = 1
 
 class Client():
     """Client sends requests and receives responses"""
-    def __init__(self, givenbootstraplist, inputfile):
-        """Initialize Client
-
-        Client State
-        - socket: socket of Client
-        - me: Peer instance of Client
-        - conn: Connection on Client's socket
-        - alive: liveness of Client
-         """
+    def __init__(self, givenbootstraplist, inputfile, domainname, debug):
+        self.servicedomainname = domainname
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+        self.bootstraplist = []
         self.initializebootstraplist(givenbootstraplist)
         self.connecttobootstrap()
         myaddr = findOwnIP()
         myport = self.socket.getsockname()[1] 
-        self.me = Peer(myaddr,myport,NODE_CLIENT)
+        self.me = Peer(myaddr,myport,NODE_CLIENT) 
         self.alive = True
         self.clientcommandnumber = 1
         self.commandlistcond = Condition()
         self.commandlist = []
         self.requests = {} # Keeps request:(reply, condition) mappings
+        setlogprefix("%s %s" % ('NODE_CLIENT',self.me.getid()))
 
     def startclientproxy():
         clientloop_thread = Thread(target=self.clientloop)
@@ -55,11 +50,18 @@ class Client():
 
     def initializebootstraplist(self,givenbootstraplist):
         bootstrapstrlist = givenbootstraplist.split(",")
-        self.bootstraplist = []
         for bootstrap in bootstrapstrlist:
             bootaddr,bootport = bootstrap.split(":")
             bootpeer = Peer(bootaddr,int(bootport),NODE_REPLICA)
             self.bootstraplist.append(bootpeer)
+
+    def refreshbootstraplist(self):
+        # XXX port number should be changed
+        nodes = self.socket.getaddrinfo(self.servicedomainname, 53)
+        tmplist = []
+        for node in nodes:
+            tmplist.append(Peer(node[4][0], int(node[4][1]), NODE_REPLICA))
+        self.bootstraplist = tmplist
 
     def connecttobootstrap(self):
         for bootpeer in self.bootstraplist:
@@ -117,7 +119,10 @@ class Client():
                     self.bootstraplist.append(currentbootstrap)
                     self.connecttobootstrap()
                     continue
-                reply = self.conn.receive()
+                try:
+                    reply = self.conn.receive()
+                except:
+                    logger("")
                 print "received: ", reply
                 if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                     if reply.replycode == cr_codes[REJECTED] or reply.replycode == cr_codes[LEADERNOTREADY]:
@@ -137,7 +142,7 @@ class Client():
                         self.requests[newcommand][REPLY] = reply
                         self.requests[newcommand][CONDITION].notify()
 
-theClient = Client(options.bootstrap, options.filename)
+theClient = Client(options.bootstrap, options.filename, options.name, options.debug)
 theClient.clientloop()
 
   
