@@ -83,7 +83,7 @@ def start_nodes(subdomain, clientobjectfile, numreplicas):
     if dnssuccess:
         print "DNS Port available."
     print "[6] initializing"
-    initsuccess,returnvalues = plconn.executecommand("tar xzf concoord.tar.gz")
+    initsuccess,returnvalues = plconn.executecommand("tar xzf concoord.tar.gz ")
     if initsuccess:
         print "Initialization done!"
     

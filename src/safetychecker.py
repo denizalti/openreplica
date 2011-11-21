@@ -1,6 +1,8 @@
 import ast, _ast
 DEBUG = False
 
+blacklist = ["open","setattr","getattr","compile","exec","eval","execfile", "globals"]
+
 class SafetyVisitor(ast.NodeVisitor):
     def __init__(self):
         self.safe = True
@@ -64,16 +66,16 @@ class SafetyVisitor(ast.NodeVisitor):
     def check_assignment(self, node):
         if DEBUG:
             print "Checking assignment.."
-        inapplicable = ["open","setattr","getattr","compile","exec","eval","execfile"]
+        global blacklist
         if type(node.value).__name__ == 'Name':
-            if node.value.id in inapplicable:
+            if node.value.id in blacklist:
                 self.safe = False
                 print "%d | Function assignment: %s --> EXIT" % (node.lineno,node.value.id)
 
     def check_functioncall(self, node):
         if DEBUG:
             print "Checking function call.."
-        inapplicable = ["setattr","getattr","compile","exec","eval","execfile"]
+        global blacklist
         isopen = False
         for fname,fvalue in ast.iter_fields(node):
             if DEBUG:
@@ -81,7 +83,7 @@ class SafetyVisitor(ast.NodeVisitor):
             if fname == 'func' and type(fvalue).__name__ == 'Name':
                 if fvalue.id == 'open':
                     isopen = True
-                elif fvalue.id in inapplicable:
+                elif fvalue.id in blacklist:
                     self.safe = False
                     print "%d | Forbidden function call: %s --> EXIT" % (node.lineno,fvalue.id)
             if fname == 'args' and isopen:

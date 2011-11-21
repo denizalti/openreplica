@@ -51,7 +51,6 @@ def main():
     abspath = os.path.abspath("bank.py")
     objectfile = open(abspath, "r")
     objectfile.close()
-    
     moduleobject = __import__('bank', globals(), locals(), [], -1)
     classobject = getattr(moduleobject, "Bank")
     create_file(classobject, objectfile)
