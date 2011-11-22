@@ -25,7 +25,7 @@ OPCODES = ['QUERY','IQUERY','STATUS']
 RCODES = ['NOERROR','FORMERR','SERVFAIL','NXDOMAIN','NOTIMP','REFUSED']
 
 IPCONVERTER = '.ipaddr.openreplica.org.'
-SRVNAME = '_concoord._tcp.'
+SRVNAME = '_concoord._tcp.hack.'
 
 class Nameserver(Tracker):
     """Nameserver keeps track of the connectivity state of the system and replies to
