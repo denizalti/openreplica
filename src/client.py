@@ -90,10 +90,16 @@ class Client():
                 if self.debug:
                     print e
                 continue
+
+    def _trynewbootstrap(self):
+        if self.domainname:
+            self.getbootstrapfromdomain(self.domainname)
+        else:
+            oldbootstrap = self.bootstraplist.pop(0)
+            self.bootstraplist.append(oldbootstrap)
+        self.connecttobootstrap()
     
     def clientloop(self):
-        """Accepts commands from the prompt and sends requests for the commands
-        and receives corresponding replies."""
         # Read commands from a file
         if self.file:
             f = open(self.file,'r')
@@ -126,12 +132,7 @@ class Client():
                     while not replied:
                         success = self.conn.send(cm)
                         if not success:
-                            if self.domainname:
-                                self.getbootstrapfromdomain(self.domainname)
-                            else:
-                                oldbootstrap = self.bootstraplist.pop(0)
-                                self.bootstraplist.append(oldbootstrap)
-                            self.connecttobootstrap()
+                            self._trynewbootstrap()
                             continue
                         try:
                             timestamp, reply = self.conn.receive()
@@ -139,9 +140,7 @@ class Client():
                             self._graceexit()
                         if reply and (reply.type == MSG_CLIENTREPLY or reply.type == MSG_CLIENTMETAREPLY) and reply.inresponseto == mynumber:
                             if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
-                                currentbootstrap = self.bootstraplist.pop(0)
-                                self.bootstraplist.append(currentbootstrap)
-                                self.connecttobootstrap()
+                                self._trynewbootstrap()
                                 continue
                             elif reply.replycode == CR_INPROGRESS:
                                 continue
@@ -152,7 +151,6 @@ class Client():
                                 print "timed out: %d seconds" % CLIENTRESENDTIMEOUT
                             if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                                 replied = True
-                        sys.stdout.flush()
             except ( IOError, EOFError ):
                 self._graceexit()
             except KeyboardInterrupt:
