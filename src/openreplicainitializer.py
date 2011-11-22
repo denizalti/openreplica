@@ -113,7 +113,6 @@ def main():
     start_nodes(options.subdomain, objectfile, options.replicanum)
     # Create Proxy
     clientproxy = create_proxy(objectfile, options.classname)
-    return clientproxy
     
 if __name__=='__main__':
     main()
