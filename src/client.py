@@ -13,25 +13,26 @@ from group import Group
 from message import ClientMessage, Message, PaxosMessage, HandshakeMessage, AckMessage
 from command import Command
 from pvalue import PValue, PValueSet
+try:
+    import dns.resolver
+except:
+    logger("Install dnspython: http://www.dnspython.org/")
 
 parser = OptionParser(usage="usage: %prog -b bootstrap -f file -n serverdomainname -d debug")
-parser.add_option("-b", "--bootstrap", action="store", dest="bootstrap", help="address:port tuples separated with commas for bootstrap peers")
+parser.add_option("-b", "--bootstrap", action="store", dest="bootstrap", default=None, help="address:port tuples separated with commas for bootstrap peers")
 parser.add_option("-f", "--file", action="store", dest="filename", default=None, help="inputfile")
-parser.add_option("-n", "--name", action="store", dest="name", default=None, help="domain name of the concoord instance")
 parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
 (options, args) = parser.parse_args()
 
 class Client():
     """Client sends requests and receives responses"""
-    def __init__(self, givenbootstraplist, inputfile, debug, domainname):
-        self.servicedomainname = domainname
-        self.bootstraplist = []
+    def __init__(self, givenbootstraplist, inputfile, debug):
         self.debug = debug
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
-        # XXX When we have the DNS running we won't need this function
-        self.initializebootstraplist(givenbootstraplist)
+        self.bootstraplist = []
+        self.discoverbootstrap(givenbootstraplist)
         self.connecttobootstrap()
         myaddr = findOwnIP()
         myport = self.socket.getsockname()[1] 
@@ -39,14 +40,23 @@ class Client():
         self.alive = True
         self.clientcommandnumber = 1
         self.file = inputfile
-        
-    def initializebootstraplist(self, givenbootstraplist):
+
+    def _getipportpairs(self, bootaddr, bootport):
+        for node in socket.getaddrinfo(bootaddr, bootport):
+            yield Peer(node[4][0],bootport,NODE_REPLICA)
+            
+    def discoverbootstrap(self, givenbootstraplist):
         bootstrapstrlist = givenbootstraplist.split(",")
         for bootstrap in bootstrapstrlist:
-            bootaddr,bootport = bootstrap.split(":")
-            for node in socket.getaddrinfo(bootaddr, int(bootport)):
-                bootpeer = Peer(node[4][0],int(bootport),NODE_REPLICA)
-                self.bootstraplist.append(bootpeer)
+            if bootstrap.find(":") >= 0:
+                bootaddr,bootport = bootstrap.split(":")
+                for peer in self._getipportpairs(bootaddr, int(bootport)):
+                    self.bootstraplist.append(peer)
+            else:
+                answers = dns.resolver.query('_concoord._tcp.hack.'+bootstrap, 'SRV')
+                for rdata in answers:
+                    for peer in self._getipportpairs(str(rdata.target), rdata.port):
+                        self.bootstraplist.append(peer)
 
     def connecttobootstrap(self):
         for bootpeer in self.bootstraplist:
@@ -139,7 +149,7 @@ class Client():
         os._exit(0)
 
         
-theClient = Client(options.bootstrap, options.filename, options.name, options.debug)
+theClient = Client(options.bootstrap, options.filename, options.debug)
 theClient.clientloop()
 signal.signal(signal.SIGINT, theClient.terminate_handler)
 signal.signal(signal.SIGTERM, theClient.terminate_handler)
