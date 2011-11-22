@@ -29,8 +29,6 @@ class ClientProxy():
         myaddr = findOwnIP()
         myport = self.socket.getsockname()[1]
         self.me = Peer(myaddr,myport,NODE_CLIENT) 
-        self.alive = True
-        self.clientcommandnumber = 1
         setlogprefix("%s %s" % ('NODE_CLIENT',self.me.getid()))
 
     def _getipportpairs(self, bootaddr, bootport):
@@ -90,9 +88,7 @@ class ClientProxy():
             self.bootstraplist.append(oldbootstrap)
         self.connecttobootstrap()
 
-    def invoke_command(self, commandname, *args):
-        mynumber = self.clientcommandnumber
-        self.clientcommandnumber += 1
+    def invoke_command(self, mynumber, commandname, *args):
         argstr = " ".join(str(arg) for arg in args)
         commandstr = commandname + " " + argstr
         command = Command(self.me, mynumber, commandstr)
