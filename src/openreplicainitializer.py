@@ -8,10 +8,10 @@ from time import sleep,time
 import os, sys, time
 import ast, _ast
 import subprocess
-from proxygenerator import *
-from openreplicacoordobj import *
 from plmanager import *
 from safetychecker import *
+from proxygenerator import *
+from openreplicacoordobjproxy import *
 
 parser = OptionParser(usage="usage: %prog -s subdomain -n objectname -o objectcode -r replicas")
 parser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
@@ -57,11 +57,11 @@ def start_nodes(subdomain, clientobjectfile, numreplicas):
     plconn = PLConnection()
     plconn.connect(numreplicas)
     # add nodes to open replica coordinator object
-    openreplicacoordobj = OpenReplicaCoord()
+    openreplicacoordobj = OpenReplicaCoordProxy('128.84.60.206:6668,128.84.60.206:6669')
     openreplicacoordobj.addsubdomain(subdomain)
-    openreplicacoordobj.addnodestosubdomain(subdomain, plconn.getHosts())
     print "Picked nodes: "
-    for node in openreplicacoordobj.nodes[subdomain]:
+    for node in plconn.getHosts():
+        openreplicacoordobj.addnodetosubdomain(subdomain, node)
         print node
     # upload concoord bundle
     print "[4] uploading files"
