@@ -18,21 +18,22 @@ try:
 except:
     logger("Install dnspython: http://www.dnspython.org/")
 
-parser = OptionParser(usage="usage: %prog -b bootstrap -f file -n serverdomainname -d debug")
-parser.add_option("-b", "--bootstrap", action="store", dest="bootstrap", default=None, help="address:port tuples separated with commas for bootstrap peers")
+parser = OptionParser(usage="usage: %prog -b bootstrap -f file -n name -d debug")
+parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="bootstrap ipaddr:port list or server domain name")
 parser.add_option("-f", "--file", action="store", dest="filename", default=None, help="inputfile")
 parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
 (options, args) = parser.parse_args()
 
 class Client():
     """Client sends requests and receives responses"""
-    def __init__(self, givenbootstraplist, inputfile, debug):
+    def __init__(self, bootstrap, inputfile, debug):
         self.debug = debug
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
         self.bootstraplist = []
-        self.discoverbootstrap(givenbootstraplist)
+        self.domainname = None
+        self.discoverbootstrap(bootstrap)
         self.connecttobootstrap()
         myaddr = findOwnIP()
         myport = self.socket.getsockname()[1] 
@@ -44,19 +45,35 @@ class Client():
     def _getipportpairs(self, bootaddr, bootport):
         for node in socket.getaddrinfo(bootaddr, bootport):
             yield Peer(node[4][0],bootport,NODE_REPLICA)
+
+    def _getbootstrapfromdomain(self, domainname):
+        answers = dns.resolver.query('_concoord._tcp.hack.'+domainname, 'SRV')
+        for rdata in answers:
+            for peer in self._getipportpairs(str(rdata.target), rdata.port):
+                yield peer
             
-    def discoverbootstrap(self, givenbootstraplist):
-        bootstrapstrlist = givenbootstraplist.split(",")
-        for bootstrap in bootstrapstrlist:
-            if bootstrap.find(":") >= 0:
-                bootaddr,bootport = bootstrap.split(":")
-                for peer in self._getipportpairs(bootaddr, int(bootport)):
-                    self.bootstraplist.append(peer)
-            else:
-                answers = dns.resolver.query('_concoord._tcp.hack.'+bootstrap, 'SRV')
-                for rdata in answers:
-                    for peer in self._getipportpairs(str(rdata.target), rdata.port):
+    def discoverbootstrap(self, givenbootstrap):
+        bootstrapstrlist = givenbootstrap.split(",")
+        try:
+            for bootstrap in bootstrapstrlist:
+                # The bootstrap list is read only during initialization
+                if bootstrap.find(":") >= 0:
+                    bootaddr,bootport = bootstrap.split(":")
+                    for peer in self._getipportpairs(bootaddr, int(bootport)):
                         self.bootstraplist.append(peer)
+                else:
+                    self.domainname = bootstrap
+                    for peer in self._getbootstrapfromdomain(self.domainname):
+                        self.bootstraplist.append(peer)
+        except ValueError:
+            print "bootstrap usage: ipaddr1:port1,ipaddr2:port2 or domainname"
+            self._graceexit()
+
+    def getbootstrapfromdomain(self, domainname):
+        tmpbootstraplist = []
+        for peer in self._getbootstrapfromdomain(self.domainname):
+            tmpbootstraplist.append(peer)
+        self.bootstraplist = tmpbootstraplist
 
     def connecttobootstrap(self):
         for bootpeer in self.bootstraplist:
@@ -109,14 +126,17 @@ class Client():
                     while not replied:
                         success = self.conn.send(cm)
                         if not success:
-                            currentbootstrap = self.bootstraplist.pop(0)
-                            self.bootstraplist.append(currentbootstrap)
+                            if self.domainname:
+                                self.getbootstrapfromdomain(self.domainname)
+                            else:
+                                oldbootstrap = self.bootstraplist.pop(0)
+                                self.bootstraplist.append(oldbootstrap)
                             self.connecttobootstrap()
                             continue
                         try:
                             timestamp, reply = self.conn.receive()
                         except KeyboardInterrupt:
-                            self.graceexit()
+                            self._graceexit()
                         if reply and (reply.type == MSG_CLIENTREPLY or reply.type == MSG_CLIENTMETAREPLY) and reply.inresponseto == mynumber:
                             if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
                                 currentbootstrap = self.bootstraplist.pop(0)
@@ -134,14 +154,14 @@ class Client():
                                 replied = True
                         sys.stdout.flush()
             except ( IOError, EOFError ):
-                self.graceexit()
+                self._graceexit()
             except KeyboardInterrupt:
-                self.graceexit()
+                self._graceexit()
 
     def terminate_handler(self, signal, frame):
-        self.graceexit()
+        self._graceexit()
         
-    def graceexit(self):
+    def _graceexit(self):
         if self.debug:
             print "Exiting.."
         sys.stdout.flush()
