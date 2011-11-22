@@ -4,10 +4,9 @@
 @date: February 1, 2011
 '''
 import socket, os, sys, time
-from optparse import OptionParser
 from threading import Thread, Lock, Condition
 from enums import *
-from utils import findOwnIP
+from utils import *
 from connection import ConnectionPool, Connection
 from group import Group
 from peer import Peer
@@ -15,18 +14,11 @@ from message import ClientMessage, Message, PaxosMessage, HandshakeMessage, AckM
 from command import Command
 from pvalue import PValue, PValueSet
 
-parser = OptionParser(usage="usage: %prog -b bootstrap -f file -d debug")
-parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="bootstrap ipaddr:port list or server domain name")
-parser.add_option("-f", "--file", action="store", dest="filename", default=None, help="inputfile")
-parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
-(options, args) = parser.parse_args()
-
 REPLY = 0
 CONDITION = 1
 
-class Client():
-    """Client sends requests and receives responses"""
-    def __init__(self, bootstrap, inputfile, debug):
+class ClientProxy():
+    def __init__(self, bootstrap, debug=False):
         self.debug = debug
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
@@ -43,6 +35,7 @@ class Client():
         self.commandlist = []
         self.requests = {} # Keeps request:(reply, condition) mappings
         setlogprefix("%s %s" % ('NODE_CLIENT',self.me.getid()))
+        self.startclientproxy()
 
     def _getipportpairs(self, bootaddr, bootport):
         for node in socket.getaddrinfo(bootaddr, bootport):
@@ -101,29 +94,39 @@ class Client():
             self.bootstraplist.append(oldbootstrap)
         self.connecttobootstrap()
 
-    def startclientproxy():
+    def startclientproxy(self):
         clientloop_thread = Thread(target=self.clientloop)
         clientloop_thread.start()
 
-    def invoke_command(self, commandname, args):
+    def invoke_command(self, commandname, *args):
+        print "Invoking command"
         mynumber = self.clientcommandnumber
         self.clientcommandnumber += 1
-        commandargs = commandname + " " + args
-        newcommand = Command(self.me, mynumber, commandargs)
+        argstr = " ".join(str(arg) for arg in args)
+        commandstr = commandname + " " + argstr
+        print commandstr
+        newcommand = Command(self.me, mynumber, commandstr)
         with self.commandlistcond:
             self.commandlist.append(newcommand)
             self.requests[newcommand] = (None,Condition())
             self.commandlistcond.notify()
         # Wait for the reply
-        while self.requests[newcommand][REPLY] == None:
-            self.requests[newcommand][CONDITION].wait()
-        # Check if there are exceptions and raise them.
-        if self.requests[newcommand][REPLY].replycode == cr_codes[METAREPLY]:
-            pass
-        elif self.requests[newcommand][REPLY].replycode == cr_codes[EXCEPTION]:
-            raise self.requests[newcommand][REPLY].reply
-        else:
-            return self.requests[newcommand][REPLY].reply
+        with self.requests[newcommand][CONDITION]:
+            while self.requests[newcommand][REPLY] == None:
+                self.requests[newcommand][CONDITION].wait()
+            # Check if there are exceptions and raise them.
+            if self.requests[newcommand][REPLY].type == MSG_CLIENTMETAREPLY:
+                print "Client METAREPLY"
+                if self.requests[newcommand][REPLY].replycode == CR_META:
+                    print "This is not used."
+                elif self.requests[newcommand][REPLY].replycode == CR_EXCEPTION:
+                    raise self.requests[newcommand][REPLY].reply
+                elif self.requests[newcommand][REPLY].replycode == CR_BLOCK:
+                    print "Blocking client."
+                elif self.requests[newcommand][REPLY].replycode == CR_UNBLOCK:
+                    print "Unblocking client."    
+            else:
+                return self.requests[newcommand][REPLY].reply
     
     def clientloop(self):
         while self.alive:
@@ -132,6 +135,7 @@ class Client():
                     while len(self.commandlist) == 0:
                         self.commandlistcond.wait()
                     command = self.commandlist.pop(0)
+                mycommand = command
                 cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
                 replied = False
                 if self.debug:
@@ -148,7 +152,7 @@ class Client():
                         timestamp, reply = self.conn.receive()
                     except KeyboardInterrupt:
                         self._graceexit()
-                    if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
+                    if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mycommand.clientcommandnumber:
                         if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
                             self._trynewbootstrap()
                             continue
@@ -156,18 +160,20 @@ class Client():
                             continue
                         else:
                             replied = True
-                            self.requests[newcommand][REPLY] = reply
-                            self.requests[newcommand][CONDITION].notify()
-                    elif reply and reply.type == MSG_CLIENTMETAREPLY and reply.inresponseto == mynumber:
+                            with self.requests[mycommand][CONDITION]:
+                                self.requests[mycommand] = (reply,self.requests[mycommand][CONDITION])
+                                self.requests[mycommand][CONDITION].notify()
+                    elif reply and reply.type == MSG_CLIENTMETAREPLY and reply.inresponseto == mycommand.clientcommandnumber:
                         # XXX Block/Unblock the client if necessary
                         print "Handling METAREPLY.."
                     if time.time() - starttime > CLIENTRESENDTIMEOUT:
                         if self.debug:
                             print "timed out: %d seconds" % CLIENTRESENDTIMEOUT
-                        if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
+                        if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mycommand.clientcommandnumber:
                             replied = True
-                            self.requests[newcommand][REPLY] = reply
-                            self.requests[newcommand][CONDITION].notify()
+                            with self.requests[mycommand][CONDITION]:
+                                self.requests[mycommand] = (reply,self.requests[mycommand][CONDITION])
+                                self.requests[mycommand][CONDITION].notify()
             except ( IOError, EOFError ):
                 self._graceexit()
             except KeyboardInterrupt:
@@ -177,11 +183,7 @@ class Client():
         self._graceexit()
         
     def _graceexit(self):
-        if self.debug:
-            print "Exiting.."
-        sys.stdout.flush()
-        sys.stderr.flush()
-        os._exit(0)
+        return
   
 
 
