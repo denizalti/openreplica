@@ -86,7 +86,7 @@ def start_nodes(subdomain, clientobjectfile, numreplicas):
     initsuccess,returnvalues = plconn.executecommand("tar xzf concoord.tar.gz ")
     if initsuccess:
         print "Initialization done!"
-    
+
 def create_proxy(objectfile, classname):
     print "[7] creating proxy"
     modulename = os.path.basename(objectfile.name).rsplit(".")[0]
