@@ -11,7 +11,6 @@ import math
 import sys
 import os
 import signal
-import proxygenerator
 
 from pprint import pprint
 from node import *
@@ -72,7 +71,7 @@ class Replica(Node):
         Node.__init__(self, nodetype, instantiateobj=True)
         if instantiateobj:
             try:
-                self.object = proxygenerator.getobjectfromname(self.objectfilename, self.objectname)()
+                self.object = getattr(__import__(self.objectfilename, globals(), locals(), [], -1), self.objectname)()
             except Exception as e:
                 logger("Object cannot be found.")
         self.leader_initializing = False

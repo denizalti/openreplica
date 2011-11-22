@@ -46,14 +46,3 @@ def createproxyfromname(modulename, classname):
 def getobjectfromname(modulename, classname):
     moduleobject = __import__(modulename, globals(), locals(), [], -1)
     return getattr(moduleobject, classname)
-
-def main():
-    abspath = os.path.abspath("bank.py")
-    objectfile = open(abspath, "r")
-    objectfile.close()
-    moduleobject = __import__('bank', globals(), locals(), [], -1)
-    classobject = getattr(moduleobject, "Bank")
-    create_file(classobject, objectfile)
-
-if __name__=='__main__':
-    main()

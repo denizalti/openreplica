@@ -122,7 +122,7 @@ class Nameserver(Tracker):
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 print responsestr
                 response = dns.message.from_text(responsestr)
-            elif question.rdtype == dns.rdatatype.SRV and question.name == self.mysrvdomain:
+            elif question.rdtype == dns.rdatatype.SRV and self.ismyname(question.name):
                 logger("This is for me %s" % str(question)) 
                 flagstr = 'QR AA RD' # response, authoritative, recursion
                 answerstr = ''    
@@ -142,25 +142,25 @@ class Nameserver(Tracker):
         responsestr = "id %s\nopcode %s\nrcode %s\nflags %s\n;QUESTION\n%s\n;ANSWER\n%s\n;AUTHORITY\n%s\n;ADDITIONAL\n%s\n" % (str(id), OPCODES[opcode], RCODES[rcode], flags, question, answer, authority, additional)
         return responsestr
 
-    def create_srv_answer_section(self, question, ttl=3600, rrclass=1, priority=0, weight=100, port='', addr=''):
+    def create_srv_answer_section(self, question, ttl=30, rrclass=1, priority=0, weight=100, port='', addr=''):
         answerstr = "%s %d %s %s %d %d %d %s\n" % (str(question.name), ttl, RRCLASS[rrclass], RRTYPE[question.rdtype], priority, weight, port, addr)
         return answerstr
 
-    def create_answer_section(self, question, ttl='3600', rrclass=1, addr='', name='', txt=None):
+    def create_answer_section(self, question, ttl='30', rrclass=1, addr='', name='', txt=None):
         if question.rdtype == dns.rdatatype.A or dns.rdatatype.TXT:
             answerstr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[question.rdtype]), str(addr) if txt is None else '"%s"' % txt)
         elif question.rdtype == dns.rdatatype.NS:
             answerstr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[question.rdtype]), str(name))
         return answerstr
     
-    def create_authority_section(self, question, ttl='3600', rrclass=1, rrtype=1, addr='', name=''):
+    def create_authority_section(self, question, ttl='30', rrclass=1, rrtype=1, addr='', name=''):
         if rrtype == dns.rdatatype.A or dns.rdatatype.TXT:
             authoritystr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[rrtype]), str(addr))
         elif rrtype == dns.rdatatype.NS:
             authoritystr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[rrtype]), str(name))
         return authoritystr
 
-    def create_additional_section(self, question, ttl='3600', rrclass=1, rrtype=1, addr='', name=''):
+    def create_additional_section(self, question, ttl='30', rrclass=1, rrtype=1, addr='', name=''):
         if rrtype == dns.rdatatype.A or dns.rdatatype.TXT:
             additionalstr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[rrtype]), str(addr))
         elif rrtype == dns.rdatatype.NS:
