@@ -15,6 +15,10 @@ import random
 import select
 import copy
 import fcntl
+try:
+    import dns.resolver
+except:
+    logger("Install dnspython: http://www.dnspython.org/")
 
 from enums import *
 from utils import *
@@ -42,7 +46,7 @@ class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
     """ 
-    def __init__(self, nodetype, port=options.port, bootstrap=options.bootstrap, local=options.local, debugoption=options.debug, replicatedobject=options.object, dnsname=options.dnsname, instantiateobj=False):
+    def __init__(self, nodetype, port=options.port, givenbootstraplist=options.bootstrap, local=options.local, debugoption=options.debug, replicatedobject=options.object, dnsname=options.dnsname, instantiateobj=False):
         """Node State
         - addr: hostname for Node, detected automatically
         - port: port for Node, can be taken from the commandline (-p [port]) or
@@ -84,7 +88,6 @@ class Node():
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
         self.socket.setblocking(0)
-        
         for i in range(30):
             try:
                 self.socket.bind((self.addr,self.port))
@@ -116,18 +119,46 @@ class Node():
             setlogprefix("%s %s" % (node_names[self.type],self.id))
         self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_LEADER:Group(self.me), \
                        NODE_TRACKER:Group(self.me), NODE_COORDINATOR:Group(self.me), NODE_NAMESERVER:Group(self.me)}
+        
         # connect to the bootstrap node
-        if bootstrap:
-            logger("connecting to %s" % bootstrap)
-            bootaddr,bootport = bootstrap.split(":")
-            bootaddr = socket.gethostbyname(bootaddr)
-            bootpeer = Peer(bootaddr,int(bootport), NODE_REPLICA)
-            helomessage = HandshakeMessage(MSG_HELO, self.me)
-            self.send(helomessage, peer=bootpeer)
-            self.groups[NODE_REPLICA].add(bootpeer)
+        if givenbootstraplist:
+            self.bootstraplist = []
+            self.discoverbootstrap(givenbootstraplist)
+            self.connecttobootstrap()
+            
         if self.type == NODE_REPLICA or self.type == NODE_TRACKER or self.type == NODE_NAMESERVER or self.type == NODE_COORDINATOR:
             self.stateuptodate = False
         print self.id
+
+    def _getipportpairs(self, bootaddr, bootport):
+        for node in socket.getaddrinfo(bootaddr, bootport):
+            yield Peer(node[4][0],bootport,NODE_REPLICA)
+
+    def discoverbootstrap(self, givenbootstraplist):
+        bootstrapstrlist = givenbootstraplist.split(",")
+        for bootstrap in bootstrapstrlist:
+            if bootstrap.find(":") >= 0:
+                bootaddr,bootport = bootstrap.split(":")
+                for peer in self._getipportpairs(bootaddr, int(bootport)):
+                    self.bootstraplist.append(peer)
+            else:
+                answers = dns.resolver.query('_concoord._tcp.hack.'+bootstrap, 'SRV')
+                for rdata in answers:
+                    for peer in self._getipportpairs(str(rdata.target), rdata.port):
+                        self.bootstraplist.append(peer)
+
+    def connecttobootstrap(self):
+        for bootpeer in self.bootstraplist:
+            try:
+                logger("trying to connect to bootstrap: %s" % bootpeer)
+                helomessage = HandshakeMessage(MSG_HELO, self.me)
+                self.send(helomessage, peer=bootpeer)
+                self.groups[NODE_REPLICA].add(bootpeer)
+                logger("connected to bootstrap: %s:%d" % (bootpeer.addr,bootpeer.port))
+                break
+            except socket.error, e:
+                print e
+                continue
 
     def startservice(self):
         """Starts the background services associated with a node."""
