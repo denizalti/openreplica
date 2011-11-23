@@ -261,7 +261,7 @@ class Replica(Node):
         """received a PERFORM message, perform it and send an UPDATE message to the source if necessary"""
         self.perform(msg)
 
-        if not self.stateuptodate and self.type == NODE_REPLICA:
+        if not self.stateuptodate and (self.type == NODE_REPLICA or self.type == NODE_NAMESERVER):
             logger("HAS TO UPDATE!")
             if msg.commandnumber == 1:
                 self.stateuptodate = True

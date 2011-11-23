@@ -142,7 +142,7 @@ class Node():
                 for peer in self._getipportpairs(bootaddr, int(bootport)):
                     self.bootstraplist.append(peer)
             else:
-                answers = dns.resolver.query('_concoord._tcp.hack.'+bootstrap, 'SRV')
+                answers = dns.resolver.query('_concoord._tcp.'+bootstrap, 'SRV')
                 for rdata in answers:
                     for peer in self._getipportpairs(str(rdata.target), rdata.port):
                         self.bootstraplist.append(peer)

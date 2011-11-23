@@ -61,7 +61,7 @@ def start_nodes(subdomain, clientobjectfile, numreplicas):
     openreplicacoordobj.addsubdomain(subdomain)
     print "Picked nodes: "
     for node in plconn.getHosts():
-        openreplicacoordobj.addnodetosubdomain(subdomain, node)
+        openreplicacoordobj.addnodetosubdomain(subdomain, node+':7897')
         print node
     # upload concoord bundle
     print "[4] uploading files"
