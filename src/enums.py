@@ -9,14 +9,13 @@ import enums
 # message types
 MSG_ACK, \
          MSG_PREPARE, MSG_PREPARE_ADOPTED, MSG_PREPARE_PREEMPTED, MSG_PROPOSE, MSG_PROPOSE_ACCEPT, MSG_PROPOSE_REJECT, \
-         MSG_HELO, MSG_HELOREPLY, MSG_BYE, \
+         MSG_HELO, MSG_HELOREPLY, MSG_PING, MSG_BYE, \
          MSG_UPDATE, MSG_UPDATEREPLY, \
          MSG_PERFORM, MSG_RESPONSE, \
          MSG_CLIENTREQUEST, MSG_CLIENTREPLY, MSG_CLIENTMETAREPLY, MSG_INCCLIENTREQUEST, \
          MSG_GARBAGECOLLECT, \
-         MSG_QUERY, MSG_QUERYREPLY, \
          MSG_OUTPUT, \
-         MSG_REFER = range(23)
+         MSG_REFER = range(22)
 
 # node types 
 NODE_ACCEPTOR, NODE_REPLICA, NODE_LEADER, NODE_CLIENT, NODE_TRACKER, NODE_NAMESERVER, NODE_COORDINATOR = range(7)
@@ -54,7 +53,7 @@ BALLOTNODE = 1
 BACKOFFINCREASE = 0.1
 
 #XXX Fix METACOMMAND to start with _del....
-METACOMMANDS = set(["add_acceptor", "del_acceptor", "add_replica", "del_replica", "add_nameserver", "del_nameserver", "garbage_collect"])
+METACOMMANDS = set(["_add_node", "_del_node", "_garbage_collect"])
 WINDOW = 1
 GARBAGEPERIOD = 100
 

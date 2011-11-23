@@ -19,7 +19,7 @@ from utils import *
 from connection import Connection, ConnectionPool
 from group import Group
 from peer import Peer
-from message import Message, PaxosMessage, HandshakeMessage, AckMessage, ClientMessage, ClientReplyMessage, UpdateMessage, GarbageCollectMessage
+from message import *
 from command import Command
 from pvalue import PValue, PValueSet
 from exception import *
@@ -68,7 +68,7 @@ class Replica(Node):
         - proposals: proposals that are made by this replica kept as <commandnumber:command> mappings
         - pendingcommands: Set of unissiued commands that are waiting for the window to roll over to be issued
         """
-        Node.__init__(self, nodetype, instantiateobj=True)
+        Node.__init__(self, nodetype, instantiateobj=instantiateobj)
         if instantiateobj:
             try:
                 self.object = getattr(__import__(self.objectfilename, globals(), locals(), [], -1), self.objectname)()
@@ -240,7 +240,7 @@ class Replica(Node):
                 # the window just got bumped by one
                 # check if there are pending commands, and issue one of them
                 self.issue_pending_command(self.nexttoexecute)
-            elif self.decisions[self.nexttoexecute] not in self.executed:
+            elif requestedcommand not in self.executed:
                 logger("executing command %d." % self.nexttoexecute)
                 # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
                 # We are calling performcore 2 times, the timing gets screwed plus this is very unefficient :(
@@ -288,44 +288,17 @@ class Replica(Node):
     def do_noop(self):
         pass
 
-    def add_acceptor(self, args):
-        """add given acceptor to groups: args = addr:port"""
-        args = args[0].split(":")
-        acceptor = Peer(args[0],int(args[1]),NODE_ACCEPTOR)
-        self.groups[NODE_ACCEPTOR].add(acceptor)
+    def _add_node(self, type, name):
+        ipaddr,port = name.split(":")
+        nodepeer = Peer(ipaddr,int(port),type)
+        self.groups[type].add(nodepeer)
         
-    def del_acceptor(self, args):
-        """remove given acceptor from groups: args = addr:port"""
-        args = args[0].split(":")
-        acceptor = Peer(args[0],int(args[1]),NODE_REPLICA)
-        self.groups[NODE_ACCEPTOR].remove(acceptor)
+    def _del_node(self, type, name):
+        ipaddr,port = name.split(":")
+        nodepeer = Peer(ipaddr,int(port),type)
+        self.groups[type].remove(nodepeer)
 
-    def add_nameserver(self, args):
-        """add given acceptor to groups: args = addr:port"""
-        args = args[0].split(":")
-        node = Peer(args[0],int(args[1]),NODE_NAMESERVER)
-        self.groups[NODE_NAMESERVER].add(node)
-        
-    def del_nameserver(self, args):
-        """remove given acceptor from groups: args = addr:port"""
-        args = args[0].split(":")
-        node = Peer(args[0],int(args[1]),NODE_NAMESERVER)
-        self.groups[NODE_NAMESERVER].remove(node)
-    
-    def add_replica(self, args):
-        """add given replica to groups: args = addr:port"""
-        args = args[0].split(":")
-        replica = Peer(args[0],int(args[1]),NODE_REPLICA)
-        if replica.getid() != self.me.getid():
-            self.groups[NODE_REPLICA].add(replica)
-        
-    def del_replica(self, args):
-        """remove given replica from groups: args = addr:port"""
-        args = args[0].split(":")
-        replica = Peer(args[0],int(args[1]),NODE_REPLICA)
-        self.groups[NODE_REPLICA].remove(replica)
-
-    def garbage_collect(self, args):
+    def _garbage_collect(self, args):
         """ garbage collect """
         garbagecommandnumber = int(args[0])
         logger("Initiating garbage collection.")
@@ -810,7 +783,6 @@ class Replica(Node):
                         self.send(performmessage, group=self.groups[NODE_LEADER])
                         self.send(performmessage, group=self.groups[NODE_NAMESERVER])
                         self.send(performmessage, group=self.groups[NODE_COORDINATOR])
-                        #XXX Minimize the number of replica classes
                     except:
                         pass
                     self.perform(performmessage, designated=True)
@@ -856,9 +828,9 @@ class Replica(Node):
             currentleader = self.find_leader()
             if currentleader != self.me:
                 logger("Sending PING to %s" % currentleader)
-                helomessage = HandshakeMessage(MSG_HELO, self.me)
+                pingmessage = HandshakeMessage(MSG_PING, self.me)
                 try:
-                    self.send(helomessage, peer=currentleader)
+                    self.send(pingmessage, peer=currentleader)
                 except:
                     logger("removing current leader from the replicalist")
                     self.groups[NODE_REPLICA].remove(currentleader)
@@ -874,6 +846,37 @@ class Replica(Node):
             except:
                 logger("removing current leader from the replicalist")
                 self.groups[NODE_REPLICA].remove(currentleader)
+
+    def msg_helo(self, conn, msg):
+        # This is the first acceptor, it has to be added by this replica
+        if msg.source.type == NODE_ACCEPTOR and len(self.groups[msg.source.type]) == 0:
+            self.groups[msg.source.type].add(msg.source)
+            heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, groups=self.groups)
+            self.send(heloreplymessage, peer=msg.source)
+            # Agree with other Replicas about adding this acceptor
+            addcommand = self.create_add_command(msg.source)
+            self.check_leader_promotion()
+            self.do_command_prepare(addcommand)
+        elif len(self.groups[NODE_COORDINATOR]) > 0:
+            refermessage = ReferMessage(MSG_REFER, self.me, referredpeer=msg.source)
+            self.send(refermessage, group=self.groups[NODE_COORDINATOR])
+        else:
+            addcommand = self.create_add_command(msg.source)
+            self.do_command_prepare(addcommand)
+
+    def create_delete_command(self, node):
+        mynumber = self.metacommandnumber
+        self.metacommandnumber += 1
+        operation = "_del_node %s %s:%d" % (node_names[node.type], node.addr, node.port)
+        command = Command(self.me, mynumber, operation)
+        return command
+
+    def create_add_command(self, node):
+        mynumber = self.metacommandnumber
+        self.metacommandnumber += 1
+        operation = "_add_node %s %s:%d" % (node_names[node.type], node.addr, node.port)
+        command = Command(self.me, mynumber, operation)
+        return command
 
     # Debug Methods
     def cmd_command(self, args):

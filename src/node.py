@@ -25,7 +25,7 @@ from utils import *
 from connection import ConnectionPool,Connection
 from group import Group
 from peer import Peer
-from message import Message, HandshakeMessage, AckMessage, MessageInfo
+from message import *
 from command import Command
 from pvalue import PValue, PValueSet
 from concoordprofiler import *
@@ -328,16 +328,22 @@ class Node():
     # message handlers
     #
     def msg_helo(self, conn, msg):
-        """Add the other peer into the matching group"""
-        heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, groups=self.groups)
-        self.send(heloreplymessage, peer=msg.source)
-        self.groups[msg.source.type].add(msg.source)
+        if len(self.groups[NODE_COORDINATOR]) > 0:
+            refermessage = ReferMessage(MSG_REFER, self.me, referredpeer=msg.source)
+            self.send(refermessage, group=self.groups[NODE_COORDINATOR])
+        else:
+            return
 
     def msg_heloreply(self, conn, msg):
-        """add acceptors and replicas carried in the HELOREPLY message"""
-        for gname in msg.groups.keys():
-            for node in msg.groups[gname]:
-                self.groups[gname].add(node)
+        for nodetype in msg.groups.keys():
+            for node in msg.groups[nodetype]:
+                self.groups[nodetype].add(node)
+
+    def msg_ping(self, conn, msg):
+        return
+
+    def msg_refer(self, conn, msg):
+        logger("Received a REFER message, not a coordinator.")
 
     def msg_bye(self, conn, msg):
         """Deletes the source of MSG_BYE from groups"""
@@ -397,10 +403,9 @@ class Node():
                 
             if DO_PERIODIC_PINGS:
                 for pingpeer in checkliveness:
-                    # logger("sending PING to %s" % pingpeer)
-                    helomessage = HandshakeMessage(MSG_HELO, self.me)
-                    self.send(helomessage, peer=pingpeer)
-
+                    logger("sending PING to %s" % pingpeer)
+                    pingmessage = HandshakeMessage(MSG_PING, self.me)
+                    self.send(pingmessage, peer=pingpeer)
             time.sleep(ACKTIMEOUT)
 
     def get_inputs(self):

@@ -26,12 +26,12 @@ class Coordinator(Replica):
         backoff_event.clear()
         backoff_thread.start()
 
-    def performcore(self, msg, slotno, dometaonly=False):
+    def performcore(self, msg, slotnumber, dometaonly=False, designated=False):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
         to the managements of the Paxos protocol) with a delay of WINDOW commands."""
-        print "---> SlotNo: %d Command: %s DoMetaOnly: %s" % (slotno, self.decisions[slotno], dometaonly)
-        command = self.decisions[slotno]
+        print "---> SlotNo: %d Command: %s DoMetaOnly: %s" % (slotnumber, self.decisions[slotnumber], dometaonly)
+        command = self.decisions[slotnumber]
         commandlist = command.command.split()
         commandname = commandlist[0]
         commandargs = commandlist[1:]
@@ -48,7 +48,7 @@ class Coordinator(Replica):
                 # meta command, but the window has not passed yet, 
                 # so just mark it as executed without actually executing it
                 # the real execution will take place when the window has expired
-                self.executed[self.decisions[slotno]] = META
+                self.executed[self.decisions[slotnumber]] = META
                 return
             elif not dometaonly and not ismeta:
                 # this is the workhorse case that executes most normal commands
@@ -56,28 +56,35 @@ class Coordinator(Replica):
         except AttributeError:
             print "command not supported: %s" % (command)
             givenresult = 'COMMAND NOT SUPPORTED'
-        self.executed[self.decisions[slotno]] = givenresult
+        self.executed[self.decisions[slotnumber]] = givenresult
 
-    def perform(self, msg):
-        """Take a given PERFORM message, add it to the set of decided commands, and call performcore to execute."""
+    def perform(self, msg, designated=False):
         if msg.commandnumber not in self.decisions:
-            self.decisions[msg.commandnumber] = msg.proposal
-        else:
-            print "This commandnumber has been decided before.."
+            self.add_to_decisions(msg.commandnumber, msg.proposal)
+        # If replica was using this commandnumber for a different proposal, initiate it again
+        if self.proposals.has_key(msg.commandnumber) and msg.proposal != self.proposals[msg.commandnumber]:
+            self.do_command_propose(self.proposals[msg.commandnumber])
             
         while self.decisions.has_key(self.nexttoexecute):
-            if self.decisions[self.nexttoexecute] in self.executed:
-                logger("skipping command %d." % self.nexttoexecute)
+            requestedcommand = self.decisions[self.nexttoexecute]
+            if requestedcommand in self.executed:
+                logger("previously executed command %d." % self.nexttoexecute)
                 self.nexttoexecute += 1
-            elif self.decisions[self.nexttoexecute] not in self.executed:
+                # the window just got bumped by one
+                # check if there are pending commands, and issue one of them
+                self.issue_pending_command(self.nexttoexecute)
+            elif requestedcommand not in self.executed:
                 logger("executing command %d." % self.nexttoexecute)
-
                 # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
+                # We are calling performcore 2 times, the timing gets screwed plus this is very unefficient :(
                 if self.nexttoexecute > WINDOW:
-                    self.performcore(msg, self.nexttoexecute - WINDOW, True)
-                self.performcore(msg, self.nexttoexecute)
+                    self.performcore(msg, self.nexttoexecute - WINDOW, True, designated=designated)
+                self.performcore(msg, self.nexttoexecute, designated=designated)
                 self.nexttoexecute += 1
-
+                # the window just got bumped by one
+                # check if there are pending commands, and issue one of them
+                self.issue_pending_command(self.nexttoexecute)
+                
     def msg_perform(self, conn, msg):
         """received a PERFORM message, perform it"""
         self.perform(msg)
@@ -106,62 +113,58 @@ class Coordinator(Replica):
             checkliveness = set()
             for type,group in self.groups.iteritems():
                 checkliveness = checkliveness.union(group.members)
-            helomessage = HandshakeMessage(MSG_HELO, self.me)
+            pingmessage = HandshakeMessage(MSG_PING, self.me)
             for pingpeer in checkliveness:
                 try:
-                    self.send(helomessage, peer=pingpeer)
-                    logger("PING to %s." %str(pingpeer))
+                    self.send(pingmessage, peer=pingpeer)
+                    #logger("PING to %s." %str(pingpeer))
                 except:
                     print "WHOOPS."
                     # take this node out of the configuration
                     deletecommand = self.create_delete_command(pingpeer)
                     logger("initiating a new coordination command")
                     self.do_command_prepare(deletecommand)
-
             time.sleep(ACKTIMEOUT)
 
     def coordinate(self):
-        """Decide which node should be removed and issue the command."""
         while True:
-            print "*** COORDINATE ***"
             peerstoremove = set()
             with self.outstandingmessages_lock:
                 for id, messageinfo in self.outstandingmessages.iteritems():
                     now = time.time()
                     if messageinfo.messagestate == ACK_NOTACKED and (messageinfo.timestamp - LIVENESSTIMEOUT) > now:
                         peerstoremove.add(messageinfo.destination)
-
             for peertoremove in peerstoremove:
-                print str(peertoremove)
                 # take this node out of the configuration
                 deletecommand = self.create_delete_command(peertoremove)
-                logger("initiating a new coordination command")
+                logger("initiating a new coordination command to remove %s" % peertoremove)
                 self.do_command_prepare(deletecommand)
-
             time.sleep(LIVENESSTIMEOUT)
+
+    def _add_node(self, type, name):
+        ipaddr,port = name.split(":")
+        nodepeer = Peer(ipaddr,int(port),type)
+        self.groups[type].add(nodepeer)
+        heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, groups=self.groups)
+        self.send(heloreplymessage, peer=nodepeer)
+        
+    def _del_node(self, type, name):
+        ipaddr,port = name.split(":")
+        nodepeer = Peer(ipaddr,int(port),type)
+        self.groups[type].remove(nodepeer)
+
+    def msg_helo(self, conn, msg):
+        addcommand = self.create_add_command(msg.source)
+        logger("initiating a new coordination command to add %s" % msg.source)
+        self.do_command_prepare(addcommand)
 
     def msg_refer(self, conn, msg):
         """A peer is referred by its bootstrap node"""
-        logger("Got a referral for %s" % msg.referredpeer)
-        referredpeer = msg.referredpeer
-        addcommand = self.create_add_command(referredpeer)
+        logger("Got a referral for %s from %s" %(msg.referredpeer, msg.source))
+        if msg.referredpeer == self.me:
+            return
+        addcommand = self.create_add_command(msg.referredpeer)
         self.do_command_prepare(addcommand)
-
-    def create_delete_command(self, node):
-        mynumber = self.coordinatorcommandnumber
-        self.coordinatorcommandnumber += 1
-        nodetype = node_names[node.type].lower()
-        operation = "del_%s %s:%d" % (nodetype, node.addr, node.port)
-        command = Command(self.me, mynumber, operation)
-        return command
-
-    def create_add_command(self, node):
-        mynumber = self.coordinatorcommandnumber
-        self.coordinatorcommandnumber += 1
-        nodetype = node_names[node.type].lower()
-        operation = "add_%s %s:%d" % (nodetype, node.addr, node.port)
-        command = Command(self.me, mynumber, operation)
-        return command
 
     def terminate_handler(self, signal, frame):
         sys.stdout.flush()
