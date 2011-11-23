@@ -4,33 +4,25 @@ from clientproxyonerun import *
 class OpenReplicaCoordProxy():
     def __init__(self, bootstrap):
         self.proxy = ClientProxy(bootstrap)
-        self.number = 1
 
     def __str__(self):
-        self.number += 1
-        self.proxy.invoke_command(self.number, "__str__")
+        self.proxy.invoke_command("__str__")
 
     def addnodetosubdomain(self, subdomain, node):
-        self.number += 1
-        self.proxy.invoke_command(self.number, "addnodetosubdomain", subdomain, node)
+        self.proxy.invoke_command("addnodetosubdomain", subdomain, node)
 
     def addsubdomain(self, subdomain):
-        self.number += 1
-        self.proxy.invoke_command(self.number, "addsubdomain", subdomain)
+        self.proxy.invoke_command("addsubdomain", subdomain)
 
     def delnodefromsubdomain(self, subdomain, node):
-        self.number += 1
-        self.proxy.invoke_command(self.number, "delnodefromsubdomain", subdomain, node)
+        self.proxy.invoke_command("delnodefromsubdomain", subdomain, node)
 
     def delsubdomain(self, subdomain):
-        self.number += 1
-        self.proxy.invoke_command(self.number, "delsubdomain", subdomain)
+        self.proxy.invoke_command("delsubdomain", subdomain)
 
     def getnodes(self, subdomain):
-        self.number += 1
-        self.proxy.invoke_command(self.number, "getnodes", subdomain)
+        self.proxy.invoke_command("getnodes", subdomain)
 
     def getsubdomains(self):
-        self.number += 1
-        self.proxy.invoke_command(self.number, "getsubdomains")
+        self.proxy.invoke_command("getsubdomains")
 

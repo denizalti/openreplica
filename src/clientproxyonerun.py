@@ -30,6 +30,8 @@ class ClientProxy():
         myport = self.socket.getsockname()[1]
         self.me = Peer(myaddr,myport,NODE_CLIENT) 
         setlogprefix("%s %s" % ('NODE_CLIENT',self.me.getid()))
+        self.commandnumber = 1
+        self.lock = Lock()
 
     def _getipportpairs(self, bootaddr, bootport):
         for node in socket.getaddrinfo(bootaddr, bootport):
@@ -88,60 +90,60 @@ class ClientProxy():
             self.bootstraplist.append(oldbootstrap)
         self.connecttobootstrap()
 
-    def invoke_command(self, mynumber, commandname, *args):
-        argstr = " ".join(str(arg) for arg in args)
-        commandstr = commandname + " " + argstr
-        command = Command(self.me, mynumber, commandstr)
-        try:
+    def invoke_command(self, commandname, *args):
+        with self.lock:
+            mynumber = self.commandnumber
+            self.commandnumber += 1
+            argstr = " ".join(str(arg) for arg in args)
+            commandstr = commandname + " " + argstr
+            command = Command(self.me, mynumber, commandstr)
             cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
             replied = False
             if self.debug:
                 print "Initiating command %s" % str(command)
             starttime = time.time()
             self.conn.settimeout(CLIENTRESENDTIMEOUT)
-
             while not replied:
-                success = self.conn.send(cm)
-                if not success:
-                    self._trynewbootstrap()
-                    continue
                 try:
+                    success = self.conn.send(cm)
+                    if not success:
+                        raise IOError
                     timestamp, reply = self.conn.receive()
+                    if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
+                        if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
+                            raise IOError
+                        elif reply.replycode == CR_INPROGRESS:
+                            continue
+                        else:
+                            replied = True
+                    elif reply and reply.type == MSG_CLIENTMETAREPLY and reply.inresponseto == mynumber:
+                        # XXX Block/Unblock the client if necessary
+                        print "Handling METAREPLY.."
+                    if time.time() - starttime > CLIENTRESENDTIMEOUT:
+                        if self.debug:
+                            print "timed out: %d seconds" % CLIENTRESENDTIMEOUT
+                        if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
+                            replied = True
+                except ( IOError, EOFError ):
+                    self._trynewbootstrap()
                 except KeyboardInterrupt:
                     self._graceexit()
-                if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
-                    if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
-                        self._trynewbootstrap()
-                        continue
-                    elif reply.replycode == CR_INPROGRESS:
-                        continue
-                    else:
-                        replied = True
-                elif reply and reply.type == MSG_CLIENTMETAREPLY and reply.inresponseto == mynumber:
-                    # XXX Block/Unblock the client if necessary
-                    print "Handling METAREPLY.."
-                if time.time() - starttime > CLIENTRESENDTIMEOUT:
-                    if self.debug:
-                        print "timed out: %d seconds" % CLIENTRESENDTIMEOUT
-                    if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
-                        replied = True
             if reply.type == MSG_CLIENTMETAREPLY:
+                # XXX
                 print "Client METAREPLY"
             if reply.replycode == CR_META:
+                # XXX
                 print "This is not used."
             elif reply.replycode == CR_EXCEPTION:
                 raise reply.reply
             elif reply.replycode == CR_BLOCK:
+                # XXX
                 print "Blocking client."
             elif reply.replycode == CR_UNBLOCK:
+                # XXX
                 print "Unblocking client."    
             else:
                 return reply.reply
-            
-        except ( IOError, EOFError ):
-            self._graceexit()
-        except KeyboardInterrupt:
-            self._graceexit()
             
     def _graceexit(self):
         return
