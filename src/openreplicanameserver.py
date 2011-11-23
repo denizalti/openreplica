@@ -1,6 +1,6 @@
 from nameserver import *
 
-OPENREPLICANS = {'ns1.openreplica.org.':'1.2.3.4', 'ns2.openreplica.org.':'5.6.7.8'} 
+OPENREPLICANS = {'ns1.openreplica.org.':'128.84.60.206', 'ns2.openreplica.org.':'128.84.60.206'} 
 
 class OpenReplicaNameserver(Nameserver):
     def __init__(self):
