@@ -850,10 +850,8 @@ class Replica(Node):
 
     def msg_helo(self, conn, msg):
         # This is the first acceptor, it has to be added by this replica
-        if msg.source.type == NODE_ACCEPTOR and len(self.groups[msg.source.type]) == 0:
+        if msg.source.type == NODE_ACCEPTOR and len(self.groups[NODE_ACCEPTOR]) == 0:
             self.groups[msg.source.type].add(msg.source)
-            heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, groups=self.groups)
-            self.send(heloreplymessage, peer=msg.source)
             # Agree with other Replicas about adding this acceptor
             addcommand = self.create_add_command(msg.source)
             self.check_leader_promotion()
