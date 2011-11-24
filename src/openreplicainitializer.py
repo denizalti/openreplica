@@ -15,10 +15,12 @@ from openreplicacoordobjproxy import *
 
 parser = OptionParser(usage="usage: %prog -s subdomain -n objectname -o objectcode -r replicas")
 parser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
-parser.add_option("-n", "--objectfilename", action="store", dest="objectfilename", help="client object file name")
+parser.add_option("-f", "--objectfilename", action="store", dest="objectfilename", help="client object file name")
 parser.add_option("-c", "--classname", action="store", dest="classname", help="main class name")
 parser.add_option("-o", "--objectcode", action="store", dest="objectcode", help="client object code")
 parser.add_option("-r", "--replicas", action="store", dest="replicanum", default=1, help="number of replicas")
+parser.add_option("-a", "--acceptors", action="store", dest="acceptornum", default=1, help="number of acceptor")
+parser.add_option("-n", "--nameservers", action="store", dest="nameservernum", default=1, help="number of nameservers")
 (options, args) = parser.parse_args()
 
 def create_objectfilefromcode(objectfilename, objectcode):
@@ -51,48 +53,47 @@ def check_object(clientobjectfile):
     v.visit(astnode)
     return v.safe
 
-def start_nodes(subdomain, clientobjectfile, numreplicas):
-    print "[3] connecting to Planet Lab"
-    # connect to PlanetLab
-    numreplicas = int(numreplicas)
-    connectedhosts = []
-    while (numreplicas-len(connectedhosts) > 0):
-        plconn = PLConnection()
-        plconn.connect(numreplicas-len(connectedhosts))
-        tmphosts = plconn.getHosts()
-        print tmphosts
-        for host in tmphosts:
-            print "[4] uploading DNS tester"
-            pathtodnstester = os.path.abspath("testdnsport.py")
-            # upload testdnsport
-            plconn.uploadone(host, pathtodnstester)
-            print "[5] trying to bind to DNS port"
-            dnssuccess = plconn.executecommandone(host, "sudo python testdnsport.py")
-            if dnssuccess:
-                print "DNS Port unavailable on %s" % host
-                connectedhosts.append(host)
-            else:
-                plconn.executecommandone(host, "rm testdnsport.py")
-    print connectedhosts
-    # Now we have desired number of hosts at hand
-    plconn = PLConnection(connectedhosts)
+# checks if a PL node is suitable for running a nameserver
+def check_planetlab_nameserver_node(node):
+    print "[5.1] uploading DNS tester to ", node
+    pathtodnstester = os.path.abspath("testdnsport.py")
+    plconn.uploadone(node, pathtodnstester)
+    print "[5.2] trying to bind to DNS port"
+    dnssuccess = plconn.executecommandone(node, "sudo python testdnsport.py")
+    if dnssuccess:
+        print "[5.3] DNS Port available on %s" % node
+    else:
+        print "[5.3] DNS Port unavailable on %s" % node
+        plconn.executecommandone(node, "rm testdnsport.py")
+    return dnssuccess
+
+def start_nodes(subdomain, clientobjectfile, configuration):
+    # locate the right number of suitable PlanetLab nodes
+    numreplicas, numacceptors, numnameservers = configuration
+    nameservers = PLConnection(numnameservers, check_planetlab_nameserver_node)
+    replicas = PLConnection(numreplicas)
+    acceptors = PLConnection(numacceptors)
+    all = PLConnection(nameservers.getHosts() + replicas.getHosts() + acceptors.getHosts())
+
     os.system('make -q')
     pathtoconcoordbundle = os.path.abspath("concoord.tar.gz")
     pathtoshscript = os.path.abspath("plopenreplica.sh")
-    plconn.uploadall(pathtoconcoordbundle)
-    # upload shellscript
-    plconn.uploadall(pathtoshscript)
-    # initialize nodes
-    print "[6] initializing"
-    initsuccess,returnvalues = plconn.executecommandall("tar xzf concoord.tar.gz")
-    if initsuccess:
-        print "Initialization done!"
+    print "[6] uploading data"
+    all.uploadall(pathtoconcoordbundle)
+    all.uploadall(pathtoshscript)
+    print "[7] initializing"
+    all.executecommandall("tar xzf concoord.tar.gz")
 
-    # add nodes to open replica coordinator object
+    acceptors.executecommandall("python acceptor.py")
+    nameservers.executecommandall("")
+    replicas.executecommandall("")
+    print "Initialization done!"
+
+    # add the nameserver nodes to open replica coordinator object
     openreplicacoordobj = OpenReplicaCoordProxy('128.84.60.206:6668,128.84.60.206:6669')
     print "Picked nodes: "
-    for node in plconn.getHosts():
-        openreplicacoordobj.addnodetosubdomain(subdomain, node+':7897')
+    for node in nameserver.getHosts():
+        openreplicacoordobj.addnodetosubdomain(subdomain, node)
         print node
 
 def create_proxy(objectfile, classname):
@@ -118,7 +119,9 @@ def main():
     if not check_object(objectfile):
         os._exit(0)
     # Start Nodes
-    start_nodes(options.subdomain, objectfile, options.replicanum)
+    print "[3] connecting to Planet Lab"
+    configuration = (int(options.replicanum), int(options.acceptornum), int(options.nameservernum))
+    start_nodes(options.subdomain, objectfile, configuration)
     # Create Proxy
     clientproxy = create_proxy(objectfile, options.classname)
     
