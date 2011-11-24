@@ -73,7 +73,7 @@ def start_nodes(subdomain, clientobjectfile, configuration):
     nameservers = PLConnection(numnameservers, check_planetlab_nameserver_node)
     replicas = PLConnection(numreplicas)
     acceptors = PLConnection(numacceptors)
-    all = PLConnection(nameservers.getHosts() + replicas.getHosts() + acceptors.getHosts())
+    all = PLConnection(nodes=nameservers.getHosts() + replicas.getHosts() + acceptors.getHosts())
 
     os.system('make -q')
     pathtoconcoordbundle = os.path.abspath("concoord.tar.gz")
