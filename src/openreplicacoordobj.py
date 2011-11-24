@@ -2,17 +2,12 @@ class OpenReplicaCoord():
     def __init__(self, **kwargs):
         self.nodes = {}
 
-    def addsubdomain(self, subdomain, **kwargs):
-        notexists = subdomain not in self.nodes
-        if notexists:
-            self.nodes[subdomain] = set()
-        return notexists
-     
     def addnodetosubdomain(self, subdomain, node, **kwargs):
-        exists = subdomain in self.nodes
-        if exists:
+        if subdomain in self.nodes:
             self.nodes[subdomain].add(node)
-        return exists
+        else:
+            self.nodes[subdomain] = set()
+            self.nodes[subdomain].add(node)
 
     def delsubdomain(self, subdomain, **kwargs):
         exists = subdomain in self.nodes
