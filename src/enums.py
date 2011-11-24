@@ -5,6 +5,7 @@
 @date: February 3, 2011
 '''
 import enums
+from __future__ import with_statement
 
 # message types
 MSG_ACK, \
