@@ -54,38 +54,46 @@ def check_object(clientobjectfile):
 def start_nodes(subdomain, clientobjectfile, numreplicas):
     print "[3] connecting to Planet Lab"
     # connect to PlanetLab
-    plconn = PLConnection()
-    plconn.connect(numreplicas)
+    numreplicas = int(numreplicas)
+    connectedhosts = []
+    while (numreplicas-len(connectedhosts) > 0):
+        plconn = PLConnection()
+        plconn.connect(numreplicas-len(connectedhosts))
+        tmphosts = plconn.getHosts()
+        print tmphosts
+        for host in tmphosts:
+            print "[4] uploading DNS tester"
+            pathtodnstester = os.path.abspath("testdnsport.py")
+            # upload testdnsport
+            plconn.uploadone(host, pathtodnstester)
+            print "[5] trying to bind to DNS port"
+            dnssuccess = plconn.executecommandone(host, "sudo python testdnsport.py")
+            if dnssuccess:
+                print "DNS Port unavailable on %s" % host
+                connectedhosts.append(host)
+            else:
+                plconn.executecommandone(host, "rm testdnsport.py")
+    print connectedhosts
+    # Now we have desired number of hosts at hand
+    plconn = PLConnection(connectedhosts)
+    os.system('make -q')
+    pathtoconcoordbundle = os.path.abspath("concoord.tar.gz")
+    pathtoshscript = os.path.abspath("plopenreplica.sh")
+    plconn.uploadall(pathtoconcoordbundle)
+    # upload shellscript
+    plconn.uploadall(pathtoshscript)
+    # initialize nodes
+    print "[6] initializing"
+    initsuccess,returnvalues = plconn.executecommandall("tar xzf concoord.tar.gz")
+    if initsuccess:
+        print "Initialization done!"
+
     # add nodes to open replica coordinator object
     openreplicacoordobj = OpenReplicaCoordProxy('128.84.60.206:6668,128.84.60.206:6669')
-    openreplicacoordobj.addsubdomain(subdomain)
     print "Picked nodes: "
     for node in plconn.getHosts():
         openreplicacoordobj.addnodetosubdomain(subdomain, node+':7897')
         print node
-    # upload concoord bundle
-    print "[4] uploading files"
-    os.system('make -q')
-    pathtoconcoordbundle = os.path.abspath("concoord.tar.gz")
-    pathtodnstester = os.path.abspath("testdnsport.py")
-    pathtoshscript = os.path.abspath("plopenreplica.sh")
-    print "bundle under ", pathtoconcoordbundle
-    plconn.upload(pathtoconcoordbundle)
-    # upload clientobject
-    plconn.upload(clientobjectfile.name)
-    # upload testdnsport
-    plconn.upload(pathtodnstester)
-    # upload shellscript
-    plconn.upload(pathtoshscript)
-    # initialize nodes
-    print "[5] trying to bind to DNS port"
-    dnssuccess,returnvalues = plconn.executecommand("sudo python testdnsport.py")
-    if dnssuccess:
-        print "DNS Port available."
-    print "[6] initializing"
-    initsuccess,returnvalues = plconn.executecommand("tar xzf concoord.tar.gz ")
-    if initsuccess:
-        print "Initialization done!"
 
 def create_proxy(objectfile, classname):
     print "[7] creating proxy"

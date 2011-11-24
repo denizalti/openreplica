@@ -8,11 +8,12 @@ from enums import *
 from replica import *
 from node import *
 
-class Coordinator(Replica):
+class OpenReplicaCoordinator(Replica):
     """Coordinator keeps track of failures, it sends PING messages periodically and takes failed nodes
     out of the configuration"""
-    def __init__(self,instantiateobj=False):
+    def __init__(self, subdomainname, instantiateobj=False):
         Replica.__init__(self, nodetype=NODE_COORDINATOR, instantiateobj=instantiateobj, port=5020, bootstrap=options.bootstrap)
+        self.subdomainname = subdomainname
         self.active = False
         self.ballotnumber = (0,self.id)
         self.outstandingprepares = {}
@@ -139,6 +140,52 @@ class Coordinator(Replica):
                 self.do_command_prepare(deletecommand)
             time.sleep(LIVENESSTIMEOUT)
 
+    def _add_node(self, nodetype, nodename):
+        logger("Adding node: %s %s" % (nodetype, nodename))
+        ipaddr,port = nodename.split(":")
+        nodetype = int(nodetype)
+        nodepeer = Peer(ipaddr,int(port),nodetype)
+        self.groups[nodetype].add(nodepeer)
+        # Add this node to the configuration file
+        openreplicacoordobj = OpenReplicaCoordProxy('openreplica.org')
+        openreplicacoordobj.addnodetosubdomain(self.subdomainname, ipaddr+str(port))
+
+    def _del_node(self, nodetype, nodename):
+        logger("Deleting node: %s %s" % (nodetype, nodename))
+        ipaddr,port = nodename.split(":")
+        nodetype = int(nodetype)
+        nodepeer = Peer(ipaddr,int(port),nodetype)
+        self.groups[nodetype].remove(nodepeer)
+        # Start a new node on PlanetLab
+        plconn = PLConnection()
+        plconn.connect(1)
+
+    def addtoopenreplicaconfiguration(self, subdomain, node):
+        openreplicabootstraplist = self.discoverbootstrap(bootstrap)
+        self.connecttoopenreplicabootstrap(openreplicabootstraplist)
+        # Act like a client.
+
+    def discoveropenreplicabootstrap(self):
+        bootstraplist = []
+        answers = dns.resolver.query('_concoord._tcp.openreplica.org', 'SRV')
+        for rdata in answers:
+            for peer in self._getipportpairs(str(rdata.target), rdata.port):
+                bootstraplist.append(peer)
+        return bootstraplist
+
+    def connecttoopenreplicabootstrap(self, openreplicabootstraplist):
+        for bootpeer in openreplicabootstraplist:
+            try:
+                self.openreplicasocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+                self.openreplicasocket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+                self.openreplicasocket.connect((bootpeer.addr,bootpeer.port))
+                self.openreplicaconn = Connection(self.socket)
+                if self.debug:
+                    logger("Connected to OpenReplica bootstrap: %s:%d" % (bootpeer.addr,bootpeer.port))
+                break
+            except socket.error, e:
+                continue
+
     def msg_helo(self, conn, msg):
         addcommand = self.create_add_command(msg.source)
         logger("initiating a new coordination command to add %s" % msg.source)
@@ -158,7 +205,7 @@ class Coordinator(Replica):
         os._exit(0)
         
 def main():
-    coordinatornode = Coordinator()
+    coordinatornode = OpenReplicaCoordinator()
     coordinatornode.startservice()
     signal.signal(signal.SIGINT, coordinatornode.interrupt_handler)
     signal.signal(signal.SIGTERM, coordinatornode.terminate_handler)
