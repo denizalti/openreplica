@@ -11,9 +11,6 @@ class OpenReplicaCoordProxy():
     def addnodetosubdomain(self, subdomain, node):
         self.proxy.invoke_command("addnodetosubdomain", subdomain, node)
 
-    def addsubdomain(self, subdomain):
-        self.proxy.invoke_command("addsubdomain", subdomain)
-
     def delnodefromsubdomain(self, subdomain, node):
         self.proxy.invoke_command("delnodefromsubdomain", subdomain, node)
 
