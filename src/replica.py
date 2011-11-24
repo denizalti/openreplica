@@ -138,7 +138,7 @@ class Replica(Node):
                 # execute a metacommand when the window has expired
                 method = getattr(self, commandname)
                 clientreplycode = CR_META
-                givenresult = method(commandargs)
+                givenresult = method(*commandargs)
                 unblocked = {}
                 send_result_to_client = False
             elif not dometaonly and ismeta:
@@ -210,7 +210,6 @@ class Replica(Node):
             return
         clientconn.send(clientreply)
 
-    #@endtiming
     def perform(self, msg, designated=False):
         """Take a given PERFORM message, add it to the set of decided commands, and call performcore to execute."""
         if msg.commandnumber not in self.decisions:
@@ -288,20 +287,23 @@ class Replica(Node):
     def do_noop(self):
         pass
 
-    def _add_node(self, type, name):
-        ipaddr,port = name.split(":")
-        nodepeer = Peer(ipaddr,int(port),type)
-        self.groups[type].add(nodepeer)
+    def _add_node(self, nodetype, nodename):
+        logger("Adding node: %s %s" % (nodetype, nodename))
+        ipaddr,port = nodename.split(":")
+        nodetype = int(nodetype)
+        nodepeer = Peer(ipaddr,int(port),nodetype)
+        self.groups[nodetype].add(nodepeer)
         
-    def _del_node(self, type, name):
-        ipaddr,port = name.split(":")
-        nodepeer = Peer(ipaddr,int(port),type)
-        self.groups[type].remove(nodepeer)
+    def _del_node(self, nodetype, nodename):
+        logger("Deleting node: %s %s" % (nodetype, nodename))
+        ipaddr,port = nodename.split(":")
+        nodetype = int(nodetype)
+        nodepeer = Peer(ipaddr,int(port),nodetype)
+        self.groups[nodetype].remove(nodepeer)
 
-    def _garbage_collect(self, args):
+    def _garbage_collect(self, garbagecommandnumber):
         """ garbage collect """
-        garbagecommandnumber = int(args[0])
-        logger("Initiating garbage collection.")
+        logger("Initiating garbage collection upto cmd#%d" % garbagecommandnumber)
         garbagemsg = GarbageCollectMessage(MSG_GARBAGECOLLECT,self.me,commandnumber=garbagecommandnumber,snapshot=self.object)
         self.send(garbagemsg,group=self.groups[NODE_ACCEPTOR])
 
@@ -455,7 +457,6 @@ class Replica(Node):
             # Check if the request has been executed
             if givencommand in self.decidedcommandset:
                 if self.executed.has_key(givencommand):
-                    #endtimer(givencommand,1)
                     #if self.executed[givencommand][RCODE] is not META -> XXX: When connectivity is not provided by a setup client.
                     clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=self.executed[givencommand][RESULT], \
                                                      replycode=self.executed[givencommand][RCODE], inresponseto=givencommand.clientcommandnumber)
@@ -526,7 +527,7 @@ class Replica(Node):
         try:
             method = getattr(self.object, commandname)
             try:
-                givenresult = method(commandargs, _concoord_command=command)
+                givenresult = method(*commandargs, _concoord_command=command)
                 clientreplycode = CR_OK
                 send_result_to_client = True
             except BlockingReturn as blockingretexp:
@@ -867,14 +868,14 @@ class Replica(Node):
     def create_delete_command(self, node):
         mynumber = self.metacommandnumber
         self.metacommandnumber += 1
-        operation = "_del_node %s %s:%d" % (node_names[node.type], node.addr, node.port)
+        operation = "_del_node %d %s:%d" % (node.type, node.addr, node.port)
         command = Command(self.me, mynumber, operation)
         return command
 
     def create_add_command(self, node):
         mynumber = self.metacommandnumber
         self.metacommandnumber += 1
-        operation = "_add_node %s %s:%d" % (node_names[node.type], node.addr, node.port)
+        operation = "_add_node %d %s:%d" % (node.type, node.addr, node.port)
         command = Command(self.me, mynumber, operation)
         return command
 

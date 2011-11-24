@@ -41,7 +41,7 @@ class Coordinator(Replica):
             if dometaonly and ismeta:
                 # execute a metacommand when the window has expired
                 method = getattr(self, commandname)
-                givenresult = method(commandargs)
+                givenresult = method(*commandargs)
             elif dometaonly and not ismeta:
                 return
             elif not dometaonly and ismeta:
@@ -140,18 +140,6 @@ class Coordinator(Replica):
                 logger("initiating a new coordination command to remove %s" % peertoremove)
                 self.do_command_prepare(deletecommand)
             time.sleep(LIVENESSTIMEOUT)
-
-    def _add_node(self, type, name):
-        ipaddr,port = name.split(":")
-        nodepeer = Peer(ipaddr,int(port),type)
-        self.groups[type].add(nodepeer)
-        heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, groups=self.groups)
-        self.send(heloreplymessage, peer=nodepeer)
-        
-    def _del_node(self, type, name):
-        ipaddr,port = name.split(":")
-        nodepeer = Peer(ipaddr,int(port),type)
-        self.groups[type].remove(nodepeer)
 
     def msg_helo(self, conn, msg):
         addcommand = self.create_add_command(msg.source)
