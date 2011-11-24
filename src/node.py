@@ -96,21 +96,6 @@ class Node():
                 self.port += 1
         self.socket.listen(10)
         self.alive = True
-
-        # append port number to controlfile
-        try:
-            if self.type == NODE_ACCEPTOR or self.type == NODE_REPLICA or self.type == NODE_COORDINATOR:
-                f = open('ports', 'a')
-                # XXX This lock blocks on NFS
-                #fcntl.flock(f,fcntl.LOCK_EX)
-                t = node_names[self.type].lower()
-                f.write("add_%s %s:%d\n" % (t, self.addr, self.port))
-                for i in range (WINDOW):
-                    f.write("noop\n")
-                #fcntl.flock(f,fcntl.LOCK_UN)
-                f.close()
-        except IOError:
-            logger("Error opening port file")
         
         # initialize empty groups
         self.me = Peer(self.addr,self.port,self.type)
@@ -119,7 +104,6 @@ class Node():
             setlogprefix("%s %s" % (node_names[self.type],self.id))
         self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_LEADER:Group(self.me), \
                        NODE_TRACKER:Group(self.me), NODE_COORDINATOR:Group(self.me), NODE_NAMESERVER:Group(self.me)}
-        
         # connect to the bootstrap node
         if givenbootstraplist:
             self.bootstraplist = []
