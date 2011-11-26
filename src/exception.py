@@ -1,4 +1,8 @@
-"""common concoord exceptions"""
+'''
+@author: denizalti
+@note: Common ConCoord exceptions.
+@date: February 3, 2011
+'''
 
 class ConCoordException(Exception):
     """Abstract base class shared by all concoord exceptions"""
@@ -16,13 +20,13 @@ class Timeout(ConCoordException):
     """The operation timed out."""
     pass
 
+class BlockingReturn(ConCoordException):
+    """Blocking Return"""
+    def __init__(self, returnvalue):
+        self.returnvalue = returnvalue
+
 class UnblockingReturn(ConCoordException):
     """Unblocking Return"""
     def __init__(self, returnvalue, unblockeddict):
         self.returnvalue = returnvalue
         self.unblocked = unblockeddict
-
-class BlockingReturn(ConCoordException):
-    """Blocking Return"""
-    def __init__(self, returnvalue):
-        self.returnvalue = returnvalue
