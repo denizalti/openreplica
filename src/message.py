@@ -1,6 +1,6 @@
 """
-@author: denizalti
-@note: Message
+@author: denizalti, egs
+@note: Messages sent on the wire
 @date: February 1, 2011
 """
 from threading import Lock
@@ -10,7 +10,6 @@ from utils import *
 from peer import Peer
 from command import Command
 
-
 msgidpool = 0
 msgidpool_lock=Lock()
 
@@ -19,11 +18,9 @@ class Message():
     by all types of messages in the system.
     """
     def __init__(self, msgtype, myname):
-        """Initialize Message
-
-        Message State
-        - type: type of message (see enums.py)
-        - source: Peer instance of the source
+        """
+        - msgtype: type of message as defined in enums.py
+        - myname: Peer instance of the source
         """
         self.type = msgtype
         self.source = myname
@@ -44,7 +41,6 @@ class Message():
         return "%s+%d" % (self.source.getid(), self.id)
 
     def __str__(self):
-        """Return Message information"""
         if self.type != MSG_ACK:
             return 'Message#%d: %s src %s' % (self.id,msg_names[self.type],self.source)
         else:
@@ -53,8 +49,7 @@ class Message():
 class HandshakeMessage(Message):
     def __init__(self,msgtype,myname,groups=None):
         Message.__init__(self, msgtype, myname)
-        if groups != None:
-            self.groups = groups
+        self.groups = groups
 
     def __str__(self):
         temp = Message.__str__(self)
@@ -65,8 +60,7 @@ class HandshakeMessage(Message):
 class UpdateMessage(Message):
     def __init__(self,msgtype,myname,decisions=None):
         Message.__init__(self, msgtype, myname)
-        if decisions != None:
-            self.decisions = decisions
+        self.decisions = decisions
 
     def __str__(self):
         temp = Message.__str__(self)
@@ -125,7 +119,6 @@ class GarbageCollectMessage(Message):
     def __str__(self):
         return "%s commandnumber: %d snapshot: %s" % (Message.__str__(self), self.commandnumber, str(self.snapshot))
 
-
 class ReferMessage(Message):
     def __init__(self, msgtype, myname, referredpeer=None):
         Message.__init__(self, msgtype, myname)
@@ -137,8 +130,7 @@ class ReferMessage(Message):
 class QueryMessage(Message):
     def __init__(self,msgtype, myname, peers=None):
         Message.__init__(self, msgtype, myname)
-        if peers != None:
-            self.peers = peers
+        self.peers = peers
 
     def __str__(self):
         temp = Message.__str__(self)
@@ -147,16 +139,8 @@ class QueryMessage(Message):
         return temp
 
 class MessageInfo():
-    """MessageState encloses a message, destination, messagestate and timestamp"""
+    """This class is used to ensure that all messages are ultimately delivered to their destinations"""
     def __init__(self, message, destination, messagestate=ACK_NOTACKED, timestamp=0):
-        """Initialize MessageInfo
-
-        MessageInfo State
-        - message: Message object
-        - destination: destination of the message
-        - messagestate: indicates if the message has been ACKed or not [NOTACKEDYET | ACKED]
-        - timestamp: timestamp for the last action
-        """
         self.message = message
         self.destination = destination
         self.messagestate = messagestate

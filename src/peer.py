@@ -1,6 +1,6 @@
 """
-@author: denizalti
-@note: Peer
+@author: denizalti, egs
+@note: Nodes participating in the protocol
 @date: February 1, 2011
 """
 from enums import *
@@ -19,28 +19,16 @@ class Peer():
         return self.getid().__hash__()
 
     def __eq__(self, otherpeer):
-        if otherpeer == None:
-            return False
-        else:
-            return self.getid() == otherpeer.getid()
+        return self.getid() == otherpeer.getid() if otherpeer is not None else False
 
     def __lt__(self, otherpeer):
-        if otherpeer == None:
-            return False
-        else:
-            return self.getid() < otherpeer.getid()
+        return self.getid() < otherpeer.getid() if otherpeer is not None else False
 
     def __gt__(self, otherpeer):
-        if otherpeer == None:
-            return False
-        else:
-            return self.getid() > otherpeer.getid()
+        return self.getid() > otherpeer.getid() if otherpeer is not None else False
 
     def __ne__(self, otherpeer):
-        if otherpeer == None:
-            return False
-        else:
-            return self.getid() != otherpeer.getid()
+        return self.getid() != otherpeer.getid() if otherpeer is not None else False
         
     def __str__(self):
         return '%s PEER(%s:%d)' % (node_names[self.type] if self.type != -1 else "UNKNOWN", self.addr, self.port)
