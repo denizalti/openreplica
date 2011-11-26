@@ -1,3 +1,9 @@
+'''
+@author: denizalti
+@note: Connections provide thread-safe send() and receive() functions, paying attention to message boundaries.
+       ConnectionPools organize collections of connections.
+@date: February 3, 2011
+'''
 import socket, errno
 import struct
 import time
