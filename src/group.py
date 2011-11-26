@@ -1,6 +1,6 @@
 """
 @author: denizalti, egs
-@note: Group
+@note: A Group is a collection of peers that perform the same function
 @date: February 1, 2011
 """
 from threading import RLock
