@@ -1,5 +1,5 @@
 '''
-@author: egs
+@author: egs, denizalti
 @note: This class holds enums that are widely used throughout the program
        Because it imports itself, this module MUST NOT HAVE ANY SIDE EFFECTS!!!!
 @date: February 3, 2011
@@ -53,7 +53,7 @@ BALLOTNODE = 1
 ##backoff
 BACKOFFINCREASE = 0.1
 
-#XXX Fix METACOMMAND to start with _del....
+#XXX Fix METACOMMAND to start with _meta....
 METACOMMANDS = set(["_add_node", "_del_node", "_garbage_collect"])
 WINDOW = 1
 GARBAGEPERIOD = 100

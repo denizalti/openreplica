@@ -1,3 +1,8 @@
+'''
+@author: denizalti
+@note: Utility functions for the runtime. Includes a timer module for collecting measurements.
+@date: February 3, 2011
+'''
 import socket
 import time
 import string
