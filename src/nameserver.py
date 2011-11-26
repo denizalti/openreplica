@@ -72,24 +72,22 @@ class Nameserver(Tracker):
         
     def aresponse(self, question):
         for gname in [NODE_LEADER, NODE_REPLICA]:
-            for address in self.groups[gname].get_addresses():
+            for address,port in self.groups[gname].get_addresses():
                 yield address
 
     def nsresponse(self, question):
-        for address in self.groups[NODE_NAMESERVER].get_addresses():
+        for address,port in self.groups[NODE_NAMESERVER].get_addresses():
             yield address
 
     def srvresponse(self, question):
         for gname in [NODE_LEADER, NODE_REPLICA]:
-            for addr,port in self.groups[gname].get_addrports():
+            for addr,port in self.groups[gname].get_addresses():
                 yield addr+IPCONVERTER,port
         
     def txtresponse(self, question):
         txtstr = ''
         for groupname,group in self.groups.iteritems():
-            txtstr += node_names[groupname] + ' = '
-            for address in group.get_addresses():
-                txtstr += str(address) + ' '
+            txtstr += node_names[groupname] + ' = ' + str(group)
         return txtstr
     
     def handle_query(self, data, addr):

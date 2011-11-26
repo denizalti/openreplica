@@ -52,12 +52,12 @@ class OpenReplicaNameserver(Nameserver):
                     return
         else:
             for gname in [NODE_LEADER, NODE_REPLICA]:
-                for address in self.groups[gname].get_addresses():
+                for address,port in self.groups[gname].get_addresses():
                     yield address
     
     def nsresponse(self, question):
         if question.name == self.mydomain or question.name.is_subdomain(self.specialdomain):
-            for address in self.groups[NODE_NAMESERVER].get_addresses():
+            for address,port in self.groups[NODE_NAMESERVER].get_addresses():
                 yield address+".ipaddr.openreplica.org."
         for subdomain in self.object.nodes.keys():
             if question.name == dns.name.Name([subdomain, 'openreplica', 'org', '']):
