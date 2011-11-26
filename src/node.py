@@ -1,5 +1,5 @@
 '''
-@author: egs
+@author: denizalti, egs
 @note: Master class for all nodes
 @date: February 1, 2011
 '''
@@ -52,10 +52,10 @@ class Node():
         - port: port for Node, can be taken from the commandline (-p [port]) or
         detected automatically by binding.
         - connectionpool: ConnectionPool that keeps all Connections Node knows about
-        - type: type of the corresponding Node: NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA
+        - type: type of the corresponding Node: NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA | NODE_NAMESERVER
         - alive: liveness of Node
-        - outstandingmessages: keeps <messageid:messageinfo> mappings as <MessageID:MessageInfo> objects
-        - socket: socket of Node
+        - outstandingmessages: collection of sent but not-yet-acked messages
+        - socket: server socket for Node
         - me: Peer object that represents Node
         - id: id for Node (addr:port)
         - groups: other Peers in the system that Node knows about. Node.groups is indexed by the
@@ -151,26 +151,15 @@ class Node():
         main_thread = Thread(target=self.handle_messages)
         main_thread.start()
         # Start a thread that waits for inputs
-        input_thread = Thread(target=self.get_inputs)
+        input_thread = Thread(target=self.get_user_input_from_shell)
         input_thread.start()
         # Start a thread that pings neighbors
         timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
         timer_thread.start()
 
-    def signalend(self):
-        with self.donecond:
-            self.done = True
-            self.donecond.notifyAll()
-            
-    def waituntilend(self):
-        with self.donecond:
-            while self.done == False:
-                self.donecond.wait()
-        logger("End of life")
-
     def __str__(self):
         """Return Node information (addr:port)"""
-        return "%s  %s:%d" % (node_names[self.type], self.addr, self.port)
+        return "%s NODE %s:%d" % (node_names[self.type], self.addr, self.port)
 
     def statestr(self):
         """Return the Peers Node knows of, i.e. connectivity state"""
@@ -189,7 +178,7 @@ class Node():
         return returnstr
     
     def server_loop(self):
-        """Serverloop that listens to multiple sockets and accepts connections.
+        """Serverloop that listens to multiple connections and accepts new ones.
 
         Server State
         - nascentset: set of sockets on which a MSG_HELO has not been received yet
@@ -296,6 +285,7 @@ class Node():
         elif message.type != MSG_CLIENTREQUEST and message.type != MSG_INCCLIENTREQUEST:
             # Send ACK
             connection.send(AckMessage(MSG_ACK,self.me,message.id))
+        # find method and invoke it with a lock held
         mname = "msg_%s" % msg_names[message.type].lower()
         try:
             method = getattr(self, mname)
@@ -390,9 +380,9 @@ class Node():
                     self.send(pingmessage, peer=pingpeer)
             time.sleep(ACKTIMEOUT)
 
-    def get_inputs(self):
-        """Shellloop that accepts inputs from the command prompt and calls corresponding command
-        handlers.
+    def get_user_input_from_shell(self):
+        """Shell loop that accepts inputs from the command prompt and 
+        calls corresponding command handlers.
         """
         while self.alive:
             try:
@@ -416,7 +406,6 @@ class Node():
         return            
     
     # There are 3 basic send types: peer.send, conn.send and group.send
-    # def __init__(self, message, destination, messagestate=ACK_NOTACKED, timestamp=0):
     def send(self, message, peer=None, group=None, isresend=False):
         if peer:
             connection = self.connectionpool.get_connection_by_peer(peer)
@@ -426,7 +415,7 @@ class Node():
                     self.outstandingmessages[message.fullid()] = msginfo
             connection.send(message)
         elif group:
-            assert not isresend, "performing a resend to a group"
+            assert not isresend, "performing a re-send to a group"
             for peer in group.members:
                 connection = self.connectionpool.get_connection_by_peer(peer)
                 msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
@@ -437,14 +426,17 @@ class Node():
                 message.assignuniqueid()
 
     # asynchronous event handlers
+    # XXX delete one of them
     def terminate_handler(self, signal, frame):
         print self.me, "exiting.."
+        logger("exiting...")
         sys.stdout.flush()
         sys.stderr.flush()
         os._exit(0)
 
     def interrupt_handler(self, signal, frame):
 	print 'BYE!'
+        logger("exiting...")
         sys.stdout.flush()
 	sys.stderr.flush()
         os._exit(0)
