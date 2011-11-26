@@ -1,5 +1,5 @@
 """
-@author: denizalti
+@author: denizalti, egs
 @note: Group
 @date: February 1, 2011
 """
@@ -10,13 +10,9 @@ from utils import *
 from peer import *
 
 class Group():
-    """Group keeps a set of Peer objects and supports functions
-    related to a Group object.
-    """
+    """A Group is a collection of Peers that perform the same function."""
     def __init__(self,owner):
-        """Initialize Group
-
-        Group State
+        """
         - owner: Peer that owns the Group
         - members: set of Peers that are in the Group
         """
@@ -24,20 +20,20 @@ class Group():
         self.members = []
 
     def remove(self,peer):
-        """Removes the given peer from the Group"""
+        """Removes the given peer from the Group."""
         if peer in self.members:
             self.members.remove(peer)
             self.members.sort()
 
     def add(self,peer):
-        """Adds the given peer to the Group if it's not the owner itself"""
+        """Adds the given peer to the Group if it's not the owner itself."""
         if peer != self.owner:
             if peer not in self.members:
                 self.members.append(peer)
                 self.members.sort()
 
     def union(self,othergroup):
-        """Unionizes the members of given Group with the members of the Group"""
+        """Adds the given Group to this one."""
         for peer in othergroup.members:
             if peer not in self.members:
                 self.members.append(peer)
@@ -47,16 +43,8 @@ class Group():
         return peer in self.members
 
     def get_addresses(self):
-        addresses = []
         for peer in self.members:
-            addresses.append(peer.addr)
-        return addresses
-
-    def get_addrports(self):
-        addrports = []
-        for peer in self.members:
-            addrports.append((peer.addr,peer.port))
-        return addrports
+            yield (peer.addr,peer.port)
 
     def __iter__(self):
         for peer in self.members:
