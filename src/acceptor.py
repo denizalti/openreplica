@@ -1,6 +1,6 @@
 """
 @author: denizalti
-@note: The Acceptor
+@note: The Acceptor node. Keeps track of past Paxos ballots.
 @date: February 1, 2011
 """
 from threading import Thread
@@ -16,13 +16,11 @@ from message import Message, PaxosMessage, GarbageCollectMessage
 from pvalue import PValue, PValueSet
 
 class Acceptor(Node):
-    """Acceptor acts like a server responding to PaxosMessages received from the Leader.
-    It extends a Node and keeps additional state about the Paxos Protocol.
+    """Acceptor keeps track of past Paxos ballots. It supports garbage collection by keeping track
+    of an object snapshot and trimming all previous ballots prior to the snapshot.
     """
     def __init__(self):
-        """Initialize Acceptor
-
-        Acceptor State
+        """
         - ballotnumber: the highest ballotnumber Acceptor has encountered
         - accepted: all pvalues Acceptor has accepted thus far
         """
@@ -33,7 +31,7 @@ class Acceptor(Node):
         self.objectsnapshot = (0,None)
         
     def msg_prepare(self, conn, msg):
-        """Handler for MSG_PREPARE.
+        """
         MSG_PREPARE is accepted only if it carries a ballotnumber greater
         than the highest ballotnumber Acceptor has ever received.
 
@@ -59,7 +57,7 @@ class Acceptor(Node):
         self.send(replymsg,peer=msg.source)
 
     def msg_propose(self, conn, msg):
-        """Handler for MSG_PROPOSE.
+        """
         MSG_PROPOSE is accepted only if it carries a ballotnumber greater
         than the highest ballotnumber Acceptor has received.
 
@@ -94,20 +92,16 @@ class Acceptor(Node):
 
     def msg_output(self, conn, msg):
         dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
+        # XXX should this be here?
         os._exit(0)
-
         
 def main():
-    acceptornode = Acceptor()
-    acceptornode.startservice()
+    acceptornode = Acceptor().startservice()
     signal.signal(signal.SIGINT, acceptornode.interrupt_handler)
     signal.signal(signal.SIGTERM, acceptornode.terminate_handler)
     signal.pause()
 
 if __name__=='__main__':
     main()
-
-  
-
 
     
