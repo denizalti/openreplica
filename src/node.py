@@ -156,6 +156,7 @@ class Node():
         # Start a thread that pings neighbors
         timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
         timer_thread.start()
+        return self
 
     def __str__(self):
         """Return Node information (addr:port)"""
