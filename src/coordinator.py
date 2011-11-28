@@ -66,13 +66,13 @@ class Coordinator(Replica):
         while self.decisions.has_key(self.nexttoexecute):
             requestedcommand = self.decisions[self.nexttoexecute]
             if requestedcommand in self.executed:
-                logger("previously executed command %d." % self.nexttoexecute)
+                self.logger.write("State", "previously executed command %d." % self.nexttoexecute)
                 self.nexttoexecute += 1
                 # the window just got bumped by one
                 # check if there are pending commands, and issue one of them
                 self.issue_pending_command(self.nexttoexecute)
             elif requestedcommand not in self.executed:
-                logger("executing command %d." % self.nexttoexecute)
+                self.logger.write("State", "executing command %d." % self.nexttoexecute)
                 # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
                 # We are calling performcore 2 times, the timing gets screwed plus this is very unefficient :(
                 if self.nexttoexecute > WINDOW:
@@ -115,12 +115,11 @@ class Coordinator(Replica):
             for pingpeer in checkliveness:
                 try:
                     self.send(pingmessage, peer=pingpeer)
-                    #logger("PING to %s." %str(pingpeer))
                 except:
                     print "WHOOPS."
                     # take this node out of the configuration
                     deletecommand = self.create_delete_command(pingpeer)
-                    logger("initiating a new coordination command")
+                    self.logger.write("State", "initiating a new coordination command")
                     self.do_command_prepare(deletecommand)
             time.sleep(ACKTIMEOUT)
 
@@ -135,18 +134,18 @@ class Coordinator(Replica):
             for peertoremove in peerstoremove:
                 # take this node out of the configuration
                 deletecommand = self.create_delete_command(peertoremove)
-                logger("initiating a new coordination command to remove %s" % peertoremove)
+                self.logger.write("State", "initiating a new coordination command to remove %s" % peertoremove)
                 self.do_command_prepare(deletecommand)
             time.sleep(LIVENESSTIMEOUT)
 
     def msg_helo(self, conn, msg):
         addcommand = self.create_add_command(msg.source)
-        logger("initiating a new coordination command to add %s" % msg.source)
+        self.logger.write("State", "initiating a new coordination command to add %s" % msg.source)
         self.do_command_prepare(addcommand)
 
     def msg_refer(self, conn, msg):
         """A peer is referred by its bootstrap node"""
-        logger("Got a referral for %s from %s" %(msg.referredpeer, msg.source))
+        self.logger.write("State", "Got a referral for %s from %s" %(msg.referredpeer, msg.source))
         if msg.referredpeer == self.me:
             return
         addcommand = self.create_add_command(msg.referredpeer)
@@ -160,7 +159,7 @@ class Coordinator(Replica):
 def main():
     coordinatornode = Coordinator()
     coordinatornode.startservice()
-    signal.signal(signal.SIGINT, coordinatornode.interrupt_handler)
+    signal.signal(signal.SIGINT, coordinatornode.terminate_handler)
     signal.signal(signal.SIGTERM, coordinatornode.terminate_handler)
     signal.pause()
 

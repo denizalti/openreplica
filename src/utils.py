@@ -12,16 +12,19 @@ def findOwnIP():
     """Retrieves the hostname of the caller"""
     return socket.gethostbyname(socket.gethostname())
 
-logprefix = None
+class Logger():
+    def __init__(self, name):
+        self.prefix = name
+        self.logfile = open("concoord_log_"+name, 'w')
 
-def setlogprefix(logpre):
-    global logprefix
-    logprefix = logpre
+    def write(self, cls, str):
+        print "%s [%s] %s: %s" % (time.asctime(time.localtime(time.time())), self.prefix, cls, str)
+        self.logfile.write("%s [%s] %s: %s" % ((time.asctime(time.localtime(time.time())), self.prefix, cls, str)))
 
-def logger(logstr):
-    if logprefix:
-        print "[%s] %s" % (logprefix, logstr)
+    def close(self):
+        self.logfile.close()
 
+        
 timers = {}
 def starttimer(timerkey, timerno):
     global timers

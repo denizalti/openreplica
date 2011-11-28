@@ -29,7 +29,7 @@ class ClientProxy():
         myaddr = findOwnIP()
         myport = self.socket.getsockname()[1]
         self.me = Peer(myaddr,myport,NODE_CLIENT) 
-        setlogprefix("%s %s" % ('NODE_CLIENT',self.me.getid()))
+        self.logger = Logger("%s %s" % ('NODE_CLIENT',self.me.getid()))
         self.commandnumber = 1
         self.lock = Lock()
 

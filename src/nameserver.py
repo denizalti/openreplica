@@ -17,7 +17,7 @@ try:
     import dns.name
     from dns.flags import *
 except:
-    logger("Install dnspython: http://www.dnspython.org/")
+    print "Install dnspython: http://www.dnspython.org/"
 
 RRTYPE = ['','A','NS','MD','MF','CNAME','SOA', 'MB', 'MG', 'MR', 'NULL', 'WKS', 'PTR', 'HINFO', 'MINFO', 'MX', 'TXT', 'RP', 'AFSDB', 'X25', 'ISDN', 'RT', 'NSAP', 'NSAP_PTR', 'SIG', 'KEY', 'PX', 'GPOS', 'AAAA', 'LOC', 'NXT', '', '', 'SRV']
 RRCLASS = ['','IN','CS','CH','HS']
@@ -51,13 +51,12 @@ class Nameserver(Tracker):
     def udp_server_loop(self):
         while self.alive:
             try:
-                print "Waiting..."
                 inputready,outputready,exceptready = select.select([self.udpsocket],[],[self.udpsocket])
                 for s in exceptready:
-                    print "EXCEPTION ", s
+                    self.logger.write("DNS Error", s)
                 for s in inputready:
                     data,clientaddr = self.udpsocket.recvfrom(UDPMAXLEN)
-                    logger("received a message from address %s" % str(clientaddr))
+                    self.logger.write("DNS State", "received a message from address %s" % str(clientaddr))
                     self.handle_query(data,clientaddr)
             except KeyboardInterrupt, EOFError:
                 os._exit(0)
@@ -94,11 +93,9 @@ class Nameserver(Tracker):
         query = dns.message.from_wire(data)
         response = dns.message.make_response(query)
         for question in query.question:
-            logger("Received Query for %s\n" % question.name)
-            print "Question Name: ", question.name
-            print "My Domain: ", self.mydomain
+            self.logger.write("DNS State", "Received Query for %s\n" % question.name)
             if question.rdtype in [dns.rdatatype.A, dns.rdatatype.TXT] and self.ismyname(question.name):
-                logger("This is me %s" % str(question)) 
+                self.logger.write("DNS State", "This is me %s" % str(question)) 
                 flagstr = 'QR AA RD' # response, authoritative, recursion
                 answerstr = ''    
                 # A Queries --> List all Replicas starting with the Leader
@@ -109,19 +106,17 @@ class Nameserver(Tracker):
                 elif question.rdtype == dns.rdatatype.TXT:
                     answerstr += self.create_answer_section(question, txt=self.txtresponse(question))
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
-                print responsestr
                 response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.NS and self.ismyname(question.name):
-                logger("This is for my name server %s" % str(question)) 
+                self.logger.write("DNS State", "This is for my name server %s" % str(question)) 
                 flagstr = 'QR AA RD' # response, authoritative, recursion
                 answerstr = ''    
                 for address in self.nsresponse(question):
                     answerstr += self.create_answer_section(question, addr=address)
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
-                print responsestr
                 response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.SRV and self.ismyname(question.name):
-                logger("This is for me %s" % str(question)) 
+                self.logger.write("DNS State", "This is for me %s" % str(question)) 
                 flagstr = 'QR AA RD' # response, authoritative, recursion
                 answerstr = ''    
                 for address,port in self.srvresponse(question):
@@ -130,10 +125,10 @@ class Nameserver(Tracker):
                 print responsestr
                 response = dns.message.from_text(responsestr)
             else:
-                logger("Name Error\n")
+                self.logger.write("DNS State", "Name Error\n")
                 flags = QR + AA + RD + dns.rcode.NXDOMAIN
                 response.flags = flags
-        logger( "RESPONSE:\n%s\n---\n" % response)
+        self.logger.write("DNS State", "RESPONSE:\n%s\n---\n" % response)
         self.udpsocket.sendto(response.to_wire(), addr)
 
     def create_response(self, id, opcode=0, rcode=0, flags='', question='', answer='', authority='', additional=''):
@@ -168,7 +163,7 @@ class Nameserver(Tracker):
 def main():
     nameservernode = Nameserver(options.dnsname)
     nameservernode.startservice()
-    signal.signal(signal.SIGINT, nameservernode.interrupt_handler)
+    signal.signal(signal.SIGINT, nameservernode.terminate_handler)
     signal.signal(signal.SIGTERM, nameservernode.terminate_handler)
     signal.pause()
 

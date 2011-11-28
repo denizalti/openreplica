@@ -34,7 +34,7 @@ class ClientProxy():
         self.commandlistcond = Condition()
         self.commandlist = []
         self.requests = {} # Keeps request:(reply, condition) mappings
-        setlogprefix("%s %s" % ('NODE_CLIENT',self.me.getid()))
+        self.logger = Logger("%s %s" % ('NODE_CLIENT',self.me.getid()))
         self.startclientproxy()
 
     def _getipportpairs(self, bootaddr, bootport):
