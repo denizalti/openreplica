@@ -145,6 +145,7 @@ class Client():
                             elif reply.replycode == CR_INPROGRESS:
                                 continue
                             else:
+                                print reply
                                 replied = True
                         if time.time() - starttime > CLIENTRESENDTIMEOUT:
                             if self.debug:

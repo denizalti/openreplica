@@ -28,7 +28,7 @@ class Tracker(Replica):
             if dometaonly and ismeta:
                 # execute a metacommand when the window has expired
                 method = getattr(self, commandname)
-                givenresult = method(commandargs)
+                givenresult = method(*commandargs)
             elif dometaonly and not ismeta:
                 return
             elif not dometaonly and ismeta:
@@ -54,10 +54,10 @@ class Tracker(Replica):
             
         while self.decisions.has_key(self.nexttoexecute):
             if self.decisions[self.nexttoexecute] in self.executed:
-                logger("skipping command %d." % self.nexttoexecute)
+                self.logger.write("State", "skipping command %d." % self.nexttoexecute)
                 self.nexttoexecute += 1
             elif self.decisions[self.nexttoexecute] not in self.executed:
-                logger("executing command %d." % self.nexttoexecute)
+                self.logger.write("State", "executing command %d." % self.nexttoexecute)
 
                 # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
                 if self.nexttoexecute > WINDOW:
@@ -74,7 +74,7 @@ class Tracker(Replica):
                 self.stateuptodate = True
                 return
             updatemessage = UpdateMessage(MSG_UPDATE, self.me)
-            logger("Sending Update Message to ", msg.source)
+            self.logger.write("State", "Sending Update Message to ", msg.source)
             self.send(updatemessage, peer=msg.source)
 
 def main():

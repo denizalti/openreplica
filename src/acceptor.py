@@ -43,7 +43,7 @@ class Acceptor(Node):
         """
         # this ballot should be strictly higher than previous ballots we have accepted,
         if msg.ballotnumber > self.ballotnumber:
-            logger("prepare received with acceptable ballotnumber %s" % str(msg.ballotnumber))
+            self.logger.write("Paxos State", "prepare received with acceptable ballotnumber %s" % str(msg.ballotnumber))
             self.ballotnumber = msg.ballotnumber
             self.last_accept_msg_id = msg.fullid()
             replymsg = PaxosMessage(MSG_PREPARE_ADOPTED,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,givenpvalueset=self.accepted)
@@ -51,9 +51,9 @@ class Acceptor(Node):
         elif msg.ballotnumber == self.ballotnumber and msg.fullid() == self.last_accept_msg_id:
             return
         else:
-            logger("prepare received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))
+            self.logger.write("Paxos State", "prepare received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))
             replymsg = PaxosMessage(MSG_PREPARE_PREEMPTED,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,givenpvalueset=self.accepted)
-        logger("prepare responding to ballotnumber %s" % str(msg.ballotnumber))
+        self.logger.write("Paxos State", "prepare responding to ballotnumber %s" % str(msg.ballotnumber))
         self.send(replymsg,peer=msg.source)
 
     def msg_propose(self, conn, msg):
@@ -67,37 +67,32 @@ class Acceptor(Node):
         commandnumber that is received.
         """
         if msg.ballotnumber >= self.ballotnumber:
-            logger("propose received with acceptable ballotnumber %s" % str(msg.ballotnumber))
+            self.logger.write("Paxos State", "propose received with acceptable ballotnumber %s" % str(msg.ballotnumber))
             self.ballotnumber = msg.ballotnumber
             newpvalue = PValue(msg.ballotnumber,msg.commandnumber,msg.proposal)
             self.accepted.add(newpvalue)
             replymsg = PaxosMessage(MSG_PROPOSE_ACCEPT,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,commandnumber=msg.commandnumber)
         else:
-            logger("propose received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))
+            self.logger.write("Paxos State", "propose received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))
             replymsg = PaxosMessage(MSG_PROPOSE_REJECT,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,commandnumber=msg.commandnumber)
         self.send(replymsg,peer=msg.source)
 
     def msg_garbagecollect(self, conn, msg):
-        print("RECEIVED GARBAGE COLLECTION MESSAGE!")
+        self.logger.write("Paxos State", "Doing garbage collection upto %d" % msg.commandnumber)
         success = self.accepted.truncateto(msg.commandnumber)
         if success:
             self.objectsnapshot = (msg.commandnumber,msg.snapshot)
         else:
-            logger("Garbege Collection failed.")
+            self.logger.write("Garbage Collection Error", "Garbege Collection failed.")
         
     def cmd_paxos(self, args):
         """Shell command [paxos]: Print the paxos state of the Acceptor."""
         keytuples = self.accepted.pvalues.keys()
         print sorted(keytuples, key=lambda keytuple: keytuple[0])
-
-    def msg_output(self, conn, msg):
-        dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
-        # XXX should this be here?
-        os._exit(0)
         
 def main():
     acceptornode = Acceptor().startservice()
-    signal.signal(signal.SIGINT, acceptornode.interrupt_handler)
+    signal.signal(signal.SIGINT, acceptornode.terminate_handler)
     signal.signal(signal.SIGTERM, acceptornode.terminate_handler)
     signal.pause()
 

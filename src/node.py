@@ -14,14 +14,13 @@ import time
 import random
 import select
 import copy
-import fcntl
-try:
-    import dns.resolver
-except:
-    logger("Install dnspython: http://www.dnspython.org/")
-
 from enums import *
 from utils import *
+import fcntl
+#try:
+#    import dns.resolver
+#except:
+#    print("Install dnspython: http://www.dnspython.org/")
 from connection import ConnectionPool,Connection
 from group import Group
 from peer import Peer
@@ -98,8 +97,7 @@ class Node():
         # initialize empty groups
         self.me = Peer(self.addr,self.port,self.type)
         self.id = self.me.getid()
-        if debugoption:
-            setlogprefix("%s %s" % (node_names[self.type],self.id))
+        self.logger = Logger("%s-%s" % (node_names[self.type],self.id))
         self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_LEADER:Group(self.me), \
                        NODE_TRACKER:Group(self.me), NODE_COORDINATOR:Group(self.me), NODE_NAMESERVER:Group(self.me)}
         # connect to the bootstrap node
@@ -110,7 +108,6 @@ class Node():
             
         if self.type == NODE_REPLICA or self.type == NODE_TRACKER or self.type == NODE_NAMESERVER or self.type == NODE_COORDINATOR:
             self.stateuptodate = False
-        print self.id
 
     def _getipportpairs(self, bootaddr, bootport):
         for node in socket.getaddrinfo(bootaddr, bootport):
@@ -132,11 +129,11 @@ class Node():
     def connecttobootstrap(self):
         for bootpeer in self.bootstraplist:
             try:
-                logger("trying to connect to bootstrap: %s" % bootpeer)
+                self.logger.write("State", "trying to connect to bootstrap: %s" % bootpeer)
                 helomessage = HandshakeMessage(MSG_HELO, self.me)
                 self.send(helomessage, peer=bootpeer)
                 self.groups[NODE_REPLICA].add(bootpeer)
-                logger("connected to bootstrap: %s:%d" % (bootpeer.addr,bootpeer.port))
+                self.logger.write("State", "connected to bootstrap: %s:%d" % (bootpeer.addr,bootpeer.port))
                 break
             except socket.error, e:
                 print e
@@ -228,7 +225,7 @@ class Node():
                 for s in inputready:
                     if s == self.socket:
                         clientsock,clientaddr = self.socket.accept()
-                        logger("accepted a connection from address %s" % str(clientaddr))
+                        self.logger.write("State", "accepted a connection from address %s" % str(clientaddr))
                         nascentset.append((clientsock,time.time()))
                         success = True
                     else:
@@ -291,7 +288,7 @@ class Node():
         try:
             method = getattr(self, mname)
         except AttributeError:
-            logger("message not supported: %s" % message)
+            self.logger.write("Message Error", "message not supported: %s" % message)
             return False
         with self.lock:
             method(connection, message)
@@ -316,7 +313,7 @@ class Node():
         return
 
     def msg_refer(self, conn, msg):
-        logger("Received a REFER message, not a coordinator.")
+        self.logger.write("Message Error", "Received a REFER message, not a coordinator.")
 
     def msg_bye(self, conn, msg):
         """Deletes the source of MSG_BYE from groups"""
@@ -342,7 +339,7 @@ class Node():
                     
     def cmd_state(self, args):
         """Shell command [state]: Prints connectivity state of the corresponding Node."""
-        logger("\n%s\n%s\n" % (self.statestr(), self.outstandingmsgstr()))
+        self.logger.write("State", "\n%s\n%s\n" % (self.statestr(), self.outstandingmsgstr()))
 
     def periodic(self):
         """timer function that is responsible for periodic state maintenance
@@ -364,7 +361,7 @@ class Node():
                     now = time.time()
                     if messageinfo.messagestate == ACK_NOTACKED and (messageinfo.timestamp + ACKTIMEOUT) < now:
                         #resend NOTACKED message
-                        logger("re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
+                        self.logger.write("State", "re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
                         self.send(messageinfo.message, peer=messageinfo.destination, isresend=True)
                         messageinfo.timestamp = time.time()
                     elif DO_PERIODIC_PINGS and messageinfo.messagestate == ACK_ACKED and \
@@ -372,11 +369,10 @@ class Node():
                             messageinfo.destination in checkliveness:
                         checkliveness.remove(messageinfo.destination)
             except Exception as ec:
-                logger("exception in resend: %s" % ec)
-                
+                self.logger.write("Connection Error", "exception in resend: %s" % ec)
             if DO_PERIODIC_PINGS:
                 for pingpeer in checkliveness:
-                    logger("sending PING to %s" % pingpeer)
+                    self.logger.write("State", "sending PING to %s" % pingpeer)
                     pingmessage = HandshakeMessage(MSG_PING, self.me)
                     self.send(pingmessage, peer=pingpeer)
             time.sleep(ACKTIMEOUT)
@@ -426,18 +422,10 @@ class Node():
                 message = copy.copy(message)
                 message.assignuniqueid()
 
-    # asynchronous event handlers
-    # XXX delete one of them
     def terminate_handler(self, signal, frame):
         print self.me, "exiting.."
-        logger("exiting...")
+        self.logger.write("State", "exiting...")
+        self.logger.close()
         sys.stdout.flush()
         sys.stderr.flush()
-        os._exit(0)
-
-    def interrupt_handler(self, signal, frame):
-	print 'BYE!'
-        logger("exiting...")
-        sys.stdout.flush()
-	sys.stderr.flush()
         os._exit(0)

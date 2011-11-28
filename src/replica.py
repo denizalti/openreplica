@@ -23,13 +23,6 @@ from message import *
 from command import Command
 from pvalue import PValue, PValueSet
 from exception import *
-from obj.test import Test
-from obj.bank import Bank
-from obj.lock import Lock
-from obj.barrier import Barrier
-from obj.semaphore import Semaphore
-from obj.condition import Condition
-from concoordprofiler import *
 
 backoff_event = Event()
 # Class used to collect responses to both PREPARE and PROPOSE messages
@@ -73,7 +66,7 @@ class Replica(Node):
             try:
                 self.object = getattr(__import__(self.objectfilename, globals(), locals(), [], -1), self.objectname)()
             except Exception as e:
-                logger("Object cannot be found.")
+                self.logger.write("Object Error", "Object cannot be found.")
         self.leader_initializing = False
         self.nexttoexecute = 1
         # decided commands: <commandnumber:command>
@@ -115,7 +108,7 @@ class Replica(Node):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
         to the managements of the Paxos protocol) with a delay of WINDOW commands."""
-        logger("---> SlotNumber: %d Command: %s DoMetaOnly: %s" % (slotnumber, self.decisions[slotnumber], dometaonly))
+        self.logger.write("State:", "---> SlotNumber: %d Command: %s DoMetaOnly: %s" % (slotnumber, self.decisions[slotnumber], dometaonly))
         command = self.decisions[slotnumber]
         commandlist = command.command.split()
         commandname = commandlist[0]
@@ -173,14 +166,14 @@ class Replica(Node):
                     for unblockedclientcommand in unblocked.iterkeys():
                         self.send_reply_to_client(CR_UNBLOCK, None, unblockedclientcommand)
                 except Exception as e:
-                    logger("Error during method invocation: %s" % e)
+                    self.logger.write("Execution Error", "Error during method invocation: %s" % e)
                     givenresult = e
                     clientreplycode = CR_EXCEPTION
                     send_result_to_client = True
                     unblocked = {}
                 self.lock.acquire()
         except (TypeError, AttributeError) as t:
-            logger("command not supported: %s" % (command))
+            self.logger.write("Execution Error", "command not supported: %s" % (command))
             givenresult = 'COMMAND NOT SUPPORTED'
             clientreplycode = CR_EXCEPTION
             unblocked = {}
@@ -202,11 +195,11 @@ class Replica(Node):
                 self.handle_client_command(garbagecommand)
 
     def send_reply_to_client(self, clientreplycode, givenresult, command):
-        logger("Sending REPLY to CLIENT")
+        self.logger.write("State", "Sending REPLY to CLIENT")
         clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=givenresult, replycode=clientreplycode, inresponseto=command.clientcommandnumber)
         clientconn = self.clientpool.get_connection_by_peer(command.client)
         if clientconn.thesocket == None:
-            logger("Client disconnected.")
+            self.logger.write("State", "Client disconnected.")
             return
         clientconn.send(clientreply)
 
@@ -221,7 +214,7 @@ class Replica(Node):
         while self.decisions.has_key(self.nexttoexecute):
             requestedcommand = self.decisions[self.nexttoexecute]
             if requestedcommand in self.executed:
-                logger("previously executed command %d." % self.nexttoexecute)
+                self.logger.write("State", "previously executed command %d." % self.nexttoexecute)
                 # If we are a leader, we should send a reply to the client for this command
                 # in case the client didn't receive the reply from the previous leader
                 if self.type == NODE_LEADER:
@@ -233,14 +226,14 @@ class Replica(Node):
                                 # This client has been UNBLOCKED
                                 prevresult = None
                                 prevrcode = CR_UNBLOCK
-                    logger("Sending reply to client.")
+                    self.logger.write("State", "Sending reply to client.")
                     self.send_reply_to_client(prevrcode, prevresult, requestedcommand)
                 self.nexttoexecute += 1
                 # the window just got bumped by one
                 # check if there are pending commands, and issue one of them
                 self.issue_pending_command(self.nexttoexecute)
             elif requestedcommand not in self.executed:
-                logger("executing command %d." % self.nexttoexecute)
+                self.logger.write("State", "executing command %d." % self.nexttoexecute)
                 # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
                 # We are calling performcore 2 times, the timing gets screwed plus this is very unefficient :(
                 if self.nexttoexecute > WINDOW:
@@ -261,7 +254,7 @@ class Replica(Node):
         self.perform(msg)
 
         if not self.stateuptodate and (self.type == NODE_REPLICA or self.type == NODE_NAMESERVER):
-            logger("HAS TO UPDATE!")
+            self.logger.write("State", "Updating..")
             if msg.commandnumber == 1:
                 self.stateuptodate = True
                 return
@@ -288,14 +281,14 @@ class Replica(Node):
         pass
 
     def _add_node(self, nodetype, nodename):
-        logger("Adding node: %s %s" % (nodetype, nodename))
+        self.logger.write("State", "Adding node: %s %s" % (nodetype, nodename))
         ipaddr,port = nodename.split(":")
         nodetype = int(nodetype)
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype].add(nodepeer)
         
     def _del_node(self, nodetype, nodename):
-        logger("Deleting node: %s %s" % (nodetype, nodename))
+        self.logger.write("State", "Deleting node: %s %s" % (nodetype, nodename))
         ipaddr,port = nodename.split(":")
         nodetype = int(nodetype)
         nodepeer = Peer(ipaddr,int(port),nodetype)
@@ -303,7 +296,7 @@ class Replica(Node):
 
     def _garbage_collect(self, garbagecommandnumber):
         """ garbage collect """
-        logger("Initiating garbage collection upto cmd#%d" % garbagecommandnumber)
+        self.logger.write("State", "Initiating garbage collection upto cmd#%d" % garbagecommandnumber)
         garbagemsg = GarbageCollectMessage(MSG_GARBAGECOLLECT,self.me,commandnumber=garbagecommandnumber,snapshot=self.object)
         self.send(garbagemsg,group=self.groups[NODE_ACCEPTOR])
 
@@ -348,7 +341,7 @@ class Replica(Node):
             backoff_thread = Thread(target=self.update_backoff)
             backoff_event.clear()
             backoff_thread.start()
-            logger("Now leader..")
+            self.logger.write("State", "Now leader..")
             
     def unbecome_leader(self):
         """stop being a leader and change type to NODE_REPLICA"""
@@ -386,15 +379,15 @@ class Replica(Node):
             if self.type != NODE_LEADER:
                 # check to see if I have full history
                 if self.stateuptodate:
-                    logger("becoming leader")
+                    self.logger.write("State", "becoming leader")
                     self.become_leader()
                 else:
-                    logger("initializing leader")
+                    self.logger.write("State", "initializing leader")
                     self.become_leader()
                     self.leader_initializing = True
         elif self.type == NODE_LEADER:
             # there is someone else who should act as a leader
-            logger("unbecoming leader")
+            self.logger.write("State", "unbecoming leader")
             self.unbecome_leader()
 
     def update_ballotnumber(self,seedballotnumber):
@@ -448,11 +441,11 @@ class Replica(Node):
         -- if it has not been executed yet send INPROGRESS
         - if this request has not been received before initiate a paxos round for the command"""
         if self.type != NODE_LEADER:
-            logger("got a request but not a leader..")
+            self.logger.write("State", "got a request but not a leader..")
             return
         
         if self.receivedclientrequests.has_key((givencommand.client, givencommand.clientcommandnumber)):
-            logger("client request received previously")
+            loggerself.logger.write("State", "client request received previously")
             resultsent = False
             # Check if the request has been executed
             if givencommand in self.decidedcommandset:
@@ -472,8 +465,8 @@ class Replica(Node):
                     conn.send(clientreply)
         else:
             self.receivedclientrequests[(givencommand.client,givencommand.clientcommandnumber)] = givencommand
-            logger("initiating a new command")
-            logger("leader is active: %s" % self.active)
+            self.logger.write("State", "initiating a new command")
+            self.logger.write("State", "leader is active: %s" % self.active)
             if self.active and not prepare:
                 self.do_command_propose(givencommand)
             else:
@@ -500,7 +493,7 @@ class Replica(Node):
         self.check_leader_promotion()
         self.callsfromclient += 1
         if self.type != NODE_LEADER:
-            logger("not leader.. request rejected..")
+            self.logger.write("State", "not leader.. request rejected..")
             clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_REJECTED, inresponseto=msg.command.clientcommandnumber)
             conn.send(clientreply)
             # Check the Leader to see if the Client had a reason to think that we are the leader
@@ -552,7 +545,7 @@ class Replica(Node):
                 send_result_to_client = True
                 unblocked = {}
         except (TypeError, AttributeError) as t:
-            logger("command not supported: %s" % (command))
+            self.logger.write("Execution Error", "command not supported: %s" % (command))
             givenresult = 'COMMAND NOT SUPPORTED'
             clientreplycode = CR_EXCEPTION
             unblocked = {}
@@ -597,11 +590,11 @@ class Replica(Node):
         self.remove_from_pendingcommands(givencommandnumber)
         self.add_to_proposals(givencommandnumber, givenproposal)
         recentballotnumber = self.ballotnumber
-        logger("proposing command: %d:%s with ballotnumber %s and %d acceptors" % (givencommandnumber,givenproposal,str(recentballotnumber),len(self.groups[NODE_ACCEPTOR])))
+        self.logger.write("State", "proposing command: %d:%s with ballotnumber %s and %d acceptors" % (givencommandnumber,givenproposal,str(recentballotnumber),len(self.groups[NODE_ACCEPTOR])))
         # since we never propose a commandnumber that is beyond the window, we can simply use the current acceptor set here
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, givencommandnumber, givenproposal)
         if len(prc.acceptors) == 0:
-            logger("There are no acceptors!")
+            self.logger.write("System Error", "There are no acceptors!")
             self.remove_from_proposals(givencommandnumber)
             self.add_to_pendingcommands(givencommandnumber, givenproposal)
             return
@@ -615,7 +608,7 @@ class Replica(Node):
         A command is proposed by running the PROPOSE stage of Paxos Protocol for the command.
         """
         if self.type != NODE_LEADER and self.type != NODE_COORDINATOR:
-            logger("Ignoring received propose: not a leader.")
+            self.logger.write("State", "Ignoring received propose: not a leader.")
             return
         givencommandnumber = self.find_commandnumber()
         self.add_to_pendingcommands(givencommandnumber, givenproposal)
@@ -632,7 +625,7 @@ class Replica(Node):
         self.remove_from_pendingcommands(givencommandnumber)
         self.add_to_proposals(givencommandnumber, givenproposal)
         newballotnumber = self.ballotnumber
-        logger("preparing command: %d:%s with ballotnumber %s" % (givencommandnumber, givenproposal,str(newballotnumber)))
+        self.logger.write("State", "preparing command: %d:%s with ballotnumber %s" % (givencommandnumber, givenproposal,str(newballotnumber)))
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], newballotnumber, givencommandnumber, givenproposal)
         if len(prc.acceptors) == 0:
             print "There are no acceptors."
@@ -690,14 +683,14 @@ class Replica(Node):
         if self.outstandingprepares.has_key(msg.inresponseto):
             prc = self.outstandingprepares[msg.inresponseto]
             prc.received[msg.source] = msg
-            logger("got an accept for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
+            self.logger.write("Paxos State", "got an accept for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
             assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PREPARE_ADOPTED can't have non-matching ballotnumber" % self
             # add all the p-values from the response to the possiblepvalueset
             if msg.pvalueset is not None:
                 prc.possiblepvalueset.union(msg.pvalueset)
 
             if len(prc.received) >= prc.nquorum:
-                logger("suffiently many accepts on prepare!")
+                self.logger.write("Paxos State", "suffiently many accepts on prepare!")
                 del self.outstandingprepares[msg.inresponseto]
                 # choose pvalues with distinctive commandnumbers and highest ballotnumbers
                 pmaxset = prc.possiblepvalueset.pmax()
@@ -708,7 +701,7 @@ class Replica(Node):
                 if self.proposals[prc.commandnumber] != prc.proposal:
                     self.do_command_propose(prc.proposal)
                 for chosencommandnumber,chosenproposal in self.proposals.iteritems():
-                    logger("Sending PROPOSE for %d, %s" % (chosencommandnumber, chosenproposal))
+                    self.logger.write("Paxos State", "Sending PROPOSE for %d, %s" % (chosencommandnumber, chosenproposal))
                     newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, chosencommandnumber, chosenproposal)
                     self.outstandingproposes[chosencommandnumber] = newprc
                     propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotnumber,commandnumber=chosencommandnumber,proposal=chosenproposal)
@@ -734,7 +727,7 @@ class Replica(Node):
         """
         if self.outstandingprepares.has_key(msg.inresponseto):
             prc = self.outstandingprepares[msg.inresponseto]
-            logger("got a reject for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
+            self.logger.write("Paxos State", "got a reject for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
             # take this response collector out of the outstanding prepare set
             del self.outstandingprepares[msg.inresponseto]
             # become inactive
@@ -769,17 +762,17 @@ class Replica(Node):
             prc = self.outstandingproposes[msg.commandnumber]
             if msg.inresponseto == prc.ballotnumber:
                 prc.received[msg.source] = msg
-                logger("got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts" % \
+                self.logger.write("Paxos State", "got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts" % \
                        (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
                 if len(prc.received) >= prc.nquorum:
-                    logger("WE AGREE!")
+                    self.logger.write("Paxos State", "Agreed on %s" % prc.proposal) 
                     # take this response collector out of the outstanding propose set
                     self.add_to_proposals(prc.commandnumber, prc.proposal)
                     del self.outstandingproposes[msg.commandnumber]
                     # now we can perform this action on the replicas
                     performmessage = PaxosMessage(MSG_PERFORM,self.me,commandnumber=prc.commandnumber,proposal=prc.proposal)
                     try:
-                        logger("Sending PERFORM!")
+                        self.logger.write("Paxos State", "Sending PERFORM!")
                         self.send(performmessage, group=self.groups[NODE_REPLICA])
                         self.send(performmessage, group=self.groups[NODE_LEADER])
                         self.send(performmessage, group=self.groups[NODE_NAMESERVER])
@@ -804,7 +797,7 @@ class Replica(Node):
         if self.outstandingproposes.has_key(msg.commandnumber):
             prc = self.outstandingproposes[msg.commandnumber]
             if msg.inresponseto == prc.ballotnumber:
-                logger("got a reject for proposal ballotno %s commandno %s proposal %s still %d out of %d accepts" % \
+                self.logger.write("Paxos State", "got a reject for proposal ballotno %s commandno %s proposal %s still %d out of %d accepts" % \
                        (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
                 # take this response collector out of the outstanding propose set
                 del self.outstandingproposes[msg.commandnumber]
@@ -819,7 +812,7 @@ class Replica(Node):
                 if leader_causing_reject < self.me:
                     # if I lost to someone whose name precedes mine, back off more than he does
                     self.backoff += BACKOFFINCREASE
-                logger("Backing off")
+                self.logger.write("Paxos State", "There is another leader, backing off.")
                 time.sleep(self.backoff)
                 self.do_command_prepare(prc.proposal)
 
@@ -828,24 +821,24 @@ class Replica(Node):
         while True:
             currentleader = self.find_leader()
             if currentleader != self.me:
-                logger("Sending PING to %s" % currentleader)
+                self.logger.write("State", "Sending PING to %s" % currentleader)
                 pingmessage = HandshakeMessage(MSG_PING, self.me)
                 try:
                     self.send(pingmessage, peer=currentleader)
                 except:
-                    logger("removing current leader from the replicalist")
+                    self.logger.write("State", "Leader not responding, removing current leader from the replicalist")
                     self.groups[NODE_REPLICA].remove(currentleader)
             time.sleep(LIVENESSTIMEOUT)
 
     def ping_leader_once(self):
         currentleader = self.find_leader()
         if currentleader != self.me:
-            logger("Sending PING to %s" % currentleader)
+            self.logger.write("State", "Sending PING to %s" % currentleader)
             helomessage = HandshakeMessage(MSG_HELO, self.me)
             try:
                 self.send(helomessage, peer=currentleader)
             except:
-                logger("removing current leader from the replicalist")
+                self.logger.write("State", "Leader not responding, removing current leader from the replicalist")
                 self.groups[NODE_REPLICA].remove(currentleader)
 
     def msg_helo(self, conn, msg):
@@ -941,7 +934,7 @@ class Replica(Node):
 def main():
     replicanode = Replica()
     replicanode.startservice()
-    signal.signal(signal.SIGINT, replicanode.interrupt_handler)
+    signal.signal(signal.SIGINT, replicanode.terminate_handler)
     signal.signal(signal.SIGTERM, replicanode.terminate_handler)
     signal.pause()
     
