@@ -4,6 +4,7 @@
 @date: February 3, 2011
 '''
 import socket
+import os, sys
 import time
 import string
 from enums import *

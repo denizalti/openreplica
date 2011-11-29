@@ -3,16 +3,13 @@ from clientproxy import *
 
 class OpenReplicaCoord():
 	def __init__(self):
-		ClientProxy()
+		invoke_command(self, "__init__")
 
 	def __str__(self):
 		invoke_command(self, "__str__")
 
 	def addnodetosubdomain(self, subdomain, node):
 		invoke_command(self, "addnodetosubdomain", subdomain, node)
-
-	def addsubdomain(self, subdomain):
-		invoke_command(self, "addsubdomain", subdomain)
 
 	def delnodefromsubdomain(self, subdomain, node):
 		invoke_command(self, "delnodefromsubdomain", subdomain, node)
