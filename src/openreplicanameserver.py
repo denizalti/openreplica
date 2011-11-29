@@ -76,7 +76,7 @@ class OpenReplicaNameserver(Nameserver):
 def main():
     nameservernode = OpenReplicaNameserver()
     nameservernode.startservice()
-    signal.signal(signal.SIGINT, nameservernode.interrupt_handler)
+    signal.signal(signal.SIGINT, nameservernode.terminate_handler)
     signal.signal(signal.SIGTERM, nameservernode.terminate_handler)
     signal.pause()
 
