@@ -1,10 +1,11 @@
 import xmlrpclib
 import sys
 
+SLICENAME = 'SLICENAME'
 s = xmlrpclib.ServerProxy('https://www.planet-lab.org/PLCAPI/', allow_none=True)
 # Specify password authentication
-auth = {'Username': 'denizalti@gmail.com',
-        'AuthString': '11235813',
+auth = {'Username': 'USERNAME',
+        'AuthString': 'PASSWORD',
         'AuthMethod': 'password'}
 authorized = s.AuthCheck(auth)
 if not authorized:
@@ -24,11 +25,11 @@ def writeallnodestofile():
     f.close()
 
 def addnodes(nodes):
-    slice_id = s.GetSlices(auth, ['cornell_openreplica'], ['slice_id'])[0]['slice_id']
+    slice_id = s.GetSlices(auth, [SLICENAME], ['slice_id'])[0]['slice_id']
     s.AddSliceToNodes(auth, slice_id, nodes)
 
 def shownodes():
-    node_ids = s.GetSlices(auth, ['cornell_openreplica'], ['node_ids'])[0]['node_ids']
+    node_ids = s.GetSlices(auth, [SLICENAME], ['node_ids'])[0]['node_ids']
     node_hostnames = [node['hostname'] for node in s.GetNodes(auth, node_ids, ['hostname'])]
     print node_hostnames
 
