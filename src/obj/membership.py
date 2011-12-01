@@ -1,19 +1,12 @@
 class Membership():
-    """Object to keep track of members in a system.
-    Supports functions:
-    - add: adds a member
-    - remove: removes a member
-    """
     def __init__(self):
         self.members = set()
 
-    def add(self, args, **kwargs):
-        member = args[0]
+    def add(self, member):
         if member not in self.members:
             self.members.add(member)
         
-    def remove(self, args, **kwargs):
-        member = args[0]
+    def remove(self, member):
         if member in self.members:
             self.members.remove(member)
         else:

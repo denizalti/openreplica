@@ -445,7 +445,7 @@ class Replica(Node):
             return
         
         if self.receivedclientrequests.has_key((givencommand.client, givencommand.clientcommandnumber)):
-            loggerself.logger.write("State", "client request received previously")
+            self.logger.write("State", "client request received previously")
             resultsent = False
             # Check if the request has been executed
             if givencommand in self.decidedcommandset:
