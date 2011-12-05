@@ -6,6 +6,7 @@ blacklist = ["open","setattr","getattr","compile","exec","eval","execfile", "glo
 class SafetyVisitor(ast.NodeVisitor):
     def __init__(self):
         self.safe = True
+        self.classes = []
     
     def generic_visit(self, node):
         if DEBUG:
@@ -33,6 +34,7 @@ class SafetyVisitor(ast.NodeVisitor):
     def visit_ClassDef(self, node):
         if DEBUG:
             print 'ClassDef : ', node.name
+        self.classes.append(node.name)
         self.generic_visit(node)
 
     def visit_Name(self, node):
@@ -97,7 +99,7 @@ class SafetyVisitor(ast.NodeVisitor):
                         print "%d | File operation with variable argument: %s --> EXIT" % (node.lineno,arg.id)
 
 def main():
-    path = "/Users/denizalti/paxi/src/safetytest.py"
+    path = "./safetytest.py"
     astnode = compile(open(path, 'rU').read(),"<string>","exec",_ast.PyCF_ONLY_AST)
     v = SafetyVisitor()
     v.visit(astnode)
