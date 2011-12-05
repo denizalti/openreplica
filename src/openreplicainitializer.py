@@ -140,23 +140,28 @@ def create_proxy(objectfile, classname):
     return proxystring
 
 def main():
-    # Create client object file
-    if options.objectcode == None:
-        objectfile = create_objectfilefromfile(options.objectfilename)
-    else:
-        objectfile = create_objectfilefromcode(options.objectfilename, options.objectcode)
-    if not objectfile:
-        print "Objectfile cannot be created. Check permissions."
-        os._exit(0)
-    # Check safety
-    if not check_object(objectfile):
-        os._exit(0)
-    # Start Nodes
-    print "-- connecting to Planet Lab"
-    configuration = (int(options.replicanum), int(options.acceptornum), int(options.nameservernum))
-    start_nodes(options.subdomain, objectfile, configuration)
-    # Create Proxy
-    clientproxy = create_proxy(objectfile, options.classname)
+    try: 
+        # Create client object file
+        if options.objectcode == None:
+            objectfile = create_objectfilefromfile(options.objectfilename)
+        else:
+            objectfile = create_objectfilefromcode(options.objectfilename, options.objectcode)
+        if not objectfile:
+            print "Objectfile cannot be created. Check permissions."
+            # XXX Exit with an error code (not 0)
+            os._exit(1)
+        # Check safety
+        if not check_object(objectfile):
+            os._exit(1)
+        # Start Nodes
+        print "-- connecting to Planet Lab"
+        configuration = (int(options.replicanum), int(options.acceptornum), int(options.nameservernum))
+        start_nodes(options.subdomain, objectfile, configuration)
+        # Create Proxy
+        clientproxy = create_proxy(objectfile, options.classname)
+    except Exception as e:
+        print "Error: "
+        print e
     
 if __name__=='__main__':
     main()
