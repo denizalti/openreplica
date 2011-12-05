@@ -5,7 +5,7 @@
 '''
 from optparse import OptionParser
 from time import sleep,time
-import os, sys, time
+import os, sys, time, shutil
 import ast, _ast
 import subprocess
 from plmanager import *
@@ -106,6 +106,7 @@ def get_node_name(node, nodeconn, type):
 def create_proxy(clientobjectfilepath, classname):
     print "-- creating proxy"
     objectfilename = os.path.basename(clientobjectfilepath)
+    shutil.copy(clientobjectfilepath, objectfilename)
     modulename = os.path.basename(objectfilename).rsplit(".")[0]
     proxyfile = createproxyfromname(modulename, classname)
     f = open(proxyfile.name, 'r')
