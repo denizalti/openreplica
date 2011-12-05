@@ -32,7 +32,8 @@ from concoordprofiler import *
 parser = OptionParser(usage="usage: %prog -p port -b bootstrap -o object -l -d")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
-parser.add_option("-o", "--object", action="store", dest="object", default=None, help="replicated object")
+parser.add_option("-f", "--objectfilename", action="store", dest="objectfilename", help="client object file name")
+parser.add_option("-c", "--objectname", action="store", dest="objectname", help="object name")
 parser.add_option("-l", "--local", action="store_true", dest="local", default=False, help="initiates the node at localhost")
 parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
 parser.add_option("-n", "--name", action="store", dest="dnsname", default='', help="dns name")
@@ -45,7 +46,7 @@ class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
     """ 
-    def __init__(self, nodetype, port=options.port, givenbootstraplist=options.bootstrap, local=options.local, debugoption=options.debug, replicatedobject=options.object, dnsname=options.dnsname, instantiateobj=False):
+    def __init__(self, nodetype, port=options.port, givenbootstraplist=options.bootstrap, local=options.local, debugoption=options.debug, objectfilename=options.objectfilename, objectname=options.objectname, dnsname=options.dnsname, instantiateobj=False):
         """Node State
         - addr: hostname for Node, detected automatically
         - port: port for Node, can be taken from the commandline (-p [port]) or
@@ -68,7 +69,8 @@ class Node():
         self.connectionpool = ConnectionPool()
         self.type = nodetype
         if instantiateobj:
-            self.objectfilename, self.objectname = replicatedobject.split(".")
+            self.objectfilename = objectfilename
+            self.objectname = objectname
 
         self.receivedmessages_semaphore = Semaphore(0)
         self.receivedmessages = []
