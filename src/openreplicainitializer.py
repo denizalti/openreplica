@@ -15,16 +15,16 @@ from openreplicacoordobjproxy import *
 
 parser = OptionParser(usage="usage: %prog -s subdomain -n objectname -o objectcode -r replicas -a acceptors -n nameservers")
 parser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
-parser.add_option("-f", "--objectfilename", action="store", dest="objectfilename", help="client object file name")
+parser.add_option("-f", "--objectfilepath", action="store", dest="objectfilepath", help="client object file path")
 parser.add_option("-c", "--classname", action="store", dest="classname", help="main class name")
 parser.add_option("-r", "--replicas", action="store", dest="replicanum", default=1, help="number of replicas")
 parser.add_option("-a", "--acceptors", action="store", dest="acceptornum", default=1, help="number of acceptor")
 parser.add_option("-n", "--nameservers", action="store", dest="nameservernum", default=1, help="number of nameservers")
 (options, args) = parser.parse_args()
 
-def check_object(clientobjectfilename):
+def check_object(clientobjectfilepath):
     print "-- checking object safety"
-    astnode = compile(open(clientobjectfilename, 'rU').read(),"<string>","exec",_ast.PyCF_ONLY_AST)
+    astnode = compile(open(clientobjectfilepath, 'rU').read(),"<string>","exec",_ast.PyCF_ONLY_AST)
     v = SafetyVisitor()
     v.visit(astnode)
     return v.safe
@@ -55,8 +55,9 @@ def check_planetlab_pythonversion(plconn, node):
     print '\n'.join(output)
     return False,output
 
-def start_nodes(subdomain, clientobjectfilename, classname, configuration):
+def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     # locate the right number of suitable PlanetLab nodes
+    clientobjectfilename = os.path.basename(clientobjectfilepath)
     numreplicas, numacceptors, numnameservers = configuration
     bootstrap = PLConnection(1, [check_planetlab_pythonversion])
     nameservers = PLConnection(numnameservers, [check_planetlab_dnsport, check_planetlab_pythonversion])
@@ -65,7 +66,7 @@ def start_nodes(subdomain, clientobjectfilename, classname, configuration):
     print "Picked all nodes!"
     allnodes = PLConnection(nodes=nameservers.getHosts() + replicas.getHosts() + acceptors.getHosts() + bootstrap.getHosts())
     processnames = []
-    allnodes.uploadall(clientobjectfilename, "bin/")
+    allnodes.uploadall(clientobjectfilepath, "bin/"+clientobjectfilename)
     print "-- setting up the environment"
     print "--- initializing bootstrap"
     bootstrap.executecommandall("nohup python bin/replica.py -f %s -c %s" % (clientobjectfilename, classname), False)
@@ -102,8 +103,9 @@ def get_node_name(node, nodeconn, type):
         print "Node creation: ", success, returnvalue
     return returnvalue[0].strip().split('-')[1]
 
-def create_proxy(objectfilename, classname):
+def create_proxy(clientobjectfilepath, classname):
     print "-- creating proxy"
+    objectfilename = os.path.basename(clientobjectfilepath)
     modulename = os.path.basename(objectfilename).rsplit(".")[0]
     proxyfile = createproxyfromname(modulename, classname)
     f = open(proxyfile.name, 'r')
@@ -113,17 +115,17 @@ def create_proxy(objectfilename, classname):
     return proxystring
 
 def main():
-    try: 
+    try:
         # Check safety
-        if not check_object(options.objectfilename):
+        if not check_object(options.objectfilepath):
             print "Object is not safe for us to execute."
             os._exit(1)
         # Start Nodes
         print "-- connecting to Planet Lab"
         configuration = (int(options.replicanum), int(options.acceptornum), int(options.nameservernum))
-        start_nodes(options.subdomain, options.objectfilename, options.classname, configuration)
+        start_nodes(options.subdomain, options.objectfilepath, options.classname, configuration)
         # Create Proxy
-        clientproxy = create_proxy(options.objectfilename, options.classname)
+        clientproxy = create_proxy(options.objectfilepath, options.classname)
     except Exception as e:
         print "Error: "
         print e
