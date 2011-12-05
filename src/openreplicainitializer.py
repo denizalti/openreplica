@@ -79,25 +79,24 @@ def check_planetlab_pythonversion(plconn, node):
     print '\n'.join(output)
     return False,output
 
-def start_nodes(subdomain, clientobjectfile, configuration):
+def start_nodes(subdomain, clientobjectfile, classname, configuration):
     # locate the right number of suitable PlanetLab nodes
     numreplicas, numacceptors, numnameservers = configuration
     bootstrap = PLConnection(1, [check_planetlab_pythonversion])
     nameservers = PLConnection(numnameservers, [check_planetlab_dnsport, check_planetlab_pythonversion])
     replicas = PLConnection(numreplicas-1, [check_planetlab_pythonversion])
     acceptors = PLConnection(numacceptors, [check_planetlab_pythonversion])
-    print "Done!"
+    print "Picked all nodes!"
     allnodes = PLConnection(nodes=nameservers.getHosts() + replicas.getHosts() + acceptors.getHosts() + bootstrap.getHosts())
     processnames = []
     #clientbundlepath = os.path.abspath("XXX")
     #allnodes.uploadall(clientbundlepath)
     print "-- setting up the environment"
     print "--- initializing bootstrap"
-    bootstrap.executecommandall("nohup python bin/replica.py -o openreplicacoordobj.OpenReplicaCoord", False)
+    bootstrap.executecommandall("nohup python bin/replica.py -f %s -c %s" % (clientobjectfile.name, classname), False)
     returnvalue = ('','')
     while returnvalue == ('',''):
         success, returnvalue = bootstrap.executecommandone(bootstrap.getHosts()[0], "ls | grep REPLICA")
-        print success, returnvalue
     bootstrapname = returnvalue[0].strip().split('-')[1]
     processnames.append(bootstrapname)
     print "Bootstrap: ", bootstrapname
@@ -106,11 +105,11 @@ def start_nodes(subdomain, clientobjectfile, configuration):
     for acceptor in acceptors.getHosts():
         processnames.append(get_node_name(acceptor, acceptors, 'ACCEPTOR'))
     print "--- initializing replicas"
-    replicas.executecommandall("nohup python bin/replica.py -o openreplicacoordobj.OpenReplicaCoord -b %s" % bootstrapname, False)
+    replicas.executecommandall("nohup python bin/replica.py -f %s -c %s -b %s" % (clientobjectfile.name, classname, bootstrapname), False)
     for replica in replicas.getHosts():
         processnames.append(get_node_name(replica, replicas, 'REPLICA'))
     print "--- initializing nameservers"
-    nameservers.executecommandone(nameservers.getHosts()[0], "sudo -A nohup python bin/nameserver.py -o openreplicacoordobj.OpenReplicaCoord -b %s -n %s" % (bootstrapname, subdomain), False)
+    nameservers.executecommandone(nameservers.getHosts()[0], "sudo -A nohup python bin/nameserver.py -n %s -f %s -c %s -b %s" % (subdomain, clientobjectfile.name, classname, bootstrapname), False)
     for nameserver in nameservers.getHosts():
         processnames.append(get_node_name(nameserver, nameservers, 'NAMESERVER'))
     print "Processes: ", processnames
@@ -155,7 +154,7 @@ def main():
         # Start Nodes
         print "-- connecting to Planet Lab"
         configuration = (int(options.replicanum), int(options.acceptornum), int(options.nameservernum))
-        start_nodes(options.subdomain, objectfile, configuration)
+        start_nodes(options.subdomain, objectfile, options.classname, configuration)
         # Create Proxy
         clientproxy = create_proxy(objectfile, options.classname)
     except Exception as e:

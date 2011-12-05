@@ -5,7 +5,6 @@
 '''
 import socket, os, sys, time
 from threading import Thread, Lock, Condition
-
 from enums import *
 from utils import *
 from connection import ConnectionPool, Connection
