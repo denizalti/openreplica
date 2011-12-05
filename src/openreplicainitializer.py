@@ -17,38 +17,14 @@ parser = OptionParser(usage="usage: %prog -s subdomain -n objectname -o objectco
 parser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
 parser.add_option("-f", "--objectfilename", action="store", dest="objectfilename", help="client object file name")
 parser.add_option("-c", "--classname", action="store", dest="classname", help="main class name")
-parser.add_option("-o", "--objectcode", action="store", dest="objectcode", help="client object code")
 parser.add_option("-r", "--replicas", action="store", dest="replicanum", default=1, help="number of replicas")
 parser.add_option("-a", "--acceptors", action="store", dest="acceptornum", default=1, help="number of acceptor")
 parser.add_option("-n", "--nameservers", action="store", dest="nameservernum", default=1, help="number of nameservers")
 (options, args) = parser.parse_args()
 
-def create_objectfilefromcode(objectfilename, objectcode):
-    print "[1] creating object file from code"
-    try:
-        abspath = os.path.abspath(objectfilename)
-        objectfile = open(abspath, "w")
-        objectfile.write(objectcode)
-        objectfile.close()
-        return objectfile
-    except:
-        return None
-
-def create_objectfilefromfile(objectfilename):
-    # For this function the object should be in the same
-    # folder as the initializer
-    print "-- creating object file from file"
-    try:
-        abspath = os.path.abspath(objectfilename)
-        objectfile = open(abspath, "r")
-        objectfile.close()
-        return objectfile
-    except:
-        return None
-
-def check_object(clientobjectfile):
+def check_object(clientobjectfilename):
     print "-- checking object safety"
-    astnode = compile(open(clientobjectfile.name, 'rU').read(),"<string>","exec",_ast.PyCF_ONLY_AST)
+    astnode = compile(open(clientobjectfilename, 'rU').read(),"<string>","exec",_ast.PyCF_ONLY_AST)
     v = SafetyVisitor()
     v.visit(astnode)
     return v.safe
@@ -79,7 +55,7 @@ def check_planetlab_pythonversion(plconn, node):
     print '\n'.join(output)
     return False,output
 
-def start_nodes(subdomain, clientobjectfile, classname, configuration):
+def start_nodes(subdomain, clientobjectfilename, classname, configuration):
     # locate the right number of suitable PlanetLab nodes
     numreplicas, numacceptors, numnameservers = configuration
     bootstrap = PLConnection(1, [check_planetlab_pythonversion])
@@ -93,7 +69,7 @@ def start_nodes(subdomain, clientobjectfile, classname, configuration):
     #allnodes.uploadall(clientbundlepath)
     print "-- setting up the environment"
     print "--- initializing bootstrap"
-    bootstrap.executecommandall("nohup python bin/replica.py -f %s -c %s" % (clientobjectfile.name, classname), False)
+    bootstrap.executecommandall("nohup python bin/replica.py -f %s -c %s" % (clientobjectfilename, classname), False)
     returnvalue = ('','')
     while returnvalue == ('',''):
         success, returnvalue = bootstrap.executecommandone(bootstrap.getHosts()[0], "ls | grep REPLICA")
@@ -105,11 +81,11 @@ def start_nodes(subdomain, clientobjectfile, classname, configuration):
     for acceptor in acceptors.getHosts():
         processnames.append(get_node_name(acceptor, acceptors, 'ACCEPTOR'))
     print "--- initializing replicas"
-    replicas.executecommandall("nohup python bin/replica.py -f %s -c %s -b %s" % (clientobjectfile.name, classname, bootstrapname), False)
+    replicas.executecommandall("nohup python bin/replica.py -f %s -c %s -b %s" % (clientobjectfilename, classname, bootstrapname), False)
     for replica in replicas.getHosts():
         processnames.append(get_node_name(replica, replicas, 'REPLICA'))
     print "--- initializing nameservers"
-    nameservers.executecommandone(nameservers.getHosts()[0], "sudo -A nohup python bin/nameserver.py -n %s -f %s -c %s -b %s" % (subdomain, clientobjectfile.name, classname, bootstrapname), False)
+    nameservers.executecommandone(nameservers.getHosts()[0], "sudo -A nohup python bin/nameserver.py -n %s -f %s -c %s -b %s" % (subdomain, clientobjectfilename, classname, bootstrapname), False)
     for nameserver in nameservers.getHosts():
         processnames.append(get_node_name(nameserver, nameservers, 'NAMESERVER'))
     print "Processes: ", processnames
@@ -127,9 +103,9 @@ def get_node_name(node, nodeconn, type):
         print "Node creation: ", success, returnvalue
     return returnvalue[0].strip().split('-')[1]
 
-def create_proxy(objectfile, classname):
+def create_proxy(objectfilename, classname):
     print "-- creating proxy"
-    modulename = os.path.basename(objectfile.name).rsplit(".")[0]
+    modulename = os.path.basename(objectfilename).rsplit(".")[0]
     proxyfile = createproxyfromname(modulename, classname)
     f = open(proxyfile.name, 'r')
     proxystring = f.read()
@@ -139,24 +115,16 @@ def create_proxy(objectfile, classname):
 
 def main():
     try: 
-        # Create client object file
-        if options.objectcode == None:
-            objectfile = create_objectfilefromfile(options.objectfilename)
-        else:
-            objectfile = create_objectfilefromcode(options.objectfilename, options.objectcode)
-        if not objectfile:
-            print "Objectfile cannot be created. Check permissions."
-            # XXX Exit with an error code (not 0)
-            os._exit(1)
         # Check safety
-        if not check_object(objectfile):
+        if not check_object(options.objectfilename):
+            print "Object is not safe for us to execute."
             os._exit(1)
         # Start Nodes
         print "-- connecting to Planet Lab"
         configuration = (int(options.replicanum), int(options.acceptornum), int(options.nameservernum))
-        start_nodes(options.subdomain, objectfile, options.classname, configuration)
+        start_nodes(options.subdomain, options.objectfilename, options.classname, configuration)
         # Create Proxy
-        clientproxy = create_proxy(objectfile, options.classname)
+        clientproxy = create_proxy(options.objectfilename, options.classname)
     except Exception as e:
         print "Error: "
         print e
