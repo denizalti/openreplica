@@ -64,7 +64,7 @@ class Replica(Node):
         Node.__init__(self, nodetype, instantiateobj=instantiateobj)
         if instantiateobj:
             try:
-                self.object = getattr(__import__(self.objectfilename, globals(), locals(), [], -1), self.objectname)()
+                self.object = getattr(__import__(self.objectfilename[:-3], globals(), locals(), [], -1), self.objectname)()
             except Exception as e:
                 self.logger.write("Object Error", "Object cannot be found.")
         self.leader_initializing = False
