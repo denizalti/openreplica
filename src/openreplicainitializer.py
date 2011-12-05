@@ -65,8 +65,7 @@ def start_nodes(subdomain, clientobjectfilename, classname, configuration):
     print "Picked all nodes!"
     allnodes = PLConnection(nodes=nameservers.getHosts() + replicas.getHosts() + acceptors.getHosts() + bootstrap.getHosts())
     processnames = []
-    #clientbundlepath = os.path.abspath("XXX")
-    #allnodes.uploadall(clientbundlepath)
+    allnodes.uploadall(clientobjectfilename, "bin/")
     print "-- setting up the environment"
     print "--- initializing bootstrap"
     bootstrap.executecommandall("nohup python bin/replica.py -f %s -c %s" % (clientobjectfilename, classname), False)
