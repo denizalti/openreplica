@@ -74,6 +74,7 @@ def check_planetlab_pythonversion(plconn, node):
     rtv, output = plconn.executecommandone(node, command)
     if rtv:
         for out in output:
+            print "Return Value: ", rtv, "\nOutput: ", output
             if string.find(out, 'Python 2.7') >= 0:
                 print "--- Python version acceptable!"
                 return True,output
