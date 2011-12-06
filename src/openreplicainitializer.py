@@ -124,9 +124,9 @@ def main():
         # Start Nodes
         print "-- connecting to Planet Lab"
         configuration = (int(options.replicanum), int(options.acceptornum), int(options.nameservernum))
-        bootstrap = start_nodes(options.subdomain, options.objectfilepath, options.classname, configuration)
+        start_nodes(options.subdomain, options.objectfilepath, options.classname, configuration)
         # Create Proxy
-        clientproxy = create_proxy(options.objectfilepath, options.classname, bootstrap)
+        clientproxy = create_proxy(options.objectfilepath, options.classname)
     except Exception as e:
         print "Error: "
         print e

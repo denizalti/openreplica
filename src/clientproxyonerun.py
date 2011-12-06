@@ -29,10 +29,10 @@ class ClientProxy():
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
-        self.bootstraplist = []
+        self.bootstraplist = [] #XXX
         self.discoverbootstrap(bootstrap)
         self.connecttobootstrap()
-        myaddr = findOwnIP()
+        myaddr = findOwnIP() # XXX We should not need this.
         myport = self.socket.getsockname()[1]
         self.me = Peer(myaddr,myport,NODE_CLIENT) 
         self.logger = Logger("%s %s" % ('NODE_CLIENT',self.me.getid()))

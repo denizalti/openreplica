@@ -67,8 +67,7 @@ def createclientproxy(modulename, objectname, bootstrap=None):
                     addline(string.replace(oldfilecontent[lineno], "):", ", bootstrap="+bootstrap+"):", 1))
                 else:
                     addline(string.replace(oldfilecontent[lineno], "):", ", bootstrap):", 1))
-                addline(INDENT+INDENT+"self.proxy = ClientProxy(bootstrap)\n")
-                addline(functioncallstr(functions[lineno]))
+                addline(INDENT+INDENT+"self.proxy = ClientProxy(bootstrap)\n\n")
             else:
                 addline(oldfilecontent[lineno])
                 addline(functioncallstr(functions[lineno]))
@@ -88,7 +87,8 @@ def addline(str):
 def functioncallstr(function):
     argnames = []
     for arg in function.args.args:
-        argnames.append(arg.id)
+        if not arg.id == "self":
+            argnames.append(arg.id)
     return INDENT+INDENT+"self.proxy.invoke_command(\""+ function.name +"\", "+", ".join(argnames)+")\n\n"
 
 
