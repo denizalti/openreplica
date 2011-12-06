@@ -30,7 +30,7 @@ class ClientVisitor(ast.NodeVisitor):
         for functiondef in node.body:
             self.functions[functiondef.lineno] = functiondef
 
-def createclientproxy(modulename, objectname):
+def createclientproxy(modulename, objectname, bootstrap=None):
     abspath = os.path.abspath(modulename+'.py')
     # Get the AST tree, find lines to fix
     astnode = compile(open(abspath, 'rU').read(),"<string>","exec",_ast.PyCF_ONLY_AST)
@@ -63,7 +63,10 @@ def createclientproxy(modulename, objectname):
         elif lineno in functionlinenos:
             # We need to replace code upto next functionlineno
             if functions[lineno].name == "__init__":
-                addline(string.replace(oldfilecontent[lineno], "):", ", bootstrap):", 1))
+                if bootstrap:
+                    addline(string.replace(oldfilecontent[lineno], "):", ", bootstrap="+bootstrap+"):", 1))
+                else:
+                    addline(string.replace(oldfilecontent[lineno], "):", ", bootstrap):", 1))
                 addline(INDENT+INDENT+"self.proxy = ClientProxy(bootstrap)\n")
                 addline(functioncallstr(functions[lineno]))
             else:

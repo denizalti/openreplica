@@ -102,12 +102,12 @@ def get_node_name(node, nodeconn, type):
         success, returnvalue = nodeconn.executecommandone(node, "ls | grep %s" % type)
     return returnvalue[0].strip().split('-')[1]
 
-def create_proxy(clientobjectfilepath, classname):
+def create_proxy(clientobjectfilepath, classname, bootstrap):
     print "-- creating proxy"
     objectfilename = os.path.basename(clientobjectfilepath)
     shutil.copy(clientobjectfilepath, objectfilename)
     modulename = os.path.basename(objectfilename).rsplit(".")[0]
-    proxyfile = createclientproxy(modulename, classname)
+    proxyfile = createclientproxy(modulename, classname, bootstrap)
     f = open(proxyfile.name, 'r')
     proxystring = f.read()
     f.close()
@@ -125,7 +125,7 @@ def main():
         configuration = (int(options.replicanum), int(options.acceptornum), int(options.nameservernum))
         start_nodes(options.subdomain, options.objectfilepath, options.classname, configuration)
         # Create Proxy
-        clientproxy = create_proxy(options.objectfilepath, options.classname)
+        clientproxy = create_proxy(options.objectfilepath, options.classname,"deniz.openreplica.org")
     except Exception as e:
         print "Error: "
         print e
