@@ -1,12 +1,12 @@
 import inspect, types, string
 import os, shutil
 import ast, _ast
-from optparse import OptionParser
+#from optparse import OptionParser
 
-parser = OptionParser(usage="usage: %prog -m modulename -o objectname")
-parser.add_option("-m", "--modulename", action="store", dest="modulename", help="name for the module (filename)")
-parser.add_option("-o", "--objectname", action="store", dest="objectname", help="name for the object (class definition name)")
-(options, args) = parser.parse_args()
+#parser = OptionParser(usage="usage: %prog -m modulename -o objectname")
+#parser.add_option("-m", "--modulename", action="store", dest="modulename", help="name for the module (filename)")
+#parser.add_option("-o", "--objectname", action="store", dest="objectname", help="name for the object (class definition name)")
+#(options, args) = parser.parse_args()
 
 class ServerVisitor(ast.NodeVisitor):
     def __init__(self, objectname):
@@ -39,7 +39,7 @@ class ServerVisitor(ast.NodeVisitor):
         if node.lineno in self.functionstofix.keys():
             print "%d | Fixing function definition." % (node.lineno)
 
-def editfile(modulename, objectname):
+def editproxyfile(modulename, objectname):
     abspath = os.path.abspath(modulename+'.py')
     # Get the AST tree, find lines to fix
     astnode = compile(open(abspath, 'rU').read(),"<string>","exec",_ast.PyCF_ONLY_AST)
@@ -58,16 +58,17 @@ def editfile(modulename, objectname):
     # Edit the file
     for line, function in functionstofix.iteritems():
         filecontent[line] = string.replace(filecontent[line], "):", ", **kwargs):", 1)
-    objectfile = open(abspath, 'w')
+    objectfile = open(abspath+"fixed", 'w')
     for line, content in filecontent.iteritems():
         objectfile.write(content)
     objectfile.close()
+    return objectfile
     
-def main():
-    editfile(options.modulename, options.objectname)
+#def main():
+#    editproxyfile(options.modulename, options.objectname)
         
-if __name__=='__main__':
-    main()
+#if __name__=='__main__':
+#    main()
     
         
         
