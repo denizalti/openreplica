@@ -11,7 +11,7 @@ import subprocess
 from plmanager import *
 from safetychecker import *
 from proxygenerator import *
-from openreplicacoordobjproxy import createclientproxy
+from openreplicacoordobjproxy import *
 
 parser = OptionParser(usage="usage: %prog -s subdomain -n objectname -o objectcode -r replicas -a acceptors -n nameservers")
 parser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
@@ -100,7 +100,6 @@ def get_node_name(node, nodeconn, type):
     returnvalue = ('','')
     while returnvalue == ('',''):
         success, returnvalue = nodeconn.executecommandone(node, "ls | grep %s" % type)
-        print "Node creation: ", success, returnvalue
     return returnvalue[0].strip().split('-')[1]
 
 def create_proxy(clientobjectfilepath, classname):
