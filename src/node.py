@@ -17,10 +17,10 @@ import copy
 from enums import *
 from utils import *
 import fcntl
-#try:
-#    import dns.resolver
-#except:
-#    print("Install dnspython: http://www.dnspython.org/")
+try:
+    import dns.resolver
+except:
+    print("Install dnspython: http://www.dnspython.org/")
 from connection import ConnectionPool,Connection
 from group import Group
 from peer import Peer

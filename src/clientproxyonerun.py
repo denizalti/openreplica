@@ -13,6 +13,12 @@ from peer import Peer
 from message import ClientMessage, Message, PaxosMessage, HandshakeMessage, AckMessage
 from command import Command
 from pvalue import PValue, PValueSet
+try:
+    import dns
+    import dns.resolver
+except:
+    print("Install dnspython: http://www.dnspython.org/")
+
 
 REPLY = 0
 CONDITION = 1
