@@ -95,6 +95,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     # for node in processnames:
     #    openreplicacoordobj.addnodetosubdomain(subdomain, node)
     #    print node
+    return bootstrapname
 
 def get_node_name(node, nodeconn, type):
     returnvalue = ('','')
@@ -123,9 +124,9 @@ def main():
         # Start Nodes
         print "-- connecting to Planet Lab"
         configuration = (int(options.replicanum), int(options.acceptornum), int(options.nameservernum))
-        start_nodes(options.subdomain, options.objectfilepath, options.classname, configuration)
+        bootstrap = start_nodes(options.subdomain, options.objectfilepath, options.classname, configuration)
         # Create Proxy
-        clientproxy = create_proxy(options.objectfilepath, options.classname,"deniz.openreplica.org")
+        clientproxy = create_proxy(options.objectfilepath, options.classname, bootstrap)
     except Exception as e:
         print "Error: "
         print e
