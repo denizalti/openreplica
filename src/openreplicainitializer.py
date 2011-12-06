@@ -78,8 +78,8 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     print "Bootstrap: ", bootstrapname
     print "--- initializing acceptors"
     acceptors.executecommandall("nohup python bin/acceptor.py -b %s" % bootstrapname, False)
-    for acceptor in acceptors.getHosts():
-        processnames.append(get_node_name(acceptor, acceptors, 'ACCEPTOR'))
+    #for acceptor in acceptors.getHosts():
+    #    processnames.append(get_node_name(acceptor, acceptors, 'ACCEPTOR'))
     print "--- initializing replicas"
     replicas.executecommandall("nohup python bin/replica.py -f %s -c %s -b %s" % (clientobjectfilename, classname, bootstrapname), False)
     for replica in replicas.getHosts():
