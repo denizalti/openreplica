@@ -30,7 +30,7 @@ class ClientVisitor(ast.NodeVisitor):
         for functiondef in node.body:
             self.functions[functiondef.lineno] = functiondef
 
-def editfile(modulename, objectname):
+def createclientproxy(modulename, objectname):
     abspath = os.path.abspath(modulename+'.py')
     # Get the AST tree, find lines to fix
     astnode = compile(open(abspath, 'rU').read(),"<string>","exec",_ast.PyCF_ONLY_AST)
@@ -86,7 +86,7 @@ def functioncallstr(function):
     return INDENT+INDENT+"self.proxy.invoke_command(\""+ function.name +"\", "+", ".join(argnames)+")\n\n"
 
 def main():
-    editfile(options.modulename, options.objectname)
+    createclientproxy(options.modulename, options.objectname)
         
 if __name__=='__main__':
     main()
