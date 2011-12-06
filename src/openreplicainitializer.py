@@ -68,8 +68,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     allnodes = PLConnection(nodes=nameservers.getHosts() + replicas.getHosts() + acceptors.getHosts() + bootstrap.getHosts())
     processnames = []
     ## Fix the server object
-    modulename = os.path.basename(clientobjectfilepath)
-    fixedfile = editproxyfile(modulename, classname)
+    fixedfile = editproxyfile(clientobjectfilepath, classname)
     allnodes.uploadall(fixedfile.name, "bin/"+clientobjectfilename)
     print "-- setting up the environment"
     print "--- initializing bootstrap"
