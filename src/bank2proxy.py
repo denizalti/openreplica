@@ -2,7 +2,7 @@
 from clientproxyonerun import *
 
 class Bank():
-    def __init__(self, bootstrap=195.134.71.133:6668):
+    def __init__(self, bootstrap=213.73.40.105:6668):
         self.proxy = ClientProxy(bootstrap)
         self.proxy.invoke_command("__init__", self)
 
