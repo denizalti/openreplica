@@ -34,7 +34,7 @@ class ClientProxy():
             print "No bootstrap found"
             self._graceexit()
         self.connecttobootstrap()
-        myaddr = findOwnIP()
+        myaddr = findOwnIP() # XXX We should not need this.
         myport = self.socket.getsockname()[1]
         self.me = Peer(myaddr,myport,NODE_CLIENT) 
         self.logger = Logger("%s %s" % ('NODE_CLIENT',self.me.getid()))
