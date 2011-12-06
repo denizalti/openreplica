@@ -2,25 +2,24 @@
 from clientproxyonerun import *
 
 class Bank():
-    def __init__(self, bootstrap=213.73.40.105:6668):
+    def __init__(self, bootstrap):
         self.proxy = ClientProxy(bootstrap)
-        self.proxy.invoke_command("__init__", self)
 
     def open(self, accntno, **kwargs):
-        self.proxy.invoke_command("open", self, accntno)
+        self.proxy.invoke_command("open", accntno)
 
     def close(self, accntno, **kwargs):
-        self.proxy.invoke_command("close", self, accntno)
+        self.proxy.invoke_command("close", accntno)
 
     def debit(self, accntno, amount, **kwargs):
-        self.proxy.invoke_command("debit", self, accntno, amount)
+        self.proxy.invoke_command("debit", accntno, amount)
 
     def deposit(self, accntno, amount, **kwargs):
-        self.proxy.invoke_command("deposit", self, accntno, amount)
+        self.proxy.invoke_command("deposit", accntno, amount)
 
     def balance(self, accntno, **kwargs):
-        self.proxy.invoke_command("balance", self, accntno)
+        self.proxy.invoke_command("balance", accntno)
 
     def __str__(self):
-        self.proxy.invoke_command("__str__", self)
+        self.proxy.invoke_command("__str__", )
 
