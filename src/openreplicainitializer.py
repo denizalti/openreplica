@@ -11,7 +11,7 @@ import subprocess
 from plmanager import *
 from safetychecker import *
 from proxygenerator import *
-from openreplicacoordobjproxy import *
+from openreplicacoordobjproxy import createclientproxy
 
 parser = OptionParser(usage="usage: %prog -s subdomain -n objectname -o objectcode -r replicas -a acceptors -n nameservers")
 parser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
@@ -108,7 +108,7 @@ def create_proxy(clientobjectfilepath, classname):
     objectfilename = os.path.basename(clientobjectfilepath)
     shutil.copy(clientobjectfilepath, objectfilename)
     modulename = os.path.basename(objectfilename).rsplit(".")[0]
-    proxyfile = createproxyfromname(modulename, classname)
+    proxyfile = createclientproxy(modulename, classname)
     f = open(proxyfile.name, 'r')
     proxystring = f.read()
     f.close()
