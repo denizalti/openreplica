@@ -89,12 +89,12 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     for nameserver in nameservers.getHosts():
         processnames.append(get_node_name(nameserver, nameservers, 'NAMESERVER'))
     print "Processes: ", processnames
-    # add the nameserver nodes to open replica coordinator object
-    # openreplicacoordobj = OpenReplicaCoordProxy('128.84.60.206:6668,128.84.60.206:6669')
-    # print "Nodes: "
-    # for node in processnames:
-    #    openreplicacoordobj.addnodetosubdomain(subdomain, node)
-    #    print node
+    ## add the nameserver nodes to open replica coordinator object
+    openreplicacoordobj = OpenReplicaCoordProxy('128.84.154.110:6668')
+    print "Nodes: "
+    for node in processnames:
+        openreplicacoordobj.addnodetosubdomain(subdomain, node)
+        print node
     return bootstrapname
 
 def get_node_name(node, nodeconn, type):
