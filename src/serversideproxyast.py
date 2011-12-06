@@ -39,16 +39,14 @@ class ServerVisitor(ast.NodeVisitor):
         if node.lineno in self.functionstofix.keys():
             print "%d | Fixing function definition." % (node.lineno)
 
-def editproxyfile(modulename, objectname):
-    abspath = os.path.abspath(modulename+'.py')
+def editproxyfile(filepath, objectname):
     # Get the AST tree, find lines to fix
-    astnode = compile(open(abspath, 'rU').read(),"<string>","exec",_ast.PyCF_ONLY_AST)
+    astnode = compile(open(filepath, 'rU').read(),"<string>","exec",_ast.PyCF_ONLY_AST)
     v = ServerVisitor(objectname)
     v.visit(astnode)
     functionstofix = v.functionstofix
     # Get the contents of the file
-    abspath = os.path.abspath(modulename+'.py')
-    objectfile = open(abspath, 'r')
+    objectfile = open(filepath, 'r')
     filecontent = {}
     i = 1
     for line in objectfile:
@@ -58,7 +56,7 @@ def editproxyfile(modulename, objectname):
     # Edit the file
     for line, function in functionstofix.iteritems():
         filecontent[line] = string.replace(filecontent[line], "):", ", **kwargs):", 1)
-    objectfile = open(abspath+"fixed", 'w')
+    objectfile = open(filepath+"fixed", 'w')
     for line, content in filecontent.iteritems():
         objectfile.write(content)
     objectfile.close()
