@@ -87,8 +87,8 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
         processnames.append(get_node_name(replica, replicas, 'REPLICA'))
     print "--- initializing nameservers"
     nameservers.executecommandone(nameservers.getHosts()[0], "sudo -A nohup python bin/nameserver.py -n %s -f %s -c %s -b %s" % (subdomain, clientobjectfilename, classname, bootstrapname), False)
-    for nameserver in nameservers.getHosts():
-        processnames.append(get_node_name(nameserver, nameservers, 'NAMESERVER'))
+    # XXX for nameserver in nameservers.getHosts():
+    # XXX     processnames.append(get_node_name(nameserver, nameservers, 'NAMESERVER'))
     print "Processes: ", processnames
     ## add the nameserver nodes to open replica coordinator object
     openreplicacoordobj = OpenReplicaCoordProxy('128.84.154.110:6668')
