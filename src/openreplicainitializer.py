@@ -12,6 +12,7 @@ from plmanager import *
 from safetychecker import *
 from proxygenerator import *
 from openreplicacoordobjproxy import *
+from serversideproxyast import *
 
 parser = OptionParser(usage="usage: %prog -s subdomain -n objectname -o objectcode -r replicas -a acceptors -n nameservers")
 parser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
@@ -66,14 +67,16 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     print "Picked all nodes!"
     allnodes = PLConnection(nodes=nameservers.getHosts() + replicas.getHosts() + acceptors.getHosts() + bootstrap.getHosts())
     processnames = []
-    allnodes.uploadall(clientobjectfilepath, "bin/"+clientobjectfilename)
+    ## Fix the server object
+    modulename = clientobjectfilename.split(".")[0]
+    fixedfile = editproxyfile(modulename, classname)
+    allnodes.uploadall(fixedfile.name, "bin/"+clientobjectfilename)
     print "-- setting up the environment"
     print "--- initializing bootstrap"
     bootstrap.executecommandall("nohup python bin/replica.py -f %s -c %s" % (clientobjectfilename, classname), False)
     returnvalue = ('','')
     while returnvalue == ('',''):
         success, returnvalue = bootstrap.executecommandone(bootstrap.getHosts()[0], "ls | grep REPLICA") # XXX Find a better way to get the name
-        print "XXXXX", success, returnvalue, "XXXXX"
     bootstrapname = returnvalue[0].strip().split('-')[1]
     processnames.append(bootstrapname)
     print "Bootstrap: ", bootstrapname
