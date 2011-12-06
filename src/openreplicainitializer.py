@@ -72,7 +72,8 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     bootstrap.executecommandall("nohup python bin/replica.py -f %s -c %s" % (clientobjectfilename, classname), False)
     returnvalue = ('','')
     while returnvalue == ('',''):
-        success, returnvalue = bootstrap.executecommandone(bootstrap.getHosts()[0], "ls | grep REPLICA")
+        success, returnvalue = bootstrap.executecommandone(bootstrap.getHosts()[0], "ls | grep REPLICA") # XXX Find a better way to get the name
+        print "XXXXX", success, returnvalue, "XXXXX"
     bootstrapname = returnvalue[0].strip().split('-')[1]
     processnames.append(bootstrapname)
     print "Bootstrap: ", bootstrapname
@@ -103,7 +104,7 @@ def get_node_name(node, nodeconn, type):
         success, returnvalue = nodeconn.executecommandone(node, "ls | grep %s" % type)
     return returnvalue[0].strip().split('-')[1]
 
-def create_proxy(clientobjectfilepath, classname, bootstrap):
+def create_proxy(clientobjectfilepath, classname, bootstrap=None):
     print "-- creating proxy"
     objectfilename = os.path.basename(clientobjectfilepath)
     shutil.copy(clientobjectfilepath, objectfilename)
