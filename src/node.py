@@ -29,6 +29,7 @@ from command import Command
 from pvalue import PValue, PValueSet
 from concoordprofiler import *
 
+# XXX Fix the help text
 parser = OptionParser(usage="usage: %prog -p port -b bootstrap -o object -l -d")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")

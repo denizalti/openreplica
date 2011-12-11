@@ -19,7 +19,6 @@ try:
 except:
     print("Install dnspython: http://www.dnspython.org/")
 
-
 REPLY = 0
 CONDITION = 1
 
