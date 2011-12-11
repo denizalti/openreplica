@@ -37,8 +37,8 @@ class ClientProxy():
         myaddr = findOwnIP() # XXX We should not need this.
         myport = self.socket.getsockname()[1]
         self.me = Peer(myaddr,myport,NODE_CLIENT) 
-        self.logger = Logger("%s %s" % ('NODE_CLIENT',self.me.getid()))
-        self.commandnumber = 1
+        self.logger = Logger("%s_%s" % ('NODE_CLIENT',self.me.getid()))
+        self.commandnumber = 4523452345 #XXX need random number
         self.lock = Lock()
 
     def _getipportpairs(self, bootaddr, bootport):
@@ -157,6 +157,7 @@ class ClientProxy():
                 # XXX
                 print "Unblocking client."    
             else:
+                print "XXXXXXXXXXXXXXXXXXXX", reply.reply
                 return reply.reply
             
     def _graceexit(self):
