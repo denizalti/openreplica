@@ -2,33 +2,33 @@ class Bank():
     def __init__(self):
         self.accounts = {}
 
-    def open(self, accntno):
+    def open(self, accntno, **kwargs):
         if self.accounts.has_key(accntno):
             return False
         else:
             self.accounts[accntno] = Account(accntno)
             return True
         
-    def close(self, accntno):
+    def close(self, accntno, **kwargs):
         if self.accounts.has_key(accntno):
             del self.accounts[accntno]
             return True
         else:
             raise KeyError
         
-    def debit(self, accntno, amount):
+    def debit(self, accntno, amount, **kwargs):
         if self.accounts.has_key(accntno):
             return self.accounts[accntno].debit(amount)
         else:
             raise KeyError
         
-    def deposit(self, accntno, amount):
+    def deposit(self, accntno, amount, **kwargs):
         if self.accounts.has_key(accntno):
             return self.accounts[accntno].deposit(amount)
         else:
             raise KeyError
         
-    def balance(self, accntno):
+    def balance(self, accntno, **kwargs):
         if self.accounts.has_key(accntno):
             return self.accounts[accntno].balance
         else:

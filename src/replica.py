@@ -50,6 +50,8 @@ class ResponseCollector():
         self.nquorum = self.ntotal/2+1
         self.possiblepvalueset = PValueSet()
 
+# XXXX Open File with the clientname-descriptor and put every information there
+# PLManager reads from there..
 class Replica(Node):
     """Replica receives MSG_PERFORM from Leaders and execute corresponding commands."""
     def __init__(self, nodetype=NODE_REPLICA, instantiateobj=True, port=None,  bootstrap=None):
@@ -197,6 +199,7 @@ class Replica(Node):
     def send_reply_to_client(self, clientreplycode, givenresult, command):
         self.logger.write("State", "Sending REPLY to CLIENT")
         clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=givenresult, replycode=clientreplycode, inresponseto=command.clientcommandnumber)
+        self.logger.write("State", "Clientreply: %s\nAcceptors: %s" % (str(clientreply), str(self.groups[NODE_ACCEPTOR])))
         clientconn = self.clientpool.get_connection_by_peer(command.client)
         if clientconn.thesocket == None:
             self.logger.write("State", "Client disconnected.")
@@ -441,25 +444,27 @@ class Replica(Node):
         -- if it has not been executed yet send INPROGRESS
         - if this request has not been received before initiate a paxos round for the command"""
         if self.type != NODE_LEADER:
-            self.logger.write("State", "got a request but not a leader..")
+            self.logger.write("State", "got a request but not a leader.")
             return
         
         if self.receivedclientrequests.has_key((givencommand.client, givencommand.clientcommandnumber)):
             self.logger.write("State", "client request received previously")
+            self.logger.write("State", "Client: %s Commandnumber: %s\nAcceptors: %s" % (str(givencommand.client), str(givencommand.clientcommandnumber), str(self.groups[NODE_ACCEPTOR])))
             resultsent = False
             # Check if the request has been executed
             if givencommand in self.decidedcommandset:
                 if self.executed.has_key(givencommand):
-                    #if self.executed[givencommand][RCODE] is not META -> XXX: When connectivity is not provided by a setup client.
                     clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=self.executed[givencommand][RESULT], \
                                                      replycode=self.executed[givencommand][RCODE], inresponseto=givencommand.clientcommandnumber)
+                    self.logger.write("State", "Sending clientreply: %s" % str(clientreply))
                     conn = self.clientpool.get_connection_by_peer(givencommand.client)
                     if conn is not None:
                         conn.send(clientreply)
                     resultsent = True
-            # If request not executed yet, send IN PROGRESS
+            # If request not executed yet, send INPROGRESS
             if not resultsent:
                 clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_INPROGRESS, inresponseto=givencommand.clientcommandnumber)
+                self.logger.write("State", "Clientreply: %s\nAcceptors: %s" % (str(clientreply),str(self.groups[NODE_ACCEPTOR])))
                 conn = self.clientpool.get_connection_by_peer(givencommand.client)
                 if conn is not None:
                     conn.send(clientreply)
@@ -495,6 +500,7 @@ class Replica(Node):
         if self.type != NODE_LEADER:
             self.logger.write("State", "not leader.. request rejected..")
             clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_REJECTED, inresponseto=msg.command.clientcommandnumber)
+            self.logger.write("State", "Clientreply: %s\nAcceptors: %s" % (str(clientreply),str(self.groups[NODE_ACCEPTOR])))
             conn.send(clientreply)
             # Check the Leader to see if the Client had a reason to think that we are the leader
             self.ping_leader_once()
@@ -929,6 +935,7 @@ class Replica(Node):
     def terminate_handler(self, signal, frame):
         sys.stdout.flush()
         sys.stderr.flush()
+        self.logger.close()
         os._exit(0)
 
 def main():
