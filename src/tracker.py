@@ -74,7 +74,7 @@ class Tracker(Replica):
                 self.stateuptodate = True
                 return
             updatemessage = UpdateMessage(MSG_UPDATE, self.me)
-            self.logger.write("State", "Sending Update Message to ", msg.source)
+            self.logger.write("State", "Sending Update Message to %s" % str(msg.source))
             self.send(updatemessage, peer=msg.source)
 
 def main():
