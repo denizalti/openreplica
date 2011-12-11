@@ -19,7 +19,6 @@ try:
 except:
     print("Install dnspython: http://www.dnspython.org/")
 
-
 REPLY = 0
 CONDITION = 1
 
@@ -157,6 +156,7 @@ class ClientProxy():
                 # XXX
                 print "Unblocking client."    
             else:
+                print "Returning a reply."
                 return reply.reply
             
     def _graceexit(self):
