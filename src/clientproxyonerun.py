@@ -156,7 +156,6 @@ class ClientProxy():
                 # XXX
                 print "Unblocking client."    
             else:
-                print "XXXXXXXXXXXXXXXXXXXX", reply.reply
                 return reply.reply
             
     def _graceexit(self):

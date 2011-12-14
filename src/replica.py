@@ -45,13 +45,12 @@ class ResponseCollector():
         self.commandnumber = commandnumber
         self.proposal = proposal
         self.acceptors = acceptors
-        self.received = {}
+        self.sent = [] # msgids
+        self.received = {} # peer:msg
         self.ntotal = len(self.acceptors)
         self.nquorum = self.ntotal/2+1
         self.possiblepvalueset = PValueSet()
 
-# XXXX Open File with the clientname-descriptor and put every information there
-# PLManager reads from there..
 class Replica(Node):
     """Replica receives MSG_PERFORM from Leaders and execute corresponding commands."""
     def __init__(self, nodetype=NODE_REPLICA, instantiateobj=True, port=None,  bootstrap=None):
@@ -67,6 +66,9 @@ class Replica(Node):
         if instantiateobj:
             try:
                 self.object = getattr(__import__(self.objectfilename[:-3], globals(), locals(), [], -1), self.objectname)()
+                infofile = open(self.objectfilename[:-3]+"-descriptor", 'w')
+                infofile.write("%s:%d" %(self.addr,self.port))
+                infofile.close()
             except Exception as e:
                 self.logger.write("Object Error", "Object cannot be found.")
         self.leader_initializing = False
@@ -87,18 +89,6 @@ class Replica(Node):
         # inconsistent client reads
         self.callsfromclient = 0
         self.clientpool = ConnectionPool()
-        
-        # Measurement Variables
-        self.firststarttime = 0
-        self.firststoptime = 0
-        self.secondstarttime = 0
-        self.secondstoptime = 0
-        self.count = 0
-
-        #Throughput Variables
-        self.throughput_runs = 0
-        self.throughput_stop = 0
-        self.throughput_start = 0 
 
     def startservice(self):
         """Start the background services associated with a replica."""
@@ -477,19 +467,6 @@ class Replica(Node):
             else:
                 self.do_command_prepare(givencommand)
 
-    def handle_client_command_tput(self, givencommand, prepare=False):
-        """handle the received client request
-        - if it has been received before check if it has been executed
-        -- if it has been executed send the result
-        -- if it has not been executed yet send INPROGRESS
-        - if this request has not been received before initiate a paxos round for the command"""
-        self.receivedclientrequests[(givencommand.client,givencommand.clientcommandnumber)] = givencommand
-        if self.active and not prepare:
-            self.do_command_propose(givencommand)
-        else:
-            self.do_command_prepare(givencommand)
-
-#    @starttiming
     def msg_clientrequest(self, conn, msg):
         """handles the request from the client if the node is a leader
         - if not leader: reject
@@ -587,7 +564,8 @@ class Replica(Node):
         time.sleep(10)
         sys.stdout.flush()
         dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
-        
+
+    # Paxos Methods
     def do_command_propose_frompending(self, givencommandnumber):
         """initiates the givencommandnumber from pendingcommands list
         removes the command from pending and transfers it to proposals
@@ -606,14 +584,15 @@ class Replica(Node):
             return
         self.outstandingproposes[givencommandnumber] = prc
         propose = PaxosMessage(MSG_PROPOSE,self.me,recentballotnumber,commandnumber=givencommandnumber,proposal=givenproposal)
-        self.send(propose,group=prc.acceptors)
+        msgids = self.send(propose,group=prc.acceptors)
+        # add sent messages to the sent proposes
+        prc.sent.extend(msgids)
         
-    # Paxos Methods
     def do_command_propose(self, givenproposal):
         """propose a command with the given commandnumber and proposal. Stage p2a.
         A command is proposed by running the PROPOSE stage of Paxos Protocol for the command.
         """
-        if self.type != NODE_LEADER and self.type != NODE_COORDINATOR:
+        if self.type != NODE_LEADER:
             self.logger.write("State", "Ignoring received propose: not a leader.")
             return
         givencommandnumber = self.find_commandnumber()
@@ -640,7 +619,9 @@ class Replica(Node):
             return
         self.outstandingprepares[newballotnumber] = prc
         prepare = PaxosMessage(MSG_PREPARE,self.me,newballotnumber)
-        self.send(prepare,group=prc.acceptors)
+        msgids = self.send(prepare,group=prc.acceptors)
+        # add sent messages to the sent prepares
+        prc.sent.extend(msgids)
 
     def do_command_prepare(self, givenproposal):
         """Prepare a command with the given commandnumber and proposal. Stage p1a.
@@ -654,7 +635,7 @@ class Replica(Node):
         -- add the ResponseCollector to the outstanding prepare set
         -- send MSG_PREPARE to Acceptor nodes
         """
-        if self.type != NODE_LEADER and self.type != NODE_COORDINATOR:
+        if self.type != NODE_LEADER:
             print "Not a Leader.."
             return
 
@@ -697,6 +678,10 @@ class Replica(Node):
 
             if len(prc.received) >= prc.nquorum:
                 self.logger.write("Paxos State", "suffiently many accepts on prepare!")
+                # delete outstanding messages that I don't need to check for anymore
+                for msgid in prc.sent:
+                    if self.outstandingmessages.has_key(msgid):
+                        del self.outstandingmessages[msgid]
                 del self.outstandingprepares[msg.inresponseto]
                 # choose pvalues with distinctive commandnumbers and highest ballotnumbers
                 pmaxset = prc.possiblepvalueset.pmax()
@@ -734,6 +719,10 @@ class Replica(Node):
         if self.outstandingprepares.has_key(msg.inresponseto):
             prc = self.outstandingprepares[msg.inresponseto]
             self.logger.write("Paxos State", "got a reject for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
+            # delete outstanding messages that I don't need to check for anymore
+            for msgid in prc.sent:
+                if self.outstandingmessages.has_key(msgid):
+                    del self.outstandingmessages[msgid]
             # take this response collector out of the outstanding prepare set
             del self.outstandingprepares[msg.inresponseto]
             # become inactive
@@ -774,6 +763,10 @@ class Replica(Node):
                     self.logger.write("Paxos State", "Agreed on %s" % prc.proposal) 
                     # take this response collector out of the outstanding propose set
                     self.add_to_proposals(prc.commandnumber, prc.proposal)
+                    # delete outstanding messages that I don't need to check for anymore
+                    for msgid in prc.sent:
+                        if self.outstandingmessages.has_key(msgid):
+                            del self.outstandingmessages[msgid]
                     del self.outstandingproposes[msg.commandnumber]
                     # now we can perform this action on the replicas
                     performmessage = PaxosMessage(MSG_PERFORM,self.me,commandnumber=prc.commandnumber,proposal=prc.proposal)
@@ -782,7 +775,6 @@ class Replica(Node):
                         self.send(performmessage, group=self.groups[NODE_REPLICA])
                         self.send(performmessage, group=self.groups[NODE_LEADER])
                         self.send(performmessage, group=self.groups[NODE_NAMESERVER])
-                        self.send(performmessage, group=self.groups[NODE_COORDINATOR])
                     except:
                         pass
                     self.perform(performmessage, designated=True)
@@ -805,6 +797,10 @@ class Replica(Node):
             if msg.inresponseto == prc.ballotnumber:
                 self.logger.write("Paxos State", "got a reject for proposal ballotno %s commandno %s proposal %s still %d out of %d accepts" % \
                        (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
+                # delete outstanding messages that I don't need to check for anymore
+                for msgid in prc.sent:
+                    if self.outstandingmessages.has_key(msgid):
+                        del self.outstandingmessages[msgid]
                 # take this response collector out of the outstanding propose set
                 del self.outstandingproposes[msg.commandnumber]
                 # become inactive
@@ -855,9 +851,6 @@ class Replica(Node):
             addcommand = self.create_add_command(msg.source)
             self.check_leader_promotion()
             self.do_command_prepare(addcommand)
-        elif len(self.groups[NODE_COORDINATOR]) > 0:
-            refermessage = ReferMessage(MSG_REFER, self.me, referredpeer=msg.source)
-            self.send(refermessage, group=self.groups[NODE_COORDINATOR])
         else:
             addcommand = self.create_add_command(msg.source)
             self.do_command_prepare(addcommand)

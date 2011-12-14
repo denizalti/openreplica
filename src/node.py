@@ -29,15 +29,13 @@ from command import Command
 from pvalue import PValue, PValueSet
 from concoordprofiler import *
 
-# XXX Fix the help text
-parser = OptionParser(usage="usage: %prog -p port -b bootstrap -o object -l -d")
+parser = OptionParser(usage="usage: %prog -p port -b bootstrap -f objectfilename -c objectname -n subdomainname -d")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
 parser.add_option("-f", "--objectfilename", action="store", dest="objectfilename", help="client object file name")
 parser.add_option("-c", "--objectname", action="store", dest="objectname", help="object name")
-parser.add_option("-l", "--local", action="store_true", dest="local", default=False, help="initiates the node at localhost")
-parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
 parser.add_option("-n", "--name", action="store", dest="dnsname", default='', help="dns name")
+parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
 
 (options, args) = parser.parse_args()
 
@@ -47,7 +45,7 @@ class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
     """ 
-    def __init__(self, nodetype, port=options.port, givenbootstraplist=options.bootstrap, local=options.local, debugoption=options.debug, objectfilename=options.objectfilename, objectname=options.objectname, dnsname=options.dnsname, instantiateobj=False):
+    def __init__(self, nodetype, port=options.port, givenbootstraplist=options.bootstrap, debugoption=options.debug, objectfilename=options.objectfilename, objectname=options.objectname, dnsname=options.dnsname, instantiateobj=False):
         """Node State
         - addr: hostname for Node, detected automatically
         - port: port for Node, can be taken from the commandline (-p [port]) or
@@ -62,10 +60,7 @@ class Node():
         - groups: other Peers in the system that Node knows about. Node.groups is indexed by the
         corresponding node_name (NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA | NODE_NAMESERVER), which returns a Group
         """
-        if local == True:
-            self.addr = '127.0.0.1'
-        else:
-            self.addr = findOwnIP() 
+        self.addr = findOwnIP() 
         self.port = port
         self.connectionpool = ConnectionPool()
         self.type = nodetype
@@ -73,11 +68,17 @@ class Node():
             self.objectfilename = objectfilename
             self.objectname = objectname
 
+        ## messaging layer information
         self.receivedmessages_semaphore = Semaphore(0)
         self.receivedmessages = []
-        
+        # msgs not acked yet
+        # {msgid: msginfo}
         self.outstandingmessages_lock =RLock()
         self.outstandingmessages = {}
+        # last msg timestamp for all peers
+        # {peer: timestamp}
+        self.lastmessages_lock =RLock()
+        self.lastmessages = {}
         
         self.lock = Lock()
         self.done = False
@@ -102,14 +103,14 @@ class Node():
         self.id = self.me.getid()
         self.logger = Logger("%s-%s" % (node_names[self.type],self.id))
         self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_LEADER:Group(self.me), \
-                       NODE_TRACKER:Group(self.me), NODE_COORDINATOR:Group(self.me), NODE_NAMESERVER:Group(self.me)}
+                       NODE_TRACKER:Group(self.me), NODE_NAMESERVER:Group(self.me)}
         # connect to the bootstrap node
         if givenbootstraplist:
             self.bootstraplist = []
             self.discoverbootstrap(givenbootstraplist)
             self.connecttobootstrap()
             
-        if self.type == NODE_REPLICA or self.type == NODE_TRACKER or self.type == NODE_NAMESERVER or self.type == NODE_COORDINATOR:
+        if self.type == NODE_REPLICA or self.type == NODE_TRACKER or self.type == NODE_NAMESERVER:
             self.stateuptodate = False
 
     def _getipportpairs(self, bootaddr, bootport):
@@ -252,7 +253,13 @@ class Node():
         if message == None:
             return False
         else:
-            # Add to received messages
+            # add to lastmessages
+            with self.lastmessages_lock:
+                if not self.lastmessages.has_key(message.source):
+                    self.lastmessages[message.source] = timestamp
+                elif self.lastmessages[message.source] < timestamp:
+                    self.lastmessages[message.source] = timestamp
+            # add to receivedmessages
             self.receivedmessages.append((timestamp,message,connection))
             self.receivedmessages_semaphore.release()
             if message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
@@ -272,7 +279,7 @@ class Node():
         return
 
     def process_message(self, message, connection):
-        """Process message loop that takes messages out of the receives_messages
+        """Process message loop that takes messages out of the receivedmessages
         list and handles them.
         """
         # check to see if it's an ack
@@ -286,7 +293,7 @@ class Node():
         elif message.type != MSG_CLIENTREQUEST and message.type != MSG_INCCLIENTREQUEST:
             # Send ACK
             connection.send(AckMessage(MSG_ACK,self.me,message.id))
-        # find method and invoke it with a lock held
+        # find method and invoke it holding a lock
         mname = "msg_%s" % msg_names[message.type].lower()
         try:
             method = getattr(self, mname)
@@ -301,11 +308,7 @@ class Node():
     # message handlers
     #
     def msg_helo(self, conn, msg):
-        if len(self.groups[NODE_COORDINATOR]) > 0:
-            refermessage = ReferMessage(MSG_REFER, self.me, referredpeer=msg.source)
-            self.send(refermessage, group=self.groups[NODE_COORDINATOR])
-        else:
-            return
+        return
 
     def msg_heloreply(self, conn, msg):
         for nodetype in msg.groups.keys():
@@ -346,9 +349,7 @@ class Node():
 
     def periodic(self):
         """timer function that is responsible for periodic state maintenance
-        
-        - goes through outstanding messages and resends messages that are older than
-          ACKTIMEOUT and are NOTACKED yet.
+        - resends messages that are in outstandingmessages and are older than ACKTIMEOUT.
         - sends MSG_HELO message to peers that it has not heard within LIVENESSTIMEOUT
         """
         while True:
@@ -356,28 +357,27 @@ class Node():
                 checkliveness = set()
                 for type,group in self.groups.iteritems():
                     checkliveness = checkliveness.union(group.members)
-
             try:
                 with self.outstandingmessages_lock:
                     msgs = self.outstandingmessages.values()
                 for messageinfo in msgs:
                     now = time.time()
-                    if messageinfo.messagestate == ACK_NOTACKED and (messageinfo.timestamp + ACKTIMEOUT) < now:
-                        #resend NOTACKED message
+                    if messageinfo.timestamp + ACKTIMEOUT < now:
+                        #resend messages
                         self.logger.write("State", "re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
                         self.send(messageinfo.message, peer=messageinfo.destination, isresend=True)
                         messageinfo.timestamp = time.time()
-                    elif DO_PERIODIC_PINGS and messageinfo.messagestate == ACK_ACKED and \
-                            (messageinfo.timestamp + LIVENESSTIMEOUT) < now and \
-                            messageinfo.destination in checkliveness:
+                    elif DO_PERIODIC_PINGS and (messageinfo.timestamp + LIVENESSTIMEOUT) < now and messageinfo.destination in checkliveness:
                         checkliveness.remove(messageinfo.destination)
             except Exception as ec:
                 self.logger.write("Connection Error", "exception in resend: %s" % ec)
             if DO_PERIODIC_PINGS:
                 for pingpeer in checkliveness:
-                    self.logger.write("State", "sending PING to %s" % pingpeer)
-                    pingmessage = HandshakeMessage(MSG_PING, self.me)
-                    self.send(pingmessage, peer=pingpeer)
+                    # don't ping the peer if it has sent a message recently
+                    if self.lastmessages[pingpeer] + LIVENESSTIMEOUT >= now:
+                        self.logger.write("State", "sending PING to %s" % pingpeer)
+                        pingmessage = HandshakeMessage(MSG_PING, self.me)
+                        self.send(pingmessage, peer=pingpeer)
             time.sleep(ACKTIMEOUT)
 
     def get_user_input_from_shell(self):
@@ -405,25 +405,28 @@ class Node():
                 return
         return            
     
-    # There are 3 basic send types: peer.send, conn.send and group.send
     def send(self, message, peer=None, group=None, isresend=False):
         if peer:
             connection = self.connectionpool.get_connection_by_peer(peer)
             if not isresend:
-                msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
+                msginfo = MessageInfo(message,peer,time.time())
                 with self.outstandingmessages_lock:
                     self.outstandingmessages[message.fullid()] = msginfo
             connection.send(message)
+            message.id
         elif group:
             assert not isresend, "performing a re-send to a group"
+            ids = []
             for peer in group.members:
                 connection = self.connectionpool.get_connection_by_peer(peer)
-                msginfo = MessageInfo(message,peer,ACK_NOTACKED,time.time())
+                msginfo = MessageInfo(message,peer,time.time())
                 with self.outstandingmessages_lock:
                     self.outstandingmessages[message.fullid()] = msginfo
                 connection.send(message)
+                ids.append(message.id)
                 message = copy.copy(message)
                 message.assignuniqueid()
+            return ids
 
     def terminate_handler(self, signal, frame):
         print self.me, "exiting.."

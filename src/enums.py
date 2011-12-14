@@ -31,9 +31,6 @@ UNBLOCK = 'UNBLOCK'
 #executed indexing
 RCODE, RESULT, UNBLOCKED = range(3)
 
-# message states
-ACK_NOTACKED, ACK_ACKED = range(2)
-
 # client reply codes
 CR_OK, CR_INPROGRESS, CR_LEADERNOTREADY, CR_REJECTED, CR_EXCEPTION, CR_BLOCK, CR_UNBLOCK, CR_META = range(8)
 
@@ -78,6 +75,5 @@ def get_var_list(prefix):
 msg_names = get_var_list("MSG_")
 node_names = get_var_list("NODE_")
 cmd_states = get_var_list("CMD_")
-msg_states = get_var_list("ACK_")
 err_types = get_var_list("ERR_")
 cr_codes = get_var_list("CR_")

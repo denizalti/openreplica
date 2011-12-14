@@ -119,32 +119,12 @@ class GarbageCollectMessage(Message):
     def __str__(self):
         return "%s commandnumber: %d snapshot: %s" % (Message.__str__(self), self.commandnumber, str(self.snapshot))
 
-class ReferMessage(Message):
-    def __init__(self, msgtype, myname, referredpeer=None):
-        Message.__init__(self, msgtype, myname)
-        self.referredpeer = referredpeer
-
-    def __str__(self):
-        return "%s referredpeer: %s" % (Message.__str__(self), str(self.referredpeer))
-
-class QueryMessage(Message):
-    def __init__(self,msgtype, myname, peers=None):
-        Message.__init__(self, msgtype, myname)
-        self.peers = peers
-
-    def __str__(self):
-        temp = Message.__str__(self)
-        if self.peers != None:
-            temp += ' peers %s' % self.peers
-        return temp
-
 class MessageInfo():
     """This class is used to ensure that all messages are ultimately delivered to their destinations"""
-    def __init__(self, message, destination, messagestate=ACK_NOTACKED, timestamp=0):
+    def __init__(self, message, destination, timestamp=0):
         self.message = message
         self.destination = destination
-        self.messagestate = messagestate
         self.timestamp = timestamp
 
     def __str__(self):
-        return "%d: [%s] %s %.2f" % (self.message.id, self.destination, msg_states[self.messagestate], self.timestamp)
+        return "%d: [%s] %.2f" % (self.message.id, self.destination, self.timestamp)

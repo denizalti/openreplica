@@ -75,22 +75,19 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     bootstrap.executecommandall("nohup python bin/replica.py -f %s -c %s" % (clientobjectfilename, classname), False)
     returnvalue = ('','')
     while returnvalue == ('',''):
-        success, returnvalue = bootstrap.executecommandone(bootstrap.getHosts()[0], "ls | grep REPLICA") # XXX Find a better way to get the name
-    bootstrapname = returnvalue[0].strip().split('-')[1]
+        success, returnvalue = bootstrap.executecommandone(bootstrap.getHosts()[0], "ls | grep %s-descriptor" % clientobjectfilename[:-3])
+    success,returnvalue = bootstrap.executecommandone(bootstrap.getHosts()[0], "cat %s-descriptor" % clientobjectfilename[:-3])
+    bootstrapname = returnvalue[0]
     processnames.append(bootstrapname)
     print "Bootstrap: ", bootstrapname
     print "--- initializing acceptors"
     acceptors.executecommandall("nohup python bin/acceptor.py -b %s" % bootstrapname, False)
-    #for acceptor in acceptors.getHosts():
-    #    processnames.append(get_node_name(acceptor, acceptors, 'ACCEPTOR'))
     print "--- initializing replicas"
     replicas.executecommandall("nohup python bin/replica.py -f %s -c %s -b %s" % (clientobjectfilename, classname, bootstrapname), False)
     for replica in replicas.getHosts():
         processnames.append(get_node_name(replica, replicas, 'REPLICA'))
     print "--- initializing nameservers"
-    nameservers.executecommandone(nameservers.getHosts()[0], "sudo -A nohup python bin/nameserver.py -n %s -f %s -c %s -b %s" % (subdomain, clientobjectfilename, classname, bootstrapname), False)
-    # XXX for nameserver in nameservers.getHosts():
-    # XXX     processnames.append(get_node_name(nameserver, nameservers, 'NAMESERVER'))
+    nameservers.executecommandall("sudo -A nohup python bin/nameserver.py -n %s -f %s -c %s -b %s" % (subdomain, clientobjectfilename, classname, bootstrapname), False)
     print "Processes: ", processnames
     ## add the nameserver nodes to open replica coordinator object
     openreplicacoordobj = OpenReplicaCoordProxy('128.84.154.110:6668')
@@ -109,7 +106,8 @@ def get_node_name(node, nodeconn, type):
 def create_proxy(clientobjectfilepath, classname, bootstrap=None):
     print "-- creating proxy"
     objectfilename = os.path.basename(clientobjectfilepath)
-    shutil.copy(clientobjectfilepath, objectfilename)
+    if not objectfilename == clientobjectfilepath:
+        shutil.copy(clientobjectfilepath, objectfilename)
     modulename = os.path.basename(objectfilename).rsplit(".")[0]
     proxyfile = createclientproxy(modulename, classname, bootstrap)
     f = open(proxyfile.name, 'r')
