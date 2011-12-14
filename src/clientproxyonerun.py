@@ -3,7 +3,7 @@
 @note: The Client
 @date: February 1, 2011
 '''
-import socket, os, sys, time
+import socket, os, sys, time, random
 from threading import Thread, Lock, Condition
 from enums import *
 from utils import *
@@ -33,11 +33,11 @@ class ClientProxy():
             print "No bootstrap found"
             self._graceexit()
         self.connecttobootstrap()
-        myaddr = findOwnIP() # XXX We should not need this.
+        myaddr = findOwnIP()
         myport = self.socket.getsockname()[1]
         self.me = Peer(myaddr,myport,NODE_CLIENT) 
         self.logger = Logger("%s_%s" % ('NODE_CLIENT',self.me.getid()))
-        self.commandnumber = 4523452345 #XXX need random number
+        self.commandnumber = random.randint(1, sys.maxint)
         self.lock = Lock()
 
     def _getipportpairs(self, bootaddr, bootport):
@@ -129,9 +129,6 @@ class ClientProxy():
                             continue
                         else:
                             replied = True
-                    elif reply and reply.type == MSG_CLIENTMETAREPLY and reply.inresponseto == mynumber:
-                        # XXX Block/Unblock the client if necessary
-                        print "Handling METAREPLY.."
                     if time.time() - starttime > CLIENTRESENDTIMEOUT:
                         if self.debug:
                             print "timed out: %d seconds" % CLIENTRESENDTIMEOUT
@@ -141,12 +138,8 @@ class ClientProxy():
                     self._trynewbootstrap()
                 except KeyboardInterrupt:
                     self._graceexit()
-            if reply.type == MSG_CLIENTMETAREPLY:
-                # XXX
-                print "Client METAREPLY"
             if reply.replycode == CR_META:
-                # XXX
-                print "This is not used."
+                print "Should not reach here."
             elif reply.replycode == CR_EXCEPTION:
                 raise reply.reply
             elif reply.replycode == CR_BLOCK:
