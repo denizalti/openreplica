@@ -213,7 +213,7 @@ class Replica(Node):
                 if self.type == NODE_LEADER:
                     prevrcode, prevresult, prevunblocked = self.executed[requestedcommand]
                     if prevrcode == CR_BLOCK:
-                        # XXX: As dictionary is not sorted we have to start from the beginning every time
+                        # As dictionary is not sorted we have to start from the beginning every time
                         for resultset in self.executed.itervalues():
                             if resultset[UNBLOCKED] == requestedcommand:
                                 # This client has been UNBLOCKED
@@ -836,9 +836,9 @@ class Replica(Node):
         currentleader = self.find_leader()
         if currentleader != self.me:
             self.logger.write("State", "Sending PING to %s" % currentleader)
-            helomessage = HandshakeMessage(MSG_HELO, self.me)
+            pingmessage = HandshakeMessage(MSG_PING, self.me)
             try:
-                self.send(helomessage, peer=currentleader)
+                self.send(pingmessage, peer=currentleader)
             except:
                 self.logger.write("State", "Leader not responding, removing current leader from the replicalist")
                 self.groups[NODE_REPLICA].remove(currentleader)
@@ -851,9 +851,16 @@ class Replica(Node):
             addcommand = self.create_add_command(msg.source)
             self.check_leader_promotion()
             self.do_command_prepare(addcommand)
+            for i in range(WINDOW):
+                noopcommand = self.create_noop_command()
+                self.do_command_propose(noopcommand)
         else:
             addcommand = self.create_add_command(msg.source)
+            #self.check_leader_promotion()
             self.do_command_prepare(addcommand)
+            for i in range(WINDOW):
+                noopcommand = self.create_noop_command()
+                self.do_command_propose(noopcommand)
 
     def create_delete_command(self, node):
         mynumber = self.metacommandnumber
@@ -867,6 +874,12 @@ class Replica(Node):
         self.metacommandnumber += 1
         operation = "_add_node %d %s:%d" % (node.type, node.addr, node.port)
         command = Command(self.me, mynumber, operation)
+        return command
+
+    def create_noop_command(self):
+        mynumber = self.metacommandnumber
+        self.metacommandnumber += 1
+        command = Command(self.me, mynumber, 'noop')
         return command
 
     # Debug Methods
