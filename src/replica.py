@@ -71,7 +71,9 @@ class Replica(Node):
                 infofile.close()
             except Exception as e:
                 self.logger.write("Object Error", "Object cannot be found.")
+        # leadership
         self.leader_initializing = False
+        self.isleader = False
         self.nexttoexecute = 1
         # decided commands: <commandnumber:command>
         self.decisions = {}
@@ -174,11 +176,11 @@ class Replica(Node):
         
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
-            if send_result_to_client and self.type == NODE_LEADER and command.client.getid() in self.clientpool.poolbypeer.keys():
+            if send_result_to_client and self.isleader and command.client.getid() in self.clientpool.poolbypeer.keys():
                 #endtimer(command, 1)
                 self.send_reply_to_client(clientreplycode, givenresult, command)
 
-        if slotnumber % GARBAGEPERIOD == 0 and self.type == NODE_LEADER:
+        if slotnumber % GARBAGEPERIOD == 0 and self.isleader:
             garbagecommand = Command(self.me, self.metacommandnumber, "garbage_collect %d" % slotnumber)
             self.metacommandnumber += 1
             if self.leader_initializing:
@@ -210,7 +212,7 @@ class Replica(Node):
                 self.logger.write("State", "previously executed command %d." % self.nexttoexecute)
                 # If we are a leader, we should send a reply to the client for this command
                 # in case the client didn't receive the reply from the previous leader
-                if self.type == NODE_LEADER:
+                if self.isleader:
                     prevrcode, prevresult, prevunblocked = self.executed[requestedcommand]
                     if prevrcode == CR_BLOCK:
                         # As dictionary is not sorted we have to start from the beginning every time
@@ -228,7 +230,7 @@ class Replica(Node):
             elif requestedcommand not in self.executed:
                 self.logger.write("State", "executing command %d." % self.nexttoexecute)
                 # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
-                # We are calling performcore 2 times, the timing gets screwed plus this is very unefficient :(
+                # We are calling performcore 2 times, the timing gets screwed plus this is very unefficient
                 if self.nexttoexecute > WINDOW:
                     self.performcore(msg, self.nexttoexecute - WINDOW, True, designated=designated)
                 self.performcore(msg, self.nexttoexecute, designated=designated)
@@ -322,8 +324,9 @@ class Replica(Node):
         - backoff: backoff amount that is used to determine how much a leader should
         backoff during a collusion
         """
-        if self.type != NODE_LEADER:
-            self.type = NODE_LEADER
+        if not self.isleader:
+            self.logger.write("State", "Becoming leader..")
+            self.isleader = True
             self.active = False
             self.ballotnumber = (0,self.id)
             self.outstandingprepares = {}
@@ -353,7 +356,7 @@ class Replica(Node):
     def detect_colliding_leader(self,ballotnumber):
         """detects a colliding leader from the highest ballotnumber received from acceptors"""
         otherleader_addr,otherleader_port = ballotnumber[BALLOTNODE].split(":")
-        otherleader = Peer(otherleader_addr, int(otherleader_port), NODE_LEADER)
+        otherleader = Peer(otherleader_addr, int(otherleader_port), NODE_REPLICA)
         return otherleader
             
     def find_leader(self):
@@ -369,18 +372,13 @@ class Replica(Node):
         chosenleader = self.find_leader()
         if self.me == chosenleader:
             # I need to become a leader
-            if self.type != NODE_LEADER:
+            if not self.isleader:
                 # check to see if I have full history
-                if self.stateuptodate:
-                    self.logger.write("State", "becoming leader")
-                    self.become_leader()
-                else:
-                    self.logger.write("State", "initializing leader")
-                    self.become_leader()
+                if not self.stateuptodate:
                     self.leader_initializing = True
-        elif self.type == NODE_LEADER:
+                self.become_leader()
+        elif self.isleader:
             # there is someone else who should act as a leader
-            self.logger.write("State", "unbecoming leader")
             self.unbecome_leader()
 
     def update_ballotnumber(self,seedballotnumber):
@@ -433,7 +431,7 @@ class Replica(Node):
         -- if it has been executed send the result
         -- if it has not been executed yet send INPROGRESS
         - if this request has not been received before initiate a paxos round for the command"""
-        if self.type != NODE_LEADER:
+        if not self.isleader:
             self.logger.write("State", "got a request but not a leader.")
             return
         
@@ -471,10 +469,9 @@ class Replica(Node):
         """handles the request from the client if the node is a leader
         - if not leader: reject
         - if leader: add connection to client connections and handle request"""
-        #starttimer(msg.command, 1)
         self.check_leader_promotion()
         self.callsfromclient += 1
-        if self.type != NODE_LEADER:
+        if not self.isleader:
             self.logger.write("State", "not leader.. request rejected..")
             clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_REJECTED, inresponseto=msg.command.clientcommandnumber)
             self.logger.write("State", "Clientreply: %s\nAcceptors: %s" % (str(clientreply),str(self.groups[NODE_ACCEPTOR])))
@@ -483,7 +480,7 @@ class Replica(Node):
             self.ping_leader_once()
             return
         # Leader should accept a request even if it's not ready as this way it will make itself ready during the prepare stage.
-        if self.type == NODE_LEADER:
+        if self.isleader:
             self.clientpool.add_connection_to_peer(msg.source, conn)
             if self.leader_initializing:
                 self.handle_client_command(msg.command, prepare=True)
@@ -592,7 +589,7 @@ class Replica(Node):
         """propose a command with the given commandnumber and proposal. Stage p2a.
         A command is proposed by running the PROPOSE stage of Paxos Protocol for the command.
         """
-        if self.type != NODE_LEADER:
+        if not self.isleader:
             self.logger.write("State", "Ignoring received propose: not a leader.")
             return
         givencommandnumber = self.find_commandnumber()
@@ -635,14 +632,17 @@ class Replica(Node):
         -- add the ResponseCollector to the outstanding prepare set
         -- send MSG_PREPARE to Acceptor nodes
         """
-        if self.type != NODE_LEADER:
+        if not self.isleader:
             print "Not a Leader.."
             return
 
         givencommandnumber = self.find_commandnumber()
         self.add_to_pendingcommands(givencommandnumber, givenproposal)
         # if we're too far in the future, i.e. past window, do not issue the command
+        print "Given: ", givencommandnumber
+        print "Next: ", self.nexttoexecute
         if givencommandnumber - self.nexttoexecute >= WINDOW:
+            print "WAITING FOR THE WINDOW.."
             return
         self.do_command_prepare_frompending(givencommandnumber)
             
@@ -773,7 +773,6 @@ class Replica(Node):
                     try:
                         self.logger.write("Paxos State", "Sending PERFORM!")
                         self.send(performmessage, group=self.groups[NODE_REPLICA])
-                        self.send(performmessage, group=self.groups[NODE_LEADER])
                         self.send(performmessage, group=self.groups[NODE_NAMESERVER])
                     except:
                         pass
@@ -855,12 +854,17 @@ class Replica(Node):
                 noopcommand = self.create_noop_command()
                 self.do_command_propose(noopcommand)
         else:
-            addcommand = self.create_add_command(msg.source)
-            #self.check_leader_promotion()
-            self.do_command_prepare(addcommand)
-            for i in range(WINDOW):
-                noopcommand = self.create_noop_command()
-                self.do_command_propose(noopcommand)
+            if self.isleader:
+                addcommand = self.create_add_command(msg.source)
+                #self.check_leader_promotion()
+                self.do_command_propose(addcommand)
+                for i in range(WINDOW):
+                    noopcommand = self.create_noop_command()
+                    self.do_command_propose(noopcommand)
+            else:
+                # XXX: Pass request to Leader
+                pass
+            
 
     def create_delete_command(self, node):
         mynumber = self.metacommandnumber
