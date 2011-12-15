@@ -51,14 +51,14 @@ class Node():
         - port: port for Node, can be taken from the commandline (-p [port]) or
         detected automatically by binding.
         - connectionpool: ConnectionPool that keeps all Connections Node knows about
-        - type: type of the corresponding Node: NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA | NODE_NAMESERVER
+        - type: type of the corresponding Node: NODE_ACCEPTOR | NODE_REPLICA | NODE_NAMESERVER
         - alive: liveness of Node
         - outstandingmessages: collection of sent but not-yet-acked messages
         - socket: server socket for Node
         - me: Peer object that represents Node
         - id: id for Node (addr:port)
         - groups: other Peers in the system that Node knows about. Node.groups is indexed by the
-        corresponding node_name (NODE_LEADER | NODE_ACCEPTOR | NODE_REPLICA | NODE_NAMESERVER), which returns a Group
+        corresponding node_name (NODE_ACCEPTOR | NODE_REPLICA | NODE_NAMESERVER), which returns a Group
         """
         self.addr = findOwnIP() 
         self.port = port
@@ -102,8 +102,7 @@ class Node():
         self.me = Peer(self.addr,self.port,self.type)
         self.id = self.me.getid()
         self.logger = Logger("%s-%s" % (node_names[self.type],self.id))
-        self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_LEADER:Group(self.me), \
-                       NODE_TRACKER:Group(self.me), NODE_NAMESERVER:Group(self.me)}
+        self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_TRACKER:Group(self.me), NODE_NAMESERVER:Group(self.me)}
         # connect to the bootstrap node
         if givenbootstraplist:
             self.bootstraplist = []
