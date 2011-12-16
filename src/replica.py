@@ -392,7 +392,9 @@ class Replica(Node):
             if self.commandgap in self.usedcommandnumbers:
                 self.commandgap += 1
             else:
+                self.logger.write("State", "Picked command number: %d" % self.commandgap)
                 return self.commandgap
+        self.logger.write("State", "Picked command number: %d" % self.commandgap)
         return self.commandgap
 
     def add_to_executed(self, key, value):
@@ -417,10 +419,12 @@ class Replica(Node):
         self.decidedcommandset.remove(self.decisions[key])
         del self.decisions[key]
         self.usedcommandnumbers.remove(key)
+        self.commandgap = key
 
     def remove_from_proposals(self, key):
         del self.proposals[key]
         self.usedcommandnumbers.remove(key)
+        self.commandgap = key
 
     def remove_from_pendingcommands(self, key):
         del self.pendingcommands[key]
@@ -857,7 +861,7 @@ class Replica(Node):
             if self.isleader:
                 addcommand = self.create_add_command(msg.source)
                 #self.check_leader_promotion()
-                self.do_command_propose(addcommand)
+                self.do_command_prepare(addcommand)
                 for i in range(WINDOW):
                     noopcommand = self.create_noop_command()
                     self.do_command_propose(noopcommand)
