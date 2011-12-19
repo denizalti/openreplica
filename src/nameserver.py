@@ -70,18 +70,16 @@ class Nameserver(Tracker):
         return name == self.mydomain
         
     def aresponse(self, question):
-        for gname == NODE_REPLICA:
-            for address,port in self.groups[gname].get_addresses():
-                yield address
+        for address,port in self.groups[NODE_REPLICA].get_addresses():
+            yield address
 
     def nsresponse(self, question):
         for address,port in self.groups[NODE_NAMESERVER].get_addresses():
             yield address
 
     def srvresponse(self, question):
-        for gname == NODE_REPLICA:
-            for addr,port in self.groups[gname].get_addresses():
-                yield addr+IPCONVERTER,port
+        for addr,port in self.groups[NODE_REPLICA].get_addresses():
+            yield addr+IPCONVERTER,port
         
     def txtresponse(self, question):
         txtstr = ''
