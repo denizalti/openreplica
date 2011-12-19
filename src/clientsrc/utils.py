@@ -19,8 +19,9 @@ class Logger():
         self.logfile = open("concoord_log_"+name, 'w')
 
     def write(self, cls, str):
-        print "%s [%s] %s: %s" % (time.asctime(time.localtime(time.time())), self.prefix, cls, str)
-        self.logfile.write("%s [%s] %s: %s" % ((time.asctime(time.localtime(time.time())), self.prefix, cls, str)))
+        print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix, cls, str)
+        self.logfile.write("%s [%s] %s: %s\n" % ((time.asctime(time.localtime(time.time())), self.prefix, cls, str)))
+        self.logfile.flush()
 
     def close(self):
         self.logfile.close()
@@ -44,7 +45,7 @@ def endtimer(timerkey, timerno):
     
 def dumptimers(numreplicas, numacceptors, ownertype):
     global timers
-    if ownertype == NODE_LEADER or ownertype == NODE_REPLICA:
+    if ownertype == NODE_REPLICA:
         filename = "output/replica/%s-%s" % (str(numreplicas), str(numacceptors))
     elif ownertype == NODE_ACCEPTOR:
         filename = "output/acceptor/%s-%s" % (str(numreplicas), str(numacceptors))
