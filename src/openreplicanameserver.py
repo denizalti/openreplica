@@ -51,9 +51,8 @@ class OpenReplicaNameserver(Nameserver):
                     yield nsaddr
                     return
         else:
-            for gname in [NODE_LEADER, NODE_REPLICA]:
-                for address,port in self.groups[gname].get_addresses():
-                    yield address
+            for address,port in self.groups[NODE_REPLICA].get_addresses():
+                yield address
     
     def nsresponse(self, question):
         if question.name == self.mydomain or question.name.is_subdomain(self.specialdomain):

@@ -45,7 +45,7 @@ def endtimer(timerkey, timerno):
     
 def dumptimers(numreplicas, numacceptors, ownertype):
     global timers
-    if ownertype == NODE_LEADER or ownertype == NODE_REPLICA:
+    if ownertype == NODE_REPLICA:
         filename = "output/replica/%s-%s" % (str(numreplicas), str(numacceptors))
     elif ownertype == NODE_ACCEPTOR:
         filename = "output/acceptor/%s-%s" % (str(numreplicas), str(numacceptors))
