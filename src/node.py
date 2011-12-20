@@ -130,7 +130,9 @@ class Node():
                         self.bootstraplist.append(peer)
 
     def connecttobootstrap(self):
-        for i in range(BOOTSTRAPCONNECTTIMEOUT):
+        tries = 0
+        keeptrying = True
+        while tries < BOOTSTRAPCONNECTTIMEOUT and keeptrying:
             for bootpeer in self.bootstraplist:
                 try:
                     self.logger.write("State", "trying to connect to bootstrap: %s" % bootpeer)
@@ -138,6 +140,7 @@ class Node():
                     self.send(helomessage, peer=bootpeer)
                     self.groups[NODE_REPLICA].add(bootpeer)
                     self.logger.write("State", "connected to bootstrap: %s:%d" % (bootpeer.addr,bootpeer.port))
+                    keeptrying = False
                     break
                 except socket.error, e:
                     print e
