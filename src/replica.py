@@ -613,6 +613,7 @@ class Replica(Node):
         newballotnumber = self.ballotnumber
         self.logger.write("State", "preparing command: %d:%s with ballotnumber %s" % (givencommandnumber, givenproposal,str(newballotnumber)))
         prc = ResponseCollector(self.groups[NODE_ACCEPTOR], newballotnumber, givencommandnumber, givenproposal)
+        print self.groups[NODE_ACCEPTOR]
         if len(prc.acceptors) == 0:
             print "There are no acceptors."
             self.remove_from_proposals(givencommandnumber)
@@ -860,14 +861,10 @@ class Replica(Node):
         else:
             if self.isleader:
                 addcommand = self.create_add_command(msg.source)
-                #self.check_leader_promotion()
                 self.do_command_prepare(addcommand)
-                for i in range(WINDOW):
+                for i in range(WINDOW+2):
                     noopcommand = self.create_noop_command()
                     self.do_command_propose(noopcommand)
-            else:
-                # XXX: Pass request to Leader
-                pass
             
 
     def create_delete_command(self, node):
