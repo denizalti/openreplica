@@ -51,9 +51,9 @@ class Acceptor(Node):
         elif msg.ballotnumber == self.ballotnumber and msg.fullid() == self.last_accept_msg_id:
             return
         else:
-            self.logger.write("Paxos State", "prepare received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))
+            self.logger.write("Paxos State", "prepare received with non-acceptable ballotnumber %s for commandnumber %s" % (str(msg.ballotnumber), str(msg.commandnumber)))
             replymsg = PaxosMessage(MSG_PREPARE_PREEMPTED,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,givenpvalueset=self.accepted)
-        self.logger.write("Paxos State", "prepare responding to ballotnumber %s" % str(msg.ballotnumber))
+        self.logger.write("Paxos State", "prepare responding with %s" % str(replymsg))
         self.send(replymsg,peer=msg.source)
 
     def msg_propose(self, conn, msg):
