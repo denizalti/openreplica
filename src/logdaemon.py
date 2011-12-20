@@ -5,11 +5,15 @@
 """
 import socket, time, os, sys, select
 
-def collect_input(socket):
+def collect_input(s):
     msg = ''
     while '\n' not in msg:
-        msg += socket.recv(1)
+        chunk = s.recv(1)
+        if chunk == '':
+            return False
+        msg += chunk
     print_event(msg)
+    return True
 
 def print_event(event):
     print "%s: %s" % (time.asctime(time.localtime(time.time())), event.strip())
@@ -35,9 +39,12 @@ def main():
                     print_event("accepted a connection from address %s\n" % str(clientaddr))
                     socketset.append(clientsock)
                 else:
-                    collect_input(s)
+                    if not collect_input(s):
+                        socketset.remove(s)
             except socket.error:
                 socketset.remove(s)
+        for s in exceptready:
+            socketset.remove(s)
         
 if __name__=='__main__':
     main()
