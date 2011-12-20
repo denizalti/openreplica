@@ -19,7 +19,7 @@ def main():
         daemonsocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         daemonsocket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         daemonsocket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
-        daemonsocket.bind(('localhost',12000))
+        daemonsocket.bind(('egs-110.cs.cornell.edu',12000))
         daemonsocket.listen(10)
     except socket.error:
         pass
