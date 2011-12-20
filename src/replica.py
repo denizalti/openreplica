@@ -861,12 +861,12 @@ class Replica(Node):
         else:
             if self.isleader:
                 addcommand = self.create_add_command(msg.source)
+                self.check_leader_promotion()
                 self.do_command_prepare(addcommand)
                 for i in range(WINDOW+2):
                     noopcommand = self.create_noop_command()
                     self.do_command_propose(noopcommand)
             
-
     def create_delete_command(self, node):
         mynumber = self.metacommandnumber
         self.metacommandnumber += 1
