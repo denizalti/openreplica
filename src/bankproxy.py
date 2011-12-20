@@ -22,3 +22,4 @@ class Bank():
 
     def __str__(self):
         self.proxy.invoke_command("__str__", )
+
