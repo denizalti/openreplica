@@ -36,7 +36,7 @@ class ClientProxy():
         myaddr = findOwnIP()
         myport = self.socket.getsockname()[1]
         self.me = Peer(myaddr,myport,NODE_CLIENT)
-        self.logger = NetworkLogger("%s-%s" % ('NODE_CLIENT',self.me.getid())), 'egs-110.cs.cornell.edu:12000')
+        self.logger = NetworkLogger("%s-%s" % ('NODE_CLIENT',self.me.getid()), 'egs-110.cs.cornell.edu:12000')
         self.commandnumber = random.randint(1, sys.maxint)
         self.lock = Lock()
 
