@@ -13,7 +13,7 @@ def findOwnIP():
     """Retrieves the hostname of the caller"""
     return socket.gethostbyname(socket.gethostname())
 
-class Logger():
+class ConsoleLogger():
     def __init__(self, name):
         self.prefix = name
         self.logfile = open("concoord_log_"+name, 'w')
@@ -26,6 +26,22 @@ class Logger():
     def close(self):
         self.logfile.close()
 
+class NetworkLogger():
+    def __init__(self, name, lognode):
+        self.prefix = name
+        logaddr,logport = lognode.split(':')
+        try:
+            self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+            self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+            self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
+            self.socket.connect((logaddr,int(logport)))
+        except socket.error:
+            print "Cannot connect to logdaemon."
+            os._exit(1)
+
+    def write(self, cls, str):
+        print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix, cls, str)
+        self.socket.send("[%s] %s: %s\n" % (self.prefix, cls, str))
         
 timers = {}
 def starttimer(timerkey, timerno):
