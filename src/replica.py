@@ -854,8 +854,10 @@ class Replica(Node):
                 self.groups[NODE_REPLICA].remove(currentleader)
 
     def msg_helo(self, conn, msg):
+        self.logger.write("State", "Received HELO from %s" % (msg.source))
         # This is the first acceptor, it has to be added by this replica
         if msg.source.type == NODE_ACCEPTOR and len(self.groups[NODE_ACCEPTOR]) == 0:
+            self.logger.write("State", "Adding the first acceptor")
             self.groups[msg.source.type].add(msg.source)
             # Agree with other Replicas about adding this acceptor
             addcommand = self.create_add_command(msg.source)
@@ -865,13 +867,18 @@ class Replica(Node):
                 noopcommand = self.create_noop_command()
                 self.do_command_propose(noopcommand)
         else:
-            if self.isleader:
+            if len(self.groups[NODE_ACCEPTOR]) == 0:
+                return
+            elif self.isleader:
+                self.logger.write("State", "Adding the new node")
                 addcommand = self.create_add_command(msg.source)
                 self.check_leader_promotion()
                 self.do_command_prepare(addcommand)
                 for i in range(WINDOW+2):
                     noopcommand = self.create_noop_command()
                     self.do_command_propose(noopcommand)
+            else:
+                return
             
     def create_delete_command(self, node):
         mynumber = self.metacommandnumber
