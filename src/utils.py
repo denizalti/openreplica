@@ -42,6 +42,9 @@ class NetworkLogger():
     def write(self, cls, str):
         print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix, cls, str)
         self.socket.send("[%s] %s: %s\n" % (self.prefix, cls, str))
+
+    def close(self):
+        self.socket.close()
         
 timers = {}
 def starttimer(timerkey, timerno):

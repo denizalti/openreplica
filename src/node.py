@@ -102,13 +102,13 @@ class Node():
         self.me = Peer(self.addr,self.port,self.type)
         self.id = self.me.getid()
         self.logger = NetworkLogger("%s-%s" % (node_names[self.type],self.id), 'egs-110.cs.cornell.edu:12000')
+        self.logger.write("State", "Connected.")
         self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_TRACKER:Group(self.me), NODE_NAMESERVER:Group(self.me)}
         # connect to the bootstrap node
         if givenbootstraplist:
             self.bootstraplist = []
             self.discoverbootstrap(givenbootstraplist)
             self.connecttobootstrap()
-            
         if self.type == NODE_REPLICA or self.type == NODE_TRACKER or self.type == NODE_NAMESERVER:
             self.stateuptodate = False
 
