@@ -72,7 +72,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     allnodes.uploadall(fixedfile.name, "bin/"+clientobjectfilename)
     print "-- setting up the environment"
     print "--- initializing bootstrap"
-    bootstrap.executecommandall("nohup python bin/replica.py -f %s -c %s &" % (clientobjectfilename, classname), False)
+    bootstrap.executecommandall("nohup python bin/replica.py -f %s -c %s" % (clientobjectfilename, classname), False)
     returnvalue = ('','')
     while returnvalue == ('',''):
         success, returnvalue = bootstrap.executecommandone(bootstrap.getHosts()[0], "ls | grep %s-descriptor" % clientobjectfilename[:-3])
@@ -81,16 +81,16 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     processnames.append(bootstrapname)
     print "Bootstrap: ", bootstrapname
     print "--- initializing acceptors"
-    print "nohup python bin/acceptor.py -b %s &" % bootstrapname
-    acceptors.executecommandall("nohup python bin/acceptor.py -b %s &" % bootstrapname, False)
+    print "nohup python bin/acceptor.py -b %s" % bootstrapname
+    acceptors.executecommandall("nohup python bin/acceptor.py -b %s" % bootstrapname, False)
     print "--- initializing replicas"
-    print "nohup python bin/replica.py -f %s -c %s -b %s &" % (clientobjectfilename, classname, bootstrapname)
-    replicas.executecommandall("nohup python bin/replica.py -f %s -c %s -b %s &" % (clientobjectfilename, classname, bootstrapname), False)
+    print "nohup python bin/replica.py -f %s -c %s -b %s" % (clientobjectfilename, classname, bootstrapname)
+    replicas.executecommandall("nohup python bin/replica.py -f %s -c %s -b %s" % (clientobjectfilename, classname, bootstrapname), False)
     for replica in replicas.getHosts():
         processnames.append(get_node_name(replica, replicas, 'REPLICA'))
     print "--- initializing nameservers"
-    print "sudo -A nohup python bin/nameserver.py -n %s -f %s -c %s -b %s &" % (subdomain, clientobjectfilename, classname, bootstrapname)
-    nameservers.executecommandall("sudo -A nohup python bin/nameserver.py -n %s -f %s -c %s -b %s &" % (subdomain, clientobjectfilename, classname, bootstrapname), False)
+    print "sudo -A nohup python bin/nameserver.py -n %s -f %s -c %s -b %s" % (subdomain, clientobjectfilename, classname, bootstrapname)
+    nameservers.executecommandall("sudo -A nohup python bin/nameserver.py -n %s -f %s -c %s -b %s" % (subdomain, clientobjectfilename, classname, bootstrapname), False)
     print "Processes: ", processnames
     ## add the nameserver nodes to open replica coordinator object
     openreplicacoordobj = OpenReplicaCoordProxy('128.84.154.110:6668')
