@@ -49,8 +49,6 @@ class Tracker(Replica):
         """Take a given PERFORM message, add it to the set of decided commands, and call performcore to execute."""
         if msg.commandnumber not in self.decisions:
             self.decisions[msg.commandnumber] = msg.proposal
-        else:
-            print "This commandnumber has been decided before.."
             
         while self.decisions.has_key(self.nexttoexecute):
             if self.decisions[self.nexttoexecute] in self.executed:

@@ -159,7 +159,7 @@ class Nameserver(Tracker):
         return additionalstr
 
 def main():
-    nameservernode = Nameserver(options.dnsname)
+    nameservernode = Nameserver(options.dnsname, instantiateobj=True)
     nameservernode.startservice()
     signal.signal(signal.SIGINT, nameservernode.terminate_handler)
     signal.signal(signal.SIGTERM, nameservernode.terminate_handler)
