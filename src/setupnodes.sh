@@ -2,6 +2,9 @@
 
 SLICENAME=cornell_openreplica
 
+make clean
+make
+
 for var in "$@"
 do
     echo "$var"
