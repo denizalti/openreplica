@@ -66,11 +66,9 @@ class Replica(Node):
         if instantiateobj:
             try:
                 self.object = getattr(__import__(self.objectfilename[:-3], globals(), locals(), [], -1), self.objectname)()
-                infofile = open(self.objectfilename[:-3]+"-descriptor", 'w')
-                infofile.write("%s:%d" %(self.addr,self.port))
-                infofile.close()
             except Exception as e:
                 self.logger.write("Object Error", "Object cannot be found.")
+                self._graceexit(1)
         # leadership
         self.leader_initializing = False
         self.isleader = False
@@ -91,6 +89,14 @@ class Replica(Node):
         # inconsistent client reads
         self.callsfromclient = 0
         self.clientpool = ConnectionPool()
+        # initialization done
+        try:
+            infofile = open(self.objectfilename[:-3]+"-descriptor", 'w')
+            infofile.write("%s:%d" %(self.addr,self.port))
+            infofile.close()
+        except IOError as e:
+            self.logger.write("File Error", "Info file cannot be created.")
+            self._graceexit(1)
 
     def startservice(self):
         """Start the background services associated with a replica."""
@@ -548,8 +554,7 @@ class Replica(Node):
             print "TOTAL: ", totaltime
             print "TPUT: ", 30000/totaltime, "req/s"
             print "********************************************"
-            sys.stdout.flush()
-            os._exit(1)
+            self._graceexit(1)
         command = Command(client=self.me, clientcommandnumber=random.randint(1,10000000), command='noop')
         self.handle_client_command_tput(command)
             
@@ -944,10 +949,13 @@ class Replica(Node):
             print i
 
     def terminate_handler(self, signal, frame):
+        self._graceexit()
+
+    def _graceexit(self, exitcode=0):
         sys.stdout.flush()
         sys.stderr.flush()
         self.logger.close()
-        os._exit(0)
+        os._exit(exitcode)
 
 def main():
     replicanode = Replica()

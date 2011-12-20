@@ -130,17 +130,19 @@ class Node():
                         self.bootstraplist.append(peer)
 
     def connecttobootstrap(self):
-        for bootpeer in self.bootstraplist:
-            try:
-                self.logger.write("State", "trying to connect to bootstrap: %s" % bootpeer)
-                helomessage = HandshakeMessage(MSG_HELO, self.me)
-                self.send(helomessage, peer=bootpeer)
-                self.groups[NODE_REPLICA].add(bootpeer)
-                self.logger.write("State", "connected to bootstrap: %s:%d" % (bootpeer.addr,bootpeer.port))
-                break
-            except socket.error, e:
-                print e
-                continue
+        for i in range(BOOTSTRAPCONNECTTIMEOUT):
+            for bootpeer in self.bootstraplist:
+                try:
+                    self.logger.write("State", "trying to connect to bootstrap: %s" % bootpeer)
+                    helomessage = HandshakeMessage(MSG_HELO, self.me)
+                    self.send(helomessage, peer=bootpeer)
+                    self.groups[NODE_REPLICA].add(bootpeer)
+                    self.logger.write("State", "connected to bootstrap: %s:%d" % (bootpeer.addr,bootpeer.port))
+                    break
+                except socket.error, e:
+                    print e
+                    continue
+            sleep(1)
 
     def startservice(self):
         """Starts the background services associated with a node."""
