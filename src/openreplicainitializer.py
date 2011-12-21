@@ -95,7 +95,12 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     if numnameservers > 0:
         print "--- initializing nameservers"
         nameservers.executecommandall("sudo -A nohup python bin/nameserver.py -n %s -f %s -c %s -b %s" % (subdomain, clientobjectfilename, classname, bootstrapname), False)
-    print "Processes: ", processnames
+    print "Checking connections.."
+    returnvalue = ('','')
+    while returnvalue == ('',''):
+        success, returnvalue = nameservers.executecommandall("ls | grep %s-descriptor" % clientobjectfilename[:-3])
+    success,returnvalue = nameservers.executecommandall("cat %s-descriptor" % clientobjectfilename[:-3])
+    print "All clear!"
     ## add the nameserver nodes to open replica coordinator object
     openreplicacoordobj = OpenReplicaCoordProxy('128.84.154.110:6668')
     print "Nodes: "
