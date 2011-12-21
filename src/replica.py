@@ -283,14 +283,14 @@ class Replica(Node):
         pass
 
     def _add_node(self, nodetype, nodename):
-        self.logger.write("State", "Adding node: %s %s" % (nodetype, nodename))
+        self.logger.write("State", "Adding node: %s %s" % (node_names[nodetype], nodename))
         ipaddr,port = nodename.split(":")
         nodetype = int(nodetype)
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype].add(nodepeer)
         
     def _del_node(self, nodetype, nodename):
-        self.logger.write("State", "Deleting node: %s %s" % (nodetype, nodename))
+        self.logger.write("State", "Deleting node: %s %s" % (node_names[nodetype], nodename))
         ipaddr,port = nodename.split(":")
         nodetype = int(nodetype)
         nodepeer = Peer(ipaddr,int(port),nodetype)
@@ -395,6 +395,7 @@ class Replica(Node):
 
     def find_commandnumber(self):
         """returns the first gap in proposals and decisions combined"""
+        print "Commandnumbers: ", self.usedcommandnumbers
         while self.commandgap <= len(self.usedcommandnumbers):
             if self.commandgap in self.usedcommandnumbers:
                 self.commandgap += 1
@@ -872,8 +873,8 @@ class Replica(Node):
             elif self.isleader:
                 self.logger.write("State", "Adding the new node")
                 addcommand = self.create_add_command(msg.source)
-                self.check_leader_promotion()
-                self.do_command_prepare(addcommand)
+                self.do_command_propose(addcommand)
+                print "SSSSS Add command created: ", addcommand
                 for i in range(WINDOW+2):
                     noopcommand = self.create_noop_command()
                     self.do_command_propose(noopcommand)
