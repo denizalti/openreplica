@@ -80,10 +80,9 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     bootstrapname = returnvalue[0]
     processnames.append(bootstrapname)
     print "Bootstrap: ", bootstrapname
-    for acceptor in acceptors.getHosts():
-        print "--- initializing acceptor on ", acceptor
-        acceptors.executecommandone(acceptor, "nohup python bin/acceptor.py -b %s" % bootstrapname, False)
-        #acceptors.executecommandall("nohup python bin/acceptor.py -b %s" % bootstrapname, False)
+    if numacceptors > 0:
+        print "--- initializing acceptors"
+        acceptors.executecommandall("nohup python bin/acceptor.py -b %s" % bootstrapname, False)
     if numreplicas-1 > 0:
         print "--- initializing replicas"
         replicas.executecommandall("nohup python bin/replica.py -f %s -c %s -b %s" % (clientobjectfilename, classname, bootstrapname), False)
@@ -93,6 +92,10 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
         print "--- initializing nameservers"
         nameservers.executecommandall("sudo -A nohup python bin/nameserver.py -n %s -f %s -c %s -b %s" % (subdomain, clientobjectfilename, classname, bootstrapname), False)
     print "Processes: ", processnames
+    returnvalue = ('','')
+    while returnvalue == ('',''):
+        success, returnvalue = bootstrap.executecommandone(nameservers.getHosts()[0], "ls | grep %s-descriptor" % clientobjectfilename[:-3])
+    success,returnvalue = bootstrap.executecommandone(nameservers.getHosts()[0], "cat %s-descriptor" % clientobjectfilename[:-3])
     ## add the nameserver nodes to open replica coordinator object
     openreplicacoordobj = OpenReplicaCoordProxy('128.84.154.110:6668')
     print "Nodes: "
