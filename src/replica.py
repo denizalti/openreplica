@@ -395,14 +395,16 @@ class Replica(Node):
 
     def find_commandnumber(self):
         """returns the first gap in proposals and decisions combined"""
-        print "Commandnumbers: ", self.usedcommandnumbers
+        self.logger.write("State", "Commandnumbers: %s" % str(self.usedcommandnumbers))
         while self.commandgap <= len(self.usedcommandnumbers):
             if self.commandgap in self.usedcommandnumbers:
                 self.commandgap += 1
             else:
                 self.logger.write("State", "Picked command number: %d" % self.commandgap)
+                self.usedcommandnumbers.add(self.commandgap)
                 return self.commandgap
         self.logger.write("State", "Picked command number: %d" % self.commandgap)
+        self.usedcommandnumbers.add(self.commandgap)
         return self.commandgap
 
     def add_to_executed(self, key, value):
@@ -873,8 +875,9 @@ class Replica(Node):
             elif self.isleader:
                 self.logger.write("State", "Adding the new node")
                 addcommand = self.create_add_command(msg.source)
-                self.do_command_propose(addcommand)
-                print "SSSSS Add command created: ", addcommand
+                self.check_leader_promotion()
+                self.do_command_prepare(addcommand)
+                self.logger.write("State", "Add command created: %s" % str(addcommand))
                 for i in range(WINDOW+2):
                     noopcommand = self.create_noop_command()
                     self.do_command_propose(noopcommand)
