@@ -92,10 +92,13 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
         replicas.executecommandall("nohup python bin/replica.py -f %s -c %s -b %s" % (clientobjectfilename, classname, bootstrapname), False)
         for replica in replicas.getHosts():
             processnames.append(get_node_name(replica, replicas, 'REPLICA'))
+    returnvalue = ('','')
+    while returnvalue == ('',''):
+        success, returnvalue = replicas.executecommandall("ls | grep %s-descriptor" % clientobjectfilename[:-3])
+    success,returnvalue = replicas.executecommandall("cat %s-descriptor" % clientobjectfilename[:-3])
     if numnameservers > 0:
         print "--- initializing nameservers"
         nameservers.executecommandall("sudo -A nohup python bin/nameserver.py -n %s -f %s -c %s -b %s" % (subdomain, clientobjectfilename, classname, bootstrapname), False)
-    print "Checking connections.."
     returnvalue = ('','')
     while returnvalue == ('',''):
         success, returnvalue = nameservers.executecommandall("ls | grep %s-descriptor" % clientobjectfilename[:-3])
