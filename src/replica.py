@@ -395,7 +395,6 @@ class Replica(Node):
 
     def find_commandnumber(self):
         """returns the first gap in proposals and decisions combined"""
-        self.logger.write("State", "Commandnumbers: %s" % str(self.usedcommandnumbers))
         while self.commandgap <= len(self.usedcommandnumbers):
             if self.commandgap in self.usedcommandnumbers:
                 self.commandgap += 1
