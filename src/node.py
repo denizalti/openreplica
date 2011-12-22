@@ -367,10 +367,10 @@ class Node():
                 for messageinfo in msgs:
                     now = time.time()
                     if messageinfo.timestamp + ACKTIMEOUT < now:
-                        #resend messages
-                        self.logger.write("State", "re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
-                        self.send(messageinfo.message, peer=messageinfo.destination, isresend=True)
-                        messageinfo.timestamp = time.time()
+                        if messageinfo.message.type != MSG_PING:
+                            self.logger.write("State", "re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
+                            self.send(messageinfo.message, peer=messageinfo.destination, isresend=True)
+                            messageinfo.timestamp = time.time()
                     elif DO_PERIODIC_PINGS and (messageinfo.timestamp + LIVENESSTIMEOUT) < now and messageinfo.destination in checkliveness:
                         checkliveness.remove(messageinfo.destination)
             except Exception as ec:
