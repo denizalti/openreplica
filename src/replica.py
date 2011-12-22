@@ -109,7 +109,6 @@ class Replica(Node):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
         to the managements of the Paxos protocol) with a delay of WINDOW commands."""
-        self.logger.write("State:", "---> SlotNumber: %d Command: %s DoMetaOnly: %s" % (slotnumber, self.decisions[slotnumber], dometaonly))
         command = self.decisions[slotnumber]
         commandlist = command.command.split()
         commandname = commandlist[0]
@@ -117,6 +116,7 @@ class Replica(Node):
         ismeta = (commandname in METACOMMANDS)
         noop = (commandname == "noop")
         send_result_to_client = True
+        self.logger.write("State:", "---> SlotNumber: %d Command: %s DoMetaOnly: %s IsMeta: %s" % (slotnumber, self.decisions[slotnumber], dometaonly, ismeta))
         # Result triple
         clientreplycode, givenresult, unblocked = (-1, None, {})
         try:
@@ -130,6 +130,7 @@ class Replica(Node):
                 send_result_to_client = False
             elif dometaonly and ismeta:
                 # execute a metacommand when the window has expired
+                self.logger.write("State", "commandname: %s args: %s" % (commandname, str(commandargs)))
                 method = getattr(self, commandname)
                 clientreplycode = CR_META
                 givenresult = method(*commandargs)
@@ -167,14 +168,16 @@ class Replica(Node):
                     for unblockedclientcommand in unblocked.iterkeys():
                         self.send_reply_to_client(CR_UNBLOCK, None, unblockedclientcommand)
                 except Exception as e:
-                    self.logger.write("Execution Error", "Error during method invocation: %s" % e)
+                    self.logger.write("Execution Error", "Error during method invocation: %s" % str(e))
                     givenresult = e
                     clientreplycode = CR_EXCEPTION
                     send_result_to_client = True
                     unblocked = {}
+                self.logger.write("State", "Acquiring lock!")
                 self.lock.acquire()
         except (TypeError, AttributeError) as t:
             self.logger.write("Execution Error", "command not supported: %s" % (command))
+            self.logger.write("Execution Error", "%s" % str(t))
             givenresult = 'COMMAND NOT SUPPORTED'
             clientreplycode = CR_EXCEPTION
             unblocked = {}
@@ -283,16 +286,16 @@ class Replica(Node):
         pass
 
     def _add_node(self, nodetype, nodename):
+        nodetype = int(nodetype)
         self.logger.write("State", "Adding node: %s %s" % (node_names[nodetype], nodename))
         ipaddr,port = nodename.split(":")
-        nodetype = int(nodetype)
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype].add(nodepeer)
         
     def _del_node(self, nodetype, nodename):
+        nodetype = int(nodetype)
         self.logger.write("State", "Deleting node: %s %s" % (node_names[nodetype], nodename))
         ipaddr,port = nodename.split(":")
-        nodetype = int(nodetype)
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype].remove(nodepeer)
 
@@ -539,6 +542,7 @@ class Replica(Node):
                 unblocked = {}
         except (TypeError, AttributeError) as t:
             self.logger.write("Execution Error", "command not supported: %s" % (command))
+            self.logger.write("Execution Error", "%s" % str(t))
             givenresult = 'COMMAND NOT SUPPORTED'
             clientreplycode = CR_EXCEPTION
             unblocked = {}
@@ -608,6 +612,7 @@ class Replica(Node):
         self.add_to_pendingcommands(givencommandnumber, givenproposal)
         # if we're too far in the future, i.e. past window, do not issue the command
         if givencommandnumber - self.nexttoexecute >= WINDOW:
+            self.logger.write("State", "Waiting for window on %d" % self.nexttoexecute)
             return
         self.do_command_propose_frompending(givencommandnumber)
             
@@ -655,7 +660,7 @@ class Replica(Node):
         print "Given: ", givencommandnumber
         print "Next: ", self.nexttoexecute
         if givencommandnumber - self.nexttoexecute >= WINDOW:
-            print "WAITING FOR THE WINDOW.."
+            self.logger.write("State", "Waiting for window on %d" % self.nexttoexecute)
             return
         self.do_command_prepare_frompending(givencommandnumber)
             

@@ -257,6 +257,7 @@ class Node():
         if message == None:
             return False
         else:
+            self.logger.write("State", "received %s" % message)
             # add to lastmessages
             with self.lastmessages_lock:
                 if not self.lastmessages.has_key(message.source):
@@ -361,6 +362,7 @@ class Node():
                 checkliveness = set()
                 for type,group in self.groups.iteritems():
                     checkliveness = checkliveness.union(group.members)
+            #XXX: Keep track of retries and take the node out of the list if it is not responding.
             try:
                 with self.outstandingmessages_lock:
                     msgs = self.outstandingmessages.values()
