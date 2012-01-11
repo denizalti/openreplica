@@ -108,8 +108,8 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     openreplicacoordobj = OpenReplicaCoordProxy('128.84.154.110:6668')
     print "Nodes: "
     for node in processnames:
-        openreplicacoordobj.addnodetosubdomain(subdomain, node)
         print node
+        openreplicacoordobj.addnodetosubdomain(subdomain, node)
     return bootstrapname
 
 def get_node_name(node, nodeconn, type):

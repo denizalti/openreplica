@@ -7,6 +7,7 @@ import socket
 import os, sys
 import time
 import string
+import threading
 from enums import *
 
 def findOwnIP():
@@ -19,7 +20,7 @@ class ConsoleLogger():
         self.logfile = open("concoord_log_"+name, 'w')
 
     def write(self, cls, str):
-        print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix, cls, str)
+        print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix + '_' + threading.current_thread().name, cls, str)
         self.logfile.write("%s [%s] %s: %s\n" % ((time.asctime(time.localtime(time.time())), self.prefix, cls, str)))
         self.logfile.flush()
 
@@ -40,7 +41,7 @@ class NetworkLogger():
             os._exit(1)
 
     def write(self, cls, str):
-        print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix, cls, str)
+        print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix + '_' + threading.current_thread().name, cls, str)
         self.socket.send("[%s] %s: %s\n" % (self.prefix, cls, str))
 
     def close(self):
