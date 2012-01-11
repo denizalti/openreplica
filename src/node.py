@@ -79,6 +79,10 @@ class Node():
         # {peer: timestamp}
         self.lastmessages_lock =RLock()
         self.lastmessages = {}
+        # number of retries for all peers
+        # {peer: retries}
+        self.retries_lock =RLock()
+        self.retries = {}
         
         self.lock = Lock()
         self.done = False
@@ -150,16 +154,17 @@ class Node():
     def startservice(self):
         """Starts the background services associated with a node."""
         # Start a thread that waits for inputs
-        receiver_thread = Thread(target=self.server_loop)
+        receiver_thread = Thread(target=self.server_loop, name='ReceiverThread')
         receiver_thread.start()
         # Start a thread with the server which will start a thread for each request
-        main_thread = Thread(target=self.handle_messages)
+        main_thread = Thread(target=self.handle_messages, name='MainThread')
         main_thread.start()
         # Start a thread that waits for inputs
-        #input_thread = Thread(target=self.get_user_input_from_shell)
+        #input_thread = Thread(target=self.get_user_input_from_shell, name=InputThread)
         #input_thread.start()
         # Start a thread that pings neighbors
         timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
+        timer_thread.name = 'PeriodicThread'
         timer_thread.start()
         return self
 
@@ -238,6 +243,7 @@ class Node():
                         success = True
                     else:
                         success = self.handle_connection(s)
+                        self.logger.write("State", "handled connection with %s" % 'success' if success else 'failure')
                     if not success:
                         # s is closed, take it out of nascentset and connection pool
                         for sock,timestamp in nascentset:
@@ -290,7 +296,7 @@ class Node():
         # check to see if it's an ack
         if message.type == MSG_ACK:
             #take it out of outstanding messages, but do not ack an ack
-            ackid = "%s+%d" % (self.me.getid(), message.ackid)
+            ackid = "%s+%d" % (self.id, message.ackid)
             with self.outstandingmessages_lock:
                 if self.outstandingmessages.has_key(ackid):
                     del self.outstandingmessages[ackid]
@@ -372,6 +378,7 @@ class Node():
                         if messageinfo.message.type != MSG_PING:
                             self.logger.write("State", "re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
                             self.send(messageinfo.message, peer=messageinfo.destination, isresend=True)
+                            self.add_retry(messageinfo.destination)
                             messageinfo.timestamp = time.time()
                     elif DO_PERIODIC_PINGS and (messageinfo.timestamp + LIVENESSTIMEOUT) < now and messageinfo.destination in checkliveness:
                         checkliveness.remove(messageinfo.destination)
@@ -385,6 +392,13 @@ class Node():
                         pingmessage = HandshakeMessage(MSG_PING, self.me)
                         self.send(pingmessage, peer=pingpeer)
             time.sleep(ACKTIMEOUT)
+
+    def add_retry(self, peer):
+        with self.retries_lock:
+            if self.retries.has_key(peer):
+                self.retries[peer] += 1
+            else:
+                self.retries[peer] = 1
 
     def get_user_input_from_shell(self):
         """Shell loop that accepts inputs from the command prompt and 

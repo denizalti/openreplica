@@ -103,6 +103,7 @@ class Replica(Node):
         """Start the background services associated with a replica."""
         Node.startservice(self)
         leaderping_thread = Timer(LIVENESSTIMEOUT, self.ping_leader)
+        leaderping_thread.name = 'LeaderPingThread'
         leaderping_thread.start()
 
     def performcore(self, msg, slotnumber, dometaonly=False, designated=False):
@@ -242,7 +243,9 @@ class Replica(Node):
                 # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
                 # We are calling performcore 2 times, the timing gets screwed plus this is very unefficient
                 if self.nexttoexecute > WINDOW:
-                    self.performcore(msg, self.nexttoexecute - WINDOW, True, designated=designated)
+                    self.logger.write("State", "performcore %d" % (self.nexttoexecute-WINDOW))
+                    self.performcore(msg, self.nexttoexecute-WINDOW, True, designated=designated)
+                self.logger.write("State", "performcore %d" % self.nexttoexecute)
                 self.performcore(msg, self.nexttoexecute, designated=designated)
                 self.nexttoexecute += 1
                 # the window just got bumped by one
