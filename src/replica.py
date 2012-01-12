@@ -600,6 +600,7 @@ class Replica(Node):
             return
         self.outstandingproposes[givencommandnumber] = prc
         propose = PaxosMessage(MSG_PROPOSE,self.me,recentballotnumber,commandnumber=givencommandnumber,proposal=givenproposal)
+        # the msgs sent may be less than the number of prc.acceptors if a connection to an acceptor is lost XXX
         msgids = self.send(propose,group=prc.acceptors)
         # add sent messages to the sent proposes
         prc.sent.extend(msgids)
@@ -614,6 +615,7 @@ class Replica(Node):
         givencommandnumber = self.find_commandnumber()
         self.add_to_pendingcommands(givencommandnumber, givenproposal)
         # if we're too far in the future, i.e. past window, do not issue the command
+        self.logger.write("State", "%d - %d ~ %d" % (givencommandnumber, self.nexttoexecute, WINDOW))
         if givencommandnumber - self.nexttoexecute >= WINDOW:
             self.logger.write("State", "Waiting for window on %d" % self.nexttoexecute)
             return
@@ -637,6 +639,7 @@ class Replica(Node):
             return
         self.outstandingprepares[newballotnumber] = prc
         prepare = PaxosMessage(MSG_PREPARE,self.me,newballotnumber)
+        # the msgs sent may be less than the number of prc.acceptors if a connection to an acceptor is lost XXX
         msgids = self.send(prepare,group=prc.acceptors)
         # add sent messages to the sent prepares
         prc.sent.extend(msgids)
