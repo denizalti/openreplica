@@ -40,6 +40,7 @@ parser.add_option("-d", "--debug", action="store_true", dest="debug", default=Fa
 (options, args) = parser.parse_args()
 
 DO_PERIODIC_PINGS = False
+RESEND = False
 
 class Node():
     """Node encloses the basic Node behaviour and state that
@@ -368,22 +369,22 @@ class Node():
                 checkliveness = set()
                 for type,group in self.groups.iteritems():
                     checkliveness = checkliveness.union(group.members)
-            #XXX: Keep track of retries and take the node out of the list if it is not responding.
-            try:
-                with self.outstandingmessages_lock:
-                    msgs = self.outstandingmessages.values()
-                for messageinfo in msgs:
-                    now = time.time()
-                    if messageinfo.timestamp + ACKTIMEOUT < now:
-                        if messageinfo.message.type != MSG_PING:
-                            self.logger.write("State", "re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
-                            self.send(messageinfo.message, peer=messageinfo.destination, isresend=True)
-                            self.add_retry(messageinfo.destination)
-                            messageinfo.timestamp = time.time()
-                    elif DO_PERIODIC_PINGS and (messageinfo.timestamp + LIVENESSTIMEOUT) < now and messageinfo.destination in checkliveness:
-                        checkliveness.remove(messageinfo.destination)
-            except Exception as ec:
-                self.logger.write("Connection Error", "exception in resend: %s" % ec)
+            if RESEND:
+                try:
+                    with self.outstandingmessages_lock:
+                        msgs = self.outstandingmessages.values()
+                    for messageinfo in msgs:
+                        now = time.time()
+                        if messageinfo.timestamp + ACKTIMEOUT < now:
+                            if messageinfo.message.type != MSG_PING:
+                                self.logger.write("State", "re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
+                                self.send(messageinfo.message, peer=messageinfo.destination, isresend=True)
+                                self.add_retry(messageinfo.destination)
+                                messageinfo.timestamp = time.time()
+                        elif DO_PERIODIC_PINGS and (messageinfo.timestamp + LIVENESSTIMEOUT) < now and messageinfo.destination in checkliveness:
+                            checkliveness.remove(messageinfo.destination)
+                except Exception as e:
+                    self.logger.write("Connection Error", "exception in resend: %s" % e)
             if DO_PERIODIC_PINGS:
                 for pingpeer in checkliveness:
                     # don't ping the peer if it has sent a message recently
@@ -428,17 +429,23 @@ class Node():
     def send(self, message, peer=None, group=None, isresend=False):
         if peer:
             connection = self.connectionpool.get_connection_by_peer(peer)
+            if connection == None:
+                self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
+                return -1
             if not isresend:
                 msginfo = MessageInfo(message,peer,time.time())
                 with self.outstandingmessages_lock:
                     self.outstandingmessages[message.fullid()] = msginfo
             connection.send(message)
-            message.id
+            return message.id
         elif group:
             assert not isresend, "performing a re-send to a group"
             ids = []
             for peer in group.members:
                 connection = self.connectionpool.get_connection_by_peer(peer)
+                if connection == None:
+                    self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
+                    continue # XXX
                 msginfo = MessageInfo(message,peer,time.time())
                 with self.outstandingmessages_lock:
                     self.outstandingmessages[message.fullid()] = msginfo
