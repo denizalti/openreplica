@@ -47,14 +47,14 @@ class Message():
             return 'AckMessage#%d: %s src %s' % (self.ackid,msg_names[self.type],self.source)
 
 class HandshakeMessage(Message):
-    def __init__(self,msgtype,myname,groups=None):
+    def __init__(self,msgtype,myname,reject=False):
         Message.__init__(self, msgtype, myname)
-        self.groups = groups
+        self.reject = reject
 
     def __str__(self):
         temp = Message.__str__(self)
         if self.type == MSG_HELOREPLY:
-            temp = '%s groups %s' % (temp, self.groups)
+            temp = '%s Reject: %s' % (temp, str(self.reject))
         return temp
 
 class UpdateMessage(Message):
