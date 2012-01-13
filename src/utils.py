@@ -36,13 +36,16 @@ class NetworkLogger():
             self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
             self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
             self.socket.connect((logaddr,int(logport)))
-        except socket.error:
+        except socket.error, e:
             print "Cannot connect to logdaemon."
             os._exit(1)
 
     def write(self, cls, str):
-        print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix + '_' + threading.current_thread().name, cls, str)
-        self.socket.send("[%s] %s: %s\n" % (self.prefix + '_' + threading.current_thread().name, cls, str))
+        try:
+            print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix + '_' + threading.current_thread().name, cls, str)
+            self.socket.send("[%s] %s: %s\n" % (self.prefix + '_' + threading.current_thread().name, cls, str))
+        except:
+            return
 
     def close(self):
         self.socket.close()

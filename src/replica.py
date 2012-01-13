@@ -147,6 +147,7 @@ class Replica(Node):
                 # this is the workhorse case that executes most normal commands
                 method = getattr(self.object, commandname)
                 # Watch out for the lock release and acquire!
+                self.logger.write("State", ">>>>>>>>>>>>>>>>>>>>>>>>>> releasing lock!")
                 self.lock.release()
                 try:
                     givenresult = method(*commandargs, _concoord_command=command)
@@ -174,7 +175,7 @@ class Replica(Node):
                     clientreplycode = CR_EXCEPTION
                     send_result_to_client = True
                     unblocked = {}
-                self.logger.write("State", "Acquiring lock!")
+                self.logger.write("State", ">>>>>>>>>>>>>>>>>>>>>>>>>> acquiring lock!")
                 self.lock.acquire()
         except (TypeError, AttributeError) as t:
             self.logger.write("Execution Error", "command not supported: %s" % (command))
@@ -198,6 +199,7 @@ class Replica(Node):
                 self.handle_client_command(garbagecommand, prepare=True)
             else:
                 self.handle_client_command(garbagecommand)
+        self.logger.write("State:", "returning from performcore!!")
 
     def send_reply_to_client(self, clientreplycode, givenresult, command):
         self.logger.write("State", "Sending REPLY to CLIENT")
@@ -211,6 +213,7 @@ class Replica(Node):
 
     def perform(self, msg, designated=False):
         """Take a given PERFORM message, add it to the set of decided commands, and call performcore to execute."""
+        self.logger.write("State:", "performing msg %s" % str(msg))
         if msg.commandnumber not in self.decisions:
             self.add_to_decisions(msg.commandnumber, msg.proposal)
         # If replica was using this commandnumber for a different proposal, initiate it again
@@ -251,9 +254,11 @@ class Replica(Node):
                 # the window just got bumped by one
                 # check if there are pending commands, and issue one of them
                 self.issue_pending_command(self.nexttoexecute)
+        self.logger.write("State:", "returning from perform!")
             
     def issue_pending_command(self, candidatecommandno):
         """propose a command from the pending commands"""
+        self.logger.write("State:", "issuing pending command")
         if self.pendingcommands.has_key(candidatecommandno):
             self.do_command_propose_frompending(candidatecommandno)
 
@@ -286,6 +291,7 @@ class Replica(Node):
         self.stateuptodate = True
 
     def do_noop(self):
+        self.logger.write("State:", "doing noop!")
         pass
 
     def _add_node(self, nodetype, nodename):
@@ -357,6 +363,7 @@ class Replica(Node):
         # fail-stop tolerance, coupled with retries in the client, mean that a 
         # leader can at any time discard all of its internal state and the protocol
         # will still work correctly.
+        self.logger.write("State:", "unbecoming leader")
         self.type = NODE_REPLICA
         backoff_event.set()
 
@@ -396,6 +403,7 @@ class Replica(Node):
 
     def update_ballotnumber(self,seedballotnumber):
         """update the ballotnumber with a higher value than the given ballotnumber"""
+        self.logger.write("State:", "updating ballotnumber")
         temp = (seedballotnumber[BALLOTNO]+1,self.ballotnumber[BALLOTNODE])
         self.ballotnumber = temp
 
@@ -586,6 +594,7 @@ class Replica(Node):
         """initiates the givencommandnumber from pendingcommands list
         removes the command from pending and transfers it to proposals
         if there are no acceptors present, sets the lists back and returns"""
+        self.logger.write("State:", "do_command_propose_frompending")
         givenproposal = self.pendingcommands[givencommandnumber]
         self.remove_from_pendingcommands(givencommandnumber)
         self.add_to_proposals(givencommandnumber, givenproposal)
@@ -600,31 +609,34 @@ class Replica(Node):
             return
         self.outstandingproposes[givencommandnumber] = prc
         propose = PaxosMessage(MSG_PROPOSE,self.me,recentballotnumber,commandnumber=givencommandnumber,proposal=givenproposal)
-        # the msgs sent may be less than the number of prc.acceptors if a connection to an acceptor is lost XXX
+        # the msgs sent may be less than the number of prc.acceptors if a connection to an acceptor is lost
         msgids = self.send(propose,group=prc.acceptors)
         # add sent messages to the sent proposes
         prc.sent.extend(msgids)
+        self.logger.write("State:", "returning from do_command_propose_frompending")
         
     def do_command_propose(self, givenproposal):
         """propose a command with the given commandnumber and proposal. Stage p2a.
         A command is proposed by running the PROPOSE stage of Paxos Protocol for the command.
         """
+        self.logger.write("State:", "do_command_propose")
         if not self.isleader:
             self.logger.write("State", "Ignoring received propose: not a leader.")
             return
         givencommandnumber = self.find_commandnumber()
         self.add_to_pendingcommands(givencommandnumber, givenproposal)
-        # if we're too far in the future, i.e. past window, do not issue the command
-        self.logger.write("State", "%d - %d ~ %d" % (givencommandnumber, self.nexttoexecute, WINDOW))
-        if givencommandnumber - self.nexttoexecute >= WINDOW:
+        # if we're too far in the future, i.e. past window, or there are no acceptors do not issue the command
+        if givencommandnumber - self.nexttoexecute >= WINDOW or len(self.groups[NODE_ACCEPTOR]) == 0:
             self.logger.write("State", "Waiting for window on %d" % self.nexttoexecute)
             return
         self.do_command_propose_frompending(givencommandnumber)
+        self.logger.write("State:", "returning from do_command_propose")
             
     def do_command_prepare_frompending(self, givencommandnumber):
         """initiates the givencommandnumber from pendingcommands list
         removes the command from pending and transfers it to proposals
         if there are no acceptors present, sets the lists back and returns"""
+        self.logger.write("State:", "do_command_prepare_frompending")
         givenproposal = self.pendingcommands[givencommandnumber]
         self.remove_from_pendingcommands(givencommandnumber)
         self.add_to_proposals(givencommandnumber, givenproposal)
@@ -639,10 +651,11 @@ class Replica(Node):
             return
         self.outstandingprepares[newballotnumber] = prc
         prepare = PaxosMessage(MSG_PREPARE,self.me,newballotnumber)
-        # the msgs sent may be less than the number of prc.acceptors if a connection to an acceptor is lost XXX
         msgids = self.send(prepare,group=prc.acceptors)
+        # the msgs sent may be less than the number of prc.acceptors if a connection to an acceptor is lost
         # add sent messages to the sent prepares
         prc.sent.extend(msgids)
+        self.logger.write("State:", "returning from do_command_prepare_frompending")
 
     def do_command_prepare(self, givenproposal):
         """Prepare a command with the given commandnumber and proposal. Stage p1a.
@@ -656,6 +669,7 @@ class Replica(Node):
         -- add the ResponseCollector to the outstanding prepare set
         -- send MSG_PREPARE to Acceptor nodes
         """
+        self.logger.write("State:", "do_command_prepare")
         if not self.isleader:
             print "Not a Leader.."
             return
@@ -669,6 +683,7 @@ class Replica(Node):
             self.logger.write("State", "Waiting for window on %d" % self.nexttoexecute)
             return
         self.do_command_prepare_frompending(givencommandnumber)
+        self.logger.write("State:", "returning from do_command_prepare")
             
     def msg_prepare_adopted(self, conn, msg):
         """MSG_PREPARE_ADOPTED is handled only if it belongs to an outstanding MSG_PREPARE,
@@ -777,6 +792,7 @@ class Replica(Node):
         -- send MSG_PERFORM to all Replicas and Leaders
         -- execute the command
         """
+        self.logger.write("State", "entered propose accept")
         if self.outstandingproposes.has_key(msg.commandnumber):
             prc = self.outstandingproposes[msg.commandnumber]
             if msg.inresponseto == prc.ballotnumber:
@@ -799,8 +815,9 @@ class Replica(Node):
                         self.send(performmessage, group=self.groups[NODE_REPLICA])
                         self.send(performmessage, group=self.groups[NODE_NAMESERVER])
                     except:
-                        pass
+                        self.logger.write("Connection Error", "Couldn't send perform messages!")
                     self.perform(performmessage, designated=True)
+            self.logger.write("State", "returning from msg_propose_accept")
         
     def msg_propose_reject(self, conn, msg):
         """MSG_PROPOSE_REJECT is handled only if it belongs to an outstanding MSG_PROPOSE,
@@ -880,19 +897,18 @@ class Replica(Node):
                 noopcommand = self.create_noop_command()
                 self.do_command_propose(noopcommand)
         else:
-            if len(self.groups[NODE_ACCEPTOR]) == 0:
-                return
-            elif self.isleader:
+            if self.isleader:
                 self.logger.write("State", "Adding the new node")
                 addcommand = self.create_add_command(msg.source)
                 self.check_leader_promotion()
                 self.do_command_prepare(addcommand)
                 self.logger.write("State", "Add command created: %s" % str(addcommand))
-                for i in range(WINDOW+2):
+                for i in range(WINDOW+3):
                     noopcommand = self.create_noop_command()
                     self.do_command_propose(noopcommand)
             else:
-                return
+                heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, True)
+                self.send(heloreplymessage, peer=msg.source)
             
     def create_delete_command(self, node):
         mynumber = self.metacommandnumber

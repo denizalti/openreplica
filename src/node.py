@@ -124,10 +124,12 @@ class Node():
     def discoverbootstrap(self, givenbootstraplist):
         bootstrapstrlist = givenbootstraplist.split(",")
         for bootstrap in bootstrapstrlist:
+            #ipaddr:port pair given as bootstrap
             if bootstrap.find(":") >= 0:
                 bootaddr,bootport = bootstrap.split(":")
                 for peer in self._getipportpairs(bootaddr, int(bootport)):
                     self.bootstraplist.append(peer)
+            #dnsname given as bootstrap
             else:
                 answers = dns.resolver.query('_concoord._tcp.'+bootstrap, 'SRV')
                 for rdata in answers:
@@ -142,13 +144,18 @@ class Node():
                 try:
                     self.logger.write("State", "trying to connect to bootstrap: %s" % bootpeer)
                     helomessage = HandshakeMessage(MSG_HELO, self.me)
-                    self.send(helomessage, peer=bootpeer)
+                    success = self.send(helomessage, peer=bootpeer)
+                    if success < 0:
+                        tries += 1
+                        continue
                     self.groups[NODE_REPLICA].add(bootpeer)
                     self.logger.write("State", "connected to bootstrap: %s:%d" % (bootpeer.addr,bootpeer.port))
                     keeptrying = False
                     break
                 except socket.error, e:
+                    self.logger.write("Connection Error", "cannot connect to bootstrap: %s" % str(e))
                     print e
+                    tries += 1
                     continue
             sleep(1)
 
@@ -161,8 +168,8 @@ class Node():
         main_thread = Thread(target=self.handle_messages, name='MainThread')
         main_thread.start()
         # Start a thread that waits for inputs
-        #input_thread = Thread(target=self.get_user_input_from_shell, name=InputThread)
-        #input_thread.start()
+        input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
+        input_thread.start()
         # Start a thread that pings neighbors
         timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
         timer_thread.name = 'PeriodicThread'
@@ -244,7 +251,6 @@ class Node():
                         success = True
                     else:
                         success = self.handle_connection(s)
-                        self.logger.write("State", "handled connection with %s" % 'success' if success else 'failure')
                     if not success:
                         # s is closed, take it out of nascentset and connection pool
                         for sock,timestamp in nascentset:
@@ -309,13 +315,17 @@ class Node():
         mname = "msg_%s" % msg_names[message.type].lower()
         try:
             method = getattr(self, mname)
+            self.logger.write("State", "invoking method: %s" % mname)
         except AttributeError:
-            self.logger.write("Message Error", "message not supported: %s" % message)
+            self.logger.write("Method Error", "method not supported: %s" % mname)
             return False
+        self.logger.write("State", ">>>>>>>>>>>>>>>>>>>>>>>>>> will grab lock!")
         with self.lock:
+            self.logger.write("State", ">>>>>>>>>>>>>>>>>>>>>>>>>> grabbed lock!")
             method(connection, message)
+            self.logger.write("State", ">>>>>>>>>>>>>>>>>>>>>>>>>> returned!")
         return True
-    
+
     #
     # message handlers
     #
@@ -323,9 +333,8 @@ class Node():
         return
 
     def msg_heloreply(self, conn, msg):
-        for nodetype in msg.groups.keys():
-            for node in msg.groups[nodetype]:
-                self.groups[nodetype].add(node)
+        if msg.reject:
+            self.connecttobootstrap()
 
     def msg_ping(self, conn, msg):
         return
@@ -418,13 +427,16 @@ class Node():
                     except AttributeError:
                         print "command not supported"
                         continue
+                    self.logger.write("State", "shellinput grabbing lock >>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                     with self.lock:
+                        self.logger.write("State", "shellinput grabbed lock >>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                         method(input)
+                    self.logger.write("State", "shellinput released lock >>>>>>>>>>>>>>>>>>>>>>>>>>>>")
             except (KeyboardInterrupt,):
                 os._exit(0)
             except (EOFError,):
                 return
-        return            
+        return           
     
     def send(self, message, peer=None, group=None, isresend=False):
         if peer:
@@ -445,7 +457,7 @@ class Node():
                 connection = self.connectionpool.get_connection_by_peer(peer)
                 if connection == None:
                     self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
-                    continue # XXX
+                    continue
                 msginfo = MessageInfo(message,peer,time.time())
                 with self.outstandingmessages_lock:
                     self.outstandingmessages[message.fullid()] = msginfo
