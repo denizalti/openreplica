@@ -66,14 +66,17 @@ class ConnectionPool():
             if self.poolbypeer.has_key(connectionkey):
                 return self.poolbypeer[connectionkey]
             else:
-                thesocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                thesocket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
-                thesocket.connect((peer.addr, peer.port))
-                thesocket.setblocking(0)
-                conn = Connection(thesocket, connectionkey)
-                self.poolbypeer[connectionkey] = conn
-                self.poolbysocket[thesocket] = conn
-                return conn
+                try:
+                    thesocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    thesocket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
+                    thesocket.connect((peer.addr, peer.port))
+                    thesocket.setblocking(0)
+                    conn = Connection(thesocket, connectionkey)
+                    self.poolbypeer[connectionkey] = conn
+                    self.poolbysocket[thesocket] = conn
+                    return conn
+                except:
+                    return None
 
     def get_connection_by_socket(self, thesocket):
         """Returns a Connection given corresponding socket.

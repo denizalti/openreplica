@@ -85,6 +85,7 @@ class ClientProxy():
                 self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
                 self.socket.connect((bootpeer.addr,bootpeer.port))
                 self.conn = Connection(self.socket)
+                self.bootstrap = bootpeer.addr,bootpeer.port #XXX
                 if self.debug:
                     print "Connected to new bootstrap: ", bootpeer.addr,bootpeer.port
                 break
@@ -117,6 +118,7 @@ class ClientProxy():
             while not replied:
                 try:
                     success = self.conn.send(cm)
+                    print "Bootstrap: ", self.bootstrap
                     print "Sent message %s" % str(cm)
                     if not success:
                         raise IOError
