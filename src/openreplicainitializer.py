@@ -60,6 +60,10 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     # locate the right number of suitable PlanetLab nodes
     clientobjectfilename = os.path.basename(clientobjectfilepath)
     numreplicas, numacceptors, numnameservers = configuration
+    if numreplicas < 1 or numacceptors < 1 or numnameservers < 1:
+        print "Invalid configuration:"
+        print "The configuration requires at least 1 Replica, 1 Acceptor and 1 Nameserver"
+        os._exit()
     bootstrap = PLConnection(1, [check_planetlab_pythonversion])
     nameservers = PLConnection(numnameservers, [check_planetlab_dnsport, check_planetlab_pythonversion])
     replicas = PLConnection(numreplicas-1, [check_planetlab_pythonversion])
@@ -88,20 +92,24 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
         replicas.executecommandall("nohup python bin/replica.py -f %s -c %s -b %s" % (clientobjectfilename, classname, bootstrapname), False)
         for replica in replicas.getHosts():
             processnames.append(get_node_name(replica, replicas, 'REPLICA'))
+    returnvalue = ('','')
+    while returnvalue == ('',''):
+        success, returnvalue = replicas.executecommandall("ls | grep %s-descriptor" % clientobjectfilename[:-3])
+    success,returnvalue = replicas.executecommandall("cat %s-descriptor" % clientobjectfilename[:-3])
     if numnameservers > 0:
         print "--- initializing nameservers"
         nameservers.executecommandall("sudo -A nohup python bin/nameserver.py -n %s -f %s -c %s -b %s" % (subdomain, clientobjectfilename, classname, bootstrapname), False)
-    print "Processes: ", processnames
     returnvalue = ('','')
     while returnvalue == ('',''):
-        success, returnvalue = bootstrap.executecommandone(nameservers.getHosts()[0], "ls | grep %s-descriptor" % clientobjectfilename[:-3])
-    success,returnvalue = bootstrap.executecommandone(nameservers.getHosts()[0], "cat %s-descriptor" % clientobjectfilename[:-3])
+        success, returnvalue = nameservers.executecommandall("ls | grep %s-descriptor" % clientobjectfilename[:-3])
+    success,returnvalue = nameservers.executecommandall("cat %s-descriptor" % clientobjectfilename[:-3])
+    print "All clear!"
     ## add the nameserver nodes to open replica coordinator object
     openreplicacoordobj = OpenReplicaCoordProxy('128.84.154.110:6668')
     print "Nodes: "
     for node in processnames:
-        openreplicacoordobj.addnodetosubdomain(subdomain, node)
         print node
+        openreplicacoordobj.addnodetosubdomain(subdomain, node)
     return bootstrapname
 
 def get_node_name(node, nodeconn, type):

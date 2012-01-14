@@ -40,6 +40,7 @@ parser.add_option("-d", "--debug", action="store_true", dest="debug", default=Fa
 (options, args) = parser.parse_args()
 
 DO_PERIODIC_PINGS = False
+RESEND = False
 
 class Node():
     """Node encloses the basic Node behaviour and state that
@@ -79,6 +80,10 @@ class Node():
         # {peer: timestamp}
         self.lastmessages_lock =RLock()
         self.lastmessages = {}
+        # number of retries for all peers
+        # {peer: retries}
+        self.retries_lock =RLock()
+        self.retries = {}
         
         self.lock = Lock()
         self.done = False
@@ -119,10 +124,12 @@ class Node():
     def discoverbootstrap(self, givenbootstraplist):
         bootstrapstrlist = givenbootstraplist.split(",")
         for bootstrap in bootstrapstrlist:
+            #ipaddr:port pair given as bootstrap
             if bootstrap.find(":") >= 0:
                 bootaddr,bootport = bootstrap.split(":")
                 for peer in self._getipportpairs(bootaddr, int(bootport)):
                     self.bootstraplist.append(peer)
+            #dnsname given as bootstrap
             else:
                 answers = dns.resolver.query('_concoord._tcp.'+bootstrap, 'SRV')
                 for rdata in answers:
@@ -137,29 +144,35 @@ class Node():
                 try:
                     self.logger.write("State", "trying to connect to bootstrap: %s" % bootpeer)
                     helomessage = HandshakeMessage(MSG_HELO, self.me)
-                    self.send(helomessage, peer=bootpeer)
+                    success = self.send(helomessage, peer=bootpeer)
+                    if success < 0:
+                        tries += 1
+                        continue
                     self.groups[NODE_REPLICA].add(bootpeer)
                     self.logger.write("State", "connected to bootstrap: %s:%d" % (bootpeer.addr,bootpeer.port))
                     keeptrying = False
                     break
                 except socket.error, e:
+                    self.logger.write("Connection Error", "cannot connect to bootstrap: %s" % str(e))
                     print e
+                    tries += 1
                     continue
             sleep(1)
 
     def startservice(self):
         """Starts the background services associated with a node."""
         # Start a thread that waits for inputs
-        receiver_thread = Thread(target=self.server_loop)
+        receiver_thread = Thread(target=self.server_loop, name='ReceiverThread')
         receiver_thread.start()
         # Start a thread with the server which will start a thread for each request
-        main_thread = Thread(target=self.handle_messages)
+        main_thread = Thread(target=self.handle_messages, name='MainThread')
         main_thread.start()
         # Start a thread that waits for inputs
-        #input_thread = Thread(target=self.get_user_input_from_shell)
-        #input_thread.start()
+        input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
+        input_thread.start()
         # Start a thread that pings neighbors
         timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
+        timer_thread.name = 'PeriodicThread'
         timer_thread.start()
         return self
 
@@ -257,6 +270,7 @@ class Node():
         if message == None:
             return False
         else:
+            self.logger.write("State", "received %s" % message)
             # add to lastmessages
             with self.lastmessages_lock:
                 if not self.lastmessages.has_key(message.source):
@@ -289,7 +303,7 @@ class Node():
         # check to see if it's an ack
         if message.type == MSG_ACK:
             #take it out of outstanding messages, but do not ack an ack
-            ackid = "%s+%d" % (self.me.getid(), message.ackid)
+            ackid = "%s+%d" % (self.id, message.ackid)
             with self.outstandingmessages_lock:
                 if self.outstandingmessages.has_key(ackid):
                     del self.outstandingmessages[ackid]
@@ -301,13 +315,17 @@ class Node():
         mname = "msg_%s" % msg_names[message.type].lower()
         try:
             method = getattr(self, mname)
+            self.logger.write("State", "invoking method: %s" % mname)
         except AttributeError:
-            self.logger.write("Message Error", "message not supported: %s" % message)
+            self.logger.write("Method Error", "method not supported: %s" % mname)
             return False
+        self.logger.write("State", ">>>>>>>>>>>>>>>>>>>>>>>>>> will grab lock!")
         with self.lock:
+            self.logger.write("State", ">>>>>>>>>>>>>>>>>>>>>>>>>> grabbed lock!")
             method(connection, message)
+            self.logger.write("State", ">>>>>>>>>>>>>>>>>>>>>>>>>> returned!")
         return True
-    
+
     #
     # message handlers
     #
@@ -315,9 +333,8 @@ class Node():
         return
 
     def msg_heloreply(self, conn, msg):
-        for nodetype in msg.groups.keys():
-            for node in msg.groups[nodetype]:
-                self.groups[nodetype].add(node)
+        if msg.reject:
+            self.connecttobootstrap()
 
     def msg_ping(self, conn, msg):
         return
@@ -361,20 +378,22 @@ class Node():
                 checkliveness = set()
                 for type,group in self.groups.iteritems():
                     checkliveness = checkliveness.union(group.members)
-            try:
-                with self.outstandingmessages_lock:
-                    msgs = self.outstandingmessages.values()
-                for messageinfo in msgs:
-                    now = time.time()
-                    if messageinfo.timestamp + ACKTIMEOUT < now:
-                        #resend messages
-                        self.logger.write("State", "re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
-                        self.send(messageinfo.message, peer=messageinfo.destination, isresend=True)
-                        messageinfo.timestamp = time.time()
-                    elif DO_PERIODIC_PINGS and (messageinfo.timestamp + LIVENESSTIMEOUT) < now and messageinfo.destination in checkliveness:
-                        checkliveness.remove(messageinfo.destination)
-            except Exception as ec:
-                self.logger.write("Connection Error", "exception in resend: %s" % ec)
+            if RESEND:
+                try:
+                    with self.outstandingmessages_lock:
+                        msgs = self.outstandingmessages.values()
+                    for messageinfo in msgs:
+                        now = time.time()
+                        if messageinfo.timestamp + ACKTIMEOUT < now:
+                            if messageinfo.message.type != MSG_PING:
+                                self.logger.write("State", "re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
+                                self.send(messageinfo.message, peer=messageinfo.destination, isresend=True)
+                                self.add_retry(messageinfo.destination)
+                                messageinfo.timestamp = time.time()
+                        elif DO_PERIODIC_PINGS and (messageinfo.timestamp + LIVENESSTIMEOUT) < now and messageinfo.destination in checkliveness:
+                            checkliveness.remove(messageinfo.destination)
+                except Exception as e:
+                    self.logger.write("Connection Error", "exception in resend: %s" % e)
             if DO_PERIODIC_PINGS:
                 for pingpeer in checkliveness:
                     # don't ping the peer if it has sent a message recently
@@ -383,6 +402,13 @@ class Node():
                         pingmessage = HandshakeMessage(MSG_PING, self.me)
                         self.send(pingmessage, peer=pingpeer)
             time.sleep(ACKTIMEOUT)
+
+    def add_retry(self, peer):
+        with self.retries_lock:
+            if self.retries.has_key(peer):
+                self.retries[peer] += 1
+            else:
+                self.retries[peer] = 1
 
     def get_user_input_from_shell(self):
         """Shell loop that accepts inputs from the command prompt and 
@@ -401,28 +427,37 @@ class Node():
                     except AttributeError:
                         print "command not supported"
                         continue
+                    self.logger.write("State", "shellinput grabbing lock >>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                     with self.lock:
+                        self.logger.write("State", "shellinput grabbed lock >>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                         method(input)
+                    self.logger.write("State", "shellinput released lock >>>>>>>>>>>>>>>>>>>>>>>>>>>>")
             except (KeyboardInterrupt,):
                 os._exit(0)
             except (EOFError,):
                 return
-        return            
+        return           
     
     def send(self, message, peer=None, group=None, isresend=False):
         if peer:
             connection = self.connectionpool.get_connection_by_peer(peer)
+            if connection == None:
+                self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
+                return -1
             if not isresend:
                 msginfo = MessageInfo(message,peer,time.time())
                 with self.outstandingmessages_lock:
                     self.outstandingmessages[message.fullid()] = msginfo
             connection.send(message)
-            message.id
+            return message.id
         elif group:
             assert not isresend, "performing a re-send to a group"
             ids = []
             for peer in group.members:
                 connection = self.connectionpool.get_connection_by_peer(peer)
+                if connection == None:
+                    self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
+                    continue
                 msginfo = MessageInfo(message,peer,time.time())
                 with self.outstandingmessages_lock:
                     self.outstandingmessages[message.fullid()] = msginfo

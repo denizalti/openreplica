@@ -45,7 +45,7 @@ class Nameserver(Tracker):
         """Starts the background services associated with a node."""
         Tracker.startservice(self)
         # Start a thread for the UDP server
-        UDP_server_thread = Thread(target=self.udp_server_loop)
+        UDP_server_thread = Thread(target=self.udp_server_loop, name='UDPServerThread')
         UDP_server_thread.start()
         
     def udp_server_loop(self):

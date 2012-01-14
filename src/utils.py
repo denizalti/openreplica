@@ -7,6 +7,7 @@ import socket
 import os, sys
 import time
 import string
+import threading
 from enums import *
 
 def findOwnIP():
@@ -19,7 +20,7 @@ class ConsoleLogger():
         self.logfile = open("concoord_log_"+name, 'w')
 
     def write(self, cls, str):
-        print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix, cls, str)
+        print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix + '_' + threading.current_thread().name, cls, str)
         self.logfile.write("%s [%s] %s: %s\n" % ((time.asctime(time.localtime(time.time())), self.prefix, cls, str)))
         self.logfile.flush()
 
@@ -35,13 +36,16 @@ class NetworkLogger():
             self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
             self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
             self.socket.connect((logaddr,int(logport)))
-        except socket.error:
+        except socket.error, e:
             print "Cannot connect to logdaemon."
             os._exit(1)
 
     def write(self, cls, str):
-        print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix, cls, str)
-        self.socket.send("[%s] %s: %s\n" % (self.prefix, cls, str))
+        try:
+            print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix + '_' + threading.current_thread().name, cls, str)
+            self.socket.send("[%s] %s: %s\n" % (self.prefix + '_' + threading.current_thread().name, cls, str))
+        except:
+            return
 
     def close(self):
         self.socket.close()

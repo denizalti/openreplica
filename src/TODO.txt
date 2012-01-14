@@ -1,26 +1,22 @@
 """ This file keeps the outstanding changes and thoughts we have about
 paxi. """
 
-*** GRAPHS ***
-- Performance: Throughput vs. number of Replicas
-- Performance: Throughput vs. number of Acceptors
-- Reliability: Throughput vs. failure events
-- Reliability: Throughput in time
-
-*** TESTING ***
-- Fuzztesting (Test with Random inputs): Peach might be used.
-
 *** CHANGES TO THE CODE ***
-- Failure Detector
-- Garbage collection: acceptor state, safe commands
+- Don't resend every nonacked message, only resend messages when
+a connection is recreated with a node.
 
-*** ADDITIONS ***
-- interface to show all ConCoord transactions
-- *tab* on an object (watch in ZooKeeper)
-- read vs. write requests. read requests do not require Paxos round.
-- 
+- Errors in Node.send() return -1 now, handle these errors accordingly
+in replica, acceptor, tracker and nameserver.
+   -- An error means a connection cannot be created to a node.
+     --- If Leader: 
+       ---- An error during prepare/propose to a group would terminate
+       the round as the acceptor set will have to change.
+       ----	Propose a command to take the node out of the neighbor
+       set.
 
 *** DONE ***
+- Failure Detector
+- Garbage collection: acceptor state, safe commands
 - self.lock problem: every msg_method function is called with the
 lock, this might cause a problem in the perform core if it doesn't
 return.
@@ -148,3 +144,9 @@ Replica		    	  : Commands should be carried in a way that
 			    	    the last replica/leader that gets
 			    	    the command should be able to
 			    	    respond to the client.
+
+*** GRAPHS ***
+- Performance: Throughput vs. number of Replicas
+- Performance: Throughput vs. number of Acceptors
+- Reliability: Throughput vs. failure events
+- Reliability: Throughput in time
