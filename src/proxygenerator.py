@@ -31,7 +31,7 @@ class ProxyGen(ast.NodeTransformer):
                 node.body = compile("self.proxy = clientproxy.ClientProxy(" + ", ".join(args) +")","<string>","exec",_ast.PyCF_ONLY_AST).body
             else:
                 args = [i.id for i in node.args.args[1:]]
-                node.body = compile("self.proxy.invoke_command(\"" + node.name +"\", "+", ".join(args)+")","<string>","exec",_ast.PyCF_ONLY_AST).body
+                node.body = compile("return self.proxy.invoke_command(\"" + node.name +"\", "+", ".join(args)+")","<string>","exec",_ast.PyCF_ONLY_AST).body
             return node
         else:
             return self.generic_visit(node)
