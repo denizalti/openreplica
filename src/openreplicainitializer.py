@@ -23,9 +23,9 @@ parser.add_option("-a", "--acceptors", action="store", dest="acceptornum", defau
 parser.add_option("-n", "--nameservers", action="store", dest="nameservernum", default=1, help="number of nameservers")
 (options, args) = parser.parse_args()
 
-def check_object(clientobjectfilepath):
+def check_object(clientcode):
     print "-- checking object safety"
-    astnode = compile(open(clientobjectfilepath, 'rU').read(),"<string>","exec",_ast.PyCF_ONLY_AST)
+    astnode = compile(clientcode,"<string>","exec",_ast.PyCF_ONLY_AST)
     v = SafetyVisitor()
     v.visit(astnode)
     return v.safe
@@ -118,31 +118,25 @@ def get_node_name(node, nodeconn, type):
         success, returnvalue = nodeconn.executecommandone(node, "ls | grep %s" % type)
     return returnvalue[0].strip().split('-')[1]
 
-def create_proxy(clientobjectfilepath, classname, bootstrap=None):
-    print "-- creating proxy"
-    objectfilename = os.path.basename(clientobjectfilepath)
-    if not objectfilename == clientobjectfilepath:
-        shutil.copy(clientobjectfilepath, objectfilename)
-    modulename = os.path.basename(objectfilename).rsplit(".")[0]
-    proxyfile = createclientproxy(modulename, classname, bootstrap)
-    f = open(proxyfile.name, 'r')
-    proxystring = f.read()
-    f.close()
-    print proxystring
-    return proxystring
-
 def main():
     try:
+        with open(options.objectfilepath, 'rU') as fd:
+            clientcode = fd.read()
+
         # Check safety
-        if not check_object(options.objectfilepath):
+        if not check_object(clientcode):
             print "Object is not safe for us to execute."
             os._exit(1)
+
         # Start Nodes
         print "-- connecting to Planet Lab"
         configuration = (int(options.replicanum), int(options.acceptornum), int(options.nameservernum))
         start_nodes(options.subdomain, options.objectfilepath, options.classname, configuration)
         # Create Proxy
-        clientproxy = create_proxy(options.objectfilepath, options.classname)
+        print "-- creating proxy"
+        clientproxycode = createclientproxy(clientcode, options.classname, None)
+        print clientproxycode
+
     except Exception as e:
         print "Error: "
         print e
