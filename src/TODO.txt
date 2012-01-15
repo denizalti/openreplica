@@ -2,19 +2,12 @@
 paxi. """
 
 *** CHANGES TO THE CODE ***
-- Don't resend every nonacked message, only resend messages when
-a connection is recreated with a node.
+- Object needs to return values (not messages) --> clientproxy.py
 
-- Errors in Node.send() return -1 now, handle these errors accordingly
-in replica, acceptor, tracker and nameserver.
-   -- An error means a connection cannot be created to a node.
-     --- If Leader: 
-       ---- An error during prepare/propose to a group would terminate
-       the round as the acceptor set will have to change.
-       ----	Propose a command to take the node out of the neighbor
-       set.
 
 *** DONE ***
+- Don't resend every nonacked message, only resend messages when
+a connection is recreated with a node.
 - Failure Detector
 - Garbage collection: acceptor state, safe commands
 - self.lock problem: every msg_method function is called with the
