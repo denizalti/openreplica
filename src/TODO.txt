@@ -3,7 +3,7 @@ paxi. """
 
 *** CHANGES TO THE CODE ***
 - Object needs to return values (not messages) --> clientproxy.py
-
+- Refresh issue on the status page should be fixed from css. 
 
 *** DONE ***
 - Don't resend every nonacked message, only resend messages when

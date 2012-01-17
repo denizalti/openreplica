@@ -6,8 +6,8 @@ class Test():
         self.proxy = ClientProxy(bootstrap)
 
     def getvalue(self):
-        self.proxy.invoke_command("getvalue", )
+        return self.proxy.invoke_command("getvalue", )
 
     def __str__(self):
-        self.proxy.invoke_command("__str__", )
+        return self.proxy.invoke_command("__str__", )
 
