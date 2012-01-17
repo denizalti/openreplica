@@ -143,7 +143,7 @@ class ClientProxy():
             if reply.replycode == CR_META:
                 print "Should not reach here."
             elif reply.replycode == CR_EXCEPTION:
-                raise reply.reply
+                raise Exception(reply.reply)
             elif reply.replycode == CR_BLOCK:
                 # XXX
                 print "Blocking client."

@@ -180,7 +180,7 @@ class Replica(Node):
         except (TypeError, AttributeError) as t:
             self.logger.write("Execution Error", "command not supported: %s" % (command))
             self.logger.write("Execution Error", "%s" % str(t))
-            givenresult = 'COMMAND NOT SUPPORTED'
+            givenresult = 'Method Does Not Exist: ', commandname
             clientreplycode = CR_EXCEPTION
             unblocked = {}
             send_result_to_client = True

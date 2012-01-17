@@ -70,7 +70,8 @@ class Nameserver(Tracker):
         return name == self.mydomain
         
     def aresponse(self, question):
-        for address,port in self.groups[NODE_REPLICA].get_addresses():
+        addresses = self.groups[NODE_REPLICA].get_addresses() + self.groups[NODE_ACCEPTOR].get_addresses()
+        for address,port in addresses:
             yield address
 
     def nsresponse(self, question):
