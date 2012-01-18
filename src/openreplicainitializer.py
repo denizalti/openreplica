@@ -82,16 +82,21 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
         success, returnvalue = bootstrap.executecommandone(bootstrap.getHosts()[0], "ls | grep %s-descriptor" % clientobjectfilename[:-3])
     success,returnvalue = bootstrap.executecommandone(bootstrap.getHosts()[0], "cat %s-descriptor" % clientobjectfilename[:-3])
     bootstrapname = returnvalue[0]
-    processnames.append(bootstrapname)
-    print "Bootstrap: ", bootstrapname
+    processnames.append(bootstrapname+':REPLICA')
+    print ">>>>>>>>>>>>>>>>>>>Bootstrap: ", bootstrapname
     if numacceptors > 0:
         print "--- initializing acceptors"
         acceptors.executecommandall("nohup python bin/acceptor.py -b %s" % bootstrapname, False)
+        #XXXXXXXX
+        #for acceptor in acceptors.getHosts():
+        #    processnames.append(get_node_name(acceptor, acceptors, 'ACCEPTOR'))
+        #print processnames
     if numreplicas-1 > 0:
         print "--- initializing replicas"
         replicas.executecommandall("nohup python bin/replica.py -f %s -c %s -b %s" % (clientobjectfilename, classname, bootstrapname), False)
-        for replica in replicas.getHosts():
-            processnames.append(get_node_name(replica, replicas, 'REPLICA'))
+        #for replica in replicas.getHosts():
+        #    processnames.append(get_node_name(replica, replicas, 'REPLICA'))
+        #print processnames
     returnvalue = ('','')
     while returnvalue == ('',''):
         success, returnvalue = replicas.executecommandall("ls | grep %s-descriptor" % clientobjectfilename[:-3])
@@ -99,6 +104,9 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     if numnameservers > 0:
         print "--- initializing nameservers"
         nameservers.executecommandall("sudo -A nohup python bin/nameserver.py -n %s -f %s -c %s -b %s" % (subdomain, clientobjectfilename, classname, bootstrapname), False)
+        #for nameserver in nameservers.getHosts():
+        #    processnames.append(get_node_name(nameserver, nameservers, 'NAMESERVER'))
+        #print processnames
     returnvalue = ('','')
     while returnvalue == ('',''):
         success, returnvalue = nameservers.executecommandall("ls | grep %s-descriptor" % clientobjectfilename[:-3])
@@ -112,11 +120,11 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
         openreplicacoordobj.addnodetosubdomain(subdomain, node)
     return bootstrapname
 
-def get_node_name(node, nodeconn, type):
+def get_node_name(node, nodeconn, nodetype):
     returnvalue = ('','')
     while returnvalue == ('',''):
-        success, returnvalue = nodeconn.executecommandone(node, "ls | grep %s" % type)
-    return returnvalue[0].strip().split('-')[1]
+        success, returnvalue = nodeconn.executecommandone(node, "ps auxww | grep %s" % nodetype.lower())
+    return returnvalue[0].strip().split('-')[1]+':'+nodetype
 
 def main():
     try:
