@@ -89,15 +89,6 @@ class Replica(Node):
         # inconsistent client reads
         self.callsfromclient = 0
         self.clientpool = ConnectionPool()
-        # initialization done
-        if instantiateobj:
-            try:
-                infofile = open(self.objectfilename[:-3]+"-descriptor", 'w')
-                infofile.write("%s:%d" %(self.addr,self.port))
-                infofile.close()
-            except IOError as e:
-                self.logger.write("File Error", "Info file cannot be created.")
-                self._graceexit(1)
 
     def startservice(self):
         """Start the background services associated with a replica."""
