@@ -6,4 +6,4 @@ class Test():
         return self.value
     
     def __str__(self):
-        return self.value
+        return "The value is %d" % self.value

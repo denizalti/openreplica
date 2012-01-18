@@ -44,7 +44,7 @@ class Group():
 
     def get_addresses(self):
         for peer in self.members:
-            yield (peer.addr,peer.port)
+            yield (peer.addr,peer.port,peer.type)
 
     def __iter__(self):
         for peer in self.members:
