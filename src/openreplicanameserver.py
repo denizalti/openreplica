@@ -51,14 +51,14 @@ class OpenReplicaNameserver(Nameserver):
                     yield nsaddr
                     return
         else:
-            for address,port in self.groups[NODE_REPLICA].get_addresses():
+            for address,port,peertype in self.groups[NODE_REPLICA].get_addresses():
                 yield address
 
     # XXX There is a bug that arises when we make a NS Request to openreplica.org
     def nsresponse(self, question):
         if question.name == self.mydomain or question.name.is_subdomain(self.specialdomain):
-            for address,port in self.groups[NODE_NAMESERVER].get_addresses():
-                yield address+IPCONVERTER
+            for address,port,peertype in self.groups[NODE_NAMESERVER].get_addresses():
+                yield address+peertype+IPCONVERTER
         for subdomain in self.object.nodes.keys():
             if question.name == dns.name.Name([subdomain, 'openreplica', 'org', '']):
                 for node in self.object.nodes[subdomain]:
