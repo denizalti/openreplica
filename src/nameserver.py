@@ -128,7 +128,7 @@ class Nameserver(Tracker):
                 self.logger.write("DNS State", "Name Error\n")
                 flags = QR + AA + RD + dns.rcode.NXDOMAIN
                 response.flags = flags
-        self.logger.write("DNS State", "RESPONSE:\n%s\n---\n" % response)
+        self.logger.write("DNS State", "RESPONSE:\n%s\n---\n" % str(response))
         self.udpsocket.sendto(response.to_wire(), addr)
 
     def create_response(self, id, opcode=0, rcode=0, flags='', question='', answer='', authority='', additional=''):
