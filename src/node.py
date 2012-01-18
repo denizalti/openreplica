@@ -29,7 +29,8 @@ from command import Command
 from pvalue import PValue, PValueSet
 from concoordprofiler import *
 
-parser = OptionParser(usage="usage: %prog -p port -b bootstrap -f objectfilename -c objectname -n subdomainname -d")
+parser = OptionParser(usage="usage: %prog -a addr -p port -b bootstrap -f objectfilename -c objectname -n subdomainname -d debug")
+parser.add_option("-a", "--addr", action="store", dest="addr", help="addr for the node")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
 parser.add_option("-f", "--objectfilename", action="store", dest="objectfilename", help="client object file name")
@@ -46,7 +47,7 @@ class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
     """ 
-    def __init__(self, nodetype, port=options.port, givenbootstraplist=options.bootstrap, debugoption=options.debug, objectfilename=options.objectfilename, objectname=options.objectname, dnsname=options.dnsname, instantiateobj=False):
+    def __init__(self, nodetype, addr=options.addr, port=options.port, givenbootstraplist=options.bootstrap, debugoption=options.debug, objectfilename=options.objectfilename, objectname=options.objectname, dnsname=options.dnsname, instantiateobj=False):
         """Node State
         - addr: hostname for Node, detected automatically
         - port: port for Node, can be taken from the commandline (-p [port]) or
@@ -61,7 +62,7 @@ class Node():
         - groups: other Peers in the system that Node knows about. Node.groups is indexed by the
         corresponding node_name (NODE_ACCEPTOR | NODE_REPLICA | NODE_NAMESERVER), which returns a Group
         """
-        self.addr = findOwnIP() 
+        self.addr = addr if addr else findOwnIP()
         self.port = port
         self.connectionpool = ConnectionPool()
         self.type = nodetype
@@ -94,12 +95,10 @@ class Node():
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
         self.socket.setblocking(0)
-        for i in range(30):
-            try:
-                self.socket.bind((self.addr,self.port))
-                break
-            except socket.error:
-                self.port += 1
+        try:
+            self.socket.bind((self.addr,self.port))
+        except socket.error:
+            os._exit(1)
         self.socket.listen(10)
         self.alive = True
         
@@ -116,6 +115,15 @@ class Node():
             self.connecttobootstrap()
         if self.type == NODE_REPLICA or self.type == NODE_TRACKER or self.type == NODE_NAMESERVER:
             self.stateuptodate = False
+
+    def createinfofile(self):
+        try:
+            infofile = open(self.objectfilename[:-3]+"-descriptor", 'a')
+            infofile.write("%s:%d" %(self.addr,self.port))
+            infofile.close()
+        except IOError as e:
+            self.logger.write("File Error", "Info file cannot be created.")
+            self._graceexit(1)
 
     def _getipportpairs(self, bootaddr, bootport):
         for node in socket.getaddrinfo(bootaddr, bootport):

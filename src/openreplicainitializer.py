@@ -70,55 +70,73 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     acceptors = PLConnection(numacceptors, [check_planetlab_pythonversion])
     print "Picked all nodes!"
     allnodes = PLConnection(nodes=nameservers.getHosts() + replicas.getHosts() + acceptors.getHosts() + bootstrap.getHosts())
-    processnames = []
+    processnames = nameservernames = []
     ## Fix the server object
     fixedfile = editproxyfile(clientobjectfilepath, classname)
     allnodes.uploadall(fixedfile.name, "bin/"+clientobjectfilename)
-    print "-- setting up the environment"
-    print "--- initializing bootstrap"
-    bootstrap.executecommandall("nohup python bin/replica.py -f %s -c %s" % (clientobjectfilename, classname), False)
-    returnvalue = ('','')
-    while returnvalue == ('',''):
-        success, returnvalue = bootstrap.executecommandone(bootstrap.getHosts()[0], "ls | grep %s-descriptor" % clientobjectfilename[:-3])
-    success,returnvalue = bootstrap.executecommandone(bootstrap.getHosts()[0], "cat %s-descriptor" % clientobjectfilename[:-3])
-    bootstrapname = returnvalue[0]
+    print "--> Setting up the environment..."
+    # BOOTSTRAP
+    print "--- Bootstrap Replica ---"
+    port = random.randint(14000, 15000)
+    p = bootstrap.executecommandone(bootstrap.getHosts()[0], "nohup python bin/replica.py -a %s -p %d -f %s -c %s" % (bootstrap.getHosts()[0], port, clientobjectfilename, classname), False)
+    while terminated(p):
+        port = random.randint(14000, 15000)
+        p = bootstrap.executecommandone(bootstrap.getHosts()[0], "nohup python bin/replica.py -a %s -p %d -f %s -c %s" % (bootstrap.getHosts()[0], port, clientobjectfilename, classname), False)
+    bootstrapname = bootstrap.getHosts()[0]+':'+str(port)
     processnames.append(bootstrapname+':REPLICA')
-    print ">>>>>>>>>>>>>>>>>>>Bootstrap: ", bootstrapname
-    if numacceptors > 0:
-        print "--- initializing acceptors"
-        acceptors.executecommandall("nohup python bin/acceptor.py -b %s" % bootstrapname, False)
-        #XXXXXXXX
-        #for acceptor in acceptors.getHosts():
-        #    processnames.append(get_node_name(acceptor, acceptors, 'ACCEPTOR'))
-        #print processnames
+    print bootstrapname
+    # ACCEPTORS
+    print "--- Acceptors ---"
+    for acceptor in acceptors.getHosts():
+        port = random.randint(14000, 15000)
+        p = acceptors.executecommandone(acceptor, "nohup python bin/acceptor.py -a %s -p %d -f %s -b %s" % (acceptor, port, clientobjectfilename, bootstrapname), False)
+        while terminated(p):
+            port = random.randint(14000, 15000)
+            p = acceptors.executecommandone(acceptor, "nohup python bin/acceptor.py -a %s -p %d -f %s -b %s" % (acceptor, port, clientobjectfilename, bootstrapname), False)
+        acceptorname = acceptor+':'+str(port)
+        processnames.append(acceptorname+':ACCEPTOR')
+        print acceptorname
+    # REPLICAS
     if numreplicas-1 > 0:
-        print "--- initializing replicas"
-        replicas.executecommandall("nohup python bin/replica.py -f %s -c %s -b %s" % (clientobjectfilename, classname, bootstrapname), False)
-        #for replica in replicas.getHosts():
-        #    processnames.append(get_node_name(replica, replicas, 'REPLICA'))
-        #print processnames
-    returnvalue = ('','')
-    while returnvalue == ('',''):
-        success, returnvalue = replicas.executecommandall("ls | grep %s-descriptor" % clientobjectfilename[:-3])
-    success,returnvalue = replicas.executecommandall("cat %s-descriptor" % clientobjectfilename[:-3])
-    if numnameservers > 0:
-        print "--- initializing nameservers"
-        nameservers.executecommandall("sudo -A nohup python bin/nameserver.py -n %s -f %s -c %s -b %s" % (subdomain, clientobjectfilename, classname, bootstrapname), False)
-        #for nameserver in nameservers.getHosts():
-        #    processnames.append(get_node_name(nameserver, nameservers, 'NAMESERVER'))
-        #print processnames
-    returnvalue = ('','')
-    while returnvalue == ('',''):
-        success, returnvalue = nameservers.executecommandall("ls | grep %s-descriptor" % clientobjectfilename[:-3])
-    success,returnvalue = nameservers.executecommandall("cat %s-descriptor" % clientobjectfilename[:-3])
+        print "--- Replicas ---"
+    for replica in replicas.getHosts():
+        port = random.randint(14000, 15000)
+        p = replicas.executecommandone(replica, "nohup python bin/replica.py -a %s -p %d -f %s -c %s -b %s" % (replica, port, clientobjectfilename, classname, bootstrapname), False)
+        while terminated(p):
+            port = random.randint(14000, 15000)
+            p = replicas.executecommandone(replica, "nohup python bin/replica.py -a %s -p %d -f %s -c %s -b %s" % (replica, port, clientobjectfilename, classname, bootstrapname), False)
+        replicaname = replica+':'+str(port)
+        processnames.append(replicaname+':REPLICA')
+        print replicaname
+    # NAMESERVERS
+    print "--- Nameservers ---"
+    for nameserver in nameservers.getHosts():
+        port = random.randint(14000, 15000)
+        p = nameservers.executecommandone(nameserver, "sudo -A nohup python bin/nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain, nameserver, port, clientobjectfilename, classname, bootstrapname), False)
+        while terminated(p):
+            port = random.randint(14000, 15000)
+            p = nameservers.executecommandone(nameserver, "sudo -A nohup python bin/nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain, nameserver, port, clientobjectfilename, classname, bootstrapname), False)
+        nameservername = nameserver+':'+str(port)
+        processnames.append(nameservername+':NAMESERVER')
+        nameservernames.append(nameservername)
+        print nameservername
     print "All clear!"
     ## add the nameserver nodes to open replica coordinator object
     openreplicacoordobj = OpenReplicaCoordProxy('128.84.154.110:6668')
     print "Nodes: "
-    for node in processnames:
+    for node in nameservernames:
         print node
         openreplicacoordobj.addnodetosubdomain(subdomain, node)
     return bootstrapname
+
+def terminated(p):
+    i = 5
+    done = p.poll() is not None
+    while not done and i>0: # Not terminated yet
+        sleep(1)
+        i -= 1
+        done = p.poll() is not None
+    return done
 
 def get_node_name(node, nodeconn, nodetype):
     returnvalue = ('','')
