@@ -100,14 +100,6 @@ class Nameserver(Tracker):
         response = dns.message.make_response(query)
         for question in query.question:
             self.logger.write("DNS State", "Received Query for %s\n" % question.name)
-            print "######################### ", question.rdtype, " ##########################"
-            if question.rdtype is dns.rdatatype.TXT:
-                print "************************************************************"
-                print "TXT QUERY %s" %str(question)
-                print "************************************************************"
-                self.logger.write("DNS State", "************************************************************")
-                self.logger.write("DNS State", "TXT QUERY %s" %str(question))
-                self.logger.write("DNS State", "************************************************************")
             if question.rdtype == dns.rdatatype.A and self.ismyname(question.name):
                 self.logger.write("DNS State", ">>>>>>>>>>> This is me %s" % str(question)) 
                 flagstr = 'QR AA RD' # response, authoritative, recursion
@@ -118,6 +110,8 @@ class Nameserver(Tracker):
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.TXT and self.ismyname(question.name):
+                flagstr = 'QR AA RD' # response, authoritative, recursion
+                answerstr = ''
                 # TXT Queries --> List all nodes
                 answerstr = self.create_answer_section(question, txt=self.txtresponse(question))
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
@@ -144,7 +138,10 @@ class Nameserver(Tracker):
                 flags = QR + AA + RD + dns.rcode.NXDOMAIN
                 response.flags = flags
         self.logger.write("DNS State", "RESPONSE:\n%s\n---\n" % str(response))
-        self.udpsocket.sendto(response.to_wire(), addr)
+        try:
+            self.udpsocket.sendto(response.to_wire(), addr)
+        except:
+            print "Cannot respond to query."
 
     def create_response(self, id, opcode=0, rcode=0, flags='', question='', answer='', authority='', additional=''):
         responsestr = "id %s\nopcode %s\nrcode %s\nflags %s\n;QUESTION\n%s\n;ANSWER\n%s\n;AUTHORITY\n%s\n;ADDITIONAL\n%s\n" % (str(id), OPCODES[opcode], RCODES[rcode], flags, question, answer, authority, additional)
