@@ -91,7 +91,7 @@ class Nameserver(Tracker):
             for peer in group:
                 peers.append(peer.addr + ':' + str(peer.port))
             txtstr += ','.join(peers) 
-            textstr += ";"
+            txtstr += ";"
         txtstr += ',' + self.addr + ':' + str(self.port)
         return txtstr
     
