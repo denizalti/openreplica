@@ -119,7 +119,7 @@ class Nameserver(Tracker):
                 response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.TXT and self.ismyname(question.name):
                 # TXT Queries --> List all nodes
-                answerstr += self.create_answer_section(question, txt=self.txtresponse(question))
+                answerstr = self.create_answer_section(question, txt=self.txtresponse(question))
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.NS and self.ismyname(question.name):
