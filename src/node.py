@@ -117,7 +117,7 @@ class Node():
         self.id = self.me.getid()
         self.logger = NetworkLogger("%s-%s" % (node_names[self.type],self.id), 'egs-110.cs.cornell.edu:12000')
         self.logger.write("State", "Connected.")
-        self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_TRACKER:Group(self.me), NODE_NAMESERVER:Group(self.me)}
+        self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_NAMESERVER:Group(self.me)}
         # connect to the bootstrap node
         if givenbootstraplist:
             self.bootstraplist = []

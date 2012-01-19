@@ -86,14 +86,14 @@ class Nameserver(Tracker):
         txtstr = ''
         for groupname,group in self.groups.iteritems():
             if len(group) > 0 or node_names[groupname] == 'NAMESERVER':
-                txtstr += node_names[groupname] + ','
+                txtstr += ";" + node_names[groupname]
             peers = []
             for peer in group:
+                txtstr += ','
                 peers.append(peer.addr + ':' + str(peer.port))
             txtstr += ','.join(peers) 
-            txtstr += ";"
         txtstr += ',' + self.addr + ':' + str(self.port)
-        return txtstr
+        return txtstr[1:]
     
     def handle_query(self, data, addr):
         query = dns.message.from_wire(data)
