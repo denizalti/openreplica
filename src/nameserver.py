@@ -108,17 +108,18 @@ class Nameserver(Tracker):
                 self.logger.write("DNS State", "************************************************************")
                 self.logger.write("DNS State", "TXT QUERY %s" %str(question))
                 self.logger.write("DNS State", "************************************************************")
-            if question.rdtype in [dns.rdatatype.A, dns.rdatatype.TXT] and self.ismyname(question.name):
+            if question.rdtype == dns.rdatatype.A and self.ismyname(question.name):
                 self.logger.write("DNS State", ">>>>>>>>>>> This is me %s" % str(question)) 
                 flagstr = 'QR AA RD' # response, authoritative, recursion
                 answerstr = ''    
                 # A Queries --> List all Replicas starting with the Leader
-                if question.rdtype == dns.rdatatype.A:
-                    for address in self.aresponse(question):
-                        answerstr += self.create_answer_section(question, addr=address)
+                for address in self.aresponse(question):
+                    answerstr += self.create_answer_section(question, addr=address)
+                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+                response = dns.message.from_text(responsestr)
+            elif question.rdtype == dns.rdatatype.TXT and self.ismyname(question.name):
                 # TXT Queries --> List all nodes
-                elif question.rdtype == dns.rdatatype.TXT:
-                    answerstr += self.create_answer_section(question, txt=self.txtresponse(question))
+                answerstr += self.create_answer_section(question, txt=self.txtresponse(question))
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.NS and self.ismyname(question.name):
