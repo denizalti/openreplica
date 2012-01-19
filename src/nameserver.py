@@ -100,6 +100,7 @@ class Nameserver(Tracker):
         response = dns.message.make_response(query)
         for question in query.question:
             self.logger.write("DNS State", "Received Query for %s\n" % question.name)
+            print "######################### ", question.rdtype, " ##########################"
             if question.rdtype is dns.rdatatype.TXT:
                 print "************************************************************"
                 print "TXT QUERY %s" %str(question)
@@ -138,7 +139,7 @@ class Nameserver(Tracker):
                 print responsestr
                 response = dns.message.from_text(responsestr)
             else:
-                self.logger.write("DNS State", "Name Error\n")
+                self.logger.write("DNS State", "Name Error, %s" %str(question))
                 flags = QR + AA + RD + dns.rcode.NXDOMAIN
                 response.flags = flags
         self.logger.write("DNS State", "RESPONSE:\n%s\n---\n" % str(response))
