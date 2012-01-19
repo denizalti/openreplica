@@ -68,8 +68,10 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     nameservers = PLConnection(numnameservers, [check_planetlab_dnsport, check_planetlab_pythonversion])
     replicas = PLConnection(numreplicas-1, [check_planetlab_pythonversion])
     acceptors = PLConnection(numacceptors, [check_planetlab_pythonversion])
-    print "Picked all nodes!"
     allnodes = PLConnection(nodes=nameservers.getHosts() + replicas.getHosts() + acceptors.getHosts() + bootstrap.getHosts())
+    print "-- Picked Nodes --"
+    for node in allnodes.getHosts():
+        print node
     processnames = nameservernames = []
     ## Fix the server object
     fixedfile = editproxyfile(clientobjectfilepath, classname)
