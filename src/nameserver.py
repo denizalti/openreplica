@@ -104,9 +104,9 @@ class Nameserver(Tracker):
                 print "************************************************************"
                 print "TXT QUERY %s" %str(question)
                 print "************************************************************"
-                self.logger.write("************************************************************")
-                self.logger.write("TXT QUERY %s" %str(question))
-                self.logger.write("************************************************************")
+                self.logger.write("DNS State", "************************************************************")
+                self.logger.write("DNS State", "TXT QUERY %s" %str(question))
+                self.logger.write("DNS State", "************************************************************")
             if question.rdtype in [dns.rdatatype.A, dns.rdatatype.TXT] and self.ismyname(question.name):
                 self.logger.write("DNS State", ">>>>>>>>>>> This is me %s" % str(question)) 
                 flagstr = 'QR AA RD' # response, authoritative, recursion
