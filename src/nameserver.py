@@ -85,7 +85,11 @@ class Nameserver(Tracker):
     def txtresponse(self, question):
         txtstr = ''
         for groupname,group in self.groups.iteritems():
-            txtstr += node_names[groupname] + ' = ' + str(group)
+            if len(group) > 0:
+                txtstr += node_names[groupname] + ' = '
+            for peer in group:
+                txtstr += peer.addr + ":" + str(peer.port)
+        txtstr += self.addr + ":" + str(self.port)
         return txtstr
     
     def handle_query(self, data, addr):
@@ -134,8 +138,8 @@ class Nameserver(Tracker):
         responsestr = "id %s\nopcode %s\nrcode %s\nflags %s\n;QUESTION\n%s\n;ANSWER\n%s\n;AUTHORITY\n%s\n;ADDITIONAL\n%s\n" % (str(id), OPCODES[opcode], RCODES[rcode], flags, question, answer, authority, additional)
         return responsestr
 
-    def create_srv_answer_section(self, question, ttl=30, rrclass=1, priority=0, weight=100, port='', addr=''):
-        answerstr = "%s %d %s %s %d %d %d %s\n" % (str(question.name), ttl, RRCLASS[rrclass], RRTYPE[question.rdtype], priority, weight, port, addr)
+    def create_srv_answer_section(self, question, ttl='30', rrclass=1, priority=0, weight=100, port='', addr=''):
+        answerstr = "%s %s %s %s %d %d %d %s\n" % (str(question.name), ttl, RRCLASS[rrclass], RRTYPE[question.rdtype], priority, weight, port, addr)
         return answerstr
 
     def create_answer_section(self, question, ttl='30', rrclass=1, addr='', name='', txt=None):
