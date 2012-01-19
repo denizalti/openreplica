@@ -85,7 +85,7 @@ class Nameserver(Tracker):
     def txtresponse(self, question):
         txtstr = ''
         for groupname,group in self.groups.iteritems():
-            if len(group) > 0 or groupname == 'NAMESERVER':
+            if len(group) > 0 or node_names[groupname] == 'NAMESERVER':
                 txtstr += node_names[groupname] + ','
             peers = []
             for peer in group:
