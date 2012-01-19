@@ -74,7 +74,7 @@ class OpenReplicaNameserver(Nameserver):
                     addr,port = node.split(":")
                     yield addr+IPCONVERTER,int(port)
 
-    def createtxtresponse(self, question):
+    def createtxtresponse(self, response, question):
         flagstr = 'QR AA RD' # response, authoritative, recursion
         answerstr = ''
         if question.name == self.mydomain:
