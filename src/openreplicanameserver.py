@@ -41,11 +41,9 @@ class OpenReplicaNameserver(Nameserver):
         return False
 
     def aresponse(self, question):
-        print "Creating A Response for ", question.name
         if question.name.is_subdomain(self.specialdomain):
             yield question.name.split(4)[0].to_text()
         elif self.ismynsname(question.name):
-            print "It is my nsname!"
             for nsdomain,nsaddr in OPENREPLICANS.iteritems():
                 if dns.name.Name(nsdomain.split(".")) == question.name:
                     yield nsaddr
@@ -71,17 +69,7 @@ class OpenReplicaNameserver(Nameserver):
                 for node in self.object.nodes[subdomain]:
                     addr,port = node.split(":")
                     yield addr+IPCONVERTER,int(port)
-
-    def txtresponse(self, question):
-        if question.name == self.mydomain or question.name.is_subdomain(self.specialdomain):
-            return Nameserver.txtresponse(self, question)
-        for subdomain in self.object.nodes.keys():
-            if question.name == dns.name.Name([subdomain, 'openreplica', 'org', '']):
-                for node in self.object.nodes[subdomain]:
-                    yield node
-        for nsdomain,nsaddr in OPENREPLICANS.iteritems():
-            yield nsdomain
-                 
+                         
 def main():
     nameservernode = OpenReplicaNameserver()
     nameservernode.startservice()
