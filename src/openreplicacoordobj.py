@@ -28,4 +28,4 @@ class OpenReplicaCoord():
         return self.nodes.keys()
 
     def __str__(self, **kwargs):
-        return str(self.nodes)
+        return str(self.nodes) # Dump this state.
