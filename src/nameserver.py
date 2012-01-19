@@ -71,17 +71,17 @@ class Nameserver(Tracker):
         
     def aresponse(self, question):
         addresses = self.groups[NODE_REPLICA].get_addresses()
-        for address,port,peertype in addresses:
+        for address,port in addresses:
             yield address
 
     def nsresponse(self, question):
-        for address,port,peertype in self.groups[NODE_NAMESERVER].get_addresses():
+        for address,port in self.groups[NODE_NAMESERVER].get_addresses():
             yield address
 
     def srvresponse(self, question):
         addresses = self.groups[NODE_REPLICA].get_addresses() + self.groups[NODE_ACCEPTOR].get_addresses() + self.groups[NODE_NAMESERVER].get_addresses()
-        for address,port,peertype in addresses:
-            yield address+peertype+IPCONVERTER,port #XXX
+        for address,port in addresses:
+            yield address+IPCONVERTER,port
         
     def txtresponse(self, question):
         txtstr = ''
