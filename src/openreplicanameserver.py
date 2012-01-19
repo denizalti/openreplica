@@ -42,8 +42,12 @@ class OpenReplicaNameserver(Nameserver):
 
     def aresponse(self, question):
         if question.name.is_subdomain(self.specialdomain):
+            # Asking for XXX.ipaddr.openreplica.org
+            # Respond with XXX
             yield question.name.split(4)[0].to_text()
         elif self.ismynsname(question.name):
+            # Asking for ns1/ns2.openreplica.org
+            # Respond with corresponding addr
             for nsdomain,nsaddr in OPENREPLICANS.iteritems():
                 if dns.name.Name(nsdomain.split(".")) == question.name:
                     yield nsaddr
@@ -68,8 +72,23 @@ class OpenReplicaNameserver(Nameserver):
             if question.name == dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', '']):
                 for node in self.object.nodes[subdomain]:
                     addr,port = node.split(":")
-                    yield addr+IPCONVERTER,int(port)        
-                         
+                    yield addr+IPCONVERTER,int(port)
+
+    def createtxtresponse(self, question):
+        flagstr = 'QR AA RD' # response, authoritative, recursion
+        answerstr = ''
+        if question.name == self.mydomain:
+            #Asking for my nodes
+            answerstr = self.create_answer_section(question, txt=self.txtresponse(question))
+        else:
+            for subdomain in self.object.nodes.keys():
+                if question.name == dns.name.Name([subdomain, 'openreplica', 'org', '']):
+                    for node in self.object.nodes[subdomain]:
+                        address,port = node.split(":")
+                        answerstr += self.create_answer_section(question, addr=address)
+        responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+        return responsestr
+
 def main():
     nameservernode = OpenReplicaNameserver()
     nameservernode.startservice()
