@@ -85,7 +85,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
         port = random.randint(14000, 15000)
         p = bootstrap.executecommandone(bootstrap.getHosts()[0], "nohup python bin/replica.py -a %s -p %d -f %s -c %s" % (bootstrap.getHosts()[0], port, clientobjectfilename, classname), False)
     bootstrapname = bootstrap.getHosts()[0]+':'+str(port)
-    processnames.append(bootstrapname+':REPLICA')
+    processnames.append(bootstrapname)
     print bootstrapname
     # ACCEPTORS
     print "--- Acceptors ---"
@@ -96,7 +96,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
             port = random.randint(14000, 15000)
             p = acceptors.executecommandone(acceptor, "nohup python bin/acceptor.py -a %s -p %d -f %s -b %s" % (acceptor, port, clientobjectfilename, bootstrapname), False)
         acceptorname = acceptor+':'+str(port)
-        processnames.append(acceptorname+':ACCEPTOR')
+        processnames.append(acceptorname)
         print acceptorname
     # REPLICAS
     if numreplicas-1 > 0:
@@ -108,7 +108,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
             port = random.randint(14000, 15000)
             p = replicas.executecommandone(replica, "nohup python bin/replica.py -a %s -p %d -f %s -c %s -b %s" % (replica, port, clientobjectfilename, classname, bootstrapname), False)
         replicaname = replica+':'+str(port)
-        processnames.append(replicaname+':REPLICA')
+        processnames.append(replicaname)
         print replicaname
     # NAMESERVERS
     print "--- Nameservers ---"
@@ -119,7 +119,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
             port = random.randint(14000, 15000)
             p = nameservers.executecommandone(nameserver, "sudo -A nohup python bin/nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain, nameserver, port, clientobjectfilename, classname, bootstrapname), False)
         nameservername = nameserver+':'+str(port)
-        processnames.append(nameservername+':NAMESERVER')
+        processnames.append(nameservername)
         nameservernames.append(nameservername)
         print nameservername
     print "All clear!"
