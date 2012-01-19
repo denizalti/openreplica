@@ -37,8 +37,8 @@ class NetworkLogger():
             self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
             self.socket.connect((logaddr,int(logport)))
         except socket.error, e:
-            print "Cannot connect to logdaemon."
-            os._exit(1)
+            print "Not connected to logdaemon."
+            return
 
     def write(self, cls, str):
         try:
