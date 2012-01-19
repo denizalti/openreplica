@@ -85,11 +85,14 @@ class Nameserver(Tracker):
     def txtresponse(self, question):
         txtstr = ''
         for groupname,group in self.groups.iteritems():
-            if len(group) > 0:
-                txtstr += node_names[groupname] + ' = '
+            if len(group) > 0 or groupname == 'NAMESERVER':
+                txtstr += node_names[groupname] + ','
+            peers = []
             for peer in group:
-                txtstr += peer.addr + ":" + str(peer.port)
-        txtstr += self.addr + ":" + str(self.port)
+                peers.append(peer.addr + ':' + str(peer.port))
+            txtstr += ','.join(peers) 
+            textstr += ";"
+        txtstr += ',' + self.addr + ':' + str(self.port)
         return txtstr
     
     def handle_query(self, data, addr):
