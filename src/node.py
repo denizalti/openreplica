@@ -31,7 +31,7 @@ from concoordprofiler import *
 
 parser = OptionParser(usage="usage: %prog -a addr -p port -b bootstrap -f objectfilename -c objectname -n subdomainname -d debug")
 parser.add_option("-a", "--addr", action="store", dest="addr", help="addr for the node")
-parser.add_option("-p", "--port", action="store", dest="port", type="int", default=6668, help="port for the node")
+parser.add_option("-p", "--port", action="store", dest="port", type="int", help="port for the node")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
 parser.add_option("-f", "--objectfilename", action="store", dest="objectfilename", help="client object file name")
 parser.add_option("-c", "--objectname", action="store", dest="objectname", help="object name")
@@ -95,10 +95,20 @@ class Node():
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
         self.socket.setblocking(0)
-        try:
-            self.socket.bind((self.addr,self.port))
-        except socket.error:
-            os._exit(1)
+        if self.port:
+            try:
+                self.socket.bind((self.addr,self.port))
+            except socket.error:
+                print "Cannot bind to port %d" % self.port
+                os._exit(1)
+        else:
+            self.port = random.randint(14000,15000)
+            for i in range(50):
+                try:
+                    self.socket.bind((self.addr,self.port))
+                    break
+                except socket.error:
+                    pass
         self.socket.listen(10)
         self.alive = True
         
