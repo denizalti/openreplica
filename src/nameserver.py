@@ -100,8 +100,15 @@ class Nameserver(Tracker):
         response = dns.message.make_response(query)
         for question in query.question:
             self.logger.write("DNS State", "Received Query for %s\n" % question.name)
+            if question.rdtype is dns.rdatatype.TXT:
+                print "************************************************************"
+                print "TXT QUERY %s" %str(question)
+                print "************************************************************"
+                self.logger.write("************************************************************")
+                self.logger.write("TXT QUERY %s" %str(question))
+                self.logger.write("************************************************************")
             if question.rdtype in [dns.rdatatype.A, dns.rdatatype.TXT] and self.ismyname(question.name):
-                self.logger.write("DNS State", "This is me %s" % str(question)) 
+                self.logger.write("DNS State", ">>>>>>>>>>> This is me %s" % str(question)) 
                 flagstr = 'QR AA RD' # response, authoritative, recursion
                 answerstr = ''    
                 # A Queries --> List all Replicas starting with the Leader
@@ -114,7 +121,7 @@ class Nameserver(Tracker):
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.NS and self.ismyname(question.name):
-                self.logger.write("DNS State", "This is for my name server %s" % str(question)) 
+                self.logger.write("DNS State", ">>>>>>>>>>>>>> This is for my name server %s" % str(question)) 
                 flagstr = 'QR AA RD' # response, authoritative, recursion
                 answerstr = ''    
                 for address in self.nsresponse(question):
@@ -122,7 +129,7 @@ class Nameserver(Tracker):
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.SRV and self.ismyname(question.name):
-                self.logger.write("DNS State", "This is for me %s" % str(question)) 
+                self.logger.write("DNS State", ">>>>>>>>>>>>>> This is for me %s" % str(question)) 
                 flagstr = 'QR AA RD' # response, authoritative, recursion
                 answerstr = ''    
                 for address,port in self.srvresponse(question):
