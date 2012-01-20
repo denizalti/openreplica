@@ -43,6 +43,7 @@ def installpython(plconn, node):
         return False
     print "installing"
     success, output = plconn.executecommandone(node, "make install -C ./Python-2.7")
+#    export PATH=/usr/local/lib:$PATH
     print output
     if not success:
         print "Cannot make."

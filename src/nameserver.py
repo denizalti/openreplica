@@ -95,14 +95,6 @@ class Nameserver(Tracker):
         txtstr += ',' + self.addr + ':' + str(self.port)
         return txtstr[1:]
 
-    def createtxtresponse(self, response, question):
-        flagstr = 'QR AA RD' # response, authoritative, recursion
-        answerstr = ''
-        # TXT Queries --> List all nodes
-        answerstr = self.create_answer_section(question, txt=self.txtresponse(question))
-        responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
-        return responsestr
-    
     def handle_query(self, data, addr):
         query = dns.message.from_wire(data)
         response = dns.message.make_response(query)
@@ -118,7 +110,12 @@ class Nameserver(Tracker):
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.TXT and self.ismyname(question.name):
-                response = dns.message.from_text(self.createtxtresponse(response, question))
+                flagstr = 'QR AA RD' # response, authoritative, recursion
+                answerstr = ''
+                # TXT Queries --> List all nodes
+                answerstr = self.create_answer_section(question, txt=self.txtresponse(question))
+                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+                response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.NS and self.ismyname(question.name):
                 self.logger.write("DNS State", ">>>>>>>>>>>>>> This is for my name server %s" % str(question)) 
                 flagstr = 'QR AA RD' # response, authoritative, recursion
