@@ -54,6 +54,7 @@ class OpenReplicaNameserver(Nameserver):
         if question.name == self.mydomain or question.name.is_subdomain(self.specialdomain):
             for address,port in self.groups[NODE_NAMESERVER].get_addresses():
                 yield address+IPCONVERTER
+            yield self.addr+IPCONVERTER
         for nsdomain,nsaddr in OPENREPLICANS.iteritems():
             yield nsdomain
 
@@ -75,7 +76,7 @@ class OpenReplicaNameserver(Nameserver):
         response = dns.message.make_response(query)
         for question in query.question:
             self.logger.write("DNS State", "Received Query for %s\n" % question.name)
-            if question.rdtype == dns.rdatatype.A and question.name == self.mydomain:
+            if (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.AAAA) and question.name == self.mydomain:
                 # This is an A Query for my domain, I should handle it
                 self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my domain: %s" % str(question))
                 flagstr = 'QR AA RD' # response, authoritative, recursion
@@ -85,7 +86,7 @@ class OpenReplicaNameserver(Nameserver):
                     answerstr += self.create_answer_section(question, addr=address)
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 response = dns.message.from_text(responsestr)
-            elif question.rdtype == dns.rdatatype.A and self.ismynsname(question.name):
+            elif (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.AAAA) and self.ismynsname(question.name):
                 # This is an A Query for my nameserver, I should handle it
                 self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my nameserver: %s" % str(question))
                 flagstr = 'QR AA RD' # response, authoritative, recursion
@@ -95,7 +96,7 @@ class OpenReplicaNameserver(Nameserver):
                     answerstr += self.create_answer_section(question, addr=address)
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 response = dns.message.from_text(responsestr)
-            elif question.rdtype == dns.rdatatype.A and question.name.is_subdomain(self.specialdomain):
+            elif (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.AAAA) and question.name.is_subdomain(self.specialdomain):
                 # This is an A Query for the special ipaddr subdomain, I should handle it
                 self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my specialsubdomain: %s" % str(question))
                 flagstr = 'QR AA RD' # response, authoritative, recursion
