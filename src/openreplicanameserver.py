@@ -62,7 +62,8 @@ class OpenReplicaNameserver(Nameserver):
         for subdomain in self.object.nodes.keys():
             if question.name == dns.name.Name([subdomain, 'openreplica', 'org', '']):
                 for node in self.object.nodes[subdomain]:
-                    yield node
+                    addr,port = node.split(":")
+                    yield addr+IPCONVERTER
 
     def srvresponse(self, question):
         for subdomain in self.object.nodes.keys():
@@ -107,14 +108,15 @@ class OpenReplicaNameserver(Nameserver):
                         answerstr += self.create_answer_section(question, addr=address)
                     responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                     response = dns.message.from_text(responsestr)
+                # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
                 elif self.ismysubdomainname(question.name):
                     # This is an A Query for my subdomain, I will reply with an NS response
                     self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my subdomain: %s" % str(question))
                     flagstr = 'QR AA RD' # response, authoritative, recursion
                     answerstr = ''    
-                    for address in self.nsresponse_subdomain(question)::
+                    for address in self.nsresponse_subdomain(question):
                         print ">>>", address
-                        answerstr += self.create_answer_section(question, addr=address)
+                        answerstr += self.create_authority_section(question, addr=address, rrtype=rdatatype.NS)
                     responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer='',authority=answerstr,additional='')
                     print str(responsestr)
                     response = dns.message.from_text(responsestr)
