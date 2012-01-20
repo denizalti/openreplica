@@ -112,10 +112,10 @@ class OpenReplicaNameserver(Nameserver):
                     self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my subdomain: %s" % str(question))
                     flagstr = 'QR AA RD' # response, authoritative, recursion
                     answerstr = ''    
-                    for address in self.nsresponse(question):
-                        print address
+                    for address in self.nsresponse_subdomain(question)::
+                        print ">>>", address
                         answerstr += self.create_answer_section(question, addr=address)
-                    responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+                    responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer='',authority=answerstr,additional='')
                     print str(responsestr)
                     response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.TXT and question.name == self.mydomain:
