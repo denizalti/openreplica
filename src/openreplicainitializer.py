@@ -114,10 +114,10 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     print "--- Nameservers ---"
     for nameserver in nameservers.getHosts():
         port = random.randint(14000, 15000)
-        p = nameservers.executecommandone(nameserver, "sudo -A nohup python bin/nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain, nameserver, port, clientobjectfilename, classname, bootstrapname), False)
+        p = nameservers.executecommandone(nameserver, "sudo -A nohup python bin/nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain+'.openreplica.org', nameserver, port, clientobjectfilename, classname, bootstrapname), False)
         while terminated(p):
             port = random.randint(14000, 15000)
-            p = nameservers.executecommandone(nameserver, "sudo -A nohup python bin/nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain, nameserver, port, clientobjectfilename, classname, bootstrapname), False)
+            p = nameservers.executecommandone(nameserver, "sudo -A nohup python bin/nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain+'.openreplica.org', nameserver, port, clientobjectfilename, classname, bootstrapname), False)
         nameservername = nameserver+':'+str(port)
         processnames.append(nameservername)
         nameservernames.append(nameservername)
