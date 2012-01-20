@@ -39,8 +39,8 @@ class OpenReplicaNameserver(Nameserver):
         return False
     
     def aresponse_ipaddr(self, question):
-        # Asking for XXX.ipaddr.openreplica.org
-        # Respond with XXX
+        # Asking for IPADDR.ipaddr.openreplica.org
+        # Respond with IPADDR
         yield question.name.split(4)[0].to_text()
 
     def aresponse_ns(self, question):

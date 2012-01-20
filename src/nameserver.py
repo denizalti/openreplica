@@ -149,7 +149,14 @@ class Nameserver(Tracker):
             print ">>>>>>>>>>>>>>>>>>>>>>>>>>>> Cannot respond to query."
 
     def create_response(self, id, opcode=0, rcode=0, flags='', question='', answer='', authority='', additional=''):
-        responsestr = "id %s\nopcode %s\nrcode %s\nflags %s\n;QUESTION\n%s\n;ANSWER\n%s\n;AUTHORITY\n%s\n;ADDITIONAL\n%s\n" % (str(id), OPCODES[opcode], RCODES[rcode], flags, question, answer, authority, additional)
+        responsestr = "id %s\nopcode %s\nrcode %s\nflags %s\n;QUESTION\n%s\n%s%s\n%s%s\n%s%s\n" % (str(id), 
+                                                                                                   OPCODES[opcode], 
+                                                                                                   RCODES[rcode], 
+                                                                                                   flags, 
+                                                                                                   question, 
+                                                                                                   ';ANSWER\n' if answer != '' else '', answer, 
+                                                                                                   ';AUTHORITY\n' if authority != '' else '', authority, 
+                                                                                                   ';ADDITIONAL\n' if additional != '' else '', additional)
         return responsestr
 
     def create_srv_answer_section(self, question, ttl='30', rrclass=1, priority=0, weight=100, port='', addr=''):
