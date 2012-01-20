@@ -116,7 +116,7 @@ class OpenReplicaNameserver(Nameserver):
                     authstr = ''    
                     for address in self.nsresponse_subdomain(question):
                         print ">>>", address
-                        authstr += self.create_authority_section(question, addr=address, rrtype=dns.rdatatype.NS)
+                        authstr += self.create_authority_section(question, nshost=address, rrtype=dns.rdatatype.NS)
                     addstr = ''    
                     for address in self.nsresponse_subdomain(question):
                         addstr += self.create_additional_section(question, addr=address)
