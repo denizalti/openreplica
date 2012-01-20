@@ -134,8 +134,7 @@ class OpenReplicaNameserver(Nameserver):
                     answerstr += self.create_answer_section(question, addr=address)
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 response = dns.message.from_text(responsestr)
-            elif question.rdtype == dns.rdatatype.SRV and question.name == self.mydomain:
-                # XXX This may need changing
+            elif question.rdtype == dns.rdatatype.SRV and self.ismysrvname(question.name):
                 # This is an SRV Query for my name, I should handle it
                 self.logger.write("DNS State", ">>>>>>>>>>>>>> SRV Query for my domain: %s" % str(question)) 
                 flagstr = 'QR AA RD' # response, authoritative, recursion
