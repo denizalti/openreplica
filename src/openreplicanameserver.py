@@ -113,11 +113,14 @@ class OpenReplicaNameserver(Nameserver):
                     # This is an A Query for my subdomain, I will reply with an NS response
                     self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my subdomain: %s" % str(question))
                     flagstr = 'QR' # response, not authoritative
-                    answerstr = ''    
+                    authstr = ''    
                     for address in self.nsresponse_subdomain(question):
                         print ">>>", address
-                        answerstr += self.create_authority_section(question, addr=address, rrtype=dns.rdatatype.NS)
-                    responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer='',authority=answerstr,additional='')
+                        authstr += self.create_authority_section(question, addr=address, rrtype=dns.rdatatype.NS)
+                    addstr = ''    
+                    for address in self.nsresponse_subdomain(question):
+                        addstr += self.create_additional_section(question, addr=address)
+                    responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer='',authority=authstr,additional=addstr)
                     print str(responsestr)
                     response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.TXT and question.name == self.mydomain:
