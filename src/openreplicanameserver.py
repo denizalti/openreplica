@@ -1,6 +1,7 @@
 from nameserver import *
 
-OPENREPLICANS = {'ns1.openreplica.org.':'128.84.60.206', 'ns2.openreplica.org.':'128.84.60.206'} 
+#OPENREPLICANS = {'ns1.openreplica.org.':'128.84.60.206', 'ns2.openreplica.org.':'128.84.60.206'}
+OPENREPLICANS = {'ns1.openreplica.org.':'128.84.154.110', 'ns2.openreplica.org.':'128.84.154.110'} 
 
 class OpenReplicaNameserver(Nameserver):
     def __init__(self):
@@ -73,21 +74,6 @@ class OpenReplicaNameserver(Nameserver):
                 for node in self.object.nodes[subdomain]:
                     addr,port = node.split(":")
                     yield addr+IPCONVERTER,int(port)
-
-    def createtxtresponse(self, response, question):
-        flagstr = 'QR AA RD' # response, authoritative, recursion
-        answerstr = ''
-        if question.name == self.mydomain:
-            #Asking for my nodes
-            answerstr = self.create_answer_section(question, txt=self.txtresponse(question))
-        else:
-            for subdomain in self.object.nodes.keys():
-                if question.name == dns.name.Name([subdomain, 'openreplica', 'org', '']):
-                    for node in self.object.nodes[subdomain]:
-                        address,port = node.split(":")
-                        answerstr += self.create_answer_section(question, addr=address)
-        responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
-        return responsestr
 
 def main():
     nameservernode = OpenReplicaNameserver()
