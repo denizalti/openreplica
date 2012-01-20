@@ -1,12 +1,6 @@
 import inspect, types, string
 import os, shutil
 import ast, _ast
-#from optparse import OptionParser
-
-#parser = OptionParser(usage="usage: %prog -m modulename -o objectname")
-#parser.add_option("-m", "--modulename", action="store", dest="modulename", help="name for the module (filename)")
-#parser.add_option("-o", "--objectname", action="store", dest="objectname", help="name for the object (class definition name)")
-#(options, args) = parser.parse_args()
 
 class ServerVisitor(ast.NodeVisitor):
     def __init__(self, objectname):
@@ -61,12 +55,6 @@ def editproxyfile(filepath, objectname):
         objectfile.write(content)
     objectfile.close()
     return objectfile
-    
-#def main():
-#    editproxyfile(options.modulename, options.objectname)
-        
-#if __name__=='__main__':
-#    main()
     
         
         

@@ -140,12 +140,6 @@ def terminated(p):
         done = p.poll() is not None
     return done
 
-def get_node_name(node, nodeconn, nodetype):
-    returnvalue = ('','')
-    while returnvalue == ('',''):
-        success, returnvalue = nodeconn.executecommandone(node, "ps auxww | grep %s" % nodetype.lower())
-    return returnvalue[0].strip().split('-')[1]+':'+nodetype
-
 def main():
     try:
         with open(options.objectfilepath, 'rU') as fd:
