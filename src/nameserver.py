@@ -98,7 +98,6 @@ class Nameserver(Tracker):
         response = dns.message.make_response(query)
         for question in query.question:
             self.logger.write("DNS State", "Received Query for %s\n" % question.name)
-
             if (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.AAAA) and question.name == self.mydomain:
                 # This is an A Query for my name, I should handle it
                 self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my domain: %s" % str(question))
