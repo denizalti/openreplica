@@ -123,8 +123,6 @@ class OpenReplicaNameserver(Nameserver):
                     responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer='',authority=authstr,additional=addstr)
                     print str(responsestr)
                     response = dns.message.from_text(responsestr)
-                    print response.authority
-                    response.authority = ['kemal.openreplica.org. 30 IN NS 163.117.253.23.ipaddr.openreplica.org.']
             elif question.rdtype == dns.rdatatype.TXT and question.name == self.mydomain:
                 # This is an TXT Query for my domain, I should handle it
                 self.logger.write("DNS State", ">>>>>>>>>>>>>> TXT Query for my domain: %s" % str(question))
