@@ -123,15 +123,29 @@ class OpenReplicaNameserver(Nameserver):
                     responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer='',authority=authstr,additional=addstr)
                     print str(responsestr)
                     response = dns.message.from_text(responsestr)
-            elif question.rdtype == dns.rdatatype.TXT and question.name == self.mydomain:
-                # This is an TXT Query for my domain, I should handle it
-                self.logger.write("DNS State", ">>>>>>>>>>>>>> TXT Query for my domain: %s" % str(question))
-                flagstr = 'QR AA' # response, authoritative
-                answerstr = ''
-                # TXT Queries --> List all nodes
-                answerstr = self.create_answer_section(question, txt=self.txtresponse(question))
-                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
-                response = dns.message.from_text(responsestr)
+            elif question.rdtype == dns.rdatatype.TXT:
+                if question.name == self.mydomain:
+                    # This is an TXT Query for my domain, I should handle it
+                    self.logger.write("DNS State", ">>>>>>>>>>>>>> TXT Query for my domain: %s" % str(question))
+                    flagstr = 'QR AA' # response, authoritative
+                    answerstr = ''
+                    # TXT Queries --> List all nodes
+                    answerstr = self.create_answer_section(question, txt=self.txtresponse(question))
+                    responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+                    response = dns.message.from_text(responsestr)
+                elif self.ismysubdomainname(question.name):
+                    # This is an A Query for my subdomain, I will reply with an NS response
+                    self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my subdomain: %s" % str(question))
+                    flagstr = 'QR' # response, not authoritative
+                    authstr = ''    
+                    for address in self.nsresponse_subdomain(question):
+                        print ">>>", address
+                        authstr += self.create_authority_section(question, nshost=address, rrtype=dns.rdatatype.NS)
+                    addstr = ''    
+                    for address in self.nsresponse_subdomain(question):
+                        addstr += self.create_additional_section(question, addr=address)
+                    responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer='',authority=authstr,additional=addstr)
+                    response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.NS:
                 if question.name == self.mydomain:
                     # This is an NS Query for my domain, I should handle it
@@ -153,16 +167,31 @@ class OpenReplicaNameserver(Nameserver):
                         answerstr += self.create_answer_section(question, addr=address)
                     responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                     response = dns.message.from_text(responsestr)
-            elif question.rdtype == dns.rdatatype.SRV and self.ismysrvname(question.name):
-                # This is an SRV Query for my name, I should handle it
-                self.logger.write("DNS State", ">>>>>>>>>>>>>> SRV Query for my domain: %s" % str(question)) 
-                flagstr = 'QR AA' # response, authoritative
-                answerstr = ''
-                # SRV Queries --> List all Replicas with addr:port
-                for address,port in self.srvresponse(question):
-                    answerstr += self.create_srv_answer_section(question, addr=address, port=port)
-                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
-                response = dns.message.from_text(responsestr)
+            elif question.rdtype == dns.rdatatype.SRV:
+                if self.ismysrvname(question.name):
+                    # This is an SRV Query for my name, I should handle it
+                    self.logger.write("DNS State", ">>>>>>>>>>>>>> SRV Query for my domain: %s" % str(question)) 
+                    flagstr = 'QR AA' # response, authoritative
+                    answerstr = ''
+                    # SRV Queries --> List all Replicas with addr:port
+                    for address,port in self.srvresponse(question):
+                        answerstr += self.create_srv_answer_section(question, addr=address, port=port)
+                    responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+                    response = dns.message.from_text(responsestr)
+                elif self.ismysubdomainname(question.name):
+                    # This is an A Query for my subdomain, I will reply with an NS response
+                    self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my subdomain: %s" % str(question))
+                    flagstr = 'QR' # response, not authoritative
+                    authstr = ''    
+                    for address in self.nsresponse_subdomain(question):
+                        print ">>>", address
+                        authstr += self.create_authority_section(question, nshost=address, rrtype=dns.rdatatype.NS)
+                    addstr = ''    
+                    for address in self.nsresponse_subdomain(question):
+                        addstr += self.create_additional_section(question, addr=address)
+                    responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer='',authority=authstr,additional=addstr)
+                    print str(responsestr)
+                    response = dns.message.from_text(responsestr)
             else:
                 # This Query is not something I know how to respond to
                 self.logger.write("DNS State", ">>>>>>>>>>>>>> Name Error, %s" %str(question))
