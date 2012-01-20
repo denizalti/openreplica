@@ -101,7 +101,7 @@ class Nameserver(Tracker):
             if (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.AAAA) and question.name == self.mydomain:
                 # This is an A Query for my name, I should handle it
                 self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my domain: %s" % str(question))
-                flagstr = 'QR AA RD' # response, authoritative, recursion
+                flagstr = 'QR AA' # response, authoritative, recursion
                 answerstr = ''    
                 # A Queries --> List all Replicas starting with the Leader
                 for address in self.aresponse(question):
@@ -111,7 +111,7 @@ class Nameserver(Tracker):
             elif question.rdtype == dns.rdatatype.TXT and question.name == self.mydomain:
                 # This is an TXT Query for my name, I should handle it
                 self.logger.write("DNS State", ">>>>>>>>>>>>>> TXT Query for my domain: %s" % str(question))
-                flagstr = 'QR AA RD' # response, authoritative, recursion
+                flagstr = 'QR AA' # response, authoritative, recursion
                 answerstr = ''
                 # TXT Queries --> List all nodes
                 answerstr = self.create_answer_section(question, txt=self.txtresponse(question))
@@ -120,7 +120,7 @@ class Nameserver(Tracker):
             elif question.rdtype == dns.rdatatype.NS and question.name == self.mydomain:
                 # This is an NS Query for my name, I should handle it
                 self.logger.write("DNS State", ">>>>>>>>>>>>>> NS Query for my domain: %s" % str(question)) 
-                flagstr = 'QR AA RD' # response, authoritative, recursion
+                flagstr = 'QR AA' # response, authoritative, recursion
                 answerstr = ''
                 # NS Queries --> List all Nameserver nodes
                 for address in self.nsresponse(question):
@@ -130,7 +130,7 @@ class Nameserver(Tracker):
             elif question.rdtype == dns.rdatatype.SRV and question.name == self.mydomain:
                 # This is an SRV Query for my name, I should handle it
                 self.logger.write("DNS State", ">>>>>>>>>>>>>> SRV Query for my domain: %s" % str(question)) 
-                flagstr = 'QR AA RD' # response, authoritative, recursion
+                flagstr = 'QR AA' # response, authoritative, recursion
                 answerstr = ''
                 # SRV Queries --> List all Replicas with addr:port
                 for address,port in self.srvresponse(question):
@@ -140,7 +140,7 @@ class Nameserver(Tracker):
             else:
                 # This Query is not something I know how to respond to
                 self.logger.write("DNS State", ">>>>>>>>>>>>>> Name Error, %s" %str(question))
-                flags = QR + AA + RD + dns.rcode.NXDOMAIN
+                flags = QR + AA + dns.rcode.NXDOMAIN
                 response.flags = flags
         self.logger.write("DNS State", ">>>>>>>>>>>>>> RESPONSE:\n%s\n---\n" % str(response))
         try:
