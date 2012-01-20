@@ -74,6 +74,7 @@ class Nameserver(Tracker):
     def nsresponse(self, question):
         for address,port in self.groups[NODE_NAMESERVER].get_addresses():
             yield address
+        yield self.addr
 
     def srvresponse(self, question):
         for address,port in self.groups[NODE_REPLICA].get_addresses():
@@ -97,7 +98,7 @@ class Nameserver(Tracker):
         response = dns.message.make_response(query)
         for question in query.question:
             self.logger.write("DNS State", "Received Query for %s\n" % question.name)
-            if question.rdtype == dns.rdatatype.A and question.name == self.mydomain:
+            if (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.AAAA) and question.name == self.mydomain:
                 # This is an A Query for my name, I should handle it
                 self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my domain: %s" % str(question))
                 flagstr = 'QR AA RD' # response, authoritative, recursion
