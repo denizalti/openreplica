@@ -76,46 +76,48 @@ class OpenReplicaNameserver(Nameserver):
         response = dns.message.make_response(query)
         for question in query.question:
             self.logger.write("DNS State", "Received Query for %s\n" % question.name)
-            if (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.AAAA) and question.name == self.mydomain:
-                # This is an A Query for my domain, I should handle it
-                self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my domain: %s" % str(question))
-                flagstr = 'QR AA RD' # response, authoritative, recursion
-                answerstr = ''    
-                # A Queries --> List all Replicas starting with the Leader
-                for address in self.aresponse(question):
-                    answerstr += self.create_answer_section(question, addr=address)
-                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
-                response = dns.message.from_text(responsestr)
-            elif (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.AAAA) and self.ismynsname(question.name):
-                # This is an A Query for my nameserver, I should handle it
-                self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my nameserver: %s" % str(question))
-                flagstr = 'QR AA RD' # response, authoritative, recursion
-                answerstr = ''    
-                # A Queries --> List all Replicas starting with the Leader
-                for address in self.aresponse_ns(question):
-                    answerstr += self.create_answer_section(question, addr=address)
-                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
-                response = dns.message.from_text(responsestr)
-            elif (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.AAAA) and question.name.is_subdomain(self.specialdomain):
-                # This is an A Query for the special ipaddr subdomain, I should handle it
-                self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my specialsubdomain: %s" % str(question))
-                flagstr = 'QR AA RD' # response, authoritative, recursion
-                answerstr = ''    
-                # A Queries --> List all Replicas starting with the Leader
-                for address in self.aresponse_ipaddr(question):
-                    answerstr += self.create_answer_section(question, addr=address)
-                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
-                response = dns.message.from_text(responsestr)
-            elif (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.AAAA) and self.ismysubdomainname(question.name):
-                # This is an A Query for my subdomain, I will reply with an NS response
-                self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my nameserver: %s" % str(question))
-                flagstr = 'QR AA RD' # response, authoritative, recursion
-                answerstr = ''    
-                # A Queries --> List all Replicas starting with the Leader
-                for address in self.nsresponse(question):
-                    answerstr += self.create_answer_section(question, addr=address)
-                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
-                response = dns.message.from_text(responsestr)
+            if question.rdtype == dns.rdatatype.A:
+                if question.name == self.mydomain:
+                    # This is an A Query for my domain, I should handle it
+                    self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my domain: %s" % str(question))
+                    flagstr = 'QR AA RD' # response, authoritative, recursion
+                    answerstr = ''    
+                    # A Queries --> List all Replicas starting with the Leader
+                    for address in self.aresponse(question):
+                        answerstr += self.create_answer_section(question, addr=address)
+                    responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+                    response = dns.message.from_text(responsestr)
+                elif self.ismynsname(question.name):
+                    # This is an A Query for my nameserver, I should handle it
+                    self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my nameserver: %s" % str(question))
+                    flagstr = 'QR AA RD' # response, authoritative, recursion
+                    answerstr = ''    
+                    # A Queries --> List all Replicas starting with the Leader
+                    for address in self.aresponse_ns(question):
+                        answerstr += self.create_answer_section(question, addr=address)
+                    responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+                    response = dns.message.from_text(responsestr)
+                elif question.name.is_subdomain(self.specialdomain):
+                    # This is an A Query for the special ipaddr subdomain, I should handle it
+                    self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my specialsubdomain: %s" % str(question))
+                    flagstr = 'QR AA RD' # response, authoritative, recursion
+                    answerstr = ''    
+                    # A Queries --> List all Replicas starting with the Leader
+                    for address in self.aresponse_ipaddr(question):
+                        answerstr += self.create_answer_section(question, addr=address)
+                    responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+                    response = dns.message.from_text(responsestr)
+                elif self.ismysubdomainname(question.name):
+                    # This is an A Query for my subdomain, I will reply with an NS response
+                    self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my subdomain: %s" % str(question))
+                    flagstr = 'QR AA RD' # response, authoritative, recursion
+                    answerstr = ''    
+                    for address in self.nsresponse(question):
+                        print address
+                        answerstr += self.create_answer_section(question, addr=address)
+                    responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+                    print str(responsestr)
+                    response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.TXT and question.name == self.mydomain:
                 # This is an TXT Query for my domain, I should handle it
                 self.logger.write("DNS State", ">>>>>>>>>>>>>> TXT Query for my domain: %s" % str(question))
@@ -125,26 +127,27 @@ class OpenReplicaNameserver(Nameserver):
                 answerstr = self.create_answer_section(question, txt=self.txtresponse(question))
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 response = dns.message.from_text(responsestr)
-            elif question.rdtype == dns.rdatatype.NS and question.name == self.mydomain:
-                # This is an NS Query for my domain, I should handle it
-                self.logger.write("DNS State", ">>>>>>>>>>>>>> NS Query for my domain: %s" % str(question)) 
-                flagstr = 'QR AA RD' # response, authoritative, recursion
-                answerstr = ''
-                # NS Queries --> List all Nameserver nodes
-                for address in self.nsresponse(question):
-                    answerstr += self.create_answer_section(question, addr=address)
-                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
-                response = dns.message.from_text(responsestr)
-            elif question.rdtype == dns.rdatatype.NS and self.ismysubdomainname(question.name):
-                # This is an NS Query for my subdomain, I should handle it
-                self.logger.write("DNS State", ">>>>>>>>>>>>>> NS Query for my subdomain: %s" % str(question)) 
-                flagstr = 'QR AA RD' # response, authoritative, recursion
-                answerstr = ''
-                # NS Queries --> List Nameservers of my subdomain
-                for address in self.nsresponse_subdomain(question):
-                    answerstr += self.create_answer_section(question, addr=address)
-                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
-                response = dns.message.from_text(responsestr)
+            elif question.rdtype == dns.rdatatype.NS:
+                if question.name == self.mydomain:
+                    # This is an NS Query for my domain, I should handle it
+                    self.logger.write("DNS State", ">>>>>>>>>>>>>> NS Query for my domain: %s" % str(question)) 
+                    flagstr = 'QR AA RD' # response, authoritative, recursion
+                    answerstr = ''
+                    # NS Queries --> List all Nameserver nodes
+                    for address in self.nsresponse(question):
+                        answerstr += self.create_answer_section(question, addr=address)
+                    responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+                    response = dns.message.from_text(responsestr)
+                elif self.ismysubdomainname(question.name):
+                    # This is an NS Query for my subdomain, I should handle it
+                    self.logger.write("DNS State", ">>>>>>>>>>>>>> NS Query for my subdomain: %s" % str(question)) 
+                    flagstr = 'QR AA RD' # response, authoritative, recursion
+                    answerstr = ''
+                    # NS Queries --> List Nameservers of my subdomain
+                    for address in self.nsresponse_subdomain(question):
+                        answerstr += self.create_answer_section(question, addr=address)
+                    responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+                    response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.SRV and self.ismysrvname(question.name):
                 # This is an SRV Query for my name, I should handle it
                 self.logger.write("DNS State", ">>>>>>>>>>>>>> SRV Query for my domain: %s" % str(question)) 
