@@ -149,14 +149,17 @@ class Nameserver(Tracker):
             print ">>>>>>>>>>>>>>>>>>>>>>>>>>>> Cannot respond to query."
 
     def create_response(self, id, opcode=0, rcode=0, flags='', question='', answer='', authority='', additional=''):
-        responsestr = "id %s\nopcode %s\nrcode %s\nflags %s\n;QUESTION\n%s\n%s%s\n%s%s\n%s%s\n" % (str(id), 
+        responsestr = "id %s\nopcode %s\nrcode %s\nflags %s\n;QUESTION\n%s\n%s%s%s%s%s%s%s%s%s" % (str(id), 
                                                                                                    OPCODES[opcode], 
                                                                                                    RCODES[rcode], 
                                                                                                    flags, 
                                                                                                    question, 
-                                                                                                   ';ANSWER\n' if answer != '' else '', answer, 
-                                                                                                   ';AUTHORITY\n' if authority != '' else '', authority, 
-                                                                                                   ';ADDITIONAL\n' if additional != '' else '', additional)
+                                                                                                   ';ANSWER\n' if answer != '' else '', answer,
+                                                                                                   '\n' if answer != '' else '',
+                                                                                                   ';AUTHORITY\n' if authority != '' else '', authority,
+                                                                                                   '\n' if authority != '' else '',
+                                                                                                   ';ADDITIONAL\n' if additional != '' else '', additional,
+                                                                                                   '\n' if additional != '' else '')
         return responsestr
 
     def create_srv_answer_section(self, question, ttl='30', rrclass=1, priority=0, weight=100, port='', addr=''):
