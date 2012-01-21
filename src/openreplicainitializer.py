@@ -160,8 +160,7 @@ def main():
         print clientproxycode
 
     except Exception as e:
-        print "Error: "
-        print e
+        print "Error: ", e
     
 if __name__=='__main__':
     main()
