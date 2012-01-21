@@ -96,7 +96,6 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
         print "Adding Nameserver to the subdomain Coordination Object" 
         openreplicacoordobj = OpenReplicaCoordProxy('128.84.154.110:6668')
         openreplicacoordobj.addnodetosubdomain(subdomain, node)
-    return output
 
 def main():
     try:
