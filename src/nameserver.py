@@ -125,11 +125,11 @@ class Nameserver(Tracker):
             else:
                 self.logger.write("DNS State", "Name Error, %s" %str(question))
                 response.flags = QR + AA + dns.rcode.NXDOMAIN
-        self.logger.write("DNS State", ">>>>>>>>>>>>>> RESPONSE:\n%s\n---\n" % str(response))
+        self.logger.write("DNS State", "RESPONSE:\n%s\n---\n" % str(response))
         try:
             self.udpsocket.sendto(response.to_wire(), addr)
         except:
-            print ">>>>>>>>>>>>>>>>>>>>>>>>>>>> Cannot respond to query."
+            self.logger.write("DNS Error", "Cannot send RESPONSE:\n%s\n---\n" % str(response))
 
     def create_response(self, id, opcode=0, rcode=0, flags='', question='', answer='', authority='', additional=''):
         answerstr     = ';ANSWER\n'     + answer     + '\n' if answer != '' else ''
