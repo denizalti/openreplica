@@ -138,7 +138,6 @@ class Replica(Node):
                 # this is the workhorse case that executes most normal commands
                 method = getattr(self.object, commandname)
                 # Watch out for the lock release and acquire!
-                self.logger.write("State", ">>>>>>>>>>>>>>>>>>>>>>>>>> releasing lock!")
                 self.lock.release()
                 try:
                     givenresult = method(*commandargs, _concoord_command=command)
@@ -166,7 +165,6 @@ class Replica(Node):
                     clientreplycode = CR_EXCEPTION
                     send_result_to_client = True
                     unblocked = {}
-                self.logger.write("State", ">>>>>>>>>>>>>>>>>>>>>>>>>> acquiring lock!")
                 self.lock.acquire()
         except (TypeError, AttributeError) as t:
             self.logger.write("Execution Error", "command not supported: %s" % (command))
@@ -287,14 +285,14 @@ class Replica(Node):
 
     def _add_node(self, nodetype, nodename):
         nodetype = int(nodetype)
-        self.logger.write("State", "Adding node: %s %s" % (node_names[nodetype], nodename))
+        self.logger.write("State", ">>>>>>>>>>>>>>>>>>> Adding node: %s %s" % (node_names[nodetype], nodename))
         ipaddr,port = nodename.split(":")
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype].add(nodepeer)
         
     def _del_node(self, nodetype, nodename):
         nodetype = int(nodetype)
-        self.logger.write("State", "Deleting node: %s %s" % (node_names[nodetype], nodename))
+        self.logger.write("State", ">>>>>>>>>>>>>>>>>>> Deleting node: %s %s" % (node_names[nodetype], nodename))
         ipaddr,port = nodename.split(":")
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype].remove(nodepeer)
