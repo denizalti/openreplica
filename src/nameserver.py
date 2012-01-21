@@ -33,6 +33,7 @@ class Nameserver(Tracker):
     def __init__(self, domain, instantiateobj=False):
         Tracker.__init__(self, nodetype=NODE_NAMESERVER, instantiateobj=instantiateobj, port=5000, bootstrap=options.bootstrap)
         self.mydomain = dns.name.Name((domain+".").split("."))
+        self.mysrvdomain = dns.name.Name([('_concoord._tcp.'+domain+".").split("."))
         self.mysrvdomain = dns.name.Name((SRVNAME+domain+".").split("."))
         self.udpport = 53
         self.udpsocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
@@ -130,7 +131,7 @@ class Nameserver(Tracker):
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 response = dns.message.from_text(responsestr)
 
-            elif question.rdtype == dns.rdatatype.SRV and question.name == self.mydomain:
+            elif question.rdtype == dns.rdatatype.SRV and question.name == self.mysrvdomain:
                 # This is an SRV Query for my name, I should handle it
                 self.logger.write("DNS State", ">>>>>>>>>>>>>> SRV Query for my domain: %s" % str(question)) 
                 flagstr = 'QR AA' # response, authoritative
