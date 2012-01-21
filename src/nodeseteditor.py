@@ -64,7 +64,6 @@ def check_planetlab_pythonversion(plconn, node):
 
 def get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, classname, bootstrapname):
     startupcmd = ''
-    print "NODE TYPE", nodetype
     if nodetype == NODE_REPLICA:
         startupcmd = "nohup python bin/replica.py -a %s -p %d -f %s -c %s -b %s" % (node, port, clientobjectfilename, classname, bootstrapname)
     elif nodetype == NODE_ACCEPTOR:
@@ -81,6 +80,7 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
     else:
         nodeconn = PLConnection(1, [check_planetlab_pythonversion])
     print "Picked Node: %s" % nodeconn.getHosts()[0]
+    print "Connecting to bootstrap: %s" % bootstrapname
     fixedfile = editproxyfile(clientobjectfilepath, classname)
     nodeconn.uploadall(fixedfile.name, "bin/"+clientobjectfilename)
     for node in nodeconn.getHosts():
