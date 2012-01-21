@@ -21,9 +21,8 @@ class OpenReplicaNameserver(Nameserver):
         Replica.msg_perform(self, conn, msg)
 
     def ismysubdomainname(self, name):
-        subdomains = [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]
         for subdomain in self.object.nodes.keys():
-            if name in subdomains:
+            if name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
                 return True
         return False
 
@@ -57,9 +56,8 @@ class OpenReplicaNameserver(Nameserver):
             yield nsdomain
 
     def nsresponse_subdomain(self, question):
-        subdomains = [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]
         for subdomain in self.object.nodes.keys():
-            if question.name in subdomains:
+            if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
                 for node in self.object.nodes[subdomain]:
                     addr,port = node.split(":")
                     print subdomain, addr+IPCONVERTER
