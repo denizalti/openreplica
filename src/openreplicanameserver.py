@@ -51,9 +51,12 @@ class OpenReplicaNameserver(Nameserver):
     def nsresponse(self, question):
         if question.name == self.mydomain or question.name.is_subdomain(self.specialdomain):
             for address,port in self.groups[NODE_NAMESERVER].get_addresses():
+                print address+IPCONVERTER
                 yield address+IPCONVERTER
+            print self.addr+IPCONVERTER
             yield self.addr+IPCONVERTER
         for nsdomain,nsaddr in OPENREPLICANS.iteritems():
+            print nsdomain
             yield nsdomain
 
     def nsresponse_subdomain(self, question):
@@ -144,7 +147,8 @@ class OpenReplicaNameserver(Nameserver):
                     answerstr = ''
                     # NS Queries --> List all Nameserver nodes
                     for address in self.nsresponse(question):
-                        answerstr += self.create_answer_section(question, addr=address)
+                        print ">>> ", address
+                        answerstr += self.create_answer_section(question, name=address)
                     responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                     response = dns.message.from_text(responsestr)
                 elif self.ismysubdomainname(question.name):
@@ -154,7 +158,7 @@ class OpenReplicaNameserver(Nameserver):
                     answerstr = ''
                     # NS Queries --> List Nameservers of my subdomain
                     for address in self.nsresponse_subdomain(question):
-                        answerstr += self.create_answer_section(question, addr=address)
+                        answerstr += self.create_answer_section(question, name=address)
                     responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                     response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.SRV:
