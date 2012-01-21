@@ -62,9 +62,6 @@ class Nameserver(Tracker):
                 os._exit(0)
         self.udpsocket.close()
         return
-
-    def ismysubdomain(self, name):
-        return name == self.mydomain
         
     def aresponse(self, question):
         addresses = self.groups[NODE_REPLICA].get_addresses()
@@ -93,59 +90,41 @@ class Nameserver(Tracker):
         txtstr += ',' + self.addr + ':' + str(self.port)
         return txtstr[1:]
 
+    def ismydomainname(self, questionname):
+        return questionname == self.mydomain or questionname == self.mysrvdomain
+
+    def should_handle(self, question):
+        return (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV) and self.ismydomainname(question.name)
+
     def handle_query(self, data, addr):
         query = dns.message.from_wire(data)
         response = dns.message.make_response(query)
         for question in query.question:
             self.logger.write("DNS State", "Received Query for %s\n" % question.name)
-            if (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.AAAA) and question.name == self.mydomain:
-                # This is an A Query for my name, I should handle it
-                self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my domain: %s" % str(question))
-                flagstr = 'QR AA' # response, authoritative, recursion
-                answerstr = ''    
-                # A Queries --> List all Replicas starting with the Leader
-                for address in self.aresponse(question):
-                    answerstr += self.create_answer_section(question, addr=address)
-                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
-                response = dns.message.from_text(responsestr)
-
-            elif question.rdtype == dns.rdatatype.TXT and question.name == self.mydomain:
-                # This is an TXT Query for my name, I should handle it
-                self.logger.write("DNS State", ">>>>>>>>>>>>>> TXT Query for my domain: %s" % str(question))
-                flagstr = 'QR AA' # response, authoritative, recursion
-                answerstr = ''
-                # TXT Queries --> List all nodes
-                answerstr = self.create_answer_section(question, txt=self.txtresponse(question))
-                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
-                response = dns.message.from_text(responsestr)
-
-            elif question.rdtype == dns.rdatatype.NS and question.name == self.mydomain:
-                # This is an NS Query for my name, I should handle it
-                self.logger.write("DNS State", ">>>>>>>>>>>>>> NS Query for my domain: %s" % str(question)) 
-                flagstr = 'QR AA' # response, authoritative, recursion
-                answerstr = ''
-                # NS Queries --> List all Nameserver nodes
-                for address in self.nsresponse(question):
-                    answerstr += self.create_answer_section(question, addr=address)
-                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
-                response = dns.message.from_text(responsestr)
-
-            elif question.rdtype == dns.rdatatype.SRV and question.name == self.mysrvdomain:
-                # This is an SRV Query for my name, I should handle it
-                self.logger.write("DNS State", ">>>>>>>>>>>>>> SRV Query for my domain: %s" % str(question)) 
+            if self.should_handle(question):
+                self.logger.write("DNS State", "Query for my domain: %s" % str(question))
                 flagstr = 'QR AA' # response, authoritative
                 answerstr = ''
-                # SRV Queries --> List all Replicas with addr:port
-                for address,port in self.srvresponse(question):
-                    answerstr += self.create_srv_answer_section(question, addr=address, port=port)
-                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
-                response = dns.message.from_text(responsestr)
-
+                if question.rdtype == dns.rdatatype.A:
+                    # A Queries --> List all Replicas starting with the Leader
+                    for address in self.aresponse(question):
+                        answerstr += self.create_answer_section(question, addr=address)
+                elif question.rdtype == dns.rdatatype.TXT:
+                    # TXT Queries --> List all nodes
+                    answerstr = self.create_answer_section(question, txt=self.txtresponse(question))
+                elif question.rdtype == dns.rdatatype.NS:
+                    # NS Queries --> List all Nameserver nodes
+                    for address in self.nsresponse(question):
+                        answerstr += self.create_answer_section(question, addr=address)
+                elif question.rdtype == dns.rdatatype.SRV:
+                    # SRV Queries --> List all Replicas with addr:port
+                    for address,port in self.srvresponse(question):
+                        answerstr += self.create_srv_answer_section(question, addr=address, port=port)
+            responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+            response = dns.message.from_text(responsestr)
             else:
-                # This Query is not something I know how to respond to
-                self.logger.write("DNS State", ">>>>>>>>>>>>>> Name Error, %s" %str(question))
-                flags = QR + AA + dns.rcode.NXDOMAIN
-                response.flags = flags
+                self.logger.write("DNS State", "Name Error, %s" %str(question))
+                response.flags = QR + AA + dns.rcode.NXDOMAIN
         self.logger.write("DNS State", ">>>>>>>>>>>>>> RESPONSE:\n%s\n---\n" % str(response))
         try:
             self.udpsocket.sendto(response.to_wire(), addr)
