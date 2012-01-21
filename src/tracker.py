@@ -56,7 +56,6 @@ class Tracker(Replica):
                 self.nexttoexecute += 1
             elif self.decisions[self.nexttoexecute] not in self.executed:
                 self.logger.write("State", "executing command %d." % self.nexttoexecute)
-
                 # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
                 if self.nexttoexecute > WINDOW:
                     self.performcore(msg, self.nexttoexecute - WINDOW, True)

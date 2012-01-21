@@ -9,7 +9,6 @@ import os, sys, time, shutil
 import subprocess
 from enums import *
 from plmanager import *
-from serversideproxyast import *
 from openreplicacoordobjproxy import *
 
 parser = OptionParser(usage="usage: %prog -t nodetype -s subdomain -p objectpath -n classname -b bootstrap")

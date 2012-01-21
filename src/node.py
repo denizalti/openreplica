@@ -337,11 +337,8 @@ class Node():
         except AttributeError:
             self.logger.write("Method Error", "method not supported: %s" % mname)
             return False
-        self.logger.write("State", ">>>>>>>>>>>>>>>>>>>>>>>>>> will grab lock!")
         with self.lock:
-            self.logger.write("State", ">>>>>>>>>>>>>>>>>>>>>>>>>> grabbed lock!")
             method(connection, message)
-            self.logger.write("State", ">>>>>>>>>>>>>>>>>>>>>>>>>> returned!")
         return True
 
     #
@@ -445,11 +442,8 @@ class Node():
                     except AttributeError:
                         print "command not supported"
                         continue
-                    self.logger.write("State", "shellinput grabbing lock >>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                     with self.lock:
-                        self.logger.write("State", "shellinput grabbed lock >>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                         method(input)
-                    self.logger.write("State", "shellinput released lock >>>>>>>>>>>>>>>>>>>>>>>>>>>>")
             except (KeyboardInterrupt,):
                 os._exit(0)
             except (EOFError,):
