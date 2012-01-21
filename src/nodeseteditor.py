@@ -74,20 +74,25 @@ def get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, class
 def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapname):
     print "==== Adding Node ===="
     clientobjectfilename = os.path.basename(clientobjectfilepath)
+    nodetype = int(nodetype)
     if nodetype == NODE_NAMESERVER:
         nodeconn = PLConnection(1, [check_planetlab_dnsport, check_planetlab_pythonversion])
     else:
         nodeconn = PLConnection(1, [check_planetlab_pythonversion])
     print "Picked Node: %s" % nodeconn.getHosts()[0]
     print "Connecting to bootstrap: %s" % bootstrapname
-    print "Uploading file from ", clientobjectfilepath+"fixed", " to NODE:bin/"+clientobjectfilename
-    nodeconn.uploadall(clientobjectfilepath+"fixed", "bin/"+clientobjectfilename)
+    if nodetype != NODE_ACCEPTOR:
+        print "Uploading file from ", clientobjectfilepath+"fixed", " to NODE:bin/"+clientobjectfilename
+        nodeconn.uploadall(clientobjectfilepath+"fixed", "bin/"+clientobjectfilename)
     for node in nodeconn.getHosts():
         port = random.randint(14000, 15000)
+        print get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, classname, bootstrapname)
         p = nodeconn.executecommandone(node, get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, classname, bootstrapname), False)
+        print p
         while terminated(p):
             port = random.randint(14000, 15000)
             p = nodeconn.executecommandone(node, get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, classname, bootstrapname), False)
+            print p
         nodename = node+':'+str(port)
         print "Node is started: %s" % nodename
     # Add it to the object if it is a nameserver
