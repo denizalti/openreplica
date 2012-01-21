@@ -26,11 +26,14 @@ class OpenReplicaNameserver(Nameserver):
                 return True
         return False
 
-    def ismysrvname(self, name):
+    def ismysrvsubdomainname(self, name):
         for subdomain in self.object.nodes.keys():
             if name == dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', '']):
                 return True
         return False
+
+    def ismysrvname(self, name):
+        return name == dns.name.Name(['_concoord', '_tcp', 'openreplica', 'org', ''])
 
     def ismynsname(self, name):
         for nsdomain in OPENREPLICANS.iterkeys():
@@ -64,13 +67,6 @@ class OpenReplicaNameserver(Nameserver):
                 for node in self.object.nodes[subdomain]:
                     addr,port = node.split(":")
                     yield addr+IPCONVERTER
-
-    def srvresponse(self, question):
-        for subdomain in self.object.nodes.keys():
-            if question.name == dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', '']):
-                for node in self.object.nodes[subdomain]:
-                    addr,port = node.split(":")
-                    yield addr+IPCONVERTER,int(port)
 
     def handle_query(self, data, addr):
         query = dns.message.from_wire(data)
@@ -108,7 +104,6 @@ class OpenReplicaNameserver(Nameserver):
                         answerstr += self.create_answer_section(question, addr=address)
                     responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                     response = dns.message.from_text(responsestr)
-                # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
                 elif self.ismysubdomainname(question.name):
                     # This is an A Query for my subdomain, I will reply with an NS response
                     self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my subdomain: %s" % str(question))
@@ -134,7 +129,7 @@ class OpenReplicaNameserver(Nameserver):
                     responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                     response = dns.message.from_text(responsestr)
                 elif self.ismysubdomainname(question.name):
-                    # This is an A Query for my subdomain, I will reply with an NS response
+                    # This is a TXT Query for my subdomain, I will reply with an NS response
                     self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my subdomain: %s" % str(question))
                     flagstr = 'QR' # response, not authoritative
                     authstr = ''    
@@ -178,7 +173,7 @@ class OpenReplicaNameserver(Nameserver):
                         answerstr += self.create_srv_answer_section(question, addr=address, port=port)
                     responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                     response = dns.message.from_text(responsestr)
-                elif self.ismysubdomainname(question.name):
+                elif self.ismysrvsubdomainname(question.name):
                     # This is an A Query for my subdomain, I will reply with an NS response
                     self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my subdomain: %s" % str(question))
                     flagstr = 'QR' # response, not authoritative
