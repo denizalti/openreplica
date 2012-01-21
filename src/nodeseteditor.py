@@ -63,6 +63,8 @@ def check_planetlab_pythonversion(plconn, node):
     return False,output
 
 def get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, classname, bootstrapname):
+    startupcmd = ''
+    print "NODE TYPE", nodetype
     if nodetype == NODE_REPLICA:
         startupcmd = "nohup python bin/replica.py -a %s -p %d -f %s -c %s -b %s" % (node, port, clientobjectfilename, classname, bootstrapname)
     elif nodetype == NODE_ACCEPTOR:
