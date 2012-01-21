@@ -25,7 +25,7 @@ OPCODES = ['QUERY','IQUERY','STATUS']
 RCODES = ['NOERROR','FORMERR','SERVFAIL','NXDOMAIN','NOTIMP','REFUSED']
 
 IPCONVERTER = '.ipaddr.openreplica.org.'
-SRVNAME = '_concoord._tcp.hack.'
+SRVNAME = '_concoord._tcp.'
 
 class Nameserver(Tracker):
     """Nameserver keeps track of the connectivity state of the system and replies to
@@ -33,7 +33,6 @@ class Nameserver(Tracker):
     def __init__(self, domain, instantiateobj=False):
         Tracker.__init__(self, nodetype=NODE_NAMESERVER, instantiateobj=instantiateobj, port=5000, bootstrap=options.bootstrap)
         self.mydomain = dns.name.Name((domain+".").split("."))
-        self.mysrvdomain = dns.name.Name([('_concoord._tcp.'+domain+".").split("."))
         self.mysrvdomain = dns.name.Name((SRVNAME+domain+".").split("."))
         self.udpport = 53
         self.udpsocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
