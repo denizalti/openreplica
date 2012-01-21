@@ -90,11 +90,11 @@ class Nameserver(Tracker):
         txtstr += ',' + self.addr + ':' + str(self.port)
         return txtstr[1:]
 
-    def ismydomainname(self, questionname):
-        return questionname == self.mydomain or questionname == self.mysrvdomain
+    def ismydomainname(self, question):
+        return question.name == self.mydomain or (question.rdtype == dns.rdatatype.SRV and question.name == self.mysrvdomain)
 
     def should_handle(self, question):
-        return (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV) and self.ismydomainname(question.name)
+        return (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV) and self.ismydomainname(question)
 
     def handle_query(self, data, addr):
         query = dns.message.from_wire(data)
