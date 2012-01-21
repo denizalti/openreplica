@@ -93,7 +93,7 @@ class Nameserver(Tracker):
     def ismydomainname(self, question):
         return question.name == self.mydomain or (question.rdtype == dns.rdatatype.SRV and question.name == self.mysrvdomain)
 
-    def should_handle(self, question):
+    def should_answer(self, question):
         return (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV) and self.ismydomainname(question)
 
     def handle_query(self, data, addr):
@@ -101,7 +101,7 @@ class Nameserver(Tracker):
         response = dns.message.make_response(query)
         for question in query.question:
             self.logger.write("DNS State", "Received Query for %s\n" % question.name)
-            if self.should_handle(question):
+            if self.should_answer(question):
                 self.logger.write("DNS State", "Query for my domain: %s" % str(question))
                 flagstr = 'QR AA' # response, authoritative
                 answerstr = ''
