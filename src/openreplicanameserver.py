@@ -6,6 +6,7 @@ OPENREPLICANS = {'ns1.openreplica.org.':'128.84.154.110', 'ns2.openreplica.org.'
 class OpenReplicaNameserver(Nameserver):
     def __init__(self):
         Nameserver.__init__(self, domain='openreplica.org', instantiateobj=True)
+        self.mysrvdomain = dns.name.Name(['_concoord', '_tcp', 'openreplica', 'org', ''])
         self.specialdomain = dns.name.Name(['ipaddr','openreplica','org',''])
         self.nsdomains = []
         for nsdomain in OPENREPLICANS.iterkeys():
@@ -26,8 +27,8 @@ class OpenReplicaNameserver(Nameserver):
                 return True
         return False
 
-    def ismysrvname(self, name):
-        return name == dns.name.Name(['_concoord', '_tcp', 'openreplica', 'org', ''])
+    def ismydomainname(self, questionname):
+        return questionname == self.mydomain or questionname == self.mysrvdomain
 
     def ismynsname(self, name):
         for nsdomain in OPENREPLICANS.iterkeys():
@@ -62,13 +63,19 @@ class OpenReplicaNameserver(Nameserver):
                     addr,port = node.split(":")
                     yield addr+IPCONVERTER
 
+    def should_handle(self, question):
+        return (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV) and self.ismydomainname(question.name)
+
+    def should_handle_auth(self, question):
+        return (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV) and self.ismydomainname(question.name)
+
     def handle_query(self, data, addr):
         query = dns.message.from_wire(data)
         response = dns.message.make_response(query)
         for question in query.question:
             self.logger.write("DNS State", "Received Query for %s\n" % question.name)
             if question.rdtype == dns.rdatatype.A:
-                if question.name == self.mydomain:
+                if self.ismydomainname(question.name):
                     # This is an A Query for my domain, I should handle it
                     self.logger.write("DNS State", ">>>>>>>>>>>>>> A Query for my domain: %s" % str(question))
                     flagstr = 'QR AA' # response, authoritative
@@ -110,7 +117,7 @@ class OpenReplicaNameserver(Nameserver):
                     print str(responsestr)
                     response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.TXT:
-                if question.name == self.mydomain:
+                if self.ismydomainname(question.name):
                     # This is an TXT Query for my domain, I should handle it
                     self.logger.write("DNS State", ">>>>>>>>>>>>>> TXT Query for my domain: %s" % str(question))
                     flagstr = 'QR AA' # response, authoritative
@@ -130,7 +137,7 @@ class OpenReplicaNameserver(Nameserver):
                     responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer='',authority=authstr,additional='')
                     response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.NS:
-                if question.name == self.mydomain:
+                if self.ismydomainname(question.name):
                     # This is an NS Query for my domain, I should handle it
                     self.logger.write("DNS State", ">>>>>>>>>>>>>> NS Query for my domain: %s" % str(question)) 
                     flagstr = 'QR AA' # response, authoritative
@@ -151,7 +158,7 @@ class OpenReplicaNameserver(Nameserver):
                     responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                     response = dns.message.from_text(responsestr)
             elif question.rdtype == dns.rdatatype.SRV:
-                if self.ismysrvname(question.name):
+                if self.ismydomainname(question.name):
                     # This is an SRV Query for my name, I should handle it
                     self.logger.write("DNS State", ">>>>>>>>>>>>>> SRV Query for my domain: %s" % str(question)) 
                     flagstr = 'QR AA' # response, authoritative
