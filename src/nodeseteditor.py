@@ -22,12 +22,13 @@ def get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, class
     return startupcmd
         
 def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapname):
+    output = '==== Adding Node ====\n'
     clientobjectfilename = os.path.basename(clientobjectfilepath)
     if nodetype == NODE_NAMESERVER:
         nodeconn = PLConnection(1, [check_planetlab_dnsport, check_planetlab_pythonversion])
     else:
         nodeconn = PLConnection(1, [check_planetlab_pythonversion])
-    print "-- Picked Node: %s" % nodeconn.getHosts()[0]
+    output += "Picked Node: %s\n" % nodeconn.getHosts()[0]
     fixedfile = editproxyfile(clientobjectfilepath, classname)
     nodeconn.uploadall(fixedfile.name, "bin/"+clientobjectfilename)
     for node in nodeconn.getHosts():
@@ -37,17 +38,9 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
             port = random.randint(14000, 15000)
             p = nodeconn.executecommandone(node, get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, classname, bootstrapname), False)
         nodename = node+':'+str(port)
-        print nodename
+        output += "Node is started: %s\n" % nodename
     # Add it to the object if it is a nameserver
     if nodetype == NODE_NAMESERVER:
         openreplicacoordobj = OpenReplicaCoordProxy('128.84.154.110:6668')
         openreplicacoordobj.addnodetosubdomain(subdomain, node)
-
-def terminated(p):
-    i = 5
-    done = p.poll() is not None
-    while not done and i>0: # Not terminated yet
-        sleep(1)
-        i -= 1
-        done = p.poll() is not None
-    return done
+    return output
