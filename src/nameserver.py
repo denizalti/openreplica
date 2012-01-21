@@ -120,8 +120,8 @@ class Nameserver(Tracker):
                     # SRV Queries --> List all Replicas with addr:port
                     for address,port in self.srvresponse(question):
                         answerstr += self.create_srv_answer_section(question, addr=address, port=port)
-            responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
-            response = dns.message.from_text(responsestr)
+                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+                response = dns.message.from_text(responsestr)
             else:
                 self.logger.write("DNS State", "Name Error, %s" %str(question))
                 response.flags = QR + AA + dns.rcode.NXDOMAIN
