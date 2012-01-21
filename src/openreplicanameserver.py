@@ -63,9 +63,10 @@ class OpenReplicaNameserver(Nameserver):
 
     def nsresponse_subdomain(self, question):
         for subdomain in self.object.nodes.keys():
-            if question.name == dns.name.Name([subdomain, 'openreplica', 'org', '']):
+            if question.name == dns.name.Name([subdomain, 'openreplica', 'org', '']) or question.name == dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', '']):
                 for node in self.object.nodes[subdomain]:
                     addr,port = node.split(":")
+                    print subdomain, addr+IPCONVERTER
                     yield addr+IPCONVERTER
 
     def handle_query(self, data, addr):
