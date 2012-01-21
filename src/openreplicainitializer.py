@@ -76,6 +76,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     nameservernames = []
     ## Fix the server object
     fixedfile = editproxyfile(clientobjectfilepath, classname)
+    print "Uploading file from ", fixedfile.name, " to NODE:bin/"+clientobjectfilename
     allnodes.uploadall(fixedfile.name, "bin/"+clientobjectfilename)
     print "--> Setting up the environment..."
     # BOOTSTRAP

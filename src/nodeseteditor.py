@@ -80,8 +80,8 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
         nodeconn = PLConnection(1, [check_planetlab_pythonversion])
     print "Picked Node: %s" % nodeconn.getHosts()[0]
     print "Connecting to bootstrap: %s" % bootstrapname
-    fixedfile = editproxyfile(clientobjectfilepath, classname)
-    nodeconn.uploadall(fixedfile.name, "bin/"+clientobjectfilename)
+    print "Uploading file from ", clientobjectfilepath+"fixed", " to NODE:bin/"+clientobjectfilename
+    nodeconn.uploadall(clientobjectfilepath+"fixed", "bin/"+clientobjectfilename)
     for node in nodeconn.getHosts():
         port = random.randint(14000, 15000)
         p = nodeconn.executecommandone(node, get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, classname, bootstrapname), False)
