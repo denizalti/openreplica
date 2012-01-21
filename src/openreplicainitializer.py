@@ -24,7 +24,7 @@ parser.add_option("-n", "--nameservers", action="store", dest="nameservernum", d
 (options, args) = parser.parse_args()
 
 def check_object(clientcode):
-    print "-- checking object safety"
+    print "Checking object safety"
     astnode = compile(clientcode,"<string>","exec",_ast.PyCF_ONLY_AST)
     v = SafetyVisitor()
     v.visit(astnode)
@@ -32,26 +32,26 @@ def check_object(clientcode):
 
 # checks if a PL node is suitable for running a nameserver
 def check_planetlab_dnsport(plconn, node):
-    print "-- uploading DNS tester to ", node
+    print "Uploading DNS tester to ", node
     pathtodnstester = os.path.abspath("testdnsport.py")
     plconn.uploadone(node, pathtodnstester)
-    print "-- trying to bind to DNS port"
+    print "Trying to bind to DNS port"
     rtv, output = plconn.executecommandone(node, "sudo -A python testdnsport.py")
     if rtv:
-        print "--- DNS Port available on %s" % node
+        print "DNS Port available on %s" % node
     else:
-        print "--- DNS Port unavailable on %s" % node
+        print "DNS Port not available on %s" % node
         plconn.executecommandone(node, "rm testdnsport.py")
     return rtv,output
 
 def check_planetlab_pythonversion(plconn, node):
-    print "-- Checking Python version on ", node
+    print "Checking Python version on ", node
     command = 'python --version'
     rtv, output = plconn.executecommandone(node, command)
     if rtv:
         for out in output:
             if string.find(out, 'Python 2.7') >= 0:
-                print "--- Python version acceptable!"
+                print "Python version acceptable!"
                 return True,output
     print '\n'.join(output)
     return False,output
@@ -69,7 +69,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     replicas = PLConnection(numreplicas-1, [check_planetlab_pythonversion])
     acceptors = PLConnection(numacceptors, [check_planetlab_pythonversion])
     allnodes = PLConnection(nodes=nameservers.getHosts() + replicas.getHosts() + acceptors.getHosts() + bootstrap.getHosts())
-    print "-- Picked Nodes --"
+    print "=== Picked Nodes ==="
     for node in allnodes.getHosts():
         print node
     processnames = []
@@ -127,9 +127,9 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     print "All clear!"
     ## add the nameserver nodes to open replica coordinator object
     openreplicacoordobj = OpenReplicaCoordProxy('128.84.154.110:6668')
-    print "Nodes: "
+    print "Adding Nameserver nodes to OpenReplica Coordination Object:"
     for node in nameservernames:
-        print node
+        print "- ", node
         openreplicacoordobj.addnodetosubdomain(subdomain, node)
     return bootstrapname
 
@@ -146,21 +146,19 @@ def main():
     try:
         with open(options.objectfilepath, 'rU') as fd:
             clientcode = fd.read()
-
         # Check safety
         if not check_object(clientcode):
             print "Object is not safe for us to execute."
             os._exit(1)
-
         # Start Nodes
-        print "-- connecting to Planet Lab"
+        print "Connecting to Planet Lab"
         configuration = (int(options.replicanum), int(options.acceptornum), int(options.nameservernum))
         start_nodes(options.subdomain, options.objectfilepath, options.classname, configuration)
         # Create Proxy
-        print "-- creating proxy"
+        print "Creating proxy..."
         clientproxycode = createclientproxy(clientcode, options.classname, None)
+        print "Proxy Code:"
         print clientproxycode
-
     except Exception as e:
         print "Error: ", e
     
