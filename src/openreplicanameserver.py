@@ -147,7 +147,6 @@ class OpenReplicaNameserver(Nameserver):
                     answerstr = ''
                     # NS Queries --> List all Nameserver nodes
                     for address in self.nsresponse(question):
-                        print ">>> ", address
                         answerstr += self.create_answer_section(question, name=address)
                     responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                     response = dns.message.from_text(responsestr)
@@ -178,21 +177,19 @@ class OpenReplicaNameserver(Nameserver):
                     flagstr = 'QR' # response, not authoritative
                     authstr = ''    
                     for address in self.nsresponse_subdomain(question):
-                        print ">>>", address
                         authstr += self.create_authority_section(question, nshost=address, rrtype=dns.rdatatype.NS)
                     responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer='',authority=authstr,additional='')
-                    print str(responsestr)
                     response = dns.message.from_text(responsestr)
             else:
                 # This Query is not something I know how to respond to
-                self.logger.write("DNS State", ">>>>>>>>>>>>>> Name Error, %s" %str(question))
+                self.logger.write("DNS State", "Name Error, %s" %str(question))
                 flags = QR + AA + dns.rcode.NXDOMAIN
                 response.flags = flags
-        self.logger.write("DNS State", ">>>>>>>>>>>>>> RESPONSE:\n%s\n---\n" % str(response))
+        self.logger.write("DNS State", "RESPONSE:\n%s\n---\n" % str(response))
         try:
             self.udpsocket.sendto(response.to_wire(), addr)
         except:
-            print ">>>>>>>>>>>>>>>>>>>>>>>>>>>> Cannot respond to query."
+            self.logger.write("DNS Error", "Cannot send RESPONSE:\n%s\n---\n" % str(response))
 
 def main():
     nameservernode = OpenReplicaNameserver()
