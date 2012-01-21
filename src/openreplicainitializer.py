@@ -72,7 +72,8 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     print "-- Picked Nodes --"
     for node in allnodes.getHosts():
         print node
-    processnames = nameservernames = []
+    processnames = []
+    nameservernames = []
     ## Fix the server object
     fixedfile = editproxyfile(clientobjectfilepath, classname)
     allnodes.uploadall(fixedfile.name, "bin/"+clientobjectfilename)
