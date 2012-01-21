@@ -149,18 +149,13 @@ class Nameserver(Tracker):
         return answerstr
 
     def create_answer_section(self, question, ttl=30, rrclass=1, addr='', name='', txt=None):
-        print question
         if question.rdtype == dns.rdatatype.A:
             resp = str(addr)
-            print "###### A", resp
         elif question.rdtype == dns.rdatatype.TXT:
             resp = '"%s"' % txt
-            print "###### TXT", resp
         elif question.rdtype == dns.rdatatype.NS:
             resp = str(name)
-            print "###### NS", resp
         answerstr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[question.rdtype]), resp)
-        print answerstr
         return answerstr
     
     def create_authority_section(self, question, ttl='30', rrclass=1, rrtype=1, nshost=''):
