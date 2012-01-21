@@ -65,9 +65,9 @@ def get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, class
     return startupcmd
         
 def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapname):
+    nodetype = int(nodetype)
     print "==== Adding %s ====" % node_names[nodetype]
     clientobjectfilename = os.path.basename(clientobjectfilepath)
-    nodetype = int(nodetype)
     if nodetype == NODE_NAMESERVER:
         nodeconn = PLConnection(1, [check_planetlab_dnsport, check_planetlab_pythonversion])
     else:
