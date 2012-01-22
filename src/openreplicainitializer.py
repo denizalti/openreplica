@@ -157,6 +157,7 @@ def main():
         # Create Proxy
         print "Creating proxy..."
         clientproxycode = createclientproxy(clientcode, options.classname, None)
+        clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
         print "Proxy Code:"
         print clientproxycode
     except Exception as e:
