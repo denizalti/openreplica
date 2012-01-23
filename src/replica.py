@@ -90,6 +90,23 @@ class Replica(Node):
         self.callsfromclient = 0
         self.clientpool = ConnectionPool()
 
+    def __str__(self):
+        rstr = "%s %s:%d\n" % ("LEADER" if self.isleader else node_names[self.type], self.addr, self.port)
+        rstr += "Waiting to execute command %d.\n" % self.nexttoexecute
+        rstr += "Decisions:\n"
+        for commandnumber, command in self.decisions.iteritems():
+            rstr += str(commandnumber) + ": " + str(command) 
+        rstr += "Executed Commands:\n"
+        for command, commandstate in self.executed.iteritems():
+            rstr += str(command) + ": " + commandstate[0] + ' ' + commandstate[1] 
+        rstr += "Proposals:\n"
+        for commandnumber, command in self.proposals.iteritems():
+            rstr += str(commandnumber) + ": " + str(command) 
+        rstr += "Pending Commands:\n"
+        for commandnumber, command in self.pendingcommands.iteritems():
+            rstr += str(commandnumber) + ": " + str(command) 
+        return rstr
+
     def startservice(self):
         """Start the background services associated with a replica."""
         Node.startservice(self)

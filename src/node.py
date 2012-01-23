@@ -178,7 +178,6 @@ class Node():
             sleep(1)
 
     def startservice(self):
-        """Starts the background services associated with a node."""
         # Start a thread that waits for inputs
         receiver_thread = Thread(target=self.server_loop, name='ReceiverThread')
         receiver_thread.start()
@@ -195,11 +194,9 @@ class Node():
         return self
 
     def __str__(self):
-        """Return Node information (addr:port)"""
         return "%s NODE %s:%d" % (node_names[self.type], self.addr, self.port)
 
     def statestr(self):
-        """Return the Peers Node knows of, i.e. connectivity state"""
         groups = "".join(str(group) for type,group in self.groups.iteritems())
         if hasattr(self,'pendingcommands') and len(self.pendingcommands) > 0:
             pending =  "".join("%d: %s" % (cno, proposal) for cno,proposal in self.pendingcommands.iteritems())
@@ -207,7 +204,6 @@ class Node():
         return groups
 
     def outstandingmsgstr(self):
-        """Return the dictionary of outstandingmessages"""
         returnstr = "outstandingmessages: time now is %s\n" % str(time.time())
         with self.outstandingmessages_lock:
             for messageid,messageinfo in self.outstandingmessages.iteritems():

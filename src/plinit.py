@@ -1,11 +1,11 @@
 import xmlrpclib
 import sys
 
-SLICENAME = 'SLICENAME'
+SLICENAME = 'cornell_openreplica'
 s = xmlrpclib.ServerProxy('https://www.planet-lab.org/PLCAPI/', allow_none=True)
 # Specify password authentication
-auth = {'Username': 'USERNAME',
-        'AuthString': 'PASSWORD',
+auth = {'Username': 'denizalti@gmail.com',
+        'AuthString': '11235813',
         'AuthMethod': 'password'}
 authorized = s.AuthCheck(auth)
 if not authorized:
@@ -14,8 +14,11 @@ if not authorized:
 def listallnodes():
     print 'Getting all nodes!'
     all_nodes = s.GetNodes(auth)
+    nodes = []
     for node in all_nodes:
+        nodes.append(node['hostname'])
         print node['hostname']
+    return nodes
 
 def writeallnodestofile():
     f = open("plnodes.txt", 'w')
@@ -41,7 +44,7 @@ def getallnodes():
     return nodenames
 
 def main():
-    pass
+    addnodes(listallnodes())
     
 if __name__ == '__main__':
     sys.exit(main())
