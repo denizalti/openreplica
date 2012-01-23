@@ -5,9 +5,6 @@ class OpenReplicaCoordProxy():
     def __init__(self, bootstrap):
         self.proxy = ClientProxy(bootstrap)
 
-    def __str__(self):
-        return self.proxy.invoke_command("__str__")
-
     def addnodetosubdomain(self, subdomain, node):
         return self.proxy.invoke_command("addnodetosubdomain", subdomain, node)
 
@@ -23,3 +20,5 @@ class OpenReplicaCoordProxy():
     def getsubdomains(self):
         return self.proxy.invoke_command("getsubdomains")
 
+    def __str__(self):
+        return self.proxy.invoke_command("__str__")

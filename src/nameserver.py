@@ -101,6 +101,7 @@ class Nameserver(Tracker):
         response = dns.message.make_response(query)
         for question in query.question:
             self.logger.write("DNS State", "Received Query for %s\n" % question.name)
+            self.logger.write("DNS State", "Mydomainname: %s Questionname: %s" % (self.mydomain, str(question.name)))
             if self.should_answer(question):
                 self.logger.write("DNS State", "Query for my domain: %s" % str(question))
                 flagstr = 'QR AA' # response, authoritative

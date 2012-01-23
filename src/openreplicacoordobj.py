@@ -27,8 +27,15 @@ class OpenReplicaCoord():
     def getsubdomains(self, **kwargs):
         return self.nodes.keys()
 
+    def _reinstantiatefromstr(self, state, **kwargs):
+        self.nodes = {}
+        for subdomain in state.split('-'):
+            if subdomain != '':
+                subdomainitems = subdomain.split('\n')
+                self.nodes[subdomainitems[0]] = set(subdomainitems[1:])
+
     def __str__(self, **kwargs):
-        rstr = ''
-        for domain,nodes in self.nodes.iteritems():
-            rstr += domain, "\n", '\n'.join(nodes)
+        rstr = ''	
+        for domain,nodes in allnodes.iteritems():
+            rstr += domain + '\n' + '\n'.join(nodes) + "-"
         return rstr
