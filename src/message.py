@@ -119,13 +119,12 @@ class GarbageCollectMessage(Message):
     def __str__(self):
         return "%s commandnumber: %d snapshot: %s" % (Message.__str__(self), self.commandnumber, str(self.snapshot))
 
-class StatusMessage(Message):
-    def __init__(self, msgtype, myname, reply=None):
-        Message.__init__(self, msgtype, myname)
-        self.reply = reply
+class StatusMessage():
+    def __init__(self):
+        self.type = MSG_STATUS
 
     def __str__(self):
-        return "%s commandnumber: %d snapshot: %s" % (Message.__str__(self), self.commandnumber, str(self.snapshot))
+        return 'Status Message'
 
 class MessageInfo():
     """This class is used to ensure that all messages are ultimately delivered to their destinations"""
