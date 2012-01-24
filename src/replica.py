@@ -98,13 +98,13 @@ class Replica(Node):
             rstr += str(commandnumber) + ": " + str(command) 
         rstr += "Executed Commands:\n"
         for command, commandstate in self.executed.iteritems():
-            rstr += str(command) + ": " + commandstate[0] + ' ' + commandstate[1] 
-        rstr += "Proposals:\n"
-        for commandnumber, command in self.proposals.iteritems():
-            rstr += str(commandnumber) + ": " + str(command) 
+            rstr += str(command) + ": " + commandstate[0] + ' ' + commandstate[1]
         rstr += "Pending Commands:\n"
         for commandnumber, command in self.pendingcommands.iteritems():
-            rstr += str(commandnumber) + ": " + str(command) 
+            rstr += str(commandnumber) + ": " + str(command)
+        rstr += "Proposals:\n"
+        for commandnumber, command in self.proposals.iteritems():
+            rstr += str(commandnumber) + ": " + str(command)  
         return rstr
 
     def startservice(self):
