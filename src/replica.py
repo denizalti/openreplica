@@ -566,28 +566,10 @@ class Replica(Node):
             send_result_to_client = True
         if commandname not in METACOMMANDS and send_result_to_client:
             self.send_reply_to_client(clientreplycode, givenresult, command)
-
-    def throughput_test(self):
-        self.throughput_runs += 1
-        if self.throughput_runs == 1:
-            self.throughput_start = time.time()
-        elif self.throughput_runs == 30001:
-            self.throughput_stop = time.time()
-            totaltime = self.throughput_stop - self.throughput_start
-            print "********************************************"
-            print "TOTAL: ", totaltime
-            print "TPUT: ", 30000/totaltime, "req/s"
-            print "********************************************"
-            self._graceexit(1)
-        command = Command(client=self.me, clientcommandnumber=random.randint(1,10000000), command='noop')
-        self.handle_client_command_tput(command)
             
     def msg_clientreply(self, conn, msg):
         """this only occurs in response to commands initiated by the shell"""
         print "Commandline Debugging:", msg
-
-    def msg_status(self, conn, msg):
-        conn.send(self.__str__())
         
     # Paxos Methods
     def do_command_propose_frompending(self, givencommandnumber):

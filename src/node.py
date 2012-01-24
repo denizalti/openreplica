@@ -285,6 +285,10 @@ class Node():
             return False
         else:
             self.logger.write("State", "received %s" % message)
+            if message.type == MSG_STATUS:
+                if self.type == NODE_REPLICA:
+                    clientsock.send(self.__str__())
+                return
             # add to lastmessages
             with self.lastmessages_lock:
                 if not self.lastmessages.has_key(message.source):
@@ -294,7 +298,7 @@ class Node():
             # add to receivedmessages
             self.receivedmessages.append((timestamp,message,connection))
             self.receivedmessages_semaphore.release()
-            if message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
+            elif message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
                 try:
                     self.clientpool.add_connection_to_peer(message.source, connection)
                 except AttributeError:
