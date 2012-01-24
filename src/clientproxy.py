@@ -114,7 +114,10 @@ class ClientProxy():
             if self.debug:
                 print "Initiating command %s" % str(command)
             starttime = time.time()
-            self.conn.settimeout(CLIENTRESENDTIMEOUT)
+            try:
+                self.conn.settimeout(CLIENTRESENDTIMEOUT)
+            except:
+                return "Cannot connect to object!"
             while not replied:
                 try:
                     success = self.conn.send(cm)
