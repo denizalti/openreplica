@@ -298,7 +298,7 @@ class Node():
             # add to receivedmessages
             self.receivedmessages.append((timestamp,message,connection))
             self.receivedmessages_semaphore.release()
-            elif message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
+            if message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
                 try:
                     self.clientpool.add_connection_to_peer(message.source, connection)
                 except AttributeError:
