@@ -89,22 +89,22 @@ class Replica(Node):
         # inconsistent client reads
         self.callsfromclient = 0
         self.clientpool = ConnectionPool()
-
+        
     def __str__(self):
         rstr = "%s %s:%d\n" % ("LEADER" if self.isleader else node_names[self.type], self.addr, self.port)
         rstr += "Waiting to execute command %d.\n" % self.nexttoexecute
-        rstr += "Decisions:\n"
+        rstr += "Commands:\n"
         for commandnumber, command in self.decisions.iteritems():
-            rstr += str(commandnumber) + ": " + str(command) 
-        rstr += "Executed Commands:\n"
-        for command, commandstate in self.executed.iteritems():
-            rstr += str(command) + ": " + commandstate[0] + ' ' + commandstate[1]
+            state = ''
+            if self.executed.has_key(command):
+                state = '\t' + cr_codes[self.executed[command][0]]+ '\t' + str(self.executed[command][1])
+            rstr += str(commandnumber) + ":\t" + str(command) + state + '\n'
         rstr += "Pending Commands:\n"
         for commandnumber, command in self.pendingcommands.iteritems():
-            rstr += str(commandnumber) + ": " + str(command)
+            rstr += str(commandnumber) + ":\t" + str(command) + '\n'
         rstr += "Proposals:\n"
         for commandnumber, command in self.proposals.iteritems():
-            rstr += str(commandnumber) + ": " + str(command)  
+            rstr += str(commandnumber) + ":\t" + str(command) + '\n'
         return rstr
 
     def startservice(self):
