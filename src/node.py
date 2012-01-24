@@ -11,7 +11,8 @@ import socket
 import os
 import sys
 import time
-import random
+import random, struct
+import cPickle as pickle
 import select
 import copy
 from enums import *
@@ -287,7 +288,10 @@ class Node():
             self.logger.write("State", "received %s" % message)
             if message.type == MSG_STATUS:
                 if self.type == NODE_REPLICA:
-                    clientsock.send(self.__str__())
+                    self.logger.write("State", "Answering status message %s" % self.__str__())
+                    messagestr = pickle.dumps(self.__str__())
+                    message = struct.pack("I", len(messagestr)) + messagestr
+                    clientsock.send(message)
                 return
             # add to lastmessages
             with self.lastmessages_lock:

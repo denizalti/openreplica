@@ -117,8 +117,8 @@ class Connection():
         with self.readlock:
             """receive a message on the Connection"""
             try:
-                returnstring = self.receive_n_bytes(4)
-                msg_length = struct.unpack("I", returnstring[0:4])[0]
+                lstr = self.receive_n_bytes(4)
+                msg_length = struct.unpack("I", lstr[0:4])[0]
                 msgstr = self.receive_n_bytes(msg_length)
                 return (time.time(), pickle.loads(msgstr))
             except IOError as inst:           
