@@ -584,17 +584,11 @@ class Replica(Node):
             
     def msg_clientreply(self, conn, msg):
         """this only occurs in response to commands initiated by the shell"""
-        print "==================>", msg
+        print "Commandline Debugging:", msg
 
-    def msg_output(self, conn, msg):
-        profile_off()
-        profilerdict = get_profile_stats()
-        for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
-            print "%s: %s" % (key, value)
-        time.sleep(10)
-        sys.stdout.flush()
-        dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
-
+    def msg_status(self, conn, msg):
+        conn.send(self.__str__())
+        
     # Paxos Methods
     def do_command_propose_frompending(self, givencommandnumber):
         """initiates the givencommandnumber from pendingcommands list
