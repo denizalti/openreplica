@@ -27,23 +27,26 @@ RCODES = ['NOERROR','FORMERR','SERVFAIL','NXDOMAIN','NOTIMP','REFUSED']
 IPCONVERTER = '.ipaddr.openreplica.org.'
 SRVNAME = '_concoord._tcp.'
 
-class Nameserver(Tracker):
+class Nameserver(Replica):
     """Nameserver keeps track of the connectivity state of the system and replies to
     QUERY messages from dnsserver."""
     def __init__(self, domain, instantiateobj=False):
-        Tracker.__init__(self, nodetype=NODE_NAMESERVER, instantiateobj=instantiateobj, port=5000, bootstrap=options.bootstrap)
-        self.mydomain = dns.name.Name((domain+".").split("."))
-        self.mysrvdomain = dns.name.Name((SRVNAME+domain+".").split("."))
+        Replica.__init__(self, nodetype=NODE_NAMESERVER, instantiateobj=instantiateobj, port=5000, bootstrap=options.bootstrap)
+        try:
+            self.mydomain = dns.name.Name((domain+".").split("."))
+            self.mysrvdomain = dns.name.Name((SRVNAME+domain+".").split("."))
+        except dns.name.EmptyLabel:
+            self.logger.write("DNS Error", "A DNS name is required. Use -n option.")            
         self.udpport = 53
         self.udpsocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         try:
             self.udpsocket.bind((self.addr,self.udpport))
         except socket.error as e:
-            print "Can't bind to UDP socket 53: ", e
+            self.logger.write("DNS Error", "Can't bind to UDP socket 53: %s" % str(e))
 
     def startservice(self):
         """Starts the background services associated with a node."""
-        Tracker.startservice(self)
+        Replica.startservice(self)
         # Start a thread for the UDP server
         UDP_server_thread = Thread(target=self.udp_server_loop, name='UDPServerThread')
         UDP_server_thread.start()
@@ -94,7 +97,8 @@ class Nameserver(Tracker):
         return question.name == self.mydomain or (question.rdtype == dns.rdatatype.SRV and question.name == self.mysrvdomain)
 
     def should_answer(self, question):
-        return (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV) and self.ismydomainname(question)
+        return (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or \
+                question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV) and self.ismydomainname(question)
 
     def handle_query(self, data, addr):
         query = dns.message.from_wire(data)
@@ -121,7 +125,10 @@ class Nameserver(Tracker):
                     # SRV Queries --> List all Replicas with addr:port
                     for address,port in self.srvresponse(question):
                         answerstr += self.create_srv_answer_section(question, addr=address, port=port)
-                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
+                responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,
+                                                   rcode=dns.rcode.NOERROR,flags=flagstr,
+                                                   question=question.to_text(),answer=answerstr,
+                                                   authority='',additional='')
                 response = dns.message.from_text(responsestr)
             else:
                 self.logger.write("DNS State", "Name Error, %s" %str(question))
@@ -176,11 +183,3 @@ def main():
 
 if __name__=='__main__':
     main()
-
-## RRTYPE
-# A               1 a host address
-# NS              2 an authoritative name server
-# CNAME           5 the canonical name for an alias
-# SOA             6 marks the start of a zone of authority
-## CLASS
-# IN              1 the Internet

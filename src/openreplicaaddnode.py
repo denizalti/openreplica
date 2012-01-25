@@ -78,10 +78,14 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
         nodeconn.uploadall(clientobjectfilepath+"fixed", "bin/"+clientobjectfilename)
     for node in nodeconn.getHosts():
         port = random.randint(14000, 15000)
-        p = nodeconn.executecommandone(node, get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, classname, bootstrapname), False)
+        p = nodeconn.executecommandone(node, get_startup_cmd(nodetype, subdomain, node, port,
+                                                             clientobjectfilename, classname,
+                                                             bootstrapname), False)
         while terminated(p):
             port = random.randint(14000, 15000)
-            p = nodeconn.executecommandone(node, get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, classname, bootstrapname), False)
+            p = nodeconn.executecommandone(node, get_startup_cmd(nodetype, subdomain, node, port,
+                                                                 clientobjectfilename, classname,
+                                                                 bootstrapname), False)
             print p
         nodename = node+':'+str(port)
         print "Node is started: %s" % nodename
@@ -94,7 +98,8 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
 def main():
     try:
         print "Connecting to Planet Lab"
-        start_node(options.nodetype, options.subdomain, options.clientobjectfilepath, options.classname, options.bootstrapname)
+        start_node(options.nodetype, options.subdomain, options.clientobjectfilepath,
+                   options.classname, options.bootstrapname)
     except Exception as e:
         print "Error: ", e
     
