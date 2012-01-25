@@ -43,6 +43,7 @@ class Nameserver(Replica):
             self.udpsocket.bind((self.addr,self.udpport))
         except socket.error as e:
             self.logger.write("DNS Error", "Can't bind to UDP socket 53: %s" % str(e))
+            self._graceexit(1)
 
     def startservice(self):
         """Starts the background services associated with a node."""
@@ -83,15 +84,10 @@ class Nameserver(Replica):
     def txtresponse(self, question):
         txtstr = ''
         for groupname,group in self.groups.iteritems():
-            if len(group) > 0 or node_names[groupname] == 'NAMESERVER':
-                txtstr += ";" + node_names[groupname]
-            peers = []
             for peer in group:
-                txtstr += ','
-                peers.append(peer.addr + ':' + str(peer.port))
-            txtstr += ','.join(peers) 
-        txtstr += ',' + self.addr + ':' + str(self.port)
-        return txtstr[1:]
+                txtstr += node_names[peer.type] +' '+ peer.addr + ':' + str(peer.port) + ';'
+        txtstr += node_names[self.type] +' '+ self.addr + ':' + str(self.port)
+        return txtstr
 
     def ismydomainname(self, question):
         return question.name == self.mydomain or (question.rdtype == dns.rdatatype.SRV and question.name == self.mysrvdomain)

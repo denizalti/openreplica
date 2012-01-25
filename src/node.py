@@ -101,7 +101,7 @@ class Node():
                 self.socket.bind((self.addr,self.port))
             except socket.error:
                 print "Cannot bind to port %d" % self.port
-                os._exit(1)
+                self._graceexit(1)
         else:
             self.port = random.randint(14000,15000)
             for i in range(50):
