@@ -3,11 +3,10 @@ import select
 from threading import Thread, Timer
 from time import strftime
 import signal
-
 from utils import *
 from enums import *
-from tracker import *
 from node import *
+from replica import *
 try:
     import dns.exception
     import dns.message

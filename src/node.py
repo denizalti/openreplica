@@ -5,18 +5,13 @@
 '''
 from optparse import OptionParser
 from threading import Thread, RLock, Lock, Condition, Timer, Semaphore
-from time import sleep,time
 from Queue import Queue
-import socket
-import os
-import sys
 import time
+import socket, select
+import os, sys
 import random, struct
 import cPickle as pickle
-import select
 import copy
-from enums import *
-from utils import *
 import fcntl
 try:
     import dns.resolver, dns.exception
@@ -25,10 +20,11 @@ except:
 from connection import ConnectionPool,Connection
 from group import Group
 from peer import Peer
-from message import *
 from command import Command
 from pvalue import PValue, PValueSet
-from concoordprofiler import *
+from enums import *
+from utils import *
+from message import *
 
 parser = OptionParser(usage="usage: %prog -a addr -p port -b bootstrap -f objectfilename -c objectname -n subdomainname -d debug")
 parser.add_option("-a", "--addr", action="store", dest="addr", help="addr for the node")
@@ -124,7 +120,7 @@ class Node():
             self.bootstraplist = []
             self.discoverbootstrap(givenbootstraplist)
             self.connecttobootstrap()
-        if self.type == NODE_REPLICA or self.type == NODE_TRACKER or self.type == NODE_NAMESERVER:
+        if self.type == NODE_REPLICA or self.type == NODE_NAMESERVER:
             self.stateuptodate = False
 
     def createinfofile(self):
@@ -180,7 +176,7 @@ class Node():
                     print e
                     tries += 1
                     continue
-            sleep(1)
+            time.sleep(1)
 
     def startservice(self):
         # Start a thread that waits for inputs
