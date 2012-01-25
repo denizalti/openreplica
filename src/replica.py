@@ -4,25 +4,19 @@
 @date: February 1, 2011
 '''
 from threading import Thread, Lock, Condition, Timer, Event
-import operator
-import time
-import random
-import math
-import sys
-import os
+import math, random, time
+import os, sys
 import signal
-
-from pprint import pprint
-from node import *
-from enums import *
-from utils import *
 from connection import Connection, ConnectionPool
 from group import Group
 from peer import Peer
-from message import *
 from command import Command
 from pvalue import PValue, PValueSet
+from message import *
+from node import *
 from exception import *
+from enums import *
+from utils import *
 
 backoff_event = Event()
 # Class used to collect responses to both PREPARE and PROPOSE messages
