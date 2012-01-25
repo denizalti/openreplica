@@ -502,6 +502,8 @@ class Replica(Node):
         """handles the request from the client if the node is a leader
         - if not leader: reject
         - if leader: add connection to client connections and handle request"""
+        if self.type == NODE_NAMESERVER:
+            return #XXX Nameserver should not get this message, but if it does it doesn't have to do anything.
         self.check_leader_promotion()
         self.callsfromclient += 1
         if not self.isleader:
@@ -882,8 +884,8 @@ class Replica(Node):
             if self.isleader:
                 self.logger.write("State", "Adding the new node")
                 addcommand = self.create_add_command(msg.source)
-                self.check_leader_promotion()
-                self.do_command_prepare(addcommand)
+                #self.check_leader_promotion()
+                self.do_command_propose(addcommand)
                 self.logger.write("State", "Add command created: %s" % str(addcommand))
                 for i in range(WINDOW+3):
                     noopcommand = self.create_noop_command()

@@ -19,7 +19,7 @@ from enums import *
 from utils import *
 import fcntl
 try:
-    import dns.resolver
+    import dns.resolver, dns.exception
 except:
     print("Install dnspython: http://www.dnspython.org/")
 from connection import ConnectionPool,Connection
@@ -150,7 +150,11 @@ class Node():
                     self.bootstraplist.append(peer)
             #dnsname given as bootstrap
             else:
-                answers = dns.resolver.query('_concoord._tcp.'+bootstrap, 'SRV')
+                answers = []
+                try:
+                    answers = dns.resolver.query('_concoord._tcp.'+bootstrap, 'SRV')
+                except (dns.resolver.NXDOMAIN, dns.exception.Timeout):
+                    self.logger.write("DNS Error", "Cannot resolve %s" % bootstrap)
                 for rdata in answers:
                     for peer in self._getipportpairs(str(rdata.target), rdata.port):
                         self.bootstraplist.append(peer)
