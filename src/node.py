@@ -367,7 +367,7 @@ class Node():
         
     # shell commands generic to all nodes
     def cmd_help(self, args):
-        """Shell command [help]: Prints the commands that are supported
+        """prints the commands that are supported
         by the corresponding Node.""" 
         print "Commands I support:"
         for attr in dir(self):
@@ -375,7 +375,7 @@ class Node():
                 print attr.replace("cmd_", "")
 
     def cmd_exit(self, args):
-        """Shell command [exit]: Changes the liveness state and send MSG_BYE to Peers.""" 
+        """Changes the liveness state and send MSG_BYE to Peers.""" 
         self.alive = False
         byemessage = Message(MSG_BYE,self.me)
         for type,nodegroup in self.groups.iteritems():
@@ -384,7 +384,7 @@ class Node():
         os._exit(0)
                     
     def cmd_state(self, args):
-        """Shell command [state]: Prints connectivity state of the corresponding Node."""
+        """prints connectivity state of the corresponding Node."""
         self.logger.write("State", "\n%s\n%s\n" % (self.statestr(), self.outstandingmsgstr()))
 
     def periodic(self):
