@@ -25,6 +25,7 @@ CONDITION = 1
 class ClientProxy():
     def __init__(self, bootstrap, debug=True):
         self.debug = debug
+        self.domainname = None
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
@@ -63,7 +64,7 @@ class ClientProxy():
                     for peer in self._getipportpairs(bootaddr, int(bootport)):
                         tmpbootstraplist.append(peer)
                 else:
-                    self.domainname = bootstrap #XXX side effect
+                    self.domainname = bootstrap
                     for peer in self._getbootstrapfromdomain(self.domainname):
                         tmpbootstraplist.append(peer)
         except ValueError:

@@ -225,7 +225,7 @@ class Replica(Node):
         while self.decisions.has_key(self.nexttoexecute):
             requestedcommand = self.decisions[self.nexttoexecute]
             if requestedcommand in self.executed:
-                self.logger.write("State", "previously executed command %d." % self.nexttoexecute)
+                self.logger.write("State", "Previously executed command %d." % self.nexttoexecute)
                 # If we are a leader, we should send a reply to the client for this command
                 # in case the client didn't receive the reply from the previous leader
                 if self.isleader:
@@ -317,7 +317,26 @@ class Replica(Node):
         self.decisions.update(msg.decisions)
         self.decisionset = set(self.decisions.values())
         self.usedcommandnumbers = self.usedcommandnumbers.union(set(self.decisions.keys()))
-        # XXX Execute the ones that we can execute
+        # Execute the ones that we can execute
+        while self.decisions.has_key(self.nexttoexecute):
+            requestedcommand = self.decisions[self.nexttoexecute]
+            if requestedcommand in self.executed:
+                self.logger.write("State", "Previously executed command %d." % self.nexttoexecute)
+                self.nexttoexecute += 1
+            elif requestedcommand not in self.executed:
+                self.logger.write("State", "executing command %d." % self.nexttoexecute)
+                # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
+                # We are calling performcore 2 times, the timing gets screwed plus this is very unefficient
+                if self.nexttoexecute > WINDOW:
+                    self.logger.write("State", "performcore %d" % (self.nexttoexecute-WINDOW))
+                    self.performcore(msg, self.nexttoexecute-WINDOW, True)
+                self.logger.write("State", "performcore %d" % self.nexttoexecute)
+                self.performcore(msg, self.nexttoexecute)
+                self.nexttoexecute += 1
+        # the window got bumped
+        # check if there are pending commands, and issue one of them
+        self.issue_pending_command(self.nexttoexecute)
+        self.logger.write("State", "Update is done!")
         self.stateuptodate = True
 
     def do_noop(self):
