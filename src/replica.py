@@ -242,7 +242,7 @@ class Replica(Node):
                 self.nexttoexecute += 1
                 # the window just got bumped by one
                 # check if there are pending commands, and issue one of them
-                self.issue_pending_command(self.nexttoexecute)
+                self.issue_command(self.nexttoexecute)
             elif requestedcommand not in self.executed:
                 self.logger.write("State", "executing command %d." % self.nexttoexecute)
                 # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
@@ -255,10 +255,10 @@ class Replica(Node):
                 self.nexttoexecute += 1
                 # the window just got bumped by one
                 # check if there are pending commands, and issue one of them
-                self.issue_pending_command(self.nexttoexecute)
+                self.issue_command(self.nexttoexecute)
         self.logger.write("State", "Returning from PERFORM!")
             
-    def issue_pending_command(self, candidatecommandno):
+    def issue_command(self, candidatecommandno):
         """propose a command from the pending commands"""
         self.logger.write("State:", "issuing pending command")
         if self.pendingcommands.has_key(candidatecommandno):
@@ -335,7 +335,7 @@ class Replica(Node):
                 self.nexttoexecute += 1
         # the window got bumped
         # check if there are pending commands, and issue one of them
-        self.issue_pending_command(self.nexttoexecute)
+        self.issue_command(self.nexttoexecute)
         self.logger.write("State", "Update is done!")
         self.stateuptodate = True
 
