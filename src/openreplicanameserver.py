@@ -114,7 +114,7 @@ class OpenReplicaNameserver(Nameserver):
                 elif question.rdtype == dns.rdatatype.MX:
                     if self.ismydomainname(question):
                         # MX Queries --> mail.systems.cs.cornell.edu
-                        answerstr = self.create_mx_answer_section(question, ttl=86400, addr='a.mx.mail.systems.cs.cornell.edu.')
+                        answerstr = self.create_mx_answer_section(question, ttl=86400, addr='mail.systems.cs.cornell.edu.')
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 response = dns.message.from_text(responsestr)
             elif self.should_auth(question):
