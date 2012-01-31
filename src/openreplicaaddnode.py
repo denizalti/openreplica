@@ -34,7 +34,7 @@ def check_planetlab_dnsport(plconn, node):
     pathtodnstester = os.path.abspath("testdnsport.py")
     plconn.uploadone(node, pathtodnstester)
     print "Trying to bind to DNS port"
-    rtv, output = plconn.executecommandone(node, "sudo -A python testdnsport.py")
+    rtv, output = plconn.executecommandone(node, "sudo -A /home/cornell_openreplica/python2.7/bin/python2.7 testdnsport.py")
     if rtv:
         print "DNS Port available on %s" % node
     else:
@@ -44,7 +44,7 @@ def check_planetlab_dnsport(plconn, node):
 
 def check_planetlab_pythonversion(plconn, node):
     print "Checking Python version on ", node
-    command = 'python --version'
+    command = '/home/cornell_openreplica/python2.7/bin/python2.7 --version'
     rtv, output = plconn.executecommandone(node, command)
     if rtv:
         for out in output:
@@ -57,11 +57,11 @@ def check_planetlab_pythonversion(plconn, node):
 def get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, classname, bootstrapname):
     startupcmd = ''
     if nodetype == NODE_REPLICA:
-        startupcmd = "nohup python bin/replica.py -a %s -p %d -f %s -c %s -b %s" % (node, port, clientobjectfilename, classname, bootstrapname)
+        startupcmd = "nohup /home/cornell_openreplica/python2.7/bin/python2.7 bin/replica.py -a %s -p %d -f %s -c %s -b %s" % (node, port, clientobjectfilename, classname, bootstrapname)
     elif nodetype == NODE_ACCEPTOR:
-        startupcmd = "nohup python bin/acceptor.py -a %s -p %d -f %s -b %s" % (node, port, clientobjectfilename, bootstrapname)
+        startupcmd = "nohup /home/cornell_openreplica/python2.7/bin/python2.7 bin/acceptor.py -a %s -p %d -f %s -b %s" % (node, port, clientobjectfilename, bootstrapname)
     elif nodetype == NODE_NAMESERVER:
-        startupcmd =  "sudo -A nohup python bin/nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain+'.openreplica.org', node, port, clientobjectfilename, classname, bootstrapname)
+        startupcmd =  "sudo -A nohup /home/cornell_openreplica/python2.7/bin/python2.7 bin/nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain+'.openreplica.org', node, port, clientobjectfilename, classname, bootstrapname)
     return startupcmd
         
 def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapname):
