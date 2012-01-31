@@ -8,19 +8,15 @@ import os, sys, time, shutil
 import ast, _ast
 import subprocess
 
-def issuecommand(cmd):
-    p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return p
-
 def executecommandone(node, command, username='cornell_openreplica', keyfile='openreplicakey'):
     cmd = ["ssh", "-i", keyfile, "-o", "StrictHostKeyChecking=no", username + "@" + node, command]
     print "Executing: %s" % cmd
-    proc = issuecommand(cmd)
+    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return proc
 
-def executelocal(command):
-    print "Executing: %s" % command
-    proc = issuecommand(command)
+def executelocal(cmd):
+    print "Executing: %s" % cmd
+    proc =  subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return proc
 
 def start_nodes():
