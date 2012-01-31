@@ -64,7 +64,7 @@ class OpenReplicaNameserver(Nameserver):
                     yield addr+IPCONVERTER
 
     def should_answer(self, question):
-        formyname = (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV) and self.ismydomainname(question)
+        formyname = (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV or question.rdtype == dns.rdatatype.MX) and self.ismydomainname(question)
         myresponsibility_a = question.rdtype == dns.rdatatype.A and (self.ismynsname(question) or question.name.is_subdomain(self.specialdomain))
         myresponsibility_ns = question.rdtype == dns.rdatatype.NS and self.ismysubdomainname(question)
         return formyname or myresponsibility_a or myresponsibility_ns
@@ -111,6 +111,10 @@ class OpenReplicaNameserver(Nameserver):
                         # SRV Queries --> List all Replicas with addr:port
                         for address,port in self.srvresponse(question):
                             answerstr += self.create_srv_answer_section(question, addr=address, port=port)
+                elif question.rdtype == dns.rdatatype.MX:
+                    if self.ismydomainname(question):
+                        # MX Queries --> mail.systems.cs.cornell.edu
+                        answerstr = self.create_mx_answer_section(question, ttl=86400, addr='a.mx.mail.systems.cs.cornell.edu.')
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 response = dns.message.from_text(responsestr)
             elif self.should_auth(question):
