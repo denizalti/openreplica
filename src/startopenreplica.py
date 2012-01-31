@@ -34,7 +34,7 @@ def start_nodes():
     # EGS-110 HOSTS
     print "--- egs-110 hosts ---"
     port = 6700
-    p = executelocal("nohup python /var/www/concoord/src/replica.py -a %s -p %d -f %s -c %s" % (replicas[0], port, clientobjectfilename, classname))
+    p = executelocal(["nohup", "python", "/var/www/concoord/src/replica.py -a %s -p %d -f %s -c %s" % (replicas[0], port, clientobjectfilename, classname)])
     while terminated(p):
         port = random.randint(14000, 15000)
         p = executelocal("nohup python /var/www/concoord/src/replica.py -a %s -p %d -f %s -c %s" % (replicas[0], port, clientobjectfilename, classname))
