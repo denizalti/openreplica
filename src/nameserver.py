@@ -151,6 +151,10 @@ class Nameserver(Replica):
         answerstr = "%s %d %s %s %d %d %d %s\n" % (str(question.name), ttl, RRCLASS[rrclass], RRTYPE[question.rdtype], priority, weight, port, addr)
         return answerstr
 
+    def create_mx_answer_section(self, question, ttl=30, rrclass=1, priority=0, addr=''):
+        answerstr = "%s %d %s %s %d %s\n" % (str(question.name), ttl, RRCLASS[rrclass], RRTYPE[question.rdtype], priority, addr)
+        return answerstr
+
     def create_answer_section(self, question, ttl=30, rrclass=1, addr='', name='', txt=None):
         if question.rdtype == dns.rdatatype.A:
             resp = str(addr)
