@@ -23,7 +23,7 @@ REPLY = 0
 CONDITION = 1
 
 class ClientProxy():
-    def __init__(self, bootstrap, debug=True):
+    def __init__(self, bootstrap, debug=False):
         self.debug = debug
         self.domainname = None
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -31,7 +31,8 @@ class ClientProxy():
         self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
         self.bootstraplist = self.discoverbootstrap(bootstrap)
         if len(self.bootstraplist) == 0:
-            print "No bootstrap found"
+            if self.debug:
+                print "No bootstrap found"
             self._graceexit()
         self.connecttobootstrap()
         myaddr = findOwnIP()
@@ -68,7 +69,8 @@ class ClientProxy():
                     for peer in self._getbootstrapfromdomain(self.domainname):
                         tmpbootstraplist.append(peer)
         except ValueError:
-            print "bootstrap usage: ipaddr1:port1,ipaddr2:port2 or domainname"
+            if self.debug:
+                print "bootstrap usage: ipaddr1:port1,ipaddr2:port2 or domainname"
             self._graceexit()
         return tmpbootstraplist
 
@@ -122,12 +124,14 @@ class ClientProxy():
             while not replied:
                 try:
                     success = self.conn.send(cm)
-                    print "Bootstrap: ", self.bootstrap
-                    print "Sent message %s" % str(cm)
+                    if self.debug:
+                        print "Bootstrap: ", self.bootstrap
+                        print "Sent message %s" % str(cm)
                     if not success:
                         raise IOError
                     timestamp, reply = self.conn.receive()
-                    print "after receive  %s" % str(reply)
+                    if self.debug:
+                        print "after receive  %s" % str(reply)
                     if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                         if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
                             raise IOError
@@ -145,15 +149,15 @@ class ClientProxy():
                 except KeyboardInterrupt:
                     self._graceexit()
             if reply.replycode == CR_META:
-                print "Should not reach here."
+                return
             elif reply.replycode == CR_EXCEPTION:
                 raise Exception(reply.reply)
             elif reply.replycode == CR_BLOCK:
                 # XXX
-                print "Blocking client."
+                return "Block."
             elif reply.replycode == CR_UNBLOCK:
                 # XXX
-                print "Unblocking client."    
+                return "Unblock."    
             else:
                 return reply.reply
             
