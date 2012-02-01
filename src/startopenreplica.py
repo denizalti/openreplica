@@ -37,24 +37,24 @@ def start_nodes():
     p = executelocal(["nohup", "python", "/var/www/concoord/src/replica.py -a %s -p %d -f %s -c %s" % (replicas[0], port, clientobjectfilename, classname)])
     while terminated(p):
         port = random.randint(14000, 15000)
-        p = executelocal("nohup python /var/www/concoord/src/replica.py -a %s -p %d -f %s -c %s" % (replicas[0], port, clientobjectfilename, classname))
+        p = executelocal(["nohup", "python", "/var/www/concoord/src/replica.py -a %s -p %d -f %s -c %s" % (replicas[0], port, clientobjectfilename, classname)])
     bootstrapname = replicas[0]+':'+str(port)
     print bootstrapname
     # ACCEPTOR on egs-110
     port = 6800
-    p = executelocal("nohup python /var/www/concoord/src/acceptor.py -a %s -p %d -f %s -b %s" % (acceptors[0], port, clientobjectfilename, bootstrapname))
+    p = executelocal(["nohup", "python", "/var/www/concoord/src/acceptor.py -a %s -p %d -f %s -b %s" % (acceptors[0], port, clientobjectfilename, bootstrapname)])
     while terminated(p):
         port = random.randint(14000, 15000)
-        p = executelocal("nohup python /var/www/concoord/src/acceptor.py -a %s -p %d -f %s -b %s" % (acceptors[0], port, clientobjectfilename, bootstrapname))
+        p = executelocal(["nohup", "python", "/var/www/concoord/src/acceptor.py -a %s -p %d -f %s -b %s" % (acceptors[0], port, clientobjectfilename, bootstrapname)])
     acceptorname = acceptors[0]+':'+str(port)
     print acceptorname
     # NAMESERVER on egs-110
     port = random.randint(14000, 15000)
-    p = executelocal("sudo -A nohup python /var/www/concoord/src/openreplicanameserver.py -a %s -p %d -f %s -c %s -b %s" % (nameservers[0], port, clientobjectfilename, classname, bootstrapname))
+    p = executelocal(["sudo", "-A", "nohup", "python", "/var/www/concoord/src/openreplicanameserver.py -a %s -p %d -f %s -c %s -b %s" % (nameservers[0], port, clientobjectfilename, classname, bootstrapname)])
     while terminated(p):
         print "Trying again..."
         port = random.randint(14000, 15000)
-        p = executelocal("sudo -A nohup python /var/www/concoord/src/openreplicanameserver.py -a %s -p %d -f %s -c %s -b %s" % (nameservers[0], port, clientobjectfilename, classname, bootstrapname))
+        p = executelocal(["sudo", "-A", "nohup", "python", "/var/www/concoord/src/openreplicanameserver.py -a %s -p %d -f %s -c %s -b %s" % (nameservers[0], port, clientobjectfilename, classname, bootstrapname)])
     nameservername = nameservers[0]+':'+str(port)
     print nameservername
     time.sleep(5)
