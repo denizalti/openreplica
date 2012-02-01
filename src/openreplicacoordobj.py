@@ -31,11 +31,11 @@ class OpenReplicaCoord():
         self.nodes = {}
         for subdomain in state.split('-'):
             if subdomain != '':
-                subdomainitems = subdomain.split('\n')
-                self.nodes[subdomainitems[0]] = set(subdomainitems[1:])
+                subdomainname, subdomainitems = subdomain.split(':')
+                self.nodes[subdomainname] = set(subdomainitems.split(''))
 
     def __str__(self, **kwargs):
         rstr = ''	
         for domain,nodes in self.nodes.iteritems():
-            rstr += domain + '\n' + '\n'.join(nodes) + "-"
+            rstr += domain + ':' + ' '.join(nodes) + "-"
         return rstr
