@@ -6,14 +6,14 @@
 """
 from threading import Thread
 import signal
-from concoord.enums import *
-from concoord.utils import *
-from concoord.node import *
-from concoord.connection import ConnectionPool
-from concoord.group import Group
-from concoord.peer import Peer
-from concoord.message import Message, PaxosMessage, GarbageCollectMessage
-from concoord.pvalue import PValue, PValueSet
+from enums import *
+from utils import *
+from node import *
+from connection import ConnectionPool
+from group import Group
+from peer import Peer
+from message import Message, PaxosMessage, GarbageCollectMessage
+from pvalue import PValue, PValueSet
 
 class Acceptor(Node):
     """Acceptor keeps track of past Paxos ballots. It supports garbage collection by keeping track

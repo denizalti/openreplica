@@ -4,7 +4,7 @@
 @date: August 1, 2011
 @copyright: See COPYING.txt
 '''
-from concoord.nameserver import *
+from nameserver import *
 
 OPENREPLICANS = {'ns1.openreplica.org.':'128.84.154.110', 'ns2.openreplica.org.':'128.232.103.201', 'ns3.openreplica.org.':'128.112.139.43', 'ns4.openreplica.org.':'128.208.4.197', 'ns5.openreplica.org.':'139.19.142.2'} 
 

@@ -4,7 +4,7 @@
 @date: February 1, 2011
 @copyright: See COPYING.txt
 '''
-from concoord.pvalue import PValue, PValueSet
+from pvalue import PValue, PValueSet
 
 class ResponseCollector():
     """ResponseCollector keeps the state related to both MSG_PREPARE and

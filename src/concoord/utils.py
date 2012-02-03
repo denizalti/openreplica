@@ -9,7 +9,7 @@ import os, sys
 import time
 import string
 import threading
-from concoord.enums import *
+from enums import *
 
 def findOwnIP():
     """Retrieves the hostname of the caller"""

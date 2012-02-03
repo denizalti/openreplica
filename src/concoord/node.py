@@ -14,18 +14,18 @@ import random, struct
 import cPickle as pickle
 import copy
 import fcntl
+from connection import ConnectionPool,Connection
+from group import Group
+from peer import Peer
+from command import Command
+from pvalue import PValue, PValueSet
+from enums import *
+from utils import *
+from message import *
 try:
     import dns.resolver, dns.exception
 except:
     print("Install dnspython: http://www.dnspython.org/")
-from concoord.connection import ConnectionPool,Connection
-from concoord.group import Group
-from concoord.peer import Peer
-from concoord.command import Command
-from concoord.pvalue import PValue, PValueSet
-from concoord.enums import *
-from concoord.utils import *
-from concoord.message import *
 
 parser = OptionParser(usage="usage: %prog -a addr -p port -b bootstrap -f objectfilename -c objectname -n subdomainname -d debug")
 parser.add_option("-a", "--addr", action="store", dest="addr", help="addr for the node")
