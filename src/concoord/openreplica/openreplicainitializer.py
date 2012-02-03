@@ -9,11 +9,11 @@ from time import sleep,time
 import os, sys, time, shutil
 import ast, _ast
 import subprocess
+from concoord.safetychecker import *
+from concoord.proxygenerator import *
+from concoord.serversideproxyast import *
 from plmanager import *
-from safetychecker import *
-from proxygenerator import *
 from openreplicacoordobjproxy import *
-from serversideproxyast import *
 
 parser = OptionParser(usage="usage: %prog -s subdomain -n objectname -o objectcode -r replicas -a acceptors -n nameservers")
 parser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
