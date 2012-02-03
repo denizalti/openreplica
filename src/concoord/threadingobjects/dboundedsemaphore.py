@@ -1,5 +1,5 @@
-from exception import *
 from threading import Lock
+from concoord.exception import *
 
 class DBoundedSemaphore():
     def __init__(self, count=1):
