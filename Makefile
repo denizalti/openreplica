@@ -1,8 +1,8 @@
-ALL := concoord.tar.gz
 VERSION := 1.0.0
 CONCOORDDIR := src/concoord
 CLIENTFILES := $(addprefix $(CONCOORDDIR)/,connection.py group.py clientproxy.py pvalue.py command.py message.py peer.py enums.py utils.py)
 CONCOORDNAME := $(addsuffix -$(VERSION),concoord)
+ALL := $(CONCOORDNAME).tar.gz
 
 all:	$(ALL)
 

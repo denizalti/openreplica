@@ -1,5 +1,5 @@
-from exception import *
 from threading import RLock
+from concoord.exception import *
 from drlock import DRlock
 from dlock import DLock
     

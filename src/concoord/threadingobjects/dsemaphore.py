@@ -1,6 +1,6 @@
-from exception import *
-from enums import *
 from threading import Lock
+from concoord.exception import *
+from concoord.enums import *
 
 class DSemaphore():
     def __init__(self, count=1):

@@ -1,6 +1,6 @@
-from exception import *
 from threading import Lock
 from thread import error
+from concoord.exception import *
 
 class DLock():
     def __init__(self):
