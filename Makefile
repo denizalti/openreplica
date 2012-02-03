@@ -1,17 +1,19 @@
-ALL := concoord.tar.gz clientbundle.tar.gz
+ALL := concoord.tar.gz
+VERSION := 1.0.0
 CONCOORDDIR := src/concoord
 CLIENTFILES := $(addprefix $(CONCOORDDIR)/,connection.py group.py clientproxy.py pvalue.py command.py message.py peer.py enums.py utils.py)
+CONCOORDNAME := $(addsuffix -$(VERSION),concoord)
 
 all:	$(ALL)
 
 concoord.zip:src/*
-	zip concoord.zip src/*
+	zip $(CONCOORDNAME).zip src/*
 
 concoord.tar.gz:src/*
-	tar czf concoord.tar.gz src/*
+	tar czf $(CONCOORDNAME).tar.gz src/*
 
 tar:src/*
-	tar czf concoord.tar src/*
+	tar czf $(CONCOORDNAME).tar src/*
 
 client:$(CLIENTFILES)
 	tar czf clientbundle.tar.gz $(CLIENTFILES)
@@ -21,3 +23,4 @@ clean:
 
 clobber: clean
 	rm -f $(ALL)
+	rm -f clientbundle.tar.gz
