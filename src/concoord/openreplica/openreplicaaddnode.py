@@ -8,9 +8,9 @@ from optparse import OptionParser
 from time import sleep,time
 import os, sys, time, shutil
 import subprocess
-from enums import *
-from plmanager import *
-from openreplicacoordobjproxy import *
+from concoord.enums import *
+from concoord.openreplica.plmanager import *
+from concoord.openreplica.openreplicacoordobjproxy import *
 
 parser = OptionParser(usage="usage: %prog -t nodetype -s subdomain -p objectpath -n classname -b bootstrap")
 parser.add_option("-t", "--nodetype", action="store", dest="nodetype", help="node type")

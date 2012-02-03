@@ -4,7 +4,7 @@
 @date: August 1, 2011
 @copyright: See COPYING.txt
 '''
-from clientproxy import *
+from concoord.clientproxy import *
 
 class OpenReplicaCoordProxy():
     def __init__(self, bootstrap):
