@@ -4,7 +4,7 @@
 @date: March 20, 2011
 @copyright: See COPYING.txt
 """
-from clientproxy import *
+from concoord.clientproxy import *
 
 class Bank():
     def __init__(self, bootstrap):

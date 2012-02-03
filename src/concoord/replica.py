@@ -8,17 +8,17 @@ from threading import Thread, Lock, Condition, Timer, Event
 import math, random, time
 import os, sys
 import signal
-from connection import Connection, ConnectionPool
-from responsecollector import ResponseCollector
-from group import Group
-from peer import Peer
-from command import Command
-from pvalue import PValue, PValueSet
-from message import *
-from node import *
-from exception import *
-from enums import *
-from utils import *
+from concoord.connection import Connection, ConnectionPool
+from concoord.responsecollector import ResponseCollector
+from concoord.group import Group
+from concoord.peer import Peer
+from concoord.command import Command
+from concoord.pvalue import PValue, PValueSet
+from concoord.message import *
+from concoord.node import *
+from concoord.exception import *
+from concoord.enums import *
+from concoord.utils import *
 
 backoff_event = Event()
 class Replica(Node):

@@ -5,10 +5,10 @@
 @copyright: See COPYING.txt
 """
 from threading import Lock
-from enums import *
-from utils import *
-from peer import Peer
-from command import Command
+from concoord.enums import *
+from concoord.utils import *
+from concoord.peer import Peer
+from concoord.command import Command
 
 msgidpool = 0
 msgidpool_lock=Lock()
