@@ -8,17 +8,17 @@ from threading import Thread, Lock, Condition, Timer, Event
 import math, random, time
 import os, sys
 import signal
-from concoord.connection import Connection, ConnectionPool
-from concoord.responsecollector import ResponseCollector
-from concoord.group import Group
-from concoord.peer import Peer
-from concoord.command import Command
-from concoord.pvalue import PValue, PValueSet
-from concoord.message import *
-from concoord.node import *
-from concoord.exception import *
-from concoord.enums import *
-from concoord.utils import *
+from connection import Connection, ConnectionPool
+from responsecollector import ResponseCollector
+from group import Group
+from peer import Peer
+from command import Command
+from pvalue import PValue, PValueSet
+from message import *
+from node import *
+from exception import *
+from enums import *
+from utils import *
 
 backoff_event = Event()
 class Replica(Node):
@@ -26,8 +26,9 @@ class Replica(Node):
     def __init__(self, nodetype=NODE_REPLICA, instantiateobj=True, port=None,  bootstrap=None):
         Node.__init__(self, nodetype, instantiateobj=instantiateobj)
         if instantiateobj:
+            print 'concoord.objects.'+self.objectfilename[:-3]
             try:
-                self.object = getattr(__import__('objects.'+self.objectfilename[:-3], globals(), locals(), [self.objectfilename[:-3]], -1), self.objectname)()
+                self.object = getattr(__import__('concoord.objects.'+self.objectfilename[:-3], globals(), locals(), [self.objectfilename[:-3]], -1), self.objectname)()
             except Exception as e:
                 self.logger.write("Object Error", "Object cannot be found.")
                 self._graceexit(1)

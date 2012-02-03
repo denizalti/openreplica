@@ -1,19 +1,20 @@
 VERSION := 1.0.0
-CONCOORDDIR := src/concoord
+CONCOORDDIR := concoord
+CONCOORDFILES := $(CONCOORDDIR)/* *.txt *.py
 CLIENTFILES := $(addprefix $(CONCOORDDIR)/,connection.py group.py clientproxy.py pvalue.py command.py message.py peer.py enums.py utils.py)
 CONCOORDNAME := $(addsuffix -$(VERSION),concoord)
 ALL := $(CONCOORDNAME).tar.gz
 
 all:	$(ALL)
 
-concoord.zip:src/*
-	zip $(CONCOORDNAME).zip src/*
+$(CONCOORDNAME).zip:$(CONCOORDFILES)
+	zip $(CONCOORDNAME).zip $(CONCOORDFILES)
 
-concoord.tar.gz:src/*
-	tar czf $(CONCOORDNAME).tar.gz src/*
+$(CONCOORDNAME).tar.gz:$(CONCOORDFILES)
+	tar czf $(CONCOORDNAME).tar.gz $(CONCOORDFILES)
 
-tar:src/*
-	tar czf $(CONCOORDNAME).tar src/*
+tar:$(CONCOORDFILES)
+	tar czf $(CONCOORDNAME).tar $(CONCOORDFILES)
 
 client:$(CLIENTFILES)
 	tar czf clientbundle.tar.gz $(CLIENTFILES)

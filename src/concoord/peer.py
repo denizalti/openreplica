@@ -4,8 +4,8 @@
 @date: February 1, 2011
 @copyright: See COPYING.txt
 '''
-from concoord.enums import *
-from concoord.utils import *
+from enums import *
+from utils import *
 
 class Peer():
     def __init__(self, peeraddr, peerport, peertype=-1):

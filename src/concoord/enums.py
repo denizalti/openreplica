@@ -5,7 +5,7 @@
 @date: February 3, 2011
 @copyright: See COPYING.txt
 '''
-import concoord.enums
+import enums
 
 # message types
 MSG_ACK, \
