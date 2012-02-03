@@ -1,6 +1,6 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
-@note: The Logger Daemon.Receives log messages and prints them.
+@note: The Logger Daemon. Receives log messages and prints them.
 @date: December 20, 2011
 @copyright: See COPYING.txt
 """
@@ -24,7 +24,7 @@ def main():
         daemonsocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         daemonsocket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         daemonsocket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
-        daemonsocket.bind(('egs-110.cs.cornell.edu',12000))
+        daemonsocket.bind(('egs-110.cs.cornell.edu',12000)) #XXX hard-coded hostname and port
         daemonsocket.listen(10)
     except socket.error:
         pass
