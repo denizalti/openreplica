@@ -191,7 +191,10 @@ class Connection():
         self.thesocket = None
 
     def _picklefixer(self, module, name):
-        module = 'concoord.'+module
-        __import__(module)
+        try:
+            __import__(module)
+        except:
+            module = 'concoord.'+module
+            __import__(module)
         return getattr(sys.modules[module], name)
         
