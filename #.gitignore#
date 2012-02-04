@@ -1,0 +1,4 @@
+*.pysrc/build
+concoord.tar.gz
+concoord_log_*
+.DS_Store
