@@ -5,10 +5,12 @@
 @date: February 3, 2011
 @copyright: See COPYING.txt
 '''
+import sys
 import socket, errno
 import struct
+import StringIO
 import time
-import cPickle as pickle
+import cPickle
 import random
 from threading import Lock
 
@@ -120,7 +122,9 @@ class Connection():
                 lstr = self.receive_n_bytes(4)
                 msg_length = struct.unpack("I", lstr[0:4])[0]
                 msgstr = self.receive_n_bytes(msg_length)
-                return (time.time(), pickle.loads(msgstr))
+                pickle_obj = cPickle.Unpickler(StringIO.StringIO(msgstr))
+                pickle_obj.find_global = self._picklefixer
+                return (time.time(), pickle_obj.load())
             except IOError as inst:           
                 return (0,None)
 
@@ -146,7 +150,7 @@ class Connection():
             if DEBUG and random.random() <= DROPRATE:
                 print "dropping message..."
                 return
-            messagestr = pickle.dumps(msg)
+            messagestr = cPickle.dumps(msg)
             message = struct.pack("I", len(messagestr)) + messagestr
             try:
                 while len(message) > 0:
@@ -185,3 +189,9 @@ class Connection():
         """Close the Connection"""
         self.thesocket.close()
         self.thesocket = None
+
+    def _picklefixer(self, module, name):
+        module = 'concoord.'+module
+        __import__(module)
+        return getattr(sys.modules[module], name)
+        
