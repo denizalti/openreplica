@@ -26,7 +26,6 @@ class Replica(Node):
     def __init__(self, nodetype=NODE_REPLICA, instantiateobj=True, port=None,  bootstrap=None):
         Node.__init__(self, nodetype, instantiateobj=instantiateobj)
         if instantiateobj:
-            print 'concoord.objects.'+self.objectfilename[:-3]
             try:
                 self.object = getattr(__import__('concoord.objects.'+self.objectfilename[:-3], globals(), locals(), [self.objectfilename[:-3]], -1), self.objectname)()
             except Exception as e:
