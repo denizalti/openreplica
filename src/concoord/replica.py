@@ -26,9 +26,17 @@ class Replica(Node):
     def __init__(self, nodetype=NODE_REPLICA, instantiateobj=True, port=None,  bootstrap=None):
         Node.__init__(self, nodetype, instantiateobj=instantiateobj)
         if instantiateobj:
-            try:
-                self.object = getattr(__import__('concoord.objects.'+self.objectfilename[:-3], globals(), locals(), [self.objectfilename[:-3]], -1), self.objectname)()
-            except Exception as e:
+            self.object = None
+            for objectloc in ['concoord.'+self.objectfilename[:-3], 'concoord.objects.'+self.objectfilename[:-3], self.objectfilename[:-3]]:
+                try:
+                    if hasattr(__import__(objectloc, globals(), locals(), [self.objectfilename[:-3]], -1), self.objectname):
+                        self.object = getattr(__import__(objectloc, globals(), locals(), [self.objectfilename[:-3]], -1), self.objectname)()
+                        break
+                except ImportError as e:
+                    continue
+                except AttributeError as e:
+                    continue
+            if self.object == None:
                 self.logger.write("Object Error", "Object cannot be found.")
                 self._graceexit(1)
         # leadership
