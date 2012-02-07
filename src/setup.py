@@ -21,8 +21,8 @@ setup(name='ConCoord',
       package_data={'concoord.openreplica': ['data/openreplicakey', 'data/eligiblenodes.txt', 'data/plnodes.txt']},
       license='2-clause BSD',
       url='http://openreplica.org/',
-      download_url='http://openreplica.org/download/concoord-1.0.0.tar.gz',
       description='ConCoord Coordination Service for Distributed Systems',
-      long_description=open('README.txt').read(),
+      long_description=open('README.txt').read(600),
       classifiers=classifiers,
+      
       )
