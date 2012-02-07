@@ -43,5 +43,5 @@ class OpenReplicaCoord():
     def __str__(self, **kwargs):
         rstr = ''	
         for domain,nodes in self.nodes.iteritems():
-            rstr += domain + ':' + ' '.join(nodes) + "-"
+            rstr += domain + ';' + ' '.join(nodes) + "-"
         return rstr
