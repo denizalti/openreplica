@@ -13,7 +13,6 @@ import os, sys
 import random, struct
 import cPickle as pickle
 import copy
-import fcntl
 from connection import ConnectionPool,Connection
 from group import Group
 from peer import Peer
