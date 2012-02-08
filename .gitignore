@@ -1,4 +1,5 @@
 src/build
+*~
 *.pyc
 concoord.tar.gz
 concoord_log_*
