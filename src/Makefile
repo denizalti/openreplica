@@ -1,6 +1,6 @@
 VERSION := 0.1.0
 CONCOORDDIR := concoord
-CONCOORDFILES := $(CONCOORDDIR)/* *.txt *.py
+CONCOORDFILES := $(CONCOORDDIR)/* *.py LICENSE README
 CONCOORDNAME := $(addsuffix -$(VERSION),concoord)
 ALL := $(CONCOORDNAME).tar.gz
 
