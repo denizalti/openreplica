@@ -925,7 +925,10 @@ class Replica(Node):
     def _graceexit(self, exitcode=0):
         sys.stdout.flush()
         sys.stderr.flush()
-        self.logger.close()
+        try:
+            self.logger.close()
+        except:
+            pass
         os._exit(exitcode)
 
 def main():

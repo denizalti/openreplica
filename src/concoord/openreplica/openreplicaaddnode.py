@@ -102,7 +102,7 @@ def main():
         start_node(options.nodetype, options.subdomain, options.clientobjectfilepath,
                    options.classname, options.bootstrapname)
     except Exception as e:
-        print "Error: ", e
+        parser.print_help()
     
 if __name__=='__main__':
     main()

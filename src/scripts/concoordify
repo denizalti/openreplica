@@ -41,7 +41,7 @@ def main():
         proxyfile.close()
         print "Client proxy: ", proxyfile.name
     except Exception as e:
-        print "Error: ", e
+        parser.print_help()
     
 if __name__=='__main__':
     main()
