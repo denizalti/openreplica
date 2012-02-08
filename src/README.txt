@@ -160,17 +160,13 @@ Date:		February 06, 2012
 (3.6) creating bundles
 
       To create bundles to use at the server and client sides you can
-      use the Makefile provided.
+      use the Makefile provided under 'concoord/'
 
-(3.6.1) create server bundle
+(3.6.1) to create a server bundle:
 
-	To create a server bundle:
+	$ make server
 
-	$ make node
-
-(3.6.2) create client bundle
-
-	To create a client bundle:
+(3.6.2) to create a client bundle:
 
 	$ make client
 
