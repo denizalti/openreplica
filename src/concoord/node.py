@@ -30,7 +30,7 @@ parser = OptionParser(usage="usage: %prog -a addr -p port -b bootstrap -f object
 parser.add_option("-a", "--addr", action="store", dest="addr", help="addr for the node")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", help="port for the node")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
-parser.add_option("-f", "--objectfilename", action="store", dest="objectfilename", help="client object file name")
+parser.add_option("-f", "--objectfilename", action="store", dest="objectfilename", default='', help="client object file name")
 parser.add_option("-c", "--objectname", action="store", dest="objectname", help="object name")
 parser.add_option("-n", "--name", action="store", dest="dnsname", default='', help="dns name")
 parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
@@ -64,6 +64,9 @@ class Node():
         self.connectionpool = ConnectionPool()
         self.type = nodetype
         if instantiateobj:
+            if objectfilename == '':
+                parser.print_help()
+                self._graceexit(1)
             self.objectfilename = objectfilename
             self.objectname = objectname
 

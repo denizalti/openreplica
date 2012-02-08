@@ -29,7 +29,7 @@ def main():
         print "Proxy Code:"
         print clientproxycode
     except Exception as e:
-        print "Error: ", e
+        parser.print_help()
     
 if __name__=='__main__':
     main()
