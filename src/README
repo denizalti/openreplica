@@ -22,7 +22,7 @@ Date:		February 06, 2012
 ----------------
 	The minimum requirements for ConCoord are:
 
-	- python 2.6.6 or later
+	- python 2.7 or later
 	- dnspython-1.9.4
 
 (2) INSTALLATION
