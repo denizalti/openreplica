@@ -1,6 +1,5 @@
 VERSION := 0.1.0
-CONCOORDDIR := concoord
-CONCOORDFILES := $(CONCOORDDIR)/* *.py LICENSE README
+CONCOORDFILES := concoord/Makefile concoord/*.py concoord/openreplica/*.py concoord/openreplica/data/* concoord/threadingobjects/*.py concoord/objects/*.py scripts/* *.py LICENSE README
 CONCOORDNAME := $(addsuffix -$(VERSION),concoord)
 ALL := $(CONCOORDNAME).tar.gz
 
