@@ -2,6 +2,7 @@ import clientproxy
 '\n@author: Deniz Altinbuken, Emin Gun Sirer\n@note: Example test object\n@date: March 20, 2011\n@copyright: See COPYING.txt\n'
 
 class Test:
+
     def __init__(self, bootstrap, **kwargs):
         self.proxy = clientproxy.ClientProxy(bootstrap)
 

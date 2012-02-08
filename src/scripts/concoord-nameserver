@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+'''
+@author: Deniz Altinbuken, Emin Gun Sirer
+@note: script for nameserver
+@date: February 1, 2012
+@copyright: See COPYING.txt
+'''
+import signal
+from concoord.nameserver import *
+
+def main():
+    nameservernode = Nameserver(options.dnsname, instantiateobj=True)
+    nameservernode.startservice()
+    signal.signal(signal.SIGINT, nameservernode.terminate_handler)
+    signal.signal(signal.SIGTERM, nameservernode.terminate_handler)
+    signal.pause()
+
+if __name__=='__main__':
+    main()

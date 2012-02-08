@@ -1,0 +1,18 @@
+#!/usr/bin/env python
+'''
+@author: Deniz Altinbuken, Emin Gun Sirer
+@note: script for acceptor
+@date: February 1, 2012
+@copyright: See COPYING.txt
+'''
+import signal
+from concoord.acceptor import *
+
+def main():
+    acceptornode = Acceptor().startservice()
+    signal.signal(signal.SIGINT, acceptornode.terminate_handler)
+    signal.signal(signal.SIGTERM, acceptornode.terminate_handler)
+    signal.pause()
+
+if __name__=='__main__':
+    main()
