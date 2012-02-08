@@ -32,6 +32,5 @@ setup(name='concoord',
       url='http://openreplica.org/',
       description='Coordination (replication and synchronization) service for distributed systems.',
       long_description=ldesc,
-      classifiers=classifiers,
-      
+      classifiers=classifiers,      
       )
