@@ -28,10 +28,10 @@ setup(name='concoord',
       author_email='deniz@systems.cs.cornell.edu, egs@systems.cs.cornell.edu',
       packages=['concoord', 'concoord.objects', 'concoord.threadingobjects', 'concoord.openreplica'],
       package_data={'concoord.openreplica': ['data/openreplicakey', 'data/eligiblenodes.txt', 'data/plnodes.txt']},
+      scripts=['scripts/concoord-addnode', 'scripts/concoord-initialize', 'scripts/concoordify', 'scripts/concoord-acceptor', 'scripts/concoord-nameserver', 'scripts/concoord-replica'],
       license='2-Clause BSD',
       url='http://openreplica.org/',
       description='Coordination (replication and synchronization) service for distributed systems.',
       long_description=ldesc,
-      classifiers=classifiers,
-      
+      classifiers=classifiers, 
       )
