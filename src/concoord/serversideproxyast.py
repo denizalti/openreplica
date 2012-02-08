@@ -61,7 +61,8 @@ def editproxyfile(filepath, objectname):
         objectfile.write(content)
     objectfile.close()
     return objectfile
-    
+
+
         
         
 

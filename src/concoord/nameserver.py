@@ -47,7 +47,7 @@ class Nameserver(Replica):
         try:
             self.udpsocket.bind((self.addr,self.udpport))
         except socket.error as e:
-            self.logger.write("DNS Error", "Can't bind to UDP socket 53: %s" % str(e))
+            self.logger.write("DNS Error", "Can't bind to UDP port 53: %s" % str(e))
             self._graceexit(1)
 
     def startservice(self):

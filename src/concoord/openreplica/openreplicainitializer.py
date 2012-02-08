@@ -15,7 +15,7 @@ from concoord.serversideproxyast import *
 from plmanager import *
 from openreplicacoordobjproxy import *
 
-parser = OptionParser(usage="usage: %prog -s subdomain -n objectname -o objectcode -r replicas -a acceptors -n nameservers")
+parser = OptionParser(usage="usage: %prog -s subdomain -f objectfilepath -c classname -r replicas -a acceptors -n nameservers")
 parser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
 parser.add_option("-f", "--objectfilepath", action="store", dest="objectfilepath", help="client object file path")
 parser.add_option("-c", "--classname", action="store", dest="classname", help="main class name")

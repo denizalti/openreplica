@@ -1,9 +1,189 @@
-ConCoord is a novel coordination service that provides replication and
-synchronization support for large-scale distributed systems. ConCoord
-employs an object-oriented approach, in which the system actively
-creates and maintains live replicas for user-provided objects. Through
-ConCoord, the clients are able to access these replicated objects
-transparently as if they are local objects. The ConCoord approach
-proposes using these replicated objects to implement coordination
-constructs in large-scale distributed systems, in effect establishing
-a transparent way of providing a coordination service.
+%% README.txt
+%% for concoord (version 0.1.0)
+
+Name:  		concoord
+Authors:		Deniz Altinbuken (deniz@systems.cs.cornell.edu)
+			Emin Gun Sirer (egs@systems.cs.cornell.edu)
+Date:		February 06, 2012
+
+(1) INTRODUCTION
+----------------
+	ConCoord is a novel coordination service that provides replication and
+	synchronization support for large-scale distributed systems. ConCoord
+	employs an object-oriented approach, in which the system actively
+	creates and maintains live replicas for user-provided objects. Through
+	ConCoord, the clients are able to access these replicated objects
+	transparently as if they are local objects.  The ConCoord approach
+	proposes using these replicated objects to implement coordination
+	constructs in large-scale distributed systems, in effect establishing
+	a transparent way of providing a coordination service.
+
+(2) REQUIREMENTS
+----------------
+	The minimum requirements for ConCoord are:
+
+	- python 2.6.6 or later
+	- dnspython-1.9.4
+
+(2) INSTALLATION
+----------------
+	To build and install concoord, type 	
+
+      	    $ python setup.py install
+
+(3) USAGE
+----------------
+(3.1) concoordify python objects
+      
+	To create concoord objects from your local python objects you
+      	can use concoordify.py as follows
+
+	    $ ./concoordify.py -p objectpath -n classname
+
+	where objectpath:= path of the object you want to concoordify
+      	      	  classname:= name of the class that you'll use to access your object	   
+
+
+        This script will create two files under the directory that the
+        object resides:
+
+       	    * objectpath+'fixed':= the object that can be used on the
+              server side by replicas and nameservers
+
+	    * objectpath+'proxy':= the proxy that can be used like
+              the original object by the client
+
+        Remember to rename the files back to the original filename
+      	before you import them on the client or server side.
+
+(3.2) start system manually
+        To start the system you need to start at least one replica, one
+        acceptor and one nameserver node. Once the nameserver node is
+        started you can send dig queries to the nameserver and learn the
+      	node to bootstrap, current set of nodes and current set of
+      	replicas.
+
+	* For bootstrapping concoord requires at least one replica
+        node. If a nameserver node is up, bootstrap can be the
+        domainname for the concoord instance as new nodes can retrieve
+        the bootstrap node automatically through DNS queries. If the
+        nameserver is not running bootstrap is a list of 'ipaddr:port'
+        strings.
+
+      	* Note that for the system to be able to add new nodes and accept
+      	client requests there has to be at least one replica and one
+      	acceptor node present initially.
+
+(3.2.1) start a replica node
+	To start the bootstrap replica node manually, use the following command:
+
+	$ python replica.py -p port -f objectfilepath -c classname
+
+	To start replica nodes to join an active concoord instance, use the following command:
+
+	$ python replica.py -p port -f objectfilepath -c classname -b bootstrap 
+
+(3.2.1) start an acceptor node
+
+	To start an acceptor node manually, use the following command:
+
+	$ python acceptor.py -p port -b bootstrap
+	
+(3.2.1) start a nameserver node
+
+	To start a nameserver node manually, use the following command:
+
+	$ python acceptor.py -p port -b bootstrap
+
+	*Note that the command has to be run with su privileges as it
+	binds to UDP port 53.
+
+
+(3.3) start nodes automatically
+
+        We have a script to start desired number of nodes on PlanetLab
+        nodes automatically: concoord/openreplica/openreplicainitializer.py
+
+	Once you have the source, you can edit this script to fit the
+	specific structure on your servers.
+
+	$ python openreplicainitializer.py -s subdomainname -f objectfilepath -c classname -r numreplicas -a numacceptors -n numnameserver
+
+
+(3.4) add nodes automatically
+
+        We have a script to add any kind of node to an active 
+	concoord runtime on PlanetLab automatically: 
+	concoord/openreplica/openreplicaaddnode.py
+
+	Once you have the source, you can edit this script to fit the
+	specific structure on your servers.
+
+	$ python openreplicaaddnode.py -t nodetype -s subdomainname -f
+	objectfilepath -c classname -b bootstrap
+
+(3.5) using concoord objects
+
+        Once you have concoord up and running for your object it is
+        easy to access your object. Let's assume that our object is
+        the following, saved under counter.py:
+
+	class Counter():
+	     def __init__(self):
+            	self.value = 0
+
+    	    def decrement(self):
+                self.value -= 1
+
+    	    def increment(self):
+                self.value += 1
+
+	   def getvalue(self):
+                return self.value
+    
+	    def __str__(self, **kwargs):
+            	return "The counter value is %d" % self.value
+
+
+	Once you have concoordified your object, you'll have a
+	proxyobject that you will use instead of your object.
+	So in your code you can use this object as follows
+
+	>>> import counter
+	>>> c = counter.Counter('subdomain')
+	>>> c.increment()
+	>>> c.increment()
+	>>> c.getvalue()
+	2
+	>>>
+
+(3.6) creating bundles
+
+      To create bundles to use at the server and client sides you can
+      use the Makefile provided.
+
+(3.6.1) create server bundle
+
+	To create a server bundle:
+
+	$ make node
+
+(3.6.2) create client bundle
+
+	To create a client bundle:
+
+	$ make client
+
+
+(4) HOMEPAGE
+----------------
+Visit http://openreplica.org to see concoord in action and to get more
+information on concoord.
+
+
+(5) CONTACT
+----------------
+If you believe you have found a bug or have a problem you need
+assistance with you can get in touch with us by emailing
+concoord@systems.cs.cornell.edu
+
