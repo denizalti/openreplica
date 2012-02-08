@@ -83,13 +83,13 @@ Date:		February 06, 2012
 
 	$ python replica.py -p port -f objectfilepath -c classname -b bootstrap 
 
-(3.2.1) start an acceptor node
+(3.2.2) start an acceptor node
 
 	To start an acceptor node manually, use the following command:
 
 	$ python acceptor.py -p port -b bootstrap
 	
-(3.2.1) start a nameserver node
+(3.2.3) start a nameserver node
 
 	To start a nameserver node manually, use the following command:
 
