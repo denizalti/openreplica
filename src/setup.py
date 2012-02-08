@@ -13,15 +13,14 @@ classifiers = [ 'Development Status :: 3 - Alpha'
               , 'Programming Language :: Python'
               ]
 
-ldesc = "ConCoord is a novel coordination service that provides replication and
-	synchronization support for large-scale distributed systems. ConCoord
-	employs an object-oriented approach, in which the system actively
-	creates and maintains live replicas for user-provided objects. Through
-	ConCoord, the clients are able to access these replicated objects
-	transparently as if they are local objects.  The ConCoord approach
-	proposes using these replicated objects to implement coordination
-	constructs in large-scale distributed systems, in effect establishing
-	a transparent way of providing a coordination service."
+ldesc = "ConCoord is a novel coordination service that provides replication an\
+d synchronization support for large-scale distributed systems. ConCoord employ\
+s an object-oriented approach, in which the system actively creates and mainta\
+ins live replicas for user-provided objects. Through ConCoord, the clients are\
+able to access these replicated objects transparently as if they are local obj\
+ects.  The ConCoord approach proposes using these replicated objects to implem\
+ent coordination constructs in large-scale distributed systems, in effect esta\
+blishing a transparent way of providing a coordination service."
 
 setup(name='concoord',
       version=concoordversion,
