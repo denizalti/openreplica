@@ -30,7 +30,7 @@ setup(name='concoord',
       package_data={'concoord.openreplica': ['data/openreplicakey', 'data/eligiblenodes.txt', 'data/plnodes.txt']},
       license='2-Clause BSD',
       url='http://openreplica.org/',
-      description='ConCoord coordination service for distributed systems',
+      description='Coordination (replication and synchronization) service for distributed systems.',
       long_description=ldesc,
       classifiers=classifiers,
       
