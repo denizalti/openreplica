@@ -1,5 +1,5 @@
 %% README.txt
-%% for concoord (version 0.1.0)
+%% for concoord
 
 Name:  		concoord
 Authors:		Deniz Altinbuken (deniz@systems.cs.cornell.edu)
@@ -41,7 +41,7 @@ Date:		February 06, 2012
 	    $ ./concoordify.py -p objectpath -n classname
 
 	where objectpath:= path of the object you want to concoordify
-      	      	  classname:= name of the class that you'll use to access your object	   
+      	      classname := name of the class that you'll use to access your object	   
 
 
         This script will create two files under the directory that the
@@ -184,6 +184,6 @@ information on concoord.
 (5) CONTACT
 ----------------
 If you believe you have found a bug or have a problem you need
-assistance with you can get in touch with us by emailing
+assistance with, you can get in touch with us by emailing
 concoord@systems.cs.cornell.edu
 
