@@ -9,9 +9,9 @@ from optparse import OptionParser
 from time import sleep,time
 import os, sys, time, shutil
 import ast, _ast
-from concoord.safetychecker import *
-from concoord.proxygenerator import *
-from concoord.serversideproxyast import *
+from safetychecker import *
+from proxygenerator import *
+from serversideproxyast import *
 
 parser = OptionParser(usage="usage: %prog -f objectfilepath -c classname")
 parser.add_option("-p", "--objectfilepath", action="store", dest="objectfilepath", help="client object file path")
