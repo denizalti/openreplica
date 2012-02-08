@@ -31,14 +31,20 @@ Date:		February 06, 2012
 
       	    $ python setup.py install
 
+	To install the scripts run the following command
+	    $ sudo cp scripts/* /usr/bin/
+
 (3) USAGE
 ----------------
-(3.1) concoordify python objects
-      
+(3.1) concoordify python objects    
 	To create concoord objects from your local python objects you
       	can use concoordify.py as follows
 
-	    $ ./concoordify.py -p objectpath -n classname
+	$ ./concoordify.py -p objectpath -n classname
+
+	or if you installed the scripts
+
+	$ concoordify -p objectpath -n classname
 
 	where objectpath:= path of the object you want to concoordify
       	      classname := name of the class that you'll use to access your object	   
@@ -79,21 +85,37 @@ Date:		February 06, 2012
 
 	$ python replica.py -p port -f objectfilepath -c classname
 
+	or if you installed the scripts
+
+	$ concoord-replica -p port -f objectfilepath -c classname
+
 	To start replica nodes to join an active concoord instance, use the following command:
 
-	$ python replica.py -p port -f objectfilepath -c classname -b bootstrap 
+	$ python replica.py -p port -f objectfilepath -c classname -b bootstrap
+
+	or if you installed the scripts
+
+	$ concoord-replica -p port -f objectfilepath -c classname -b bootstrap
 
 (3.2.2) start an acceptor node
 
 	To start an acceptor node manually, use the following command:
 
 	$ python acceptor.py -p port -b bootstrap
+
+	or if you installed the scripts
+
+	$ concoord-acceptor -p port -b bootstrap
 	
 (3.2.3) start a nameserver node
 
 	To start a nameserver node manually, use the following command:
 
-	$ python acceptor.py -p port -b bootstrap
+	$ python nameserver.py -n domainname -p port -f objectfilepath -c classname -b bootstrap
+
+	or if you installed the scripts
+
+	$ concoord-nameserver -n domainname -p port -f objectfilepath -c classname -b bootstrap
 
 	*Note that the command has to be run with su privileges as it
 	binds to UDP port 53.
@@ -109,6 +131,10 @@ Date:		February 06, 2012
 
 	$ python openreplicainitializer.py -s subdomainname -f objectfilepath -c classname -r numreplicas -a numacceptors -n numnameserver
 
+	or if you installed the scripts
+
+	$ concoord-initialize -s subdomainname -f objectfilepath -c classname -r numreplicas -a numacceptors -n numnameserver
+
 
 (3.4) add nodes automatically
 
@@ -119,8 +145,11 @@ Date:		February 06, 2012
 	Once you have the source, you can edit this script to fit the
 	specific structure on your servers.
 
-	$ python openreplicaaddnode.py -t nodetype -s subdomainname -f
-	objectfilepath -c classname -b bootstrap
+	$ python openreplicaaddnode.py -t nodetype -s subdomainname -f objectfilepath -c classname -b bootstrap
+
+	or if you installed the scripts
+
+	
 
 (3.5) using concoord objects
 
