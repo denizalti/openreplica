@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Creates concoord objects
