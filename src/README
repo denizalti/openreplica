@@ -32,7 +32,7 @@ Date:		February 06, 2012
       	    $ python setup.py install
 
 	To install the scripts run the following command
-	    $ sudo cp scripts/* /usr/bin/
+	    $ sudo cp scripts/concoord /usr/bin/
 
 (3) USAGE
 ----------------
@@ -44,7 +44,7 @@ Date:		February 06, 2012
 
 	or if you installed the scripts
 
-	$ concoord object objectpath classname
+	$ concoord object -p objectpath -n classname
 
 	where objectpath:= path of the object you want to concoordify
       	      classname := name of the class that you'll use to access your object	   
@@ -87,7 +87,7 @@ Date:		February 06, 2012
 
 	or if you installed the scripts
 
-	$ concoord-replica -p port -f objectfilepath -c classname
+	$ concoord replica -p port -f objectfilepath -c classname
 
 	To start replica nodes to join an active concoord instance, use the following command:
 
