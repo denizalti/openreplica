@@ -12,13 +12,13 @@ from concoord.enums import *
 from concoord.openreplica.plmanager import *
 from concoord.openreplica.openreplicacoordobjproxy import *
 
-parser = OptionParser(usage="usage: %prog -t nodetype -s subdomain -p objectpath -n classname -b bootstrap")
-parser.add_option("-t", "--nodetype", action="store", dest="nodetype", help="node type")
-parser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
-parser.add_option("-p", "--objectpath", action="store", dest="clientobjectfilepath", help="client object file path")
-parser.add_option("-n", "--classname", action="store", dest="classname", help="main class name")
-parser.add_option("-b", "--bootstrap", action="store", dest="bootstrapname", help="bootstrap name")
-(options, args) = parser.parse_args()
+optparser = OptionParser(usage="usage: %prog -t nodetype -s subdomain -p objectpath -n classname -b bootstrap")
+optparser.add_option("-t", "--nodetype", action="store", dest="nodetype", help="node type")
+optparser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
+optparser.add_option("-p", "--objectpath", action="store", dest="clientobjectfilepath", help="client object file path")
+optparser.add_option("-n", "--classname", action="store", dest="classname", help="main class name")
+optparser.add_option("-b", "--bootstrap", action="store", dest="bootstrapname", help="bootstrap name")
+(optoptions, args) = optparser.parse_args()
 
 def terminated(p):
     i = 5
@@ -99,10 +99,10 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
 def main():
     try:
         print "Connecting to Planet Lab"
-        start_node(options.nodetype, options.subdomain, options.clientobjectfilepath,
-                   options.classname, options.bootstrapname)
+        start_node(poptions.nodetype, poptions.subdomain, poptions.clientobjectfilepath,
+                   poptions.classname, poptions.bootstrapname)
     except Exception as e:
-        parser.print_help()
+        optparser.print_help()
     
 if __name__=='__main__':
     main()
