@@ -35,7 +35,7 @@ SRVNAME = '_concoord._tcp.'
 class Nameserver(Replica):
     """Nameserver keeps track of the connectivity state of the system and replies to
     QUERY messages from dnsserver."""
-    def __init__(self, domain, instantiateobj=False):
+    def __init__(self, domain=options.dnsname, instantiateobj=False):
         Replica.__init__(self, nodetype=NODE_NAMESERVER, instantiateobj=instantiateobj, port=5000, bootstrap=options.bootstrap)
         try:
             self.mydomain = dns.name.Name((domain+".").split("."))
