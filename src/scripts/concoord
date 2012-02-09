@@ -54,23 +54,24 @@ def initialize():
     except Exception as e:
         parser.print_help()
 
-def concoordify(objectfilepath, classname):
+def concoordify():
+    from concoord.concoordify import parser, options, check_object
     try:
-        with open(objectfilepath, 'rU') as fd:
+        with open(options.objectfilepath, 'rU') as fd:
             clientcode = fd.read()
         if not check_object(clientcode):
             print "Object is not safe for us to execute."
             os._exit(1)
-        fixedfile = editproxyfile(objectfilepath, classname)
+        fixedfile = editproxyfile(options.objectfilepath, options.classname)
         print "Fixed server-side object: ", fixedfile.name
-        clientproxycode = createclientproxy(clientcode, classname, None)
+        clientproxycode = createclientproxy(clientcode, options.classname, None)
         clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
-        proxyfile = open(objectfilepath+"proxy", 'w')
+        proxyfile = open(options.objectfilepath+"proxy", 'w')
         proxyfile.write(clientproxycode)
         proxyfile.close()
         print "Client proxy: ", proxyfile.name
     except Exception as e:
-        print HELPSTR
+        parser.print_help()
 
 def main():
     if len(sys.argv) < 2:
@@ -89,10 +90,7 @@ def main():
     elif sys.argv[1] == 'INITIALIZE':
         initialize()
     elif sys.argv[1] == 'OBJECT':
-        if len(sys.argv) != 4:
-            print HELPSTR
-            sys.exit()
-        concoordify(sys.argv[2], sys.argv[3])
+        concoordify()
     else:
         print HELPSTR
 

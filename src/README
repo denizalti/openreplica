@@ -40,11 +40,11 @@ Date:		February 06, 2012
 	To create concoord objects from your local python objects you
       	can use concoordify.py as follows
 
-	$ ./concoordify.py -p objectpath -n classname
+	$ python concoordify.py -p objectpath -n classname
 
 	or if you installed the scripts
 
-	$ concoordify -p objectpath -n classname
+	$ concoord object objectpath classname
 
 	where objectpath:= path of the object you want to concoordify
       	      classname := name of the class that you'll use to access your object	   
@@ -95,7 +95,7 @@ Date:		February 06, 2012
 
 	or if you installed the scripts
 
-	$ concoord-replica -p port -f objectfilepath -c classname -b bootstrap
+	$ concoord replica -p port -f objectfilepath -c classname -b bootstrap
 
 (3.2.2) start an acceptor node
 
@@ -105,7 +105,7 @@ Date:		February 06, 2012
 
 	or if you installed the scripts
 
-	$ concoord-acceptor -p port -b bootstrap
+	$ concoord acceptor -p port -b bootstrap
 	
 (3.2.3) start a nameserver node
 
@@ -115,7 +115,7 @@ Date:		February 06, 2012
 
 	or if you installed the scripts
 
-	$ concoord-nameserver -n domainname -p port -f objectfilepath -c classname -b bootstrap
+	$ concoord nameserver -n domainname -p port -f objectfilepath -c classname -b bootstrap
 
 	*Note that the command has to be run with su privileges as it
 	binds to UDP port 53.
@@ -133,7 +133,7 @@ Date:		February 06, 2012
 
 	or if you installed the scripts
 
-	$ concoord-initialize -s subdomainname -f objectfilepath -c classname -r numreplicas -a numacceptors -n numnameserver
+	$ concoord initialize -s subdomainname -f objectfilepath -c classname -r numreplicas -a numacceptors -n numnameserver
 
 
 (3.4) add nodes automatically
@@ -145,11 +145,11 @@ Date:		February 06, 2012
 	Once you have the source, you can edit this script to fit the
 	specific structure on your servers.
 
-	$ python openreplicaaddnode.py -t nodetype -s subdomainname -f objectfilepath -c classname -b bootstrap
+	$ python openreplicaaddnode.py -t nodetype -s subdomainname -p objectfilepath -n classname -b bootstrap
 
 	or if you installed the scripts
 
-	
+	$ concoord addnode -t nodetype -s subdomainname -p objectfilepath -n classname -b bootstrap
 
 (3.5) using concoord objects
 
