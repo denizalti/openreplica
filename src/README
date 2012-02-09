@@ -1,9 +1,9 @@
 %% README.txt
 %% for concoord
 
-Name:  		concoord
-Authors:		Deniz Altinbuken (deniz@systems.cs.cornell.edu)
-			Emin Gun Sirer (egs@systems.cs.cornell.edu)
+Name:		concoord
+Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
+		Emin Gun Sirer (egs@systems.cs.cornell.edu)
 Date:		February 06, 2012
 
 (1) INTRODUCTION
@@ -120,7 +120,6 @@ Date:		February 06, 2012
 	*Note that the command has to be run with su privileges as it
 	binds to UDP port 53.
 
-
 (3.3) start nodes automatically
 
         We have a script to start desired number of nodes on PlanetLab
@@ -134,7 +133,6 @@ Date:		February 06, 2012
 	or if you installed the scripts
 
 	$ concoord initialize -s subdomainname -f objectfilepath -c classname -r numreplicas -a numacceptors -n numnameserver
-
 
 (3.4) add nodes automatically
 
@@ -158,7 +156,7 @@ Date:		February 06, 2012
         the following, saved under counter.py:
 
 	class Counter():
-	     def __init__(self):
+	    def __init__(self):
             	self.value = 0
 
     	    def decrement(self):
@@ -167,7 +165,7 @@ Date:		February 06, 2012
     	    def increment(self):
                 self.value += 1
 
-	   def getvalue(self):
+	    def getvalue(self):
                 return self.value
     
 	    def __str__(self, **kwargs):
@@ -211,4 +209,3 @@ information on concoord.
 If you believe you have found a bug or have a problem you need
 assistance with, you can get in touch with us by emailing
 concoord@systems.cs.cornell.edu
-
