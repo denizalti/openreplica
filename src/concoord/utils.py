@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Utility functions for the runtime. Includes a timer module for collecting measurements.
 @date: February 3, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 '''
 import socket
 import os, sys

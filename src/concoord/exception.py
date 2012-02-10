@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Common ConCoord exceptions.
 @date: February 3, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 '''
 class ConCoordException(Exception):
     """Abstract base class shared by all concoord exceptions"""

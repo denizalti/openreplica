@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: The Nameserver keeps track of the view by being involved in Paxos rounds and replies to DNS queries with the latest view.
 @date: February 1, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 """
 import socket
 import select

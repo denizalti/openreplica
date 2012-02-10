@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: OpenReplicaNameserver that uses OpenReplica Coordination Object to keep track of nameservers of subdomains of OpenReplica.
 @date: August 1, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 '''
 from concoord.nameserver import *
 

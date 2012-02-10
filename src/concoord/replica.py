@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: The Replica keeps an object and responds to Perform messages received from the Leader.
 @date: February 1, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 '''
 from threading import Thread, Lock, Condition, Timer, Event
 import math, random, time

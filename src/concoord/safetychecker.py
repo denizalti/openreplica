@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Checks the safety of the client object
 @date: August 1, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 '''
 import ast, _ast
 DEBUG = False

@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Script to check DNS Port bindings
 @date: November 20, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 '''
 import socket
 import sys

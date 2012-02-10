@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Example bank object that keeps track of accounts
 @date: March 20, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 """
 class Bank():
     def __init__(self):

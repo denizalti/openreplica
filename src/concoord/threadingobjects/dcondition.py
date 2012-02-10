@@ -1,3 +1,9 @@
+"""
+@author: Deniz Altinbuken, Emin Gun Sirer
+@note: Condition Coordination Object
+@date: March 20, 2011
+@copyright: See LICENSE
+"""
 from threading import RLock
 from concoord.exception import *
 from drlock import DRlock

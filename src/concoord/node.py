@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Master class for all nodes
 @date: February 1, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 '''
 from optparse import OptionParser
 from threading import Thread, RLock, Lock, Condition, Timer, Semaphore

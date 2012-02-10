@@ -3,7 +3,7 @@
 @note: This class holds enums that are widely used throughout the program
        Because it imports itself, this module MUST NOT HAVE ANY SIDE EFFECTS!!!!
 @date: February 3, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 '''
 import enums
 

@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Initializes an OpenReplica instance
 @date: August 1, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 '''
 from optparse import OptionParser
 from time import sleep,time

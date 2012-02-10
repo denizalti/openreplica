@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Proxy Generator that creates ConCoord proxy files from regular Python objects.
 @date: March 20, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 '''
 import inspect, types, string
 import os, shutil

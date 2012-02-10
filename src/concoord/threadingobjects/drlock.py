@@ -1,3 +1,9 @@
+"""
+@author: Deniz Altinbuken, Emin Gun Sirer
+@note: RLock Coordination Object
+@date: March 20, 2011
+@copyright: See LICENSE
+"""
 from threading import Lock
 from concoord.exception import *
 

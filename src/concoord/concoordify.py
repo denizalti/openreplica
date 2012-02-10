@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Creates concoord objects
 @date: August 1, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 '''
 from optparse import OptionParser
 from time import sleep,time

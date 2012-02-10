@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: ConCoord Client Proxy
 @date: February 1, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 '''
 import socket, os, sys, time, random
 from threading import Thread, Lock, Condition
