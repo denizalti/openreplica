@@ -33,6 +33,7 @@ Date:		February 06, 2012
 
 	To install the scripts run the following command
 	    $ sudo cp scripts/concoord /usr/bin/
+	    $ sudo cp data/concoord /etc/bash_completion.d
 
 (3) USAGE
 ----------------
