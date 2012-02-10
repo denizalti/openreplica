@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: A Group is a collection of peers that perform the same function
 @date: February 1, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 """
 from threading import RLock
 from connection import *

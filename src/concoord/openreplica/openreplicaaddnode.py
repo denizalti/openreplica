@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Adds nodes to an OpenReplica instance
 @date: January 20, 2012
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 '''
 from optparse import OptionParser
 from time import sleep,time

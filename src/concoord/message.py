@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Messages sent on the wire
 @date: February 1, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 """
 from threading import Lock
 from enums import *

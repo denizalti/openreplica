@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Example test object
 @date: March 20, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 """
 class Test():
     def __init__(self, **kwargs):

@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Automatically generated bank object proxy
 @date: March 20, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 """
 from clientproxy import *
 

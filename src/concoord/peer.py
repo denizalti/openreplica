@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Peers participating in the protocol
 @date: February 1, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 '''
 from enums import *
 from utils import *

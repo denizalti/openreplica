@@ -1,3 +1,9 @@
+"""
+@author: Deniz Altinbuken, Emin Gun Sirer
+@note: Lock Coordination Object
+@date: March 20, 2011
+@copyright: See LICENSE
+"""
 from threading import Lock
 from thread import error
 from concoord.exception import *

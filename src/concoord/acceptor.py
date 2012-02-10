@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: The Acceptor keeps track of past Paxos ballots. It is the log for the Paxos state.
 @date: February 1, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 """
 from threading import Thread
 import signal

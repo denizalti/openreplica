@@ -3,7 +3,7 @@
 @note: Connections provide thread-safe send() and receive() functions, paying attention to message boundaries.
        ConnectionPools organize collections of connections.
 @date: February 3, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 '''
 import sys
 import socket, errno

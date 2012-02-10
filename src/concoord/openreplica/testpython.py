@@ -2,7 +2,7 @@
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Script to check Python installation
 @date: November 24, 2011
-@copyright: See COPYING.txt
+@copyright: See LICENSE
 '''
 import socket, sys
 import string
