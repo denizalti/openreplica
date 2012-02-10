@@ -17,7 +17,7 @@ concoord [initialize] - initializes a concoord instance with given number of nod
 concoord [object $objectfilepath $classname] - concoordifies a python object"
 
 def start_node(nodetype):
-    nodename = node_names[NODE_ACCEPTOR].lower()
+    nodename = node_names[nodetype].lower()
     node = getattr(__import__('concoord.'+nodename, globals(), locals(), -1), nodename.capitalize())()
     node.startservice()
     signal.signal(signal.SIGINT, node.terminate_handler)
