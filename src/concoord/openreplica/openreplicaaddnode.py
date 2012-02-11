@@ -12,11 +12,11 @@ from concoord.enums import *
 from concoord.openreplica.plmanager import *
 from concoord.openreplica.openreplicacoordobjproxy import *
 
-parser = OptionParser(usage="usage: %prog -t nodetype -s subdomain -p objectpath -n classname -b bootstrap")
+parser = OptionParser(usage="usage: %prog -t nodetype -s subdomain -f objectpath -c classname -b bootstrap")
 parser.add_option("-t", "--nodetype", action="store", dest="nodetype", help="node type")
 parser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
-parser.add_option("-p", "--objectpath", action="store", dest="clientobjectfilepath", help="client object file path")
-parser.add_option("-n", "--classname", action="store", dest="classname", help="main class name")
+parser.add_option("-f", "--objectfilepath", action="store", dest="objectfilepath", help="client object file path")
+parser.add_option("-c", "--classname", action="store", dest="classname", help="main class name")
 parser.add_option("-b", "--bootstrap", action="store", dest="bootstrapname", help="bootstrap name")
 (options, args) = parser.parse_args()
 
@@ -46,16 +46,17 @@ def check_planetlab_dnsport(plconn, node):
     return rtv,output
 
 def check_planetlab_pythonversion(plconn, node):
-    print "Checking Python version on ", node
-    command = NPYTHONPATH+" --version"
-    rtv, output = plconn.executecommandone(node, command)
+    print "Uploading Python version tester to ", node
+    pathtopvtester = os.path.abspath("testpythonversion.py")
+    plconn.uploadone(node, pathtopvtester)
+    print "Checking Python version"
+    rtv, output = plconn.executecommandone(node, NPYTHONPATH+" testpythonversion.py")
     if rtv:
-        for out in output:
-            if string.find(out, 'Python 2.6') >= 0 or string.find(out, 'Python 2.7') >= 0:
-                print "Python version acceptable!"
-                return True,output
-    print '\n'.join(output)
-    return False,output
+        print "Python version acceptable on %s" % node
+    else:
+        print "Python version not acceptable on %s" % node
+        plconn.executecommandone(node, "rm testpythonversion.py")
+    return rtv,output
 
 def get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, classname, bootstrapname):
     startupcmd = ''
@@ -101,7 +102,7 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
 def main():
     try:
         print "Connecting to Planet Lab"
-        start_node(options.nodetype, options.subdomain, options.clientobjectfilepath,
+        start_node(options.nodetype, options.subdomain, options.objectfilepath,
                    options.classname, options.bootstrapname)
     except Exception as e:
         parser.print_help()

@@ -6,6 +6,8 @@
 """
 import socket, time, os, sys, select
 
+LOGGERHOST = 'addr'
+
 def collect_input(s):
     msg = ''
     while '\n' not in msg:
@@ -24,10 +26,10 @@ def main():
         daemonsocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         daemonsocket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         daemonsocket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
-        daemonsocket.bind(('egs-110.cs.cornell.edu',12000)) #XXX hard-coded hostname and port
+        daemonsocket.bind((LOGGERHOST,12000)) #XXX hard-coded port
         daemonsocket.listen(10)
     except socket.error:
-        pass
+        passLOGGERHOST
     print_event("server ready on port %d\n" % 12000)
 
     socketset = [daemonsocket]

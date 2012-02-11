@@ -48,16 +48,17 @@ def check_planetlab_dnsport(plconn, node):
     return rtv,output
 
 def check_planetlab_pythonversion(plconn, node):
-    print "Checking Python version on ", node
-    command = NPYTHONPATH+" --version"
-    rtv, output = plconn.executecommandone(node, command)
+    print "Uploading Python version tester to ", node
+    pathtopvtester = os.path.abspath("testpythonversion.py")
+    plconn.uploadone(node, pathtopvtester)
+    print "Checking Python version"
+    rtv, output = plconn.executecommandone(node, NPYTHONPATH+" testpythonversion.py")
     if rtv:
-        for out in output:
-            if string.find(out, 'Python 2.6') >= 0 or string.find(out, 'Python 2.7') >= 0:
-                print "Python version acceptable!"
-                return True,output
-    print '\n'.join(output)
-    return False,output
+        print "Python version acceptable on %s" % node
+    else:
+        print "Python version not acceptable on %s" % node
+        plconn.executecommandone(node, "rm testpythonversion.py")
+    return rtv,output
 
 def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     # locate the right number of suitable PlanetLab nodes

@@ -9,10 +9,13 @@ import signal
 from time import sleep,time
 import os, sys, time, shutil
 import ast, _ast
-from concoord.enums import *
-from concoord.safetychecker import *
-from concoord.proxygenerator import *
-from concoord.serversideproxyast import *
+try:
+    from concoord.enums import *
+    from concoord.safetychecker import *
+    from concoord.proxygenerator import *
+    from concoord.serversideproxyast import *
+except:
+    print "Cannot import concoord module, please check your installation"
 
 HELPSTR = "concoord, version 0.1.0-release:\n\
 concoord [acceptor] - starts an acceptor node\n\
@@ -33,7 +36,7 @@ def start_node(nodetype):
 def add_node():
     from concoord.openreplica.openreplicaaddnode import parser, options, start_node
     try:
-        start_node(options.nodetype, options.subdomain, options.clientobjectfilepath,
+        start_node(options.nodetype, options.subdomain, options.objectfilepath,
                    options.classname, options.bootstrapname)
     except Exception as e:
         parser.print_help()

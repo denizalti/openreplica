@@ -39,6 +39,7 @@ parser.add_option("-d", "--debug", action="store_true", dest="debug", default=Fa
 
 DO_PERIODIC_PINGS = False
 RESEND = False
+LOGGERHOST = 'addr:12000'
 
 class Node():
     """Node encloses the basic Node behaviour and state that
@@ -115,7 +116,7 @@ class Node():
         # initialize empty groups
         self.me = Peer(self.addr,self.port,self.type)
         self.id = self.me.getid()
-        self.logger = NetworkLogger("%s-%s" % (node_names[self.type],self.id), 'egs-110.cs.cornell.edu:12000')
+        self.logger = NetworkLogger("%s-%s" % (node_names[self.type],self.id), LOGGERHOST)
         self.logger.write("State", "Connected.")
         self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_NAMESERVER:Group(self.me)}
         # connect to the bootstrap node
