@@ -20,7 +20,7 @@ parser.add_option("-c", "--classname", action="store", dest="classname", help="m
 parser.add_option("-b", "--bootstrap", action="store", dest="bootstrapname", help="bootstrap name")
 (options, args) = parser.parse_args()
 
-NPYTHONPATH = "/home/cornell_openreplica/python2.7/bin/python2.7"
+NPYTHONPATH = "pythonpath"
 
 def terminated(p):
     i = 5

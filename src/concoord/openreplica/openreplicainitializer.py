@@ -24,7 +24,7 @@ parser.add_option("-a", "--acceptors", action="store", dest="acceptornum", defau
 parser.add_option("-n", "--nameservers", action="store", dest="nameservernum", default=1, help="number of nameservers")
 (options, args) = parser.parse_args()
 
-NPYTHONPATH = "/home/cornell_openreplica/python2.7/bin/python2.7"
+NPYTHONPATH = "pythonpath"
 
 def check_object(clientcode):
     print "Checking object safety"
