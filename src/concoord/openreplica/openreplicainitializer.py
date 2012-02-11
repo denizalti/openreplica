@@ -24,6 +24,8 @@ parser.add_option("-a", "--acceptors", action="store", dest="acceptornum", defau
 parser.add_option("-n", "--nameservers", action="store", dest="nameservernum", default=1, help="number of nameservers")
 (options, args) = parser.parse_args()
 
+NPYTHONPATH = "/home/cornell_openreplica/python2.7/bin/python2.7"
+
 def check_object(clientcode):
     print "Checking object safety"
     astnode = compile(clientcode,"<string>","exec",_ast.PyCF_ONLY_AST)
@@ -37,7 +39,7 @@ def check_planetlab_dnsport(plconn, node):
     pathtodnstester = os.path.abspath("testdnsport.py")
     plconn.uploadone(node, pathtodnstester)
     print "Trying to bind to DNS port"
-    rtv, output = plconn.executecommandone(node, "sudo -A /home/cornell_openreplica/python2.7/bin/python2.7 testdnsport.py")
+    rtv, output = plconn.executecommandone(node, "sudo -A "+NPYTHONPATH+" testdnsport.py")
     if rtv:
         print "DNS Port available on %s" % node
     else:
@@ -47,11 +49,11 @@ def check_planetlab_dnsport(plconn, node):
 
 def check_planetlab_pythonversion(plconn, node):
     print "Checking Python version on ", node
-    command = '/home/cornell_openreplica/python2.7/bin/python2.7 --version'
+    command = NPYTHONPATH+" --version"
     rtv, output = plconn.executecommandone(node, command)
     if rtv:
         for out in output:
-            if string.find(out, 'Python 2.7') >= 0:
+            if string.find(out, 'Python 2.6') >= 0 or string.find(out, 'Python 2.7') >= 0:
                 print "Python version acceptable!"
                 return True,output
     print '\n'.join(output)
@@ -84,10 +86,10 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     # BOOTSTRAP
     print "--- Bootstrap Replica ---"
     port = random.randint(14000, 15000)
-    p = bootstrap.executecommandone(bootstrap.getHosts()[0], "nohup /home/cornell_openreplica/python2.7/bin/python2.7 concoord/replica.py -a %s -p %d -f %s -c %s" % (bootstrap.getHosts()[0], port, clientobjectfilename, classname), False)
+    p = bootstrap.executecommandone(bootstrap.getHosts()[0], "nohup "+NPYTHONPATH+" concoord/replica.py -a %s -p %d -f %s -c %s" % (bootstrap.getHosts()[0], port, clientobjectfilename, classname), False)
     while terminated(p):
         port = random.randint(14000, 15000)
-        p = bootstrap.executecommandone(bootstrap.getHosts()[0], "nohup /home/cornell_openreplica/python2.7/bin/python2.7 concoord/replica.py -a %s -p %d -f %s -c %s" % (bootstrap.getHosts()[0], port, clientobjectfilename, classname), False)
+        p = bootstrap.executecommandone(bootstrap.getHosts()[0], "nohup "+NPYTHONPATH+" concoord/replica.py -a %s -p %d -f %s -c %s" % (bootstrap.getHosts()[0], port, clientobjectfilename, classname), False)
     bootstrapname = bootstrap.getHosts()[0]+':'+str(port)
     processnames.append(bootstrapname)
     print bootstrapname
@@ -95,10 +97,10 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     print "--- Acceptors ---"
     for acceptor in acceptors.getHosts():
         port = random.randint(14000, 15000)
-        p = acceptors.executecommandone(acceptor, "nohup /home/cornell_openreplica/python2.7/bin/python2.7 concoord/acceptor.py -a %s -p %d -f %s -b %s" % (acceptor, port, clientobjectfilename, bootstrapname), False)
+        p = acceptors.executecommandone(acceptor, "nohup "+NPYTHONPATH+" concoord/acceptor.py -a %s -p %d -f %s -b %s" % (acceptor, port, clientobjectfilename, bootstrapname), False)
         while terminated(p):
             port = random.randint(14000, 15000)
-            p = acceptors.executecommandone(acceptor, "nohup /home/cornell_openreplica/python2.7/bin/python2.7 concoord/acceptor.py -a %s -p %d -f %s -b %s" % (acceptor, port, clientobjectfilename, bootstrapname), False)
+            p = acceptors.executecommandone(acceptor, "nohup "+NPYTHONPATH+" concoord/acceptor.py -a %s -p %d -f %s -b %s" % (acceptor, port, clientobjectfilename, bootstrapname), False)
         acceptorname = acceptor+':'+str(port)
         processnames.append(acceptorname)
         print acceptorname
@@ -107,10 +109,10 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
         print "--- Replicas ---"
     for replica in replicas.getHosts():
         port = random.randint(14000, 15000)
-        p = replicas.executecommandone(replica, "nohup /home/cornell_openreplica/python2.7/bin/python2.7 concoord/replica.py -a %s -p %d -f %s -c %s -b %s" % (replica, port, clientobjectfilename, classname, bootstrapname), False)
+        p = replicas.executecommandone(replica, "nohup "+NPYTHONPATH+" concoord/replica.py -a %s -p %d -f %s -c %s -b %s" % (replica, port, clientobjectfilename, classname, bootstrapname), False)
         while terminated(p):
             port = random.randint(14000, 15000)
-            p = replicas.executecommandone(replica, "nohup /home/cornell_openreplica/python2.7/bin/python2.7 concoord/replica.py -a %s -p %d -f %s -c %s -b %s" % (replica, port, clientobjectfilename, classname, bootstrapname), False)
+            p = replicas.executecommandone(replica, "nohup "+NPYTHONPATH+" concoord/replica.py -a %s -p %d -f %s -c %s -b %s" % (replica, port, clientobjectfilename, classname, bootstrapname), False)
         replicaname = replica+':'+str(port)
         processnames.append(replicaname)
         print replicaname
@@ -118,10 +120,10 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     print "--- Nameservers ---"
     for nameserver in nameservers.getHosts():
         port = random.randint(14000, 15000)
-        p = nameservers.executecommandone(nameserver, "sudo -A nohup /home/cornell_openreplica/python2.7/bin/python2.7 concoord/nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain+'.openreplica.org', nameserver, port, clientobjectfilename, classname, bootstrapname), False)
+        p = nameservers.executecommandone(nameserver, "sudo -A nohup "+NPYTHONPATH+" concoord/nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain+'.openreplica.org', nameserver, port, clientobjectfilename, classname, bootstrapname), False)
         while terminated(p):
             port = random.randint(14000, 15000)
-            p = nameservers.executecommandone(nameserver, "sudo -A nohup /home/cornell_openreplica/python2.7/bin/python2.7 concoord/nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain+'.openreplica.org', nameserver, port, clientobjectfilename, classname, bootstrapname), False)
+            p = nameservers.executecommandone(nameserver, "sudo -A nohup "+NPYTHONPATH+" concoord/nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain+'.openreplica.org', nameserver, port, clientobjectfilename, classname, bootstrapname), False)
         nameservername = nameserver+':'+str(port)
         processnames.append(nameservername)
         nameservernames.append(nameservername)
