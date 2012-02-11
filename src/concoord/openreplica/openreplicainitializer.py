@@ -131,7 +131,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
         print nameservername
     print "All clear!"
     ## add the nameserver nodes to open replica coordinator object
-    openreplicacoordobj = OpenReplicaCoordProxy('128.84.154.110:6668')
+    openreplicacoordobj = OpenReplicaCoordProxy('openreplica.org')
     print "Adding Nameserver nodes to OpenReplica Coordination Object:"
     for node in nameservernames:
         print "- ", node
