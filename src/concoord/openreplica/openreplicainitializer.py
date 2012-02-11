@@ -14,6 +14,7 @@ from concoord.proxygenerator import *
 from concoord.serversideproxyast import *
 from plmanager import *
 from openreplicacoordobjproxy import *
+from openreplicasecret import NPYTHONPATH
 
 parser = OptionParser(usage="usage: %prog -s subdomain -f objectfilepath -c classname -r replicas -a acceptors -n nameservers")
 parser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
@@ -23,8 +24,6 @@ parser.add_option("-r", "--replicas", action="store", dest="replicanum", default
 parser.add_option("-a", "--acceptors", action="store", dest="acceptornum", default=1, help="number of acceptor")
 parser.add_option("-n", "--nameservers", action="store", dest="nameservernum", default=1, help="number of nameservers")
 (options, args) = parser.parse_args()
-
-NPYTHONPATH = "pythonpath"
 
 def check_object(clientcode):
     print "Checking object safety"
