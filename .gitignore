@@ -1,5 +1,6 @@
 src/build
 src/dist
+src/MANIFEST
 *.tar.gz
 *~
 *.pyc
