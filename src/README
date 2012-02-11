@@ -1,4 +1,4 @@
-%% README.txt
+%% README
 %% for concoord
 
 Name:		concoord
@@ -22,7 +22,7 @@ Date:		February 06, 2012
 ----------------
 	The minimum requirements for ConCoord are:
 
-	- python 2.7 or later
+	- python 2.6.6 or later
 	- dnspython-1.9.4
 
 (2) INSTALLATION
@@ -118,16 +118,22 @@ Date:		February 06, 2012
 
 	$ concoord nameserver -n domainname -p port -f objectfilepath -c classname -b bootstrap
 
-	*Note that the command has to be run with su privileges as it
+	* Note that the command has to be run with su privileges as it
 	binds to UDP port 53.
 
 (3.3) start nodes automatically
 
-        We have a script to start desired number of nodes on PlanetLab
-        nodes automatically: concoord/openreplica/openreplicainitializer.py
+        We have a script we use for openreplica.org to start desired
+        number of nodes on PlanetLab servers automatically and this
+        script is included for your reference.
 
-	Once you have the source, you can edit this script to fit the
-	specific structure on your servers.
+        concoord/openreplica/openreplicainitializer.py
+
+	* Note that the script requires host and user-specific
+	credentials and you will have to edit the script for your own
+	use.
+
+	To call the script:
 
 	$ python openreplicainitializer.py -s subdomainname -f objectfilepath -c classname -r numreplicas -a numacceptors -n numnameserver
 
@@ -137,18 +143,23 @@ Date:		February 06, 2012
 
 (3.4) add nodes automatically
 
-        We have a script to add any kind of node to an active 
-	concoord runtime on PlanetLab automatically: 
-	concoord/openreplica/openreplicaaddnode.py
+        We have a script we use for openreplica.org to add nodes on
+        PlanetLab servers automatically and this script is included
+        for your reference.
 
-	Once you have the source, you can edit this script to fit the
-	specific structure on your servers.
+        concoord/openreplica/openreplicaaddnode.py
 
-	$ python openreplicaaddnode.py -t nodetype -s subdomainname -p objectfilepath -n classname -b bootstrap
+	* Note that the script requires host and user-specific
+	credentials and you will have to edit the script for your own
+	use.
+
+	To call the script:
+
+	$ python openreplicaaddnode.py -t nodetype -s subdomainname -f objectfilepath -c classname -b bootstrap
 
 	or if you installed the scripts
 
-	$ concoord addnode -t nodetype -s subdomainname -p objectfilepath -n classname -b bootstrap
+	$ concoord addnode -t nodetype -s subdomainname -f objectfilepath -c classname -b bootstrap
 
 (3.5) using concoord objects
 
@@ -198,6 +209,16 @@ Date:		February 06, 2012
 
 	$ make client
 
+(3.7) Logging
+
+      We have two kinds of loggers for ConCoord:
+      - Console Logger
+      - Network Logger
+
+      Both of these loggers are included under utils.py
+
+      To start the NetworkLogger, use the logdaemon.py on the host you
+      want to keep the Logger.
 
 (4) HOMEPAGE
 ----------------

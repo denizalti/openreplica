@@ -8,9 +8,9 @@ import sys, os, socket, os.path
 import random, time
 import subprocess, signal
 from concoord.objects.openreplicacoordobj import OpenReplicaCoord
-USERNAME="username"
-USERKEYFILE = "hostprivatekey"
-NODESFILE= "nodes"
+USERNAME="cornell_openreplica"
+USERKEYFILE = "/Users/denizalti/projects/openreplicakey"
+NODESFILE= "/Users/denizalti/projects/testnodes.txt"
 
 with open(NODESFILE, 'r') as f:
     all_nodes = []
