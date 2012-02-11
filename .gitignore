@@ -1,6 +1,10 @@
 src/build
 src/dist
+*.tar.gz
 *~
 *.pyc
+*.tar
+*.zip
+*.tar.bz2
 concoord_log_*
 .DS_Store
