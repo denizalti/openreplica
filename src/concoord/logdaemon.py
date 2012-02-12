@@ -5,8 +5,11 @@
 @copyright: See LICENSE
 """
 import socket, time, os, sys, select
-
-LOGGERHOST = 'addr'
+try:
+    from openreplicasecret import LOGGERNODE
+except:
+    print "To turn on Logging through the Network, edit NetworkLogger credentials"
+    LOGGERNODE = 'addr:12000'
 
 def collect_input(s):
     msg = ''
@@ -22,14 +25,15 @@ def print_event(event):
     print "%s: %s" % (time.asctime(time.localtime(time.time())), event.strip())
     
 def main():
+    addr, port = LOGGERNODE.split(':')
     try:
         daemonsocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         daemonsocket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         daemonsocket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
-        daemonsocket.bind((LOGGERHOST,12000)) #XXX hard-coded port
+        daemonsocket.bind((addr,int(port)))
         daemonsocket.listen(10)
     except socket.error:
-        passLOGGERHOST
+        pass
     print_event("server ready on port %d\n" % 12000)
 
     socketset = [daemonsocket]
