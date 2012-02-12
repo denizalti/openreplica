@@ -14,7 +14,10 @@ from concoord.proxygenerator import *
 from concoord.serversideproxyast import *
 from plmanager import *
 from openreplicacoordobjproxy import *
-from openreplicasecret import NPYTHONPATH
+try:
+    from openreplicasecret import NPYTHONPATH
+except:
+    NPYTHONPATH = 'python'
 
 parser = OptionParser(usage="usage: %prog -s subdomain -f objectfilepath -c classname -r replicas -a acceptors -n nameservers")
 parser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
