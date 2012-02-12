@@ -22,6 +22,11 @@ from enums import *
 from utils import *
 from message import *
 try:
+    from openreplicasecret import LOGGERNODE
+except:
+    print "To turn on Logging through the Network, edit NetworkLogger credentials"
+    LOGGERNODE = 'addr:12000'
+try:
     import dns.resolver, dns.exception
 except:
     print("Install dnspython: http://www.dnspython.org/")
@@ -39,7 +44,6 @@ parser.add_option("-d", "--debug", action="store_true", dest="debug", default=Fa
 
 DO_PERIODIC_PINGS = False
 RESEND = False
-LOGGERHOST = 'addr:12000'
 
 class Node():
     """Node encloses the basic Node behaviour and state that
@@ -116,7 +120,7 @@ class Node():
         # initialize empty groups
         self.me = Peer(self.addr,self.port,self.type)
         self.id = self.me.getid()
-        self.logger = NetworkLogger("%s-%s" % (node_names[self.type],self.id), LOGGERHOST)
+        self.logger = NetworkLogger("%s-%s" % (node_names[self.type],self.id), LOGGERNODE)
         self.logger.write("State", "Connected.")
         self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_NAMESERVER:Group(self.me)}
         # connect to the bootstrap node

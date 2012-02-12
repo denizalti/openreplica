@@ -8,7 +8,11 @@ import sys, os, socket, os.path
 import random, time
 import subprocess, signal
 from concoord.objects.openreplicacoordobj import OpenReplicaCoord
-from openreplicasecret import USERNAME, USERKEYFILE, NODESFILE
+try:
+    from openreplicasecret import USERNAME, USERKEYFILE, NODESFILE
+except:
+    print "To use this script, create your own ssh credentials."
+    os._exit(1)
 
 with open(NODESFILE, 'r') as f:
     all_nodes = []
