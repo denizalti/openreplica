@@ -3,6 +3,7 @@ src/dist
 src/MANIFEST
 secret
 scripts
+packages
 openreplicasecret.py
 *.tar.gz
 *~

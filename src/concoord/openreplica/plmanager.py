@@ -53,7 +53,7 @@ class PLConnection():
 
     def _tryconnect(self, node):
         host = USERNAME + "@" + node
-        cmd = ["ssh", "-i", USERKEYFILE, "-o", "StrictHostKeyChecking=no", host, "ls"]
+        cmd = ["ssh", "-v", "-i", USERKEYFILE, "-o", "StrictHostKeyChecking=no", host, "ls"]
         return self._system(cmd, timeout=20) == 0
 
     def _system(self, cmd, timeout=300):
@@ -99,7 +99,7 @@ class PLConnection():
     def executecommandall(self, command, wait=True):
         procdict = {}
         for node in self.nodes:
-            cmd = ["ssh", "-i", USERKEYFILE, "-o", "StrictHostKeyChecking=no", USERNAME + "@" + node, command]
+            cmd = ["ssh", "-v", "-i", USERKEYFILE, "-o", "StrictHostKeyChecking=no", USERNAME + "@" + node, command]
             proc = self._issuecommand(cmd)
             self.procs.append(proc)
             if wait:
@@ -109,7 +109,7 @@ class PLConnection():
         return
 
     def executecommandone(self, node, command, wait=True):
-        cmd = ["ssh", "-i", USERKEYFILE, "-o", "StrictHostKeyChecking=no", USERNAME + "@" + node, command]
+        cmd = ["ssh", "-v", "-i", USERKEYFILE, "-o", "StrictHostKeyChecking=no", USERNAME + "@" + node, command]
         proc = self._issuecommand(cmd)
         self.procs.append(proc)
         if wait:
