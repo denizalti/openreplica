@@ -168,6 +168,7 @@ def main():
         print "Proxy Code:"
         print clientproxycode
     except Exception as e:
+        print e
         parser.print_help()
     
 if __name__=='__main__':
