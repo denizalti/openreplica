@@ -36,7 +36,7 @@ def terminated(p):
 # checks if a PL node is suitable for running a nameserver
 def check_planetlab_dnsport(plconn, node):
     print "Uploading DNS tester to ", node
-    pathtodnstester = os.path.abspath("testdnsport.py")
+    pathtodnstester = os.getenv('CONCOORD_HELPERDIR')+'/testdnsport.py'
     plconn.uploadone(node, pathtodnstester)
     print "Trying to bind to DNS port"
     rtv, output = plconn.executecommandone(node, "sudo -A "+NPYTHONPATH+" testdnsport.py")
@@ -49,7 +49,7 @@ def check_planetlab_dnsport(plconn, node):
 
 def check_planetlab_pythonversion(plconn, node):
     print "Uploading Python version tester to ", node
-    pathtopvtester = os.path.abspath("testpythonversion.py")
+    pathtopvtester = os.getenv('CONCOORD_HELPERDIR')+'/testpythonversion.py'
     plconn.uploadone(node, pathtopvtester)
     print "Checking Python version"
     rtv, output = plconn.executecommandone(node, NPYTHONPATH+" testpythonversion.py")
@@ -67,7 +67,7 @@ def get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, class
     elif nodetype == NODE_ACCEPTOR:
         startupcmd = "nohup "+NPYTHONPATH+" concoord/acceptor.py -a %s -p %d -f %s -b %s" % (node, port, clientobjectfilename, bootstrapname)
     elif nodetype == NODE_NAMESERVER:
-        startupcmd =  "sudo -A nohup "+NPYTHONPATH+" concoord/nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain+'.openreplica.org', node, port, clientobjectfilename, classname, bootstrapname)
+        startupcmd =  "sudo nohup "+NPYTHONPATH+" concoord/nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain+'.openreplica.org', node, port, clientobjectfilename, classname, bootstrapname)
     return startupcmd
         
 def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapname):
