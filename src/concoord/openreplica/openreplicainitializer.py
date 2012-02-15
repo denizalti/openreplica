@@ -42,7 +42,6 @@ def check_planetlab_dnsport(plconn, node):
     plconn.uploadone(node, pathtodnstester)
     print "Trying to bind to DNS port"
     rtv, output = plconn.executecommandone(node, "sudo "+NPYTHONPATH+" testdnsport.py")
-    print "**************************", rtv, output
     if rtv:
         print "DNS Port available on %s" % node
     else:
@@ -56,7 +55,6 @@ def check_planetlab_pythonversion(plconn, node):
     plconn.uploadone(node, pathtopvtester)
     print "Checking Python version"
     rtv, output = plconn.executecommandone(node, NPYTHONPATH+" testpythonversion.py")
-    print "**************************", rtv, output
     if rtv:
         print "Python version acceptable on %s" % node
     else:
