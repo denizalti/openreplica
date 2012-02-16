@@ -25,7 +25,7 @@ try:
     from openreplicasecret import LOGGERNODE
 except:
     print "To turn on Logging through the Network, edit NetworkLogger credentials"
-    LOGGERNODE = 'addr:12000'
+    LOGGERNODE = '128.84.154.110:12000'
 try:
     import dns.resolver, dns.exception
 except:
