@@ -194,7 +194,10 @@ class Connection():
         try:
             __import__(module)
         except:
-            module = 'concoord.'+module
+            if module == "concoord.message":
+                module = 'message'
+            else:
+                module = 'concoord.'+module
             __import__(module)
         return getattr(sys.modules[module], name)
         
