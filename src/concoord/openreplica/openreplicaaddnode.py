@@ -39,7 +39,7 @@ def check_planetlab_dnsport(plconn, node):
     pathtodnstester = os.getenv('CONCOORD_HELPERDIR')+'/testdnsport.py'
     plconn.uploadone(node, pathtodnstester)
     print "Trying to bind to DNS port"
-    rtv, output = plconn.executecommandone(node, "sudo -A "+NPYTHONPATH+" testdnsport.py")
+    rtv, output = plconn.executecommandone(node, "sudo "+NPYTHONPATH+" testdnsport.py")
     if rtv:
         print "DNS Port available on %s" % node
     else:
@@ -63,11 +63,11 @@ def check_planetlab_pythonversion(plconn, node):
 def get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, classname, bootstrapname):
     startupcmd = ''
     if nodetype == NODE_REPLICA:
-        startupcmd = "nohup "+NPYTHONPATH+" concoord/replica.py -a %s -p %d -f %s -c %s -b %s" % (node, port, clientobjectfilename, classname, bootstrapname)
+        startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -b %s" % (node, port, clientobjectfilename, classname, bootstrapname)
     elif nodetype == NODE_ACCEPTOR:
-        startupcmd = "nohup "+NPYTHONPATH+" concoord/acceptor.py -a %s -p %d -f %s -b %s" % (node, port, clientobjectfilename, bootstrapname)
+        startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "acceptor.py -a %s -p %d -f %s -b %s" % (node, port, clientobjectfilename, bootstrapname)
     elif nodetype == NODE_NAMESERVER:
-        startupcmd =  "sudo nohup "+NPYTHONPATH+" concoord/nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain+'.openreplica.org', node, port, clientobjectfilename, classname, bootstrapname)
+        startupcmd =  "sudo nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain+'.openreplica.org', node, port, clientobjectfilename, classname, bootstrapname)
     return startupcmd
         
 def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapname):
@@ -81,7 +81,7 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
     print "Picked Node: %s" % nodeconn.getHosts()[0]
     print "Connecting to bootstrap: %s" % bootstrapname
     if nodetype != NODE_ACCEPTOR:
-        nodeconn.uploadall(clientobjectfilepath+"fixed", "concoord/"+clientobjectfilename)
+        nodeconn.uploadall(clientobjectfilepath+"fixed", CONCOORDPATH+clientobjectfilename)
     for node in nodeconn.getHosts():
         port = random.randint(14000, 15000)
         p = nodeconn.executecommandone(node, get_startup_cmd(nodetype, subdomain, node, port,
