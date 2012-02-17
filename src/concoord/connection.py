@@ -194,8 +194,8 @@ class Connection():
         try:
             __import__(module)
         except:
-            if module == "concoord.message":
-                module = 'message'
+            if module.split('.')[0] == 'concoord':
+                module = module.split('.')[1]
             else:
                 module = 'concoord.'+module
             __import__(module)
