@@ -5,8 +5,11 @@
 @copyright: See LICENSE
 '''
 from concoord.nameserver import *
+from time import strftime, gmtime
 
 OPENREPLICANS = {'ns1.openreplica.org.':'128.84.154.110', 'ns2.openreplica.org.':'128.232.103.201', 'ns3.openreplica.org.':'128.112.139.43', 'ns4.openreplica.org.':'128.208.4.197', 'ns5.openreplica.org.':'139.19.142.2'} 
+
+VIEWCHANGEFUNCTIONS = ['addnodetosubdomain','delnodefromsubdomain','delsubdomain']
 
 class OpenReplicaNameserver(Nameserver):
     def __init__(self):
@@ -16,16 +19,21 @@ class OpenReplicaNameserver(Nameserver):
         self.nsdomains = []
         for nsdomain in OPENREPLICANS.iterkeys():
             self.nsdomains.append(dns.name.Name(nsdomain.split(".")))
+        # When the nameserver starts the revision number is 00 for that day
+        self.revision = strftime("%Y%m%d", gmtime())+str(0).zfill(2)
 
     def performcore(self, msg, slotno, dometaonly=False, designated=False):
         Replica.performcore(self, msg, slotno, dometaonly, designated)
+        commandname = self.decisions[slotno].command.split()[0]
+        if commandname in VIEWCHANGEFUNCTIONS:
+            self.updaterevision()
 
     def perform(self, msg):
         Replica.perform(self, msg)
             
     def msg_perform(self, conn, msg):
         Replica.msg_perform(self, conn, msg)
-
+        
     def ismysubdomainname(self, question):
         for subdomain in self.object.nodes.keys():
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
@@ -69,7 +77,7 @@ class OpenReplicaNameserver(Nameserver):
                     yield addr+IPCONVERTER
 
     def should_answer(self, question):
-        formyname = (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV or question.rdtype == dns.rdatatype.MX) and self.ismydomainname(question)
+        formyname = (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV or question.rdtype == dns.rdatatype.MX or question.rdtype == dns.rdatatype.SOA) and self.ismydomainname(question)
         myresponsibility_a = question.rdtype == dns.rdatatype.A and (self.ismynsname(question) or question.name.is_subdomain(self.specialdomain))
         myresponsibility_ns = question.rdtype == dns.rdatatype.NS and self.ismysubdomainname(question)
         return formyname or myresponsibility_a or myresponsibility_ns
@@ -120,6 +128,10 @@ class OpenReplicaNameserver(Nameserver):
                     if self.ismydomainname(question):
                         # MX Queries --> mail.systems.cs.cornell.edu
                         answerstr = self.create_mx_answer_section(question, ttl=86400, addr='mail.systems.cs.cornell.edu.')
+                elif question.rdtype == dns.rdatatype.SOA:
+                    if self.ismydomainname(question):
+                        # SOA Query --> Reply with Metadata
+                        answerstr = self.create_soa_answer_section(question)
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 response = dns.message.from_text(responsestr)
             elif self.should_auth(question):
