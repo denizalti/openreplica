@@ -7,7 +7,7 @@
 import socket
 import select
 from threading import Thread, Timer
-from time import strftime
+from time import strftime, gmtime
 import signal
 from utils import *
 from enums import *
@@ -49,6 +49,8 @@ class Nameserver(Replica):
         except socket.error as e:
             self.logger.write("DNS Error", "Can't bind to UDP port 53: %s" % str(e))
             self._graceexit(1)
+        # When the nameserver starts the revision number is 00 for that day
+        self.revision = strftime("%Y%m%d", gmtime())+str(0).zfill(2)
 
     def startservice(self):
         """Starts the background services associated with a node."""
@@ -99,7 +101,7 @@ class Nameserver(Replica):
 
     def should_answer(self, question):
         return (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or \
-                question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV) and self.ismydomainname(question)
+                question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV or question.rdtype == dns.rdatatype.SOA) and self.ismydomainname(question)
 
     def handle_query(self, data, addr):
         query = dns.message.from_wire(data)
@@ -122,6 +124,9 @@ class Nameserver(Replica):
                     # NS Queries --> List all Nameserver nodes
                     for address in self.nsresponse(question):
                         answerstr += self.create_answer_section(question, name=address)
+                elif question.rdtype == dns.rdatatype.SOA:
+                    # SOA Query --> Reply with Metadata
+                    answerstr = self.create_soa_answer_section(question)
                 elif question.rdtype == dns.rdatatype.SRV:
                     # SRV Queries --> List all Replicas with addr:port
                     for address,port in self.srvresponse(question):
@@ -161,6 +166,22 @@ class Nameserver(Replica):
         answerstr = "%s %d %s %s %d %s\n" % (str(question.name), ttl, RRCLASS[rrclass], RRTYPE[question.rdtype], priority, addr)
         return answerstr
 
+    def create_soa_answer_section(self, question, ttl=30, rrclass=1):
+        refreshrate = 86000 # time (in seconds) when the slave DNS server will refresh from the master
+        updateretry = 7200  # time (in seconds) when the slave DNS server should retry contacting a failed master
+        expiry = 360000     # time (in seconds) that a slave server will keep a cached zone file as valid
+        minimum = 432000    # default time (in seconds) that the slave servers should cache the Zone file
+        answerstr = "%s %d %s %s %s %s (%s %d %d %d %d)" % (str(question.name), ttl, RRCLASS[rrclass],
+                                                            RRTYPE[question.rdtype],
+                                                            str(self.mydomain),
+                                                            'dns-admin.'+str(self.mydomain),
+                                                            self.revision,
+                                                            refreshrate,
+                                                            updateretry,
+                                                            expiry,
+                                                            minimum)
+        return answerstr
+
     def create_answer_section(self, question, ttl=30, rrclass=1, addr='', name='', txt=None):
         if question.rdtype == dns.rdatatype.A:
             resp = str(addr)
@@ -178,6 +199,32 @@ class Nameserver(Replica):
     def create_additional_section(self, question, ttl='30', rrclass=1, rrtype=1, addr=''):
         additionalstr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[rrtype]), str(addr))
         return additionalstr
+
+    def _add_node(self, nodetype, nodename):
+        nodetype = int(nodetype)
+        self.logger.write("State", "Adding node: %s %s" % (node_names[nodetype], nodename))
+        ipaddr,port = nodename.split(":")
+        nodepeer = Peer(ipaddr,int(port),nodetype)
+        self.groups[nodetype].add(nodepeer)
+        self.updaterevision()
+        
+    def _del_node(self, nodetype, nodename):
+        nodetype = int(nodetype)
+        self.logger.write("State", "Deleting node: %s %s" % (node_names[nodetype], nodename))
+        ipaddr,port = nodename.split(":")
+        nodepeer = Peer(ipaddr,int(port),nodetype)
+        self.groups[nodetype].remove(nodepeer)
+        self.updaterevision()
+
+    def updaterevision(self):
+        self.logger.write("State", "Updating Revision -- from: %s" % self.revision)
+        if strftime("%Y%m%d", gmtime()) in self.revision:
+            rno = int(self.revision[-2]+self.revision[-1])
+            rno += 1
+            self.revision = strftime("%Y%m%d", gmtime())+str(rno).zfill(2)
+        else:
+            self.revision = strftime("%Y%m%d", gmtime())+str(0).zfill(2)
+        self.logger.write("State", "Updating Revision -- to: %s" % self.revision)
 
 def main():
     nameservernode = Nameserver(options.dnsname, instantiateobj=True)
