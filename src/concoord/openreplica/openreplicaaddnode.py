@@ -9,8 +9,8 @@ from time import sleep,time
 import os, sys, time, shutil
 import subprocess
 from concoord.enums import *
-from concoord.openreplica.plmanager import *
-from concoord.openreplica.openreplicacoordobjproxy import *
+from plmanager import *
+from openreplicacoordobjproxy import *
 try:
     from openreplicasecret import NPYTHONPATH
 except:
@@ -23,6 +23,8 @@ parser.add_option("-f", "--objectfilepath", action="store", dest="objectfilepath
 parser.add_option("-c", "--classname", action="store", dest="classname", help="main class name")
 parser.add_option("-b", "--bootstrap", action="store", dest="bootstrapname", help="bootstrap name")
 (options, args) = parser.parse_args()
+
+CONCOORDPATH = 'concoord/src/concoord/'
 
 def terminated(p):
     i = 5
@@ -89,6 +91,7 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
                                                              bootstrapname), False)
         while terminated(p):
             port = random.randint(14000, 15000)
+            print get_startup_cmd(nodetype, subdomain, node, port,clientobjectfilename, classname, bootstrapname)
             p = nodeconn.executecommandone(node, get_startup_cmd(nodetype, subdomain, node, port,
                                                                  clientobjectfilename, classname,
                                                                  bootstrapname), False)
