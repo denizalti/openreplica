@@ -1,7 +1,6 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Semaphore Coordination Object
-@date: March 20, 2011
 @copyright: See LICENSE
 """
 from threading import Lock
@@ -13,10 +12,6 @@ class DSemaphore():
         self.count = int(count)
         self.queue = []
         self.atomic = Lock()
-
-    def create(self, count=1):
-        self.count = int(count)
-        self.queue = []
     
     def acquire(self, _concoord_command):
         with self.atomic:

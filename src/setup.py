@@ -32,7 +32,7 @@ setup(name='concoord',
       data_files=[('/etc/bash_completion.d', ['data/concoord'])],
       license='3-Clause BSD',
       url='http://openreplica.org/',
-      description='Coordination (replication and synchronization) service for distributed systems.',
+      description='Coordination service for distributed systems.',
       long_description=ldesc,
       classifiers=classifiers, 
       )

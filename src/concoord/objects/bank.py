@@ -1,11 +1,10 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Example bank object that keeps track of accounts
-@date: March 20, 2011
 @copyright: See LICENSE
 """
 class Bank():
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.accounts = {}
 
     def open(self, accntno, **kwargs):
@@ -40,7 +39,7 @@ class Bank():
         else:
             raise KeyError
     
-    def __str__(self):
+    def __str__(self, **kwargs):
         return "\n".join(["%s" % (str(account)) for account in self.accounts.values()])
 
 class Account():
