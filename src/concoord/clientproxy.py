@@ -1,10 +1,9 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: ConCoord Client Proxy
-@date: February 1, 2011
 @copyright: See LICENSE
 '''
-import socket, os, sys, time, random
+import socket, os, sys, time, random, threading
 from threading import Thread, Lock, Condition
 from enums import *
 from utils import *
@@ -14,6 +13,11 @@ from peer import Peer
 from message import ClientMessage, Message, PaxosMessage, HandshakeMessage, AckMessage
 from command import Command
 from pvalue import PValue, PValueSet
+try:
+    from openreplicasecret import LOGGERNODE
+except:
+    print "To turn on Logging through the Network, edit NetworkLogger credentials"
+    LOGGERNODE = '128.84.154.110:12000'
 try:
     import dns
     import dns.resolver
@@ -39,7 +43,7 @@ class ClientProxy():
         myaddr = findOwnIP()
         myport = self.socket.getsockname()[1]
         self.me = Peer(myaddr,myport,NODE_CLIENT)
-        self.logger = NetworkLogger("%s-%s" % ('NODE_CLIENT',self.me.getid()), 'egs-110.cs.cornell.edu:12000')
+        self.logger = NetworkLogger("%s-%s" % ('NODE_CLIENT',self.me.getid()), LOGGERNODE)
         self.commandnumber = random.randint(1, sys.maxint)
         self.lock = Lock()
 
@@ -127,12 +131,12 @@ class ClientProxy():
                     success = self.conn.send(cm)
                     if self.debug:
                         print "Bootstrap: ", self.bootstrap
-                        print "Sent message %s" % str(cm)
+                        print "Sent: %s" % str(cm)
                     if not success:
                         raise IOError
                     timestamp, reply = self.conn.receive()
                     if self.debug:
-                        print "after receive  %s" % str(reply)
+                        print "Received: %s" % str(reply)
                     if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                         if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
                             raise IOError
@@ -142,7 +146,7 @@ class ClientProxy():
                             replied = True
                     if time.time() - starttime > CLIENTRESENDTIMEOUT:
                         if self.debug:
-                            print "timed out: %d seconds" % CLIENTRESENDTIMEOUT
+                            print "Timed out: %d seconds" % CLIENTRESENDTIMEOUT
                         if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
                             replied = True
                 except ( IOError, EOFError ):
@@ -154,11 +158,28 @@ class ClientProxy():
             elif reply.replycode == CR_EXCEPTION:
                 raise Exception(reply.reply)
             elif reply.replycode == CR_BLOCK:
-                # XXX
-                return "Block."
+                # Wait until an UNBLOCK msg is received
+                replied = False
+                while not replied:
+                    try:
+                        timestamp, reply = self.conn.receive()
+                        if self.debug:
+                            print "Received:  %s" % str(reply)
+                        if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
+                            if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
+                                raise IOError
+                            elif reply.replycode == CR_INPROGRESS:
+                                continue
+                            else:
+                                replied = True
+                    except ( IOError, EOFError ):
+                        self._trynewbootstrap()
+                    except KeyboardInterrupt:
+                        self._graceexit()
+                if reply.replycode == CR_UNBLOCK:
+                    return
             elif reply.replycode == CR_UNBLOCK:
-                # XXX
-                return "Unblock."    
+                return    
             else:
                 return reply.reply
             

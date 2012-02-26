@@ -1,7 +1,6 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: OpenReplica coordination object that keeps subdomains and their corresponding nameservers
-@date: August 1, 2011
 @copyright: See LICENSE
 '''
 class OpenReplicaCoord():

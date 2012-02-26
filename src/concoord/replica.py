@@ -1,7 +1,6 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: The Replica keeps an object and responds to Perform messages received from the Leader.
-@date: February 1, 2011
 @copyright: See LICENSE
 '''
 from threading import Thread, Lock, Condition, Timer, Event
@@ -145,7 +144,7 @@ class Replica(Node):
                     clientreplycode = CR_OK
                     send_result_to_client = True
                     # If there are clients to be unblocked that have
-                    # been blocked previously send them unblock messages
+                    # been blocked previously, send them unblock messages
                     for unblockedclientcommand in unblocked.iterkeys():
                         self.send_reply_to_client(CR_UNBLOCK, None, unblockedclientcommand)
                 except Exception as e:

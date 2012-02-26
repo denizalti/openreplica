@@ -1,7 +1,6 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Example test object
-@date: March 20, 2011
 @copyright: See LICENSE
 """
 class Test():
@@ -10,6 +9,9 @@ class Test():
 
     def getvalue(self, **kwargs):
         return self.value
+
+    def setvalue(self, newvalue, **kwargs):
+        self.value = newvalue
     
     def __str__(self, **kwargs):
         return "The value is %d" % self.value
