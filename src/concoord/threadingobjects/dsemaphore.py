@@ -13,16 +13,16 @@ class DSemaphore():
         self.queue = []
         self.atomic = Lock()
     
-    def acquire(self, _concoord_command):
+    def acquire(self, kwargs):
         with self.atomic:
             self.count -= 1
             if self.count < 0:
-                self.queue.append(_concoord_command)
+                self.queue.append(kwargs['_concoord_command'])
                 raise BlockingReturn()
             else:
                 return True
 
-    def release(self, _concoord_command):
+    def release(self, kwargs):
         with self.atomic:
             self.count += 1
             if len(self.queue) > 0:
