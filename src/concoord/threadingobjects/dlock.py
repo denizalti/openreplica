@@ -9,37 +9,41 @@ from concoord.exception import *
 
 class DLock():
     def __init__(self):
-        self.locked = False
-        self.holder = None
-        self.queue = []
-        self.atomic = Lock()
-    
+        self.__locked = False
+        self.__owner = None
+        self.__queue = []
+        self.__atomic = Lock()
+
+    def __repr__(self):
+        return "<%s owner=%s>" % (self.__class__.__name__, str(self.__owner))
+
     def acquire(self, kwargs):
         command = kwargs['_concoord_command']
-        with self.atomic:
-            if self.locked:
-                self.queue.append(command)
+        with self.__atomic:
+            if self.__locked:
+                self.__queue.append(command)
                 raise BlockingReturn()
             else:
-                self.locked = True          
-                self.holder = command.client
+                self.__locked = True          
+                self.__owner = command.client
 
     def release(self, kwargs):
         command = kwargs['_concoord_command']
-        with self.atomic:
-            if self.locked and self.holder == command.client:
-                if len(self.queue) > 0:
-                    newcommand = self.queue.pop(0)
-                    self.holder = newcommand.client
+        with self.__atomic:
+            if self.__locked and self.__owner == command.client:
+                if len(self.__queue) > 0:
+                    newcommand = self.__queue.pop(0)
+                    self.__owner = newcommand.client
                     # add the popped command to the exception args
                     unblocked = {}
                     unblocked[unblockcommand] = True
                     raise UnblockingReturn(unblockeddict=unblocked)
-                elif len(self.queue) == 0:
-                    self.holder = None
-                    self.locked = False
+                elif len(self.__queue) == 0:
+                    self.__owner = None
+                    self.__locked = False
             else:
                 raise error("release unlocked lock")
                 
     def __str__(self):
-        return '<concoord.threadingobjects.dlock object>'
+        return "<%s object>" % (self.__class__.__name__)
+    
