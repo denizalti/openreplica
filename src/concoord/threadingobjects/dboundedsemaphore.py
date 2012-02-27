@@ -38,4 +38,4 @@ class DBoundedSemaphore():
                 raise UnblockingReturn(unblockeddict=unblocked)
                 
     def __str__(self):
-        return "Distributed BoundedSemaphore\ncount: %d\nqueue: %s\n" % (self.count, " ".join([str(m) for m in self.queue]))
+        return '<concoord.threadingobjects.dboundedsemaphore object>'
