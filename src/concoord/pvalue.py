@@ -1,7 +1,6 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: PValue is used to keep Paxos state in Acceptor and Leader nodes.
-@date: February 1, 2011
 @copyright: See LICENSE
 '''
 class PValue():

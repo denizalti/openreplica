@@ -1,16 +1,15 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Creates concoord objects
-@date: August 1, 2011
 @copyright: See LICENSE
 '''
 from optparse import OptionParser
 from time import sleep,time
 import os, sys, time, shutil
 import ast, _ast
-from safetychecker import *
-from proxygenerator import *
-from serversideproxyast import *
+from concoord.safetychecker import *
+from concoord.proxygenerator import *
+from concoord.serversideproxyast import *
 
 parser = OptionParser(usage="usage: %prog -f objectfilepath -c classname")
 parser.add_option("-p", "--objectfilepath", action="store", dest="objectfilepath", help="client object file path")

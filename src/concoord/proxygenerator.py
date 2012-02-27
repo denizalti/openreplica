@@ -1,7 +1,6 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Proxy Generator that creates ConCoord proxy files from regular Python objects.
-@date: March 20, 2011
 @copyright: See LICENSE
 '''
 import inspect, types, string
@@ -19,7 +18,7 @@ class ProxyGen(ast.NodeTransformer):
         return node
 
     def visit_Module(self, node):
-        importstmt = compile("import clientproxy","<string>","exec",_ast.PyCF_ONLY_AST).body
+        importstmt = compile("import concoord.clientproxy","<string>","exec",_ast.PyCF_ONLY_AST).body
         node.body.insert(0, importstmt[0])
         return self.generic_visit(node)
 

@@ -1,7 +1,6 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Fixes client objects to be replicated by ConCoord
-@date: August 1, 2011
 @copyright: See LICENSE
 '''
 import inspect, types, string

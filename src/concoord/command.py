@@ -1,7 +1,6 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: A Command is a request from a Client to the replicated object to carry out a method.
-@date: February 1, 2011
 @copyright: See LICENSE
 """
 from threading import Lock, Condition

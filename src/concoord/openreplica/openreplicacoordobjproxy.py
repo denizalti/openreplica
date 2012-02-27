@@ -1,7 +1,6 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Automatically generated OpenReplica coordination object proxy.
-@date: August 1, 2011
 @copyright: LICENSE
 '''
 from concoord.clientproxy import *

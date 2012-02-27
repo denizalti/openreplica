@@ -1,10 +1,10 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Script to check Python installation version
-@date: November 24, 2011
 @copyright: See LICENSE
 '''
 import sys
+
 def checkpythonversion():
     version = sys.version_info.major*100 + sys.version_info.minor * 10 + sys.version_info.micro
     if version > 266:

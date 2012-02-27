@@ -18,7 +18,7 @@ class DLock():
         with self.atomic:
             if self.locked:
                 self.queue.append(_concoord_command)
-                raise BlockingReturn(None)
+                raise BlockingReturn()
             else:
                 self.locked = True          
                 self.holder = _concoord_command.client
@@ -32,7 +32,7 @@ class DLock():
                     # add the popped command to the exception args
                     unblocked = {}
                     unblocked[unblockcommand] = True
-                    raise UnblockingReturn(None, unblocked)
+                    raise UnblockingReturn(unblockeddict=unblocked)
                 elif len(self.queue) == 0:
                     self.holder = None
                     self.locked = False

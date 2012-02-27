@@ -18,7 +18,7 @@ class DSemaphore():
             self.count -= 1
             if self.count < 0:
                 self.queue.append(_concoord_command)
-                raise BlockingReturn(None)
+                raise BlockingReturn()
             else:
                 return True
 
@@ -30,7 +30,7 @@ class DSemaphore():
                 # add the popped command to the exception args
                 unblocked = {}
                 unblocked[unblockcommand] = True
-                raise UnblockingReturn(None, unblocked)
+                raise UnblockingReturn(unblockeddict=unblocked)
                 
     def __str__(self):
         return "Distributed Semaphore\ncount: %d\nqueue: %s\n" % (self.count, " ".join([str(m) for m in self.queue]))

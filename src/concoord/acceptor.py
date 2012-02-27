@@ -1,19 +1,18 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: The Acceptor keeps track of past Paxos ballots. It is the log for the Paxos state.
-@date: February 1, 2011
 @copyright: See LICENSE
 """
-from threading import Thread
 import signal
-from enums import *
-from utils import *
-from node import *
-from connection import ConnectionPool
-from group import Group
-from peer import Peer
-from message import Message, PaxosMessage, GarbageCollectMessage
-from pvalue import PValue, PValueSet
+from threading import Thread
+from concoord.node import *
+from concoord.enums import *
+from concoord.utils import *
+from concoord.peer import Peer
+from concoord.group import Group
+from concoord.pvalue import PValue, PValueSet
+from concoord.connection import ConnectionPool
+from concoord.message import Message, PaxosMessage, GarbageCollectMessage
 
 class Acceptor(Node):
     """Acceptor keeps track of past Paxos ballots. It supports garbage collection by keeping track

@@ -1,14 +1,13 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Messages sent on the wire
-@date: February 1, 2011
 @copyright: See LICENSE
 """
 from threading import Lock
-from enums import *
-from utils import *
-from peer import Peer
-from command import Command
+from concoord.enums import *
+from concoord.utils import *
+from concoord.peer import Peer
+from concoord.command import Command
 
 msgidpool = 0
 msgidpool_lock=Lock()

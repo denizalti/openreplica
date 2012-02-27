@@ -5,14 +5,14 @@
 '''
 import socket, os, sys, time, random, threading
 from threading import Thread, Lock, Condition
-from enums import *
-from utils import *
-from connection import ConnectionPool, Connection
-from group import Group
-from peer import Peer
-from message import ClientMessage, Message, PaxosMessage, HandshakeMessage, AckMessage
-from command import Command
-from pvalue import PValue, PValueSet
+from concoord.enums import *
+from concoord.utils import *
+from concoord.connection import ConnectionPool, Connection
+from concoord.group import Group
+from concoord.peer import Peer
+from concoord.message import ClientMessage, Message, PaxosMessage, HandshakeMessage, AckMessage
+from concoord.command import Command
+from concoord.pvalue import PValue, PValueSet
 try:
     from openreplicasecret import LOGGERNODE
 except:

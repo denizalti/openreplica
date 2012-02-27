@@ -1,7 +1,6 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Utility functions for the runtime. Includes a timer module for collecting measurements.
-@date: February 3, 2011
 @copyright: See LICENSE
 '''
 import socket
@@ -9,7 +8,7 @@ import os, sys
 import time
 import string
 import threading
-from enums import *
+from concoord.enums import *
 
 def findOwnIP():
     """Retrieves the hostname of the caller"""
