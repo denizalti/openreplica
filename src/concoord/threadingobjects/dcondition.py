@@ -1,7 +1,6 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Condition Coordination Object
-@date: March 20, 2011
 @copyright: See LICENSE
 """
 from threading import RLock

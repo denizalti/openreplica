@@ -9,6 +9,8 @@ from concoord.enums import *
 
 class DSemaphore():
     def __init__(self, count=1):
+        if count < 0:
+            raise ValueError
         self.count = int(count)
         self.queue = []
         self.atomic = Lock()
