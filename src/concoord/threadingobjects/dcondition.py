@@ -5,8 +5,7 @@
 """
 from threading import RLock
 from concoord.exception import *
-from drlock import DRlock
-from dlock import DLock
+from concoord.threadingobjects.drlock import DRLock
     
 class DCondition():
     def __init__(self):
