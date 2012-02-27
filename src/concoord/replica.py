@@ -90,7 +90,6 @@ class Replica(Node):
         executes regular commands as well as META-level commands (commands related
         to the managements of the Paxos protocol) with a delay of WINDOW commands."""
         command = self.decisions[slotnumber]
-        print "**************************Command: ", command
         commandlist = command.command.split()
         commandname = commandlist[0]
         commandargs = commandlist[1:]
@@ -129,17 +128,16 @@ class Replica(Node):
                 # Watch out for the lock release and acquire!
                 self.lock.release()
                 try:
-                    print "*******************************", BlockingReturn
                     givenresult = method(*commandargs, _concoord_command=command)
                     clientreplycode = CR_OK
                     send_result_to_client = True
                 except BlockingReturn as blockingretexp:
-                    print "********************BLOCK************************"
+                    self.logger.write("State", "Blocking Client.")
                     givenresult = blockingretexp.returnvalue
                     clientreplycode = CR_BLOCK
                     send_result_to_client = True
                 except UnblockingReturn as unblockingretexp:
-                    print "********************UNBLOCK************************"
+                    self.logger.write("State", "Unblocking Client(s).")
                     # Get the information about the method call
                     # These will be used to update executed and
                     # to send reply message to the caller client
@@ -160,7 +158,6 @@ class Replica(Node):
                 self.lock.acquire()
         except (TypeError, AttributeError) as t:
             self.logger.write("Execution Error", "command not supported: %s" % (command))
-            self.logger.write("Execution Error", "%s" % str(t))
             givenresult = 'Method Does Not Exist: ', commandname
             clientreplycode = CR_EXCEPTION
             unblocked = {}
@@ -186,8 +183,8 @@ class Replica(Node):
         clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=givenresult, replycode=clientreplycode, inresponseto=command.clientcommandnumber)
         self.logger.write("State", "Clientreply: %s\nAcceptors: %s" % (str(clientreply), str(self.groups[NODE_ACCEPTOR])))
         clientconn = self.clientpool.get_connection_by_peer(command.client)
-        if clientconn.thesocket == None:
-            self.logger.write("State", "Client disconnected.")
+        if clientconn == None or clientconn.thesocket == None:
+            self.logger.write("State", "Client connection does not exist.")
             return
         clientconn.send(clientreply)
 
