@@ -1,7 +1,6 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: The Logger Daemon. Receives log messages and prints them.
-@date: December 20, 2011
 @copyright: See LICENSE
 """
 import socket, time, os, sys, select

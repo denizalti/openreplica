@@ -1,14 +1,13 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: A Group is a collection of peers that perform the same function
-@date: February 1, 2011
 @copyright: See LICENSE
 """
 from threading import RLock
-from connection import *
-from enums import *
-from utils import *
-from peer import *
+from concoord.connection import *
+from concoord.enums import *
+from concoord.utils import *
+from concoord.peer import *
 
 class Group():
     """A Group is a collection of Peers that perform the same function."""

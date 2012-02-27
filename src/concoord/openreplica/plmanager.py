@@ -1,7 +1,6 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Planet Lab Manager that handles operations on Planet Lab.
-@date: August 1, 2011
 @copyright: See LICENSE
 '''
 import sys, os, socket, os.path

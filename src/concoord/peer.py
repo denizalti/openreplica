@@ -1,11 +1,10 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Peers participating in the protocol
-@date: February 1, 2011
 @copyright: See LICENSE
 '''
-from enums import *
-from utils import *
+from concoord.enums import *
+from concoord.utils import *
 
 class Peer():
     def __init__(self, peeraddr, peerport, peertype=-1):

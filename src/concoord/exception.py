@@ -1,19 +1,10 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Common ConCoord exceptions.
-@date: February 3, 2011
 @copyright: See LICENSE
 '''
 class ConCoordException(Exception):
     """Abstract base class shared by all concoord exceptions"""
-    pass
-
-class AcceptorError(ConCoordException):
-    """Not enough acceptors or not responding"""
-    pass
-
-class SyntaxError(ConCoordException):
-    """input is malformed."""
     pass
 
 class Timeout(ConCoordException):
@@ -22,11 +13,17 @@ class Timeout(ConCoordException):
 
 class BlockingReturn(ConCoordException):
     """Blocking Return"""
-    def __init__(self, returnvalue):
+    def __init__(self, returnvalue=None):
         self.returnvalue = returnvalue
+
+    def __str__(self):
+        return "ConCoord BlockingReturn Exception: " + str(self.returnvalue)
 
 class UnblockingReturn(ConCoordException):
     """Unblocking Return"""
-    def __init__(self, returnvalue, unblockeddict):
+    def __init__(self, returnvalue=None, unblockeddict={}):
         self.returnvalue = returnvalue
         self.unblocked = unblockeddict
+
+    def __str__(self):
+        return "ConCoord UnblockingReturn Exception: " + str(self.returnvalue) + " ".join(unblockeddict.keys())

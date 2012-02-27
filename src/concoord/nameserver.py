@@ -1,18 +1,15 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: The Nameserver keeps track of the view by being involved in Paxos rounds and replies to DNS queries with the latest view.
-@date: February 1, 2011
 @copyright: See LICENSE
 """
-import socket
-import select
+import socket, select, signal
 from threading import Thread, Timer
 from time import strftime, gmtime
-import signal
-from utils import *
-from enums import *
-from node import *
-from replica import *
+from concoord.utils import *
+from concoord.enums import *
+from concoord.node import *
+from concoord.replica import *
 try:
     import dns.exception
     import dns.message

@@ -1,26 +1,24 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Master class for all nodes
-@date: February 1, 2011
 @copyright: See LICENSE
 '''
 from optparse import OptionParser
 from threading import Thread, RLock, Lock, Condition, Timer, Semaphore
 from Queue import Queue
-import time
-import socket, select
+import time, socket, select
 import os, sys
 import random, struct
 import cPickle as pickle
 import copy
-from connection import ConnectionPool,Connection
-from group import Group
-from peer import Peer
-from command import Command
-from pvalue import PValue, PValueSet
-from enums import *
-from utils import *
-from message import *
+from concoord.connection import ConnectionPool,Connection
+from concoord.group import Group
+from concoord.peer import Peer
+from concoord.command import Command
+from concoord.pvalue import PValue, PValueSet
+from concoord.enums import *
+from concoord.utils import *
+from concoord.message import *
 try:
     from openreplicasecret import LOGGERNODE
 except:

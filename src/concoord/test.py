@@ -1,7 +1,6 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Example test object
-@date: March 20, 2011
 @copyright: See LICENSE
 """
 class Test():

@@ -1,16 +1,15 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Adds nodes to an OpenReplica instance
-@date: January 20, 2012
 @copyright: See LICENSE
 '''
-from optparse import OptionParser
-from time import sleep,time
-import os, sys, time, shutil
 import subprocess
+import os, sys, time, shutil
+from time import sleep,time
+from optparse import OptionParser
 from concoord.enums import *
-from plmanager import *
-from openreplicacoordobjproxy import *
+from concoord.openreplica.plmanager import *
+from concoord.openreplica.openreplicacoordobjproxy import *
 try:
     from openreplicasecret import NPYTHONPATH
 except:

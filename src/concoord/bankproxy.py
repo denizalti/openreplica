@@ -1,10 +1,9 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Automatically generated bank object proxy
-@date: March 20, 2011
 @copyright: See LICENSE
 """
-from clientproxy import *
+from concoord.clientproxy import *
 
 class Bank():
     def __init__(self, bootstrap):

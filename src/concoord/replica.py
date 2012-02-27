@@ -7,17 +7,17 @@ from threading import Thread, Lock, Condition, Timer, Event
 import math, random, time
 import os, sys
 import signal
-from connection import Connection, ConnectionPool
-from responsecollector import ResponseCollector
-from group import Group
-from peer import Peer
-from command import Command
-from pvalue import PValue, PValueSet
-from message import *
-from node import *
-from exception import *
-from enums import *
-from utils import *
+from concoord.connection import Connection, ConnectionPool
+from concoord.exception import ConCoordException, BlockingReturn, UnblockingReturn
+from concoord.responsecollector import ResponseCollector
+from concoord.group import Group
+from concoord.peer import Peer
+from concoord.command import Command
+from concoord.pvalue import PValue, PValueSet
+from concoord.message import *
+from concoord.node import *
+from concoord.enums import *
+from concoord.utils import *
 
 backoff_event = Event()
 class Replica(Node):
@@ -90,6 +90,7 @@ class Replica(Node):
         executes regular commands as well as META-level commands (commands related
         to the managements of the Paxos protocol) with a delay of WINDOW commands."""
         command = self.decisions[slotnumber]
+        print "**************************Command: ", command
         commandlist = command.command.split()
         commandname = commandlist[0]
         commandargs = commandlist[1:]
@@ -128,14 +129,17 @@ class Replica(Node):
                 # Watch out for the lock release and acquire!
                 self.lock.release()
                 try:
+                    print "*******************************", BlockingReturn
                     givenresult = method(*commandargs, _concoord_command=command)
                     clientreplycode = CR_OK
                     send_result_to_client = True
                 except BlockingReturn as blockingretexp:
+                    print "********************BLOCK************************"
                     givenresult = blockingretexp.returnvalue
                     clientreplycode = CR_BLOCK
                     send_result_to_client = True
                 except UnblockingReturn as unblockingretexp:
+                    print "********************UNBLOCK************************"
                     # Get the information about the method call
                     # These will be used to update executed and
                     # to send reply message to the caller client

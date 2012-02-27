@@ -1,10 +1,9 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Class used to collect responses to both PREPARE and PROPOSE messages
-@date: February 1, 2011
 @copyright: See LICENSE
 '''
-from pvalue import PValue, PValueSet
+from concoord.pvalue import PValue, PValueSet
 
 class ResponseCollector():
     """ResponseCollector keeps the state related to both MSG_PREPARE and
