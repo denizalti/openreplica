@@ -48,6 +48,10 @@ class DRLock():
             elif self.__count == 0 and len(self.__queue) == 0:
                 self.__owner = None
 
+    # Internal methods used by condition variables
+    def _is_owned(self, client):
+        return self.__owner == client
+
     def __str__(self):
         return "<%s object>" % (self.__class__.__name__)
     
