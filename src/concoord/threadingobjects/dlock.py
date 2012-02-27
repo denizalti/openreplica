@@ -14,18 +14,20 @@ class DLock():
         self.queue = []
         self.atomic = Lock()
     
-    def acquire(self, _concoord_command):
+    def acquire(self, kwargs):
+        command = kwargs['_concoord_command']
         with self.atomic:
             if self.locked:
-                self.queue.append(_concoord_command)
+                self.queue.append(command)
                 raise BlockingReturn()
             else:
                 self.locked = True          
-                self.holder = _concoord_command.client
+                self.holder = command.client
 
-    def release(self, _concoord_command):
+    def release(self, kwargs):
+        command = kwargs['_concoord_command']
         with self.atomic:
-            if self.locked and self.holder == _concoord_command.client:
+            if self.locked and self.holder == command.client:
                 if len(self.queue) > 0:
                     newcommand = self.queue.pop(0)
                     self.holder = newcommand.client

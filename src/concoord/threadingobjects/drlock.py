@@ -3,47 +3,51 @@
 @note: RLock Coordination Object
 @copyright: See LICENSE
 """
-from threading import Lock
+from threading import Lock, error
+from concoord.enums import *
 from concoord.exception import *
 
-class DRlock():
+class DRLock():
     def __init__(self):
         self.lockcount = 0
         self.holder = None
         self.queue = []
         self.atomic = Lock()
-    
+        
     def acquire(self, kwargs):
-        _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
+        command = kwargs['_concoord_command']
         with self.atomic:
-            if self.lockcount > 0 and self.holder != _concoord_command.client:
-                self.queue.append(_concoord_command)
-                raise UnusualReturn
-            elif self.lockcount > 0 and self.holder == _concoord_command.client:
+            if self.lockcount > 0 and self.holder != command.client:
+                self.queue.append(command)
+                raise BlockingReturn()
+            elif self.lockcount > 0 and self.holder == command.client:
                 self.lockcount += 1                
             else:
                 self.lockcount = 1
-                self.holder = _concoord_command.client
+                self.holder = command.client
 
     def release(self, kwargs):
-        _concoord_designated, _concoord_owner, _concoord_command = kwargs['_concoord_designated'], kwargs['_concoord_owner'], kwargs['_concoord_command']
+        command = kwargs['_concoord_command']
         with self.atomic:
             if self.lockcount > 0:
                 self.lockcount -= 1
             else:
-                return "Release on unacquired lock"
+                raise RuntimeError("cannot release un-acquired lock")
             
             if self.lockcount == 0 and len(self.queue) > 0:
                 self.lockcount += 1
                 newcommand = self.queue.pop(0)
                 self.holder = newcommand.client
-                # return to new holder which is waiting
-                return_outofband(_concoord_designated, _concoord_owner, newcommand)
+                # add the popped command to the exception args
+                unblocked = {}
+                unblocked[unblockcommand] = True
+                raise UnblockingReturn(unblockeddict=unblocked)
             elif self.lockcount == 0 and len(self.queue) == 0:
                 self.holder = None
-                self.lockcount = False
+                self.lockcount = 0
             else:
                 pass
                 
     def __str__(self):
         return '<concoord.threadingobjects.drlock object>'
+    
