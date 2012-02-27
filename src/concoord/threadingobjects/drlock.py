@@ -46,4 +46,4 @@ class DRlock():
                 pass
                 
     def __str__(self):
-        return "Distributed RLock\nholder: %s\nqueue: %s\n" % (self.holder, " ".join([str(m) for m in self.queue]))
+        return '<concoord.threadingobjects.drlock object>'

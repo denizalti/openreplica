@@ -53,5 +53,5 @@ class DCondition():
                 raise RuntimeError("cannot notify on un-acquired lock")   
 
     def __str__(self):
-        return "Distributed Condition\nlock: %s\nwaiters: %s\n" % (str(self.lock), " ".join([str(w) for w in self.__waiters]))
+        return '<concoord.threadingobjects.dcondition object>'
 
