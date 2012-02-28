@@ -1,4 +1,9 @@
-from concoord.threadingobjects.drlock import DRLock
+"""
+@author: Deniz Altinbuken, Emin Gun Sirer
+@note: Example rlock object
+@copyright: See LICENSE
+"""
+from concoord.threadingobject.drlock import DRLock
 
 class RLock():
     """RLock object that supports following functions:

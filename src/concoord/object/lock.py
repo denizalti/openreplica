@@ -1,4 +1,9 @@
-from concoord.threadingobjects.dlock import DLock
+"""
+@author: Deniz Altinbuken, Emin Gun Sirer
+@note: Example lock object
+@copyright: See LICENSE
+"""
+from concoord.threadingobject.dlock import DLock
 
 class Lock():
     """Lock object that supports following functions:
