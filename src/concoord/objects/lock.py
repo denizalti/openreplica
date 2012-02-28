@@ -8,6 +8,9 @@ class Lock():
     def __init__(self, **kwargs):
         self.lock = DLock()
 
+    def __repr__(self, **kwargs):
+        return repr(self.lock)
+
     def acquire(self, **kwargs):
         try:
             return self.lock.acquire(kwargs)

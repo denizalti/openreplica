@@ -12,6 +12,9 @@ class BoundedSemaphore():
     """
     def __init__(self, count=1, **kwargs):
         self.semaphore = DBoundedSemaphore(count)
+
+    def __repr__(self, **kwargs):
+        return repr(self.semaphore)        
             
     def acquire(self, **kwargs):
         try:

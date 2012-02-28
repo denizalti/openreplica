@@ -3,7 +3,7 @@
 @note: Lock Coordination Object
 @copyright: See LICENSE
 """
-from threading import Lock, error
+from threading import Lock
 from concoord.enums import *
 from concoord.exception import *
 
@@ -30,19 +30,18 @@ class DLock():
     def release(self, kwargs):
         command = kwargs['_concoord_command']
         with self.__atomic:
-            if self.__locked and self.__owner == command.client:
-                if len(self.__queue) > 0:
-                    newcommand = self.__queue.pop(0)
-                    self.__owner = newcommand.client
-                    # add the popped command to the exception args
-                    unblocked = {}
-                    unblocked[unblockcommand] = True
-                    raise UnblockingReturn(unblockeddict=unblocked)
-                elif len(self.__queue) == 0:
-                    self.__owner = None
-                    self.__locked = False
-            else:
-                raise error("release unlocked lock")
+            if self.__owner != command.client:
+                raise RuntimeError("cannot release un-acquired lock")
+            if len(self.__queue) > 0:
+                unblockcommand = self.__queue.pop(0)
+                self.__owner = unblockcommand.client
+                # add the popped command to the exception args
+                unblocked = {}
+                unblocked[unblockcommand] = True
+                raise UnblockingReturn(unblockeddict=unblocked)
+            elif len(self.__queue) == 0:
+                self.__owner = None
+                self.__locked = False
                 
     def __str__(self):
         return "<%s object>" % (self.__class__.__name__)

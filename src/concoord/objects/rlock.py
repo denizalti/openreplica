@@ -8,6 +8,9 @@ class RLock():
     def __init__(self, **kwargs):
         self.rlock = DRLock()
 
+    def __repr__(self, **kwargs):
+        return repr(self.rlock)
+
     def acquire(self, **kwargs):
         try:
             return self.rlock.acquire(kwargs)

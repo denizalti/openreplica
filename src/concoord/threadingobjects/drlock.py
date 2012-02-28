@@ -3,7 +3,7 @@
 @note: RLock Coordination Object
 @copyright: See LICENSE
 """
-from threading import Lock, error
+from threading import Lock
 from concoord.enums import *
 from concoord.exception import *
 
@@ -29,6 +29,7 @@ class DRLock():
             else:
                 self.__count = 1
                 self.__owner = command.client
+                return True
 
     def release(self, kwargs):
         command = kwargs['_concoord_command']
@@ -39,8 +40,8 @@ class DRLock():
                 
             if self.__count == 0 and len(self.__queue) > 0:
                 self.__count += 1
-                newcommand = self.__queue.pop(0)
-                self.__owner = newcommand.client
+                unblockcommand = self.__queue.pop(0)
+                self.__owner = unblockcommand.client
                 # add the popped command to the exception args
                 unblocked = {}
                 unblocked[unblockcommand] = True
@@ -51,6 +52,9 @@ class DRLock():
     # Internal methods used by condition variables
     def _is_owned(self, client):
         return self.__owner == client
+
+    def _add_to_queue(self, clientcommand):
+        self.__queue.append(clientcommand)
 
     def __str__(self):
         return "<%s object>" % (self.__class__.__name__)
