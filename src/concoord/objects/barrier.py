@@ -5,7 +5,7 @@ class Barrier():
     """Barrier object that supports following functions:
     - wait: takes a thread who wants to wait on the barrier
     """
-    def __init__(self, count):
+    def __init__(self, count=1, **kwargs):
         self.count = int(count)
         self.current = 0
         self.condition = DCondition()
@@ -20,7 +20,7 @@ class Barrier():
             self.condition.notifyAll(kwargs)
         self.condition.release(kwargs)
         
-    def __str__(self):
+    def __str__(self, **kwargs):
         return "<%s object>" % (self.__class__.__name__)
         
     
