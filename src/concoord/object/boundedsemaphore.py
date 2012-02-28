@@ -3,7 +3,7 @@
 @note: Example boundedsemaphore object
 @copyright: See LICENSE
 """
-from concoord.threadingobjects.dboundedsemaphore import DBoundedSemaphore
+from concoord.threadingobject.dboundedsemaphore import DBoundedSemaphore
 
 class BoundedSemaphore():
     """Semaphore object that supports following functions:

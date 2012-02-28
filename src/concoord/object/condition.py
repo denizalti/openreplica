@@ -3,7 +3,7 @@
 @note: Example condition object
 @copyright: See LICENSE
 """
-from concoord.threadingobjects.dcondition import DCondition
+from concoord.threadingobject.dcondition import DCondition
 
 class Condition():
     """Lock object that supports following functions:

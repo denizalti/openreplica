@@ -1,5 +1,5 @@
 from threading import Lock
-from concoord.threadingobjects.dcondition import DCondition
+from concoord.threadingobject.dcondition import DCondition
 
 class Barrier():
     """Barrier object that supports following functions:

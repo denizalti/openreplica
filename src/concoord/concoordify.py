@@ -11,9 +11,10 @@ from concoord.safetychecker import *
 from concoord.proxygenerator import *
 from concoord.serversideproxyast import *
 
-parser = OptionParser(usage="usage: %prog -f objectfilepath -c classname")
+parser = OptionParser(usage="usage: %prog -f objectfilepath -c classname -s safe")
 parser.add_option("-p", "--objectfilepath", action="store", dest="objectfilepath", help="client object file path")
 parser.add_option("-n", "--classname", action="store", dest="classname", help="main class name")
+parser.add_option("-s", "--safe", action="store_true", dest="safe", default=False, help="safety checking on/off")
 (options, args) = parser.parse_args()
 
 def check_object(clientcode):
@@ -27,9 +28,10 @@ def main():
     try:
         with open(options.objectfilepath, 'rU') as fd:
             clientcode = fd.read()
-        if not check_object(clientcode):
-            print "Object is not safe for us to execute."
-            os._exit(1)
+        if options.safe:
+            if not check_object(clientcode):
+                print "Object is not safe to execute."
+                os._exit(1)
         fixedfile = editproxyfile(options.objectfilepath, options.classname)
         print "Fixed server-side object: ", fixedfile.name
         clientproxycode = createclientproxy(clientcode, options.classname, None)

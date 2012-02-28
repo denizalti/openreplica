@@ -26,7 +26,7 @@ class Replica(Node):
         Node.__init__(self, nodetype, instantiateobj=instantiateobj)
         if instantiateobj:
             self.object = None
-            for objectloc in ['concoord.'+self.objectfilename[:-3], 'concoord.objects.'+self.objectfilename[:-3], self.objectfilename[:-3]]:
+            for objectloc in ['concoord.'+self.objectfilename[:-3], 'concoord.object.'+self.objectfilename[:-3], self.objectfilename[:-3]]:
                 try:
                     if hasattr(__import__(objectloc, globals(), locals(), [self.objectfilename[:-3]], -1), self.objectname):
                         self.object = getattr(__import__(objectloc, globals(), locals(), [self.objectfilename[:-3]], -1), self.objectname)()

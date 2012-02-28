@@ -3,7 +3,7 @@
 @note: Example semaphore object
 @copyright: See LICENSE
 """
-from concoord.threadingobjects.dsemaphore import DSemaphore
+from concoord.threadingobject.dsemaphore import DSemaphore
 
 class Semaphore():
     """Semaphore object that supports following functions:
