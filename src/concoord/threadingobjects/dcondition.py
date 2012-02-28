@@ -40,8 +40,8 @@ class DCondition():
             if not self.__waiters:
                 return
             waitcommand = self.__waiters.pop(0)
-            # To make sure that the client that will be unblocked has the lock we'll add the client to the lock queue.
-            self.__lock.acquire({'_concoord_command':waitcommand}) # This in effect would Unblock the client
+            # client should acquire the lock to continue
+            self.__lock.acquire({'_concoord_command':waitcommand})
         
     def notifyAll(self, kwargs):
         command = kwargs['_concoord_command']
@@ -51,14 +51,10 @@ class DCondition():
                 raise RuntimeError("cannot wait on un-acquired lock")
             if not self.__waiters:
                 return
-            __waiters = self.__waiters
-            waiters = __waiters
-            for waitcommand in waiters:
-                self.__lock.acquire({'_concoord_command':waitcommand}) # This in effect would Unblock the client
-                try:
-                    __waiters.remove(waitcommand)
-                except ValueError:
-                    pass
+            for waitcommand in self.__waiters:
+                # client should acquire the lock to continue
+                self.__lock.acquire({'_concoord_command':waitcommand})
+            self.__waiters = []
             
     def __str__(self):
         return "<%s object>" % (self.__class__.__name__)
