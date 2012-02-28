@@ -21,6 +21,7 @@ except:
 try:
     import dns
     import dns.resolver
+    import dns.exception
 except:
     print("Install dnspython: http://www.dnspython.org/")
 
@@ -53,12 +54,14 @@ class ClientProxy():
 
     def _getbootstrapfromdomain(self, domainname):
         try:
-            answers = dns.resolver.query('_concoord._tcp.'+domainname, 'SRV')
+            r = dns.resolver.Resolver()
+            r.nameservers.append('127.0.0.1')
+            answers = r.query('_concoord._tcp.'+domainname, 'SRV')
             for rdata in answers:
                 for peer in self._getipportpairs(str(rdata.target), rdata.port):
                     yield peer
-        except dns.resolver.NXDOMAIN:
-            pass
+        except (dns.resolver.NXDOMAIN, dns.exception.Timeout):
+            print "Cannot resolve name."
 
     def discoverbootstrap(self, givenbootstrap):
         tmpbootstraplist = []
