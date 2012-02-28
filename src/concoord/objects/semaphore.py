@@ -12,6 +12,9 @@ class Semaphore():
     """
     def __init__(self, count=1, **kwargs):
         self.semaphore = DSemaphore(count)
+
+    def __repr__(self, **kwargs):
+        return repr(self.semaphore)
             
     def acquire(self, **kwargs):
         try:
