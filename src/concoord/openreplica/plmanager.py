@@ -6,7 +6,7 @@
 import sys, os, socket, os.path
 import random, time
 import subprocess, signal
-from concoord.object.openreplicacoordobj import OpenReplicaCoord
+from concoord.object.openreplicacoord import OpenReplicaCoord
 try:
     from openreplicasecret import USERNAME, USERKEYFILE, NODESFILE
 except:

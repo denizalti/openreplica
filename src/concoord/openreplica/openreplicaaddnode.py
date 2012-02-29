@@ -9,7 +9,7 @@ from time import sleep,time
 from optparse import OptionParser
 from concoord.enums import *
 from concoord.openreplica.plmanager import *
-from concoord.openreplica.openreplicacoordobjproxy import *
+from concoord.proxy.openreplicacoord import *
 try:
     from openreplicasecret import NPYTHONPATH
 except:

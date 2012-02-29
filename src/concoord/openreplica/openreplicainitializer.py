@@ -12,7 +12,7 @@ from concoord.safetychecker import *
 from concoord.proxygenerator import *
 from concoord.serversideproxyast import *
 from concoord.openreplica.plmanager import *
-from concoord.openreplica.openreplicacoordobjproxy import *
+from concoord.proxy.openreplicacoord import *
 try:
     from openreplicasecret import NPYTHONPATH
 except:
@@ -134,7 +134,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
         print nameservername
     print "All clear!"
     ## add the nameserver nodes to open replica coordinator object
-    openreplicacoordobj = OpenReplicaCoordProxy('openreplica.org')
+    openreplicacoordobj = OpenReplicaCoord('openreplica.org')
     print "Adding Nameserver nodes to OpenReplica Coordination Object:"
     for node in nameservernames:
         print "- ", node

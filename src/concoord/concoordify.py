@@ -12,8 +12,8 @@ from concoord.proxygenerator import *
 from concoord.serversideproxyast import *
 
 parser = OptionParser(usage="usage: %prog -f objectfilepath -c classname -s safe")
-parser.add_option("-p", "--objectfilepath", action="store", dest="objectfilepath", help="client object file path")
-parser.add_option("-n", "--classname", action="store", dest="classname", help="main class name")
+parser.add_option("-f", "--objectfilepath", action="store", dest="objectfilepath", help="client object file path")
+parser.add_option("-c", "--classname", action="store", dest="classname", help="main class name")
 parser.add_option("-s", "--safe", action="store_true", dest="safe", default=False, help="safety checking on/off")
 (options, args) = parser.parse_args()
 

@@ -18,7 +18,7 @@ class ProxyGen(ast.NodeTransformer):
         return node
 
     def visit_Module(self, node):
-        importstmt = compile("import concoord.clientproxy","<string>","exec",_ast.PyCF_ONLY_AST).body
+        importstmt = compile("from concoord.clientproxy import ClientProxy","<string>","exec",_ast.PyCF_ONLY_AST).body
         node.body.insert(0, importstmt[0])
         return self.generic_visit(node)
 
@@ -30,12 +30,16 @@ class ProxyGen(ast.NodeTransformer):
         if self.inourobject:
             # XXX this code currently only supports positional arguments
             if node.name == "__init__":
-                node.args.args.append(ast.Name(id="bootstrap"))
-                args = [i.id for i in node.args.args[1:]]
-                node.body = compile("self.proxy = clientproxy.ClientProxy(" + ", ".join(args) +")","<string>","exec",_ast.PyCF_ONLY_AST).body
+                args = ["'__init__'"]+[i.id for i in node.args.args[1:]]
+                node.args.args.append(ast.Name(id='bootstrap'))
+                node.args.defaults.append(ast.Name(id='None'))
+                node.args.args.append(ast.Name(id='connect'))
+                node.args.defaults.append(ast.Name(id='False'))
+                initstr = "if connect and not bootstrap:\n\traise ConCoordException('bootstrap cannot be None')\nelif connect and bootstrap:\n\tself.proxy = ClientProxy(bootstrap)\nelse:\n\treturn self.proxy.invoke_command(%s)" % ", ".join(args)
+                node.body = compile(initstr,"<string>","exec",_ast.PyCF_ONLY_AST).body
             else:
-                args = [i.id for i in node.args.args[1:]]
-                node.body = compile("return self.proxy.invoke_command(\"" + node.name +"\", "+", ".join(args)+")","<string>","exec",_ast.PyCF_ONLY_AST).body
+                args = ["\'"+ node.name +"\'"]+[i.id for i in node.args.args[1:]]
+                node.body = compile("return self.proxy.invoke_command(%s)" % ", ".join(args),"<string>","exec",_ast.PyCF_ONLY_AST).body
             return node
         else:
             return self.generic_visit(node)

@@ -54,9 +54,7 @@ class ClientProxy():
 
     def _getbootstrapfromdomain(self, domainname):
         try:
-            r = dns.resolver.Resolver()
-            r.nameservers.append('127.0.0.1')
-            answers = r.query('_concoord._tcp.'+domainname, 'SRV')
+            answers = dns.resolver.query('_concoord._tcp.'+domainname, 'SRV')
             for rdata in answers:
                 for peer in self._getipportpairs(str(rdata.target), rdata.port):
                     yield peer
