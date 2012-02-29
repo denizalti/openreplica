@@ -5,7 +5,8 @@
 '''
 class ConCoordException(Exception):
     """Abstract base class shared by all concoord exceptions"""
-    pass
+    def __init__(self, msg=''):
+        self.msg = msg
 
 class Timeout(ConCoordException):
     """The operation timed out."""

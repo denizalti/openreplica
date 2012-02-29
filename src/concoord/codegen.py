@@ -11,6 +11,52 @@
 from ast import *
 
 
+BOOLOP_SYMBOLS = {
+    And:        'and',
+    Or:         'or'
+}
+
+BINOP_SYMBOLS = {
+    Add:        '+',
+    Sub:        '-',
+    Mult:       '*',
+    Div:        '/',
+    FloorDiv:   '//',
+    Mod:        '%',
+    LShift:     '<<',
+    RShift:     '>>',
+    BitOr:      '|',
+    BitAnd:     '&',
+    BitXor:     '^'
+}
+
+CMPOP_SYMBOLS = {
+    Eq:         '==',
+    Gt:         '>',
+    GtE:        '>=',
+    In:         'in',
+    Is:         'is',
+    IsNot:      'is not',
+    Lt:         '<',
+    LtE:        '<=',
+    NotEq:      '!=',
+    NotIn:      'not in'
+}
+
+UNARYOP_SYMBOLS = {
+    Invert:     '~',
+    Not:        'not',
+    UAdd:       '+',
+    USub:       '-'
+}
+
+ALL_SYMBOLS = {}
+ALL_SYMBOLS.update(BOOLOP_SYMBOLS)
+ALL_SYMBOLS.update(BINOP_SYMBOLS)
+ALL_SYMBOLS.update(CMPOP_SYMBOLS)
+ALL_SYMBOLS.update(UNARYOP_SYMBOLS)
+
+
 def to_source(node, indent_with=' ' * 4, add_line_information=False):
     """This function can convert a node tree back into python sourcecode.
     This is useful for debugging purposes, especially if you're dealing with
@@ -32,7 +78,6 @@ def to_source(node, indent_with=' ' * 4, add_line_information=False):
     generator = SourceGenerator(indent_with, add_line_information)
     generator.visit(node)
     return ''.join(generator.result)
-
 
 class SourceGenerator(NodeVisitor):
     """This visitor is able to transform a well formed syntax tree into python
@@ -126,7 +171,7 @@ class SourceGenerator(NodeVisitor):
         for idx, item in enumerate(node.names):
             if idx:
                 self.write(', ')
-            self.write(item)
+            self.visit(item)
 
     def visit_Import(self, node):
         self.newline(node)
@@ -405,7 +450,7 @@ class SourceGenerator(NodeVisitor):
 
     def visit_Compare(self, node):
         self.write('(')
-        self.write(node.left)
+        self.visit(node.left)
         for op, right in zip(node.ops, node.comparators):
             self.write(' %s %%' % CMPOP_SYMBOLS[type(op)])
             self.visit(right)

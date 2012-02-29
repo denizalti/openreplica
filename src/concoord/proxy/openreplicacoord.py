@@ -1,13 +1,14 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
-@note: Automatically generated OpenReplica coordination object proxy.
+@note: OpenReplica coordination object proxy
 @copyright: LICENSE
 '''
-from concoord.clientproxy import *
+from concoord.clientproxy import ClientProxy
 
-class OpenReplicaCoordProxy():
+class OpenReplicaCoord():
     def __init__(self, bootstrap):
         self.proxy = ClientProxy(bootstrap)
+        return self.proxy.invoke_command('__init__')
 
     def addnodetosubdomain(self, subdomain, node):
         return self.proxy.invoke_command("addnodetosubdomain", subdomain, node)

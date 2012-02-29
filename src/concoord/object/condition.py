@@ -46,5 +46,5 @@ class Condition():
         except Exception as e:
             raise e
 
-    def __str__(self):
+    def __str__(self, **kwargs):
         return str(self.condition)
