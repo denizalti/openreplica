@@ -1,9 +1,9 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
-@note: OpenReplica coordination object that keeps subdomains and their corresponding nameservers
+@note: Nameserver coordination object that keeps subdomains and their corresponding nameservers
 @copyright: See LICENSE
 '''
-class OpenReplicaCoord():
+class NameserverCoord():
     def __init__(self, **kwargs):
         self.nodes = {}
 

@@ -9,7 +9,7 @@ from time import sleep,time
 from optparse import OptionParser
 from concoord.enums import *
 from concoord.openreplica.plmanager import *
-from concoord.proxy.openreplicacoord import *
+from concoord.proxy.nameservercoord import *
 try:
     from openreplicasecret import NPYTHONPATH
 except:
@@ -99,9 +99,9 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
         print "Node is started: %s" % nodename
     # Add it to the object if it is a nameserver
     if nodetype == NODE_NAMESERVER:
-        print "Adding Nameserver to the subdomain Coordination Object" 
-        openreplicacoordobj = OpenReplicaCoordProxy('openreplica.org')
-        openreplicacoordobj.addnodetosubdomain(subdomain, node)
+        print "Adding Nameserver to the subdomain Nameserver Coordination Object" 
+        nameservercoordobj = NameserverProxy('openreplica.org')
+        nameservercoordobj.addnodetosubdomain(subdomain, node)
 
 def main():
     try:

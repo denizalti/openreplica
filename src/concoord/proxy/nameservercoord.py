@@ -1,11 +1,11 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
-@note: Openreplica coordination object proxy
+@note: Nameserver coordination object proxy
 @copyright: See LICENSE
 '''
 from concoord.clientproxy import ClientProxy
 
-class OpenReplicaCoord:
+class NameserverCoord:
     def __init__(self, bootstrap):
         self.proxy = ClientProxy(bootstrap)
         
