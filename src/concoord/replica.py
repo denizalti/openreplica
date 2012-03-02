@@ -3,21 +3,21 @@
 @note: The Replica keeps an object and responds to Perform messages received from the Leader.
 @copyright: See LICENSE
 '''
-from threading import Thread, Lock, Condition, Timer, Event
 import math, random, time
 import os, sys
 import signal
-from concoord.connection import Connection, ConnectionPool
-from concoord.exception import ConCoordException, BlockingReturn, UnblockingReturn
-from concoord.responsecollector import ResponseCollector
-from concoord.group import Group
+from threading import Thread, Lock, Condition, Timer, Event
 from concoord.peer import Peer
+from concoord.group import Group
 from concoord.command import Command
 from concoord.pvalue import PValue, PValueSet
-from concoord.message import *
+from concoord.responsecollector import ResponseCollector
+from concoord.connection import Connection, ConnectionPool
+from concoord.exception import ConCoordException, BlockingReturn, UnblockingReturn
 from concoord.node import *
 from concoord.enums import *
 from concoord.utils import *
+from concoord.message import *
 
 backoff_event = Event()
 class Replica(Node):

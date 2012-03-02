@@ -3,27 +3,27 @@
 @note: Master class for all nodes
 @copyright: See LICENSE
 '''
-from optparse import OptionParser
-from threading import Thread, RLock, Lock, Condition, Timer, Semaphore
-from Queue import Queue
-import time, socket, select
+import copy
 import os, sys
 import random, struct
 import cPickle as pickle
-import copy
-from concoord.connection import ConnectionPool,Connection
-from concoord.group import Group
-from concoord.peer import Peer
-from concoord.command import Command
-from concoord.pvalue import PValue, PValueSet
+import time, socket, select
+from Queue import Queue
+from optparse import OptionParser
+from threading import Thread, RLock, Lock, Condition, Timer, Semaphore
 from concoord.enums import *
 from concoord.utils import *
 from concoord.message import *
+from concoord.peer import Peer
+from concoord.group import Group
+from concoord.command import Command
+from concoord.pvalue import PValue, PValueSet
+from concoord.connection import ConnectionPool,Connection
 try:
     from openreplicasecret import LOGGERNODE
 except:
     print "To turn on Logging through the Network, edit NetworkLogger credentials"
-    LOGGERNODE = '128.84.154.110:12000'
+    LOGGERNODE = None
 try:
     import dns.resolver, dns.exception
 except:

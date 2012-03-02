@@ -1,13 +1,15 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
 @note: Lock proxy
-@copyright: LICENSE
+@copyright: See LICENSE
 '''
 from concoord.clientproxy import ClientProxy
 
 class Lock:
     def __init__(self, bootstrap):
         self.proxy = ClientProxy(bootstrap)
+        
+    def __concoordinit__(self):
         return self.proxy.invoke_command('__init__')
 
     def __repr__(self):

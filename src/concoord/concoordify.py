@@ -3,10 +3,10 @@
 @note: Creates concoord objects
 @copyright: See LICENSE
 '''
-from optparse import OptionParser
-from time import sleep,time
-import os, sys, time, shutil
 import ast, _ast
+import os, sys, time, shutil
+from time import sleep,time
+from optparse import OptionParser
 from concoord.safetychecker import *
 from concoord.proxygenerator import *
 from concoord.serversideproxyast import *

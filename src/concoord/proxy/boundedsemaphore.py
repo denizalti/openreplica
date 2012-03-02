@@ -1,13 +1,15 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
-@note: BoundedSemaphore proxy
-@copyright: LICENSE
+@note: Bounded semaphore proxy
+@copyright: See LICENSE
 '''
 from concoord.clientproxy import ClientProxy
 
 class BoundedSemaphore:
-    def __init__(self, bootstrap, count=1):
+    def __init__(self, bootstrap):
         self.proxy = ClientProxy(bootstrap)
+        
+    def __concoordinit__(self, count=1):
         return self.proxy.invoke_command('__init__', count)
 
     def __repr__(self):

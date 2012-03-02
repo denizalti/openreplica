@@ -80,7 +80,7 @@ def concoordify():
         proxyfile.close()
         print "Client proxy: ", proxyfile.name
     except Exception as e:
-        parser.print_help()
+        print "Error: ", e
 
 def main():
     if len(sys.argv) < 2:
