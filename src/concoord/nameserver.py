@@ -26,7 +26,6 @@ RRCLASS = ['','IN','CS','CH','HS']
 OPCODES = ['QUERY','IQUERY','STATUS']
 RCODES = ['NOERROR','FORMERR','SERVFAIL','NXDOMAIN','NOTIMP','REFUSED']
 
-IPCONVERTER = '.ipaddr.openreplica.org.'
 SRVNAME = '_concoord._tcp.'
 
 class Nameserver(Replica):
@@ -35,8 +34,9 @@ class Nameserver(Replica):
     def __init__(self, domain=options.dnsname, instantiateobj=False):
         Replica.__init__(self, nodetype=NODE_NAMESERVER, instantiateobj=instantiateobj, port=5000, bootstrap=options.bootstrap)
         try:
-            self.mydomain = dns.name.Name((domain+".").split("."))
-            self.mysrvdomain = dns.name.Name((SRVNAME+domain+".").split("."))
+            self.mydomain = dns.name.Name((domain+'.').split('.'))
+            self.mysrvdomain = dns.name.Name((SRVNAME+domain+'.').split('.'))
+            self.ipconverter = '.ipaddr.'+domain+'.'
         except dns.name.EmptyLabel:
             self.logger.write("DNS Error", "A DNS name is required. Use -n option.")            
         self.udpport = 53
@@ -83,7 +83,7 @@ class Nameserver(Replica):
 
     def srvresponse(self, question):
         for address,port in self.groups[NODE_REPLICA].get_addresses():
-            yield address+IPCONVERTER,port
+            yield address+self.ipconverter,port
         
     def txtresponse(self, question):
         txtstr = ''
@@ -204,7 +204,7 @@ class Nameserver(Replica):
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype].add(nodepeer)
         self.updaterevision()
-        self.updatemaster()
+        self.updatemaster(nodepeer, add=True)
         
     def _del_node(self, nodetype, nodename):
         nodetype = int(nodetype)
@@ -213,10 +213,22 @@ class Nameserver(Replica):
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype].remove(nodepeer)
         self.updaterevision()
-        self.updatemaster()
+        self.updatemaster(nodepeer)
 
-    def updatemaster(self):
+    def updatemaster(self, node, add=True, route53=False):
         self.logger.write("State", "Updating Master")
+        # Master can be a Nameserver that uses a Coordination Object
+        # or Amazon Route 53
+        if route53:
+            pass
+        else:
+            # XXX The representation of a node in the Coordination
+            # Object may need change
+            nameservercoordobj = NameserverProxy(self.master)
+            if add:
+                nameservercoordobj.addnodetosubdomain(subdomain, node)
+            else:
+                nameservercoordobj.delnodefromsubdomain(subdomain, node)
 
     def updaterevision(self):
         self.logger.write("State", "Updating Revision -- from: %s" % self.revision)
