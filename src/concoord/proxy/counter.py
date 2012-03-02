@@ -1,25 +1,25 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
-@note: Log proxy
+@note: Counter proxy
 @copyright: See LICENSE
 '''
 from concoord.clientproxy import ClientProxy
 
-class Log:
+class Counter:
     def __init__(self, bootstrap):
         self.proxy = ClientProxy(bootstrap)
-        
+
     def __concoordinit__(self):
         return self.proxy.invoke_command('__init__')
 
-    def write(self, entry):
-        return self.proxy.invoke_command('write', entry)
+    def decrement(self):
+        return self.proxy.invoke_command('decrement')
 
-    def append(self, entry):
-        return self.proxy.invoke_command('append', entry)
+    def increment(self):
+        return self.proxy.invoke_command('increment')
 
-    def read(self):
-        return self.proxy.invoke_command('read')
+    def getvalue(self):
+        return self.proxy.invoke_command('getvalue')
 
     def __str__(self):
         return self.proxy.invoke_command('__str__')

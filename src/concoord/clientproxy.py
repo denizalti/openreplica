@@ -14,11 +14,6 @@ from concoord.message import ClientMessage, Message, PaxosMessage, HandshakeMess
 from concoord.command import Command
 from concoord.pvalue import PValue, PValueSet
 try:
-    from openreplicasecret import LOGGERNODE
-except:
-    print "To turn on Logging through the Network, edit NetworkLogger credentials"
-    LOGGERNODE = '128.84.154.110:12000'
-try:
     import dns
     import dns.resolver
     import dns.exception
@@ -44,7 +39,6 @@ class ClientProxy():
         myaddr = findOwnIP()
         myport = self.socket.getsockname()[1]
         self.me = Peer(myaddr,myport,NODE_CLIENT)
-        self.logger = NetworkLogger("%s-%s" % ('NODE_CLIENT',self.me.getid()), LOGGERNODE)
         self.commandnumber = random.randint(1, sys.maxint)
         self.lock = Lock()
 

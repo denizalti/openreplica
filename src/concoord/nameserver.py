@@ -4,11 +4,11 @@
 @copyright: See LICENSE
 """
 import socket, select, signal
-from threading import Thread, Timer
 from time import strftime, gmtime
+from threading import Thread, Timer
+from concoord.node import *
 from concoord.utils import *
 from concoord.enums import *
-from concoord.node import *
 from concoord.replica import *
 try:
     import dns.exception
@@ -204,6 +204,7 @@ class Nameserver(Replica):
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype].add(nodepeer)
         self.updaterevision()
+        self.updatemaster()
         
     def _del_node(self, nodetype, nodename):
         nodetype = int(nodetype)
@@ -212,6 +213,10 @@ class Nameserver(Replica):
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype].remove(nodepeer)
         self.updaterevision()
+        self.updatemaster()
+
+    def updatemaster(self):
+        self.logger.write("State", "Updating Master")
 
     def updaterevision(self):
         self.logger.write("State", "Updating Revision -- from: %s" % self.revision)

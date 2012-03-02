@@ -1,16 +1,17 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
-@note: Example semaphore object
+@note: Semaphore proxy
 @copyright: See LICENSE
 '''
 from concoord.clientproxy import ClientProxy
 
 class Semaphore:
-    def __init__(self, count=1, bootstrap=None, connect=False):
+    def __init__(self, bootstrap):
         self.proxy = ClientProxy(bootstrap)
-        if not connect:
-            return self.proxy.invoke_command('__init__', count)
-    
+        
+    def __concoordinit__(self, count=1):
+        return self.proxy.invoke_command('__init__', count)
+
     def __repr__(self):
         return self.proxy.invoke_command('__repr__')
 

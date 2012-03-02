@@ -6,8 +6,8 @@
 from concoord.proxy.openreplicacoord import OpenReplicaCoord
 
 def main():
-    openreplicacoordobj = OpenReplicaCoord('openreplica.org')
-    print openreplicacoordobj.__str__()
+    openreplicacoord = OpenReplicaCoord('openreplica.org')
+    print openreplicacoord.__str__()
     
 if __name__=='__main__':
     main()

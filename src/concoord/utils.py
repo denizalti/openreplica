@@ -30,13 +30,14 @@ class ConsoleLogger():
 class NetworkLogger():
     def __init__(self, name, lognode):
         self.prefix = name
-        logaddr,logport = lognode.split(':')
+        if lognode:
+            logaddr,logport = lognode.split(':')
         try:
             self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
             self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
             self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
             self.socket.connect((logaddr,int(logport)))
-        except socket.error, e:
+        except:
             return
 
     def write(self, cls, str):
