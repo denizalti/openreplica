@@ -32,32 +32,38 @@ SRVNAME = '_concoord._tcp.'
 class Nameserver(Replica):
     """Nameserver keeps track of the connectivity state of the system and replies to
     QUERY messages from dnsserver."""
-    def __init__(self, domain=options.dnsname, instantiateobj=False, master='128.84.227.201:14000'):
+    def __init__(self, domain=options.dnsname, instantiateobj=False, master='128.84.227.201:14000', servicetype=NS_SELF):
         Replica.__init__(self, nodetype=NODE_NAMESERVER, instantiateobj=instantiateobj, port=5000, bootstrap=options.bootstrap)
         try:
             self.mydomain = dns.name.Name((domain+'.').split('.'))
             self.mysrvdomain = dns.name.Name((SRVNAME+domain+'.').split('.'))
             self.ipconverter = '.ipaddr.'+domain+'.'
         except dns.name.EmptyLabel:
-            self.logger.write("DNS Error", "A DNS name is required. Use -n option.")            
-        self.udpport = 53
-        self.udpsocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-        if master:
-            self.master = master
-        try:
-            self.udpsocket.bind((self.addr,self.udpport))
-        except socket.error as e:
-            self.logger.write("DNS Error", "Can't bind to UDP port 53: %s" % str(e))
-            #self._graceexit(1)
+            self.logger.write("DNS Error", "A DNS name is required. Use -n option.")
+        if servicetype == NS_SELF:
+            self.udpport = 53
+            self.udpsocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+            try:
+                self.udpsocket.bind((self.addr,self.udpport))
+            except socket.error as e:
+                self.logger.write("DNS Error", "Can't bind to UDP port 53: %s" % str(e))
+                self._graceexit(1)
+        if servicetype == NS_MASTER:
+            if master:
+                self.master = master
+            else:
+                self.logger.write("DNS Error", "Master is required to run in MASTER mode.")
+                self._graceexit(1)
         # When the nameserver starts the revision number is 00 for that day
         self.revision = strftime("%Y%m%d", gmtime())+str(0).zfill(2)
 
     def startservice(self):
         """Starts the background services associated with a node."""
         Replica.startservice(self)
-        # Start a thread for the UDP server
-        UDP_server_thread = Thread(target=self.udp_server_loop, name='UDPServerThread')
-        UDP_server_thread.start()
+        if servicetype == NS_SELF:
+            # Start a thread for the UDP server
+            UDP_server_thread = Thread(target=self.udp_server_loop, name='UDPServerThread')
+            UDP_server_thread.start()
         
     def udp_server_loop(self):
         while self.alive:
@@ -207,7 +213,8 @@ class Nameserver(Replica):
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype].add(nodepeer)
         self.updaterevision()
-        self.updatemaster(nodepeer, add=True)
+        if not servicetype == NS_SELF:
+            self.updatemaster(nodepeer, add=True)
         
     def _del_node(self, nodetype, nodename):
         nodetype = int(nodetype)
@@ -216,15 +223,16 @@ class Nameserver(Replica):
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype].remove(nodepeer)
         self.updaterevision()
-        self.updatemaster(nodepeer)
+        if not servicetype == NS_SELF:
+            self.updatemaster(nodepeer)
 
-    def updatemaster(self, node, add=True, route53=False):
-        self.logger.write("State", "**************************************Updating Master")
+    def updatemaster(self, node, add=True):
+        self.logger.write("State", "********************************Updating Master")
         # Master can be a Nameserver that uses a Coordination Object
         # or Amazon Route 53
-        if route53:
+        if servicetype == NS_ROUTE53:
             pass
-        else:
+        elif servicetype == NS_MASTER:
             # XXX The representation of a node in the Coordination
             # Object may need change
             print self.master

@@ -10,7 +10,6 @@
 """
 from ast import *
 
-
 BOOLOP_SYMBOLS = {
     And:        'and',
     Or:         'or'

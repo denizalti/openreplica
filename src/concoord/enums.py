@@ -21,6 +21,9 @@ NODE_CLIENT, NODE_ACCEPTOR, NODE_REPLICA, NODE_NAMESERVER = range(4)
 # error_types
 ERR_NOERROR, ERR_NOTLEADER, ERR_INITIALIZING = range(3)
 
+# nameserver service types
+NS_SELF, NS_MASTER, NS_ROUTE53 = range(3)
+
 # command result
 META = 'META'
 BLOCK = 'BLOCK'
@@ -74,3 +77,4 @@ node_names = get_var_list("NODE_")
 cmd_states = get_var_list("CMD_")
 err_types = get_var_list("ERR_")
 cr_codes = get_var_list("CR_")
+ns_services = get_var_list("NS_")
