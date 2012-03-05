@@ -10,6 +10,7 @@ from concoord.node import *
 from concoord.utils import *
 from concoord.enums import *
 from concoord.replica import *
+from concoord.proxy.nameservercoord import NameserverCoord
 try:
     import dns.exception
     import dns.message
@@ -31,7 +32,7 @@ SRVNAME = '_concoord._tcp.'
 class Nameserver(Replica):
     """Nameserver keeps track of the connectivity state of the system and replies to
     QUERY messages from dnsserver."""
-    def __init__(self, domain=options.dnsname, instantiateobj=False):
+    def __init__(self, domain=options.dnsname, instantiateobj=False, master='128.84.227.201:14000'):
         Replica.__init__(self, nodetype=NODE_NAMESERVER, instantiateobj=instantiateobj, port=5000, bootstrap=options.bootstrap)
         try:
             self.mydomain = dns.name.Name((domain+'.').split('.'))
@@ -41,11 +42,13 @@ class Nameserver(Replica):
             self.logger.write("DNS Error", "A DNS name is required. Use -n option.")            
         self.udpport = 53
         self.udpsocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+        if master:
+            self.master = master
         try:
             self.udpsocket.bind((self.addr,self.udpport))
         except socket.error as e:
             self.logger.write("DNS Error", "Can't bind to UDP port 53: %s" % str(e))
-            self._graceexit(1)
+            #self._graceexit(1)
         # When the nameserver starts the revision number is 00 for that day
         self.revision = strftime("%Y%m%d", gmtime())+str(0).zfill(2)
 
@@ -216,7 +219,7 @@ class Nameserver(Replica):
         self.updatemaster(nodepeer)
 
     def updatemaster(self, node, add=True, route53=False):
-        self.logger.write("State", "Updating Master")
+        self.logger.write("State", "**************************************Updating Master")
         # Master can be a Nameserver that uses a Coordination Object
         # or Amazon Route 53
         if route53:
@@ -224,11 +227,15 @@ class Nameserver(Replica):
         else:
             # XXX The representation of a node in the Coordination
             # Object may need change
-            nameservercoordobj = NameserverProxy(self.master)
+            print self.master
+            print str(self.mydomain)
+            print type(str(self.mydomain))
+            nscoord = NameserverCoord(self.master)
             if add:
-                nameservercoordobj.addnodetosubdomain(subdomain, node)
+                print str(self.mydomain), str(node.addr)
+                nscoord.addnodetosubdomain(str(self.mydomain), str(node.addr))
             else:
-                nameservercoordobj.delnodefromsubdomain(subdomain, node)
+                nscoord.delnodefromsubdomain(str(self.mydomain), str(node.addr))
 
     def updaterevision(self):
         self.logger.write("State", "Updating Revision -- from: %s" % self.revision)
