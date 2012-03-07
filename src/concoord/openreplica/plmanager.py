@@ -8,7 +8,7 @@ import random, time
 import subprocess, signal
 from concoord.object.openreplicacoord import OpenReplicaCoord
 try:
-    from openreplicasecret import USERNAME, USERKEYFILE, NODESFILE
+    from credentials import USERNAME, USERKEYFILE, NODESFILE
 except:
     print "To use this script, create your own ssh credentials."
     os._exit(1)

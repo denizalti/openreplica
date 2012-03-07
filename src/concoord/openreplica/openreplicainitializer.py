@@ -14,7 +14,7 @@ from concoord.serversideproxyast import *
 from concoord.openreplica.plmanager import *
 from concoord.proxy.nameservercoord import *
 try:
-    from openreplicasecret import NPYTHONPATH
+    from credentials import NPYTHONPATH
 except:
     NPYTHONPATH = 'python'
 

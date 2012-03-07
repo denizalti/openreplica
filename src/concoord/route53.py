@@ -179,7 +179,6 @@ def help(conn, fnc=None):
                     print "\t%-20s  %s" % (cname, doc)
     sys.exit(1)
 
-
 if __name__ == "__main__":
     import boto
     import sys

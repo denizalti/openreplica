@@ -259,6 +259,16 @@ Date:		February 06, 2012
 
 (3.9) Synchronization & Threading
 
+*********
+(3.10) Amazon Route 53
+       For Amazon Route 53 you can pass your credentials into the methods 
+       that create connections.  Alternatively, boto will check for the existance of the
+following environment variables to ascertain your credentials:
+
+	  AWS_ACCESS_KEY_ID - Your AWS Access Key ID
+	  AWS_SECRET_ACCESS_KEY - Your AWS Secret Access Key
+*********
+
 (4) HOMEPAGE
 ----------------
 Visit http://openreplica.org to see concoord in action and to get more
