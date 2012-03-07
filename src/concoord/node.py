@@ -20,7 +20,7 @@ from concoord.command import Command
 from concoord.pvalue import PValue, PValueSet
 from concoord.connection import ConnectionPool,Connection
 try:
-    from openreplicasecret import LOGGERNODE
+    from credentials import LOGGERNODE
 except:
     print "To turn on Logging through the Network, edit NetworkLogger credentials"
     LOGGERNODE = None

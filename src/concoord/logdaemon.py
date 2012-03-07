@@ -5,7 +5,7 @@
 """
 import socket, time, os, sys, select
 try:
-    from openreplicasecret import LOGGERNODE
+    from credentials import LOGGERNODE
 except:
     print "To turn on Logging through the Network, edit NetworkLogger credentials"
     LOGGERNODE = 'addr:12000'

@@ -46,6 +46,10 @@ class Group():
         for peer in self.members:
             yield (peer.addr,peer.port)
 
+    def get_only_addresses(self):
+        for peer in self.members:
+            yield peer.addr
+
     def __iter__(self):
         for peer in self.members:
             yield peer

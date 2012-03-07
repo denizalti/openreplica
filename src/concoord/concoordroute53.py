@@ -20,58 +20,69 @@ def get_zone_id(conn, name):
         if zoneinfo['Name'] == name:
             return zoneinfo['Id'].split("/")[-1]
 
-def append_to_record(conn, hosted_zone_id, name, rtype, newvalues, ttl=600,
+def append_record(conn, hosted_zone_id, name, type, newvalues, ttl=600,
                    identifier=None, weight=None, comment=""):
-    values = get_values(conn, hosted_zone_id, name, rtype)
+    values = get_values(conn, hosted_zone_id, name, type)
     if values == '':
         values = newvalues
     else:
         values += ',' + newvalues
-    change_record(conn, zone_id, name, rtype, values)
+    change_record(conn, hosted_zone_id, name, type, values, ttl=ttl, identifier=identifier, weight=weight, comment=comment)
 
-def get_values(conn, hosted_zone_id, name, rtype, ttl=600,
-                   identifier=None, weight=None, comment=""):
+def get_values(conn, hosted_zone_id, name, type):
     response = conn.get_all_rrsets(hosted_zone_id, 'A', name)
     for record in response:
-        if record.type == rtype:
+        if record.type == type:
             values = ','.join(record.resource_records)
     return values
+
+def add_record_bool(conn, zone_id, name, type, values, ttl=600, identifier=None, weight=None, comment=""):
+    # Add Record succeeds only when the type doesn't exist yet
+    print "Adding record..."
+    try:
+        add_record(conn, zone_id, name, type, values, ttl=ttl, identifier=identifier, weight=weight, comment=comment)
+    except DNSServerError as e:
+        return False
+    return True
+
+def change_record_bool(conn, zone_id, name, type, values, ttl=600, identifier=None, weight=None, comment=""):
+    try:
+        change_record(conn, zone_id, name, type, values, ttl=ttl, identifier=identifier, weight=weight, comment=comment)
+    except DNSServerError as e:
+        return False
+    return True
+
+def append_record_bool(conn, zone_id, name, type, values, ttl=600, identifier=None, weight=None, comment=""):
+    try:
+        append_record(conn, zone_id, name, type, values, ttl=ttl, identifier=identifier, weight=weight, comment=comment)
+    except DNSServerError as e:
+        return False
+    return True
+
+def del_record_bool(conn, zone_id, name, type, values, ttl=600, identifier=None, weight=None, comment=""):
+    try:
+        del_record(conn, zone_id, name, type, values, ttl=ttl, identifier=identifier, weight=weight, comment=comment)
+    except DNSServerError as e:
+        print e
 
 if __name__ == '__main__':
     zone_id = 'Z1A1MS4JFD4PLW'
     name = 'ecoviews.org.'
-    rtype = 'A'
-    values = "1.2.3.4"
+    type = 'A'
+    #values = ''
     conn = Route53Connection(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-    print get_zone_id(conn, name)
-    # Add Record succeeds only when the type doesn't exist yet
-    print "Adding record..."
-    try:
-        add_record(conn, zone_id, name, rtype, values, ttl=600, comment="Add Test")
-    except DNSServerError as e:
-        if e.error_code == 'InvalidChangeBatch':
-            print "Record already exists.."
     print get(conn, zone_id)
     print "Changing record..."
     values = "5.6.7.8"
-    try:
-        change_record(conn, zone_id, name, rtype, values)
-    except DNSServerError as e:
-        print e
+    change_record_bool(conn, zone_id, name, type, values)
     print get(conn, zone_id)
     print "Appending to record..."
     values = "3.4.5.6"
-    try:
-        append_to_record(conn, zone_id, name, rtype, values)
-    except DNSServerError as e:
-        print e
+    append_record_bool(conn, zone_id, name, type, values)
     print get(conn, zone_id)
-    values = get_values(conn, zone_id, name, rtype)
+    values = get_values(conn, zone_id, name, type)
     print "Deleting record..."
-    try:
-        del_record(conn, zone_id, name, rtype, values, ttl=600, comment="Delete Test")
-    except DNSServerError as e:
-        print e
+    del_record_bool(conn, zone_id, name, type, values)
     print get(conn, zone_id)
 
     
