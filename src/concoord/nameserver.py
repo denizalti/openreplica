@@ -11,6 +11,8 @@ from concoord.utils import *
 from concoord.enums import *
 from concoord.replica import *
 from concoord.proxy.nameservercoord import NameserverCoord
+import concoord.concoordroute53
+import concoord.route53
 try:
     import dns.exception
     import dns.message
@@ -23,8 +25,6 @@ except:
     print "To use the nameserver stand-alone, install dnspython: http://www.dnspython.org/"
 try:
     from boto.route53.connection import Route53Connection
-    import concoord.concoordroute53 as concoordroute53
-    import concoord.route53 as route53
     import boto
 except:
     print "To use Amazon Route 53, install boto: http://github.com/boto/boto/"
@@ -43,9 +43,24 @@ SRVNAME = '_concoord._tcp.'
 class Nameserver(Replica):
     """Nameserver keeps track of the connectivity state of the system and replies to
     QUERY messages from dnsserver."""
-    def __init__(self, domain=options.dnsname, instantiateobj=False, master='128.84.227.201:14000', route53name='ecoviews.org.'):
+    def __init__(self, domain=options.domain, master=options.master, route53name=options.route53name, instantiateobj=False):
         Replica.__init__(self, nodetype=NODE_NAMESERVER, instantiateobj=instantiateobj, port=5000, bootstrap=options.bootstrap)
-        self.servicetype = servicetype
+        #master = '128.84.227.201:14000'
+        route53name = 'ecoviews.org.'
+        if master:
+            self.servicetype = NS_MASTER
+            self.master = master
+        elif route53name:
+            self.servicetype = NS_ROUTE53
+            # initialize Route 53 connection
+            self.route53_name = route53name
+            self.route53_conn = Route53Connection(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+            # get the zone_id for the domainname, the domainname
+            # should be added to the zones beforehand
+            self.route53_zone_id = concoord.concoordroute53.get_zone_id(self.route53_conn, self.route53_name)
+        else:
+            self.servicetype = NS_SELF
+            
         try:
             self.mydomain = dns.name.Name((domain+'.').split('.'))
             self.mysrvdomain = dns.name.Name((SRVNAME+domain+'.').split('.'))
@@ -60,20 +75,8 @@ class Nameserver(Replica):
             except socket.error as e:
                 self.logger.write("DNS Error", "Can't bind to UDP port 53: %s" % str(e))
                 self._graceexit(1)
-        if self.servicetype == NS_MASTER:
-            if master:
-                self.master = master
-            else:
-                self.logger.write("DNS Error", "Master is required to run in MASTER mode.")
-                self._graceexit(1)
         # When the nameserver starts the revision number is 00 for that day
         self.revision = strftime("%Y%m%d", gmtime())+str(0).zfill(2)
-        if self.servicetype==NS_ROUTE53:
-            # initialize Route 53 connection
-            self.route53_conn = Route53Connection(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-            # get the zone_id for the domainname, the domainname
-            # should be added to the zones beforehand
-            self.route53_zone_id = get_zone_id(conn, name)
     
     def startservice(self):
         """Starts the background services associated with a node."""
@@ -246,8 +249,9 @@ class Nameserver(Replica):
             self.updatemaster(nodepeer)
         elif self.servicetype == NS_ROUTE53:
             self.updateroute53(nodepeer)
-
-    #### ROUTE 53 VALUES ####
+    
+    ########## ROUTE 53 ##########
+            
     def route53_a(self):
         values = []
         for address in self.groups[NODE_REPLICA].get_only_addresses():
@@ -263,41 +267,44 @@ class Nameserver(Replica):
         return ','.join(values)
 
     def route53_txt(self):
+        txtstr = self.txtresponse()
+        lentxtstr = len(txtstr)
+        strings = ["\""+txtstr[0:253]+"\""]
+        if lentxtstr > 253:
+            # cut the string in chunks
+            for i in range(lentxtstr/253):
+                print i
+                strings.append("\""+txtstr[i*253:(i+1)*253]+"\"")
         return "\""+self.txtresponse()+"\""
-    #########################
 
     def updateroute53(self, node, add=True):
         self.logger.write("State", "******************************** Updating Route 53")
+        # send the newest group set to the route53 master
         if add:
-            print str(self.mydomain), str(node.addr)
             if node.type == NODE_REPLICA:
                 # type A: update only if added node is a Replica
-                valuetoadd = node.address
+                #valuetoadd = node.address
                 rtype = 'A'
-                concoordroute53.append_record_bool(self.route53_conn, self.route53_zone_id, str(self.mydomain), rtype, valuetoadd)
+                newvalue = self.route53_a()
+                print concoord.concoordroute53.change_record_bool(self.route53_conn, self.route53_zone_id, self.route53_name, rtype, newvalue)
                 # type SRV: update only if added node is a Replica
-                priority=0
-                weight=100
-                valuetoadd = '%d %d %d %s' % (priority, weight, node.port, node.address+self.ipconverter)
+                #valuetoadd = '%d %d %d %s' % (0, 100, node.port, node.address+self.ipconverter)
                 rtype = 'SRV'
-                concoordroute53.append_record_bool(self.route53_conn, self.route53_zone_id, str(self.mydomain), rtype, valuetoadd)
+                newvalue = self.route53_srv()
+                print concoord.concoordroute53.append_record_bool(self.route53_conn, self.route53_zone_id, self.route53_name, rtype, newvalue)
             # type TXT: All Nodes
-            values = self.route53_txt()
             rtype = 'TXT'
-            valuetoadd = self.route53_txt()
-            change_record_bool(conn, zone_id, name, type, values)
-            route53.append_record_bool(self.route53_conn, self.route53_zone_id, str(self.mydomain), rtype, valuetoadd)
+            newvalue = self.route53_txt()
+            print concoord.concoordroute53.change_record_bool(self.route53_conn, self.route53_zone_id, self.route53_name, rtype, newvalue)
         else:
             print str(self.mydomain), str(node.addr)
-    
+
+    ##############################
 
     def updatemaster(self, node, add=True):
         self.logger.write("State", "******************************** Updating Master")
         # XXX The representation of a node in the Coordination
         # Object may need change
-        print self.master
-        print str(self.mydomain)
-        print type(str(self.mydomain))
         nscoord = NameserverCoord(self.master)
         if add:
             print str(self.mydomain), str(node.addr)
@@ -316,7 +323,7 @@ class Nameserver(Replica):
         self.logger.write("State", "Updating Revision -- to: %s" % self.revision)
 
 def main():
-    nameservernode = Nameserver(options.dnsname, instantiateobj=True)
+    nameservernode = Nameserver(instantiateobj=True)
     nameservernode.startservice()
     signal.signal(signal.SIGINT, nameservernode.terminate_handler)
     signal.signal(signal.SIGTERM, nameservernode.terminate_handler)

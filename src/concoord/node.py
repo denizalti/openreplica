@@ -35,7 +35,9 @@ parser.add_option("-p", "--port", action="store", dest="port", type="int", help=
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
 parser.add_option("-f", "--objectfilename", action="store", dest="objectfilename", default='', help="client object file name")
 parser.add_option("-c", "--objectname", action="store", dest="objectname", help="object name")
-parser.add_option("-n", "--name", action="store", dest="dnsname", default='', help="dns name")
+parser.add_option("-n", "--name", action="store", dest="domain", default='', help="domainname that the nameserver will accept queries for")
+parser.add_option("-m", "--master", action="store", dest="master", default='', help="ipaddr:port for the master nameserver")
+parser.add_option("-r", "--route53", action="store", dest="route53name", default='', help="name for the route 53 zone")
 parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
 
 (options, args) = parser.parse_args()
@@ -47,7 +49,7 @@ class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
     """ 
-    def __init__(self, nodetype, addr=options.addr, port=options.port, givenbootstraplist=options.bootstrap, debugoption=options.debug, objectfilename=options.objectfilename, objectname=options.objectname, dnsname=options.dnsname, instantiateobj=False):
+    def __init__(self, nodetype, addr=options.addr, port=options.port, givenbootstraplist=options.bootstrap, debugoption=options.debug, objectfilename=options.objectfilename, objectname=options.objectname, instantiateobj=False):
         """Node State
         - addr: hostname for Node, detected automatically
         - port: port for Node, can be taken from the commandline (-p [port]) or
