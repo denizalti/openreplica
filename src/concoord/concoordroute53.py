@@ -12,8 +12,6 @@ try:
 except:
     print "Install boto: http://github.com/boto/boto"
 
-from credentials import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
-
 def get_zone_id(conn, name):
     response = conn.get_all_hosted_zones()
     for zoneinfo in response['ListHostedZonesResponse']['HostedZones']:
@@ -49,6 +47,7 @@ def change_record_bool(conn, zone_id, name, type, values, ttl=600, identifier=No
     try:
         change_record(conn, zone_id, name, type, values, ttl=ttl, identifier=identifier, weight=weight, comment=comment)
     except DNSServerError as e:
+        print e
         return False
     return True
 
@@ -56,6 +55,7 @@ def append_record_bool(conn, zone_id, name, type, values, ttl=600, identifier=No
     try:
         append_record(conn, zone_id, name, type, values, ttl=ttl, identifier=identifier, weight=weight, comment=comment)
     except DNSServerError as e:
+        print e
         return False
     return True
 
@@ -66,24 +66,29 @@ def del_record_bool(conn, zone_id, name, type, values, ttl=600, identifier=None,
         print e
 
 if __name__ == '__main__':
+    try:
+        from credentials import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+    except:
+        print "To use Amazon Route 53, set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY credentials"
     zone_id = 'Z1A1MS4JFD4PLW'
     name = 'ecoviews.org.'
     type = 'A'
     #values = ''
     conn = Route53Connection(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
     print get(conn, zone_id)
-    print "Changing record..."
-    values = "5.6.7.8"
-    change_record_bool(conn, zone_id, name, type, values)
-    print get(conn, zone_id)
-    print "Appending to record..."
-    values = "3.4.5.6"
-    append_record_bool(conn, zone_id, name, type, values)
-    print get(conn, zone_id)
-    values = get_values(conn, zone_id, name, type)
-    print "Deleting record..."
-    del_record_bool(conn, zone_id, name, type, values)
-    print get(conn, zone_id)
+
+    #print "Changing record..."
+    #values = "5.6.7.8"
+    #change_record_bool(conn, zone_id, name, type, values)
+    #print get(conn, zone_id)
+    #print "Appending to record..."
+    #values = "3.4.5.6"
+    #append_record_bool(conn, zone_id, name, type, values)
+    #print get(conn, zone_id)
+    #values = get_values(conn, zone_id, name, type)
+    #print "Deleting record..."
+    #del_record_bool(conn, zone_id, name, type, values)
+    #print get(conn, zone_id)
 
     
 
