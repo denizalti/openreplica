@@ -32,8 +32,6 @@ try:
     from credentials import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 except:
     print "To use Amazon Route 53, set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY credentials"
-    AWS_ACCESS_KEY_ID = "AKIAJVKCDYNXI2ZKRJ5A"
-    AWS_SECRET_ACCESS_KEY = "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"
 
 RRTYPE = ['','A','NS','MD','MF','CNAME','SOA', 'MB', 'MG', 'MR', 'NULL', 'WKS', 'PTR', 'HINFO', 'MINFO', 'MX', 'TXT', 'RP', 'AFSDB', 'X25', 'ISDN', 'RT', 'NSAP', 'NSAP_PTR', 'SIG', 'KEY', 'PX', 'GPOS', 'AAAA', 'LOC', 'NXT', '', '', 'SRV']
 RRCLASS = ['','IN','CS','CH','HS']
@@ -47,9 +45,6 @@ class Nameserver(Replica):
     QUERY messages from dnsserver."""
     def __init__(self, domain=options.domain, master=options.master, servicetype=options.type, instantiateobj=False):
         Replica.__init__(self, nodetype=NODE_NAMESERVER, instantiateobj=instantiateobj, port=5000, bootstrap=options.bootstrap)
-        ###
-        master = '128.84.227.201:14000'
-        ###
         self.servicetype = int(servicetype)
         self.ipconverter = '.ipaddr.'+domain+'.'
         try:
@@ -303,12 +298,12 @@ class Nameserver(Replica):
         print concoord.concoordroute53.change_record_bool(self.route53_conn, self.route53_zone_id, self.route53_name, rtype, newvalue)
 
     ########## MASTER ##########
-            
+
     def master_a(self):
         values = []
         for address in self.groups[NODE_REPLICA].get_only_addresses():
             values.append(address)
-        return ','.join(values)
+        return values
 
     def master_srv(self):
         values = []
@@ -316,30 +311,27 @@ class Nameserver(Replica):
         weight=100
         for address,port in self.groups[NODE_REPLICA].get_addresses():
             values.append('%d %d %d %s' % (priority, weight, port, address+self.ipconverter))
-        return ','.join(values)
+        return values
 
     def master_txt(self):
-        txtstr = self.txtresponse()
-        lentxtstr = len(txtstr)
-        strings = ["\""+txtstr[0:253]+"\""]
-        if lentxtstr > 253:
-            # cut the string in chunks
-            for i in range(lentxtstr/253):
-                print i
-                strings.append("\""+txtstr[i*253:(i+1)*253]+"\"")
-        return strings
+        return self.txtresponse()
 
     def updatemaster(self, node, add=True):
         self.logger.write("State", "Updating Master at %s" % self.master)
-        # XXX The representation of a node in the Coordination
-        # Object may need change
         nscoord = NameserverCoord(self.master)
-        if add:
-            print str(self.mydomain), str(node.addr)
-            nscoord.addnodetosubdomain(str(self.mydomain), str(node.addr))
-        else:
-            nscoord.delnodefromsubdomain(str(self.mydomain), str(node.addr))
-
+        # type A: update only if added node is a Replica
+        rtype = 'A'
+        newvalue = self.master_a()
+        nscoord.update_slave_subdomain(str(self.mydomain), newvalue, rtype)
+        # type SRV: update only if added node is a Replica
+        rtype = 'SRV'
+        newvalue = self.master_srv()
+        nscoord.update_slave_subdomain(str(self.mydomain), newvalue, rtype)
+        # type TXT: All Nodes
+        rtype = 'TXT'
+        newvalue = self.master_txt()
+        nscoord.update_slave_subdomain(str(self.mydomain), newvalue, rtype)
+            
     def updaterevision(self):
         self.logger.write("State", "Updating Revision -- from: %s" % self.revision)
         if strftime("%Y%m%d", gmtime()) in self.revision:

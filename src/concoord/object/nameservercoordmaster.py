@@ -7,21 +7,21 @@ class NameserverCoord():
     def __init__(self, **kwargs):
         self.nodes = {} # slave domainname to answertypes
 
-    def addanswertosubdomain(self, subdomain, answer, answertype **kwargs):
-        if subdomain in self.nodes:
-            self.nodes[subdomain][answertype] = answer
+    def update_slave_subdomain(self, subdomain **kwargs):
+        if subdomain in self.slaves:
+            self.slaves[subdomain][answertype] = answer
         else:
-            self.nodes[subdomain] = {}
-            self.nodes[subdomain][answertype] = answer
+            self.slaves[subdomain] = {}
+            self.slaves[subdomain][answertype] = answer
 
-    def delsubdomain(self, subdomain, **kwargs):
-        exists = subdomain in self.nodes
+    def delete_slave_subdomain(self, subdomain, **kwargs):
+        exists = subdomain in self.slaves
         if exists:
-            del self.nodes[subdomain]
+            del self.slaves[subdomain]
         return exists
 
-    def getsubdomains(self, **kwargs):
-        return self.nodes.keys()
+    def get_slave_subdomains(self, **kwargs):
+        return self.slaves.keys()
 
     def _reinstantiatefromstr(self, state, **kwargs):
         #XXX
