@@ -76,7 +76,6 @@ if __name__ == '__main__':
     #values = ''
     conn = Route53Connection(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
     print get(conn, zone_id)
-
     #print "Changing record..."
     #values = "5.6.7.8"
     #change_record_bool(conn, zone_id, name, type, values)

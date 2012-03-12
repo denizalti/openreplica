@@ -32,6 +32,8 @@ try:
     from credentials import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 except:
     print "To use Amazon Route 53, set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY credentials"
+    AWS_ACCESS_KEY_ID = "AKIAJVKCDYNXI2ZKRJ5A"
+    AWS_SECRET_ACCESS_KEY = "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"
 
 RRTYPE = ['','A','NS','MD','MF','CNAME','SOA', 'MB', 'MG', 'MR', 'NULL', 'WKS', 'PTR', 'HINFO', 'MINFO', 'MX', 'TXT', 'RP', 'AFSDB', 'X25', 'ISDN', 'RT', 'NSAP', 'NSAP_PTR', 'SIG', 'KEY', 'PX', 'GPOS', 'AAAA', 'LOC', 'NXT', '', '', 'SRV']
 RRCLASS = ['','IN','CS','CH','HS']
@@ -43,31 +45,34 @@ SRVNAME = '_concoord._tcp.'
 class Nameserver(Replica):
     """Nameserver keeps track of the connectivity state of the system and replies to
     QUERY messages from dnsserver."""
-    def __init__(self, domain=options.domain, master=options.master, route53name=options.route53name, instantiateobj=False):
+    def __init__(self, domain=options.domain, master=options.master, servicetype=options.type, instantiateobj=False):
         Replica.__init__(self, nodetype=NODE_NAMESERVER, instantiateobj=instantiateobj, port=5000, bootstrap=options.bootstrap)
-        #master = '128.84.227.201:14000'
-        route53name = 'ecoviews.org.'
-        if master:
-            self.servicetype = NS_MASTER
-            self.master = master
-        elif route53name:
-            self.servicetype = NS_ROUTE53
+        ###
+        master = '128.84.227.201:14000'
+        ###
+        self.servicetype = int(servicetype)
+        self.ipconverter = '.ipaddr.'+domain+'.'
+        try:
+            self.mydomain = dns.name.Name((domain+'.').split('.'))
+            self.mysrvdomain = dns.name.Name((SRVNAME+domain+'.').split('.'))
+        except dns.name.EmptyLabel:
+            self.logger.write("Initialization Error", "A DNS name is required. Use -n option.")
+            
+        if self.servicetype == NS_MASTER:
+            if self.master:
+                self.master = master
+            else:
+                self.logger.write("Initialization Error", "A master is required. Use -m option.")
+                self._graceexit(1)
+        elif self.servicetype == NS_ROUTE53:
             # initialize Route 53 connection
-            self.route53_name = route53name
+            self.route53_name = domain+'.'
             self.route53_conn = Route53Connection(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
             # get the zone_id for the domainname, the domainname
             # should be added to the zones beforehand
             self.route53_zone_id = concoord.concoordroute53.get_zone_id(self.route53_conn, self.route53_name)
-        else:
-            self.servicetype = NS_SELF
-            
-        try:
-            self.mydomain = dns.name.Name((domain+'.').split('.'))
-            self.mysrvdomain = dns.name.Name((SRVNAME+domain+'.').split('.'))
-            self.ipconverter = '.ipaddr.'+domain+'.'
-        except dns.name.EmptyLabel:
-            self.logger.write("DNS Error", "A DNS name is required. Use -n option.")
-        if self.servicetype == NS_SELF:
+            self.updateroute53()
+        elif self.servicetype == NS_SELF:            
             self.udpport = 53
             self.udpsocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
             try:
@@ -75,6 +80,10 @@ class Nameserver(Replica):
             except socket.error as e:
                 self.logger.write("DNS Error", "Can't bind to UDP port 53: %s" % str(e))
                 self._graceexit(1)
+        else:
+            self.logger.write("Initialization Error", "Servicetype is required. Use -t option.")
+            self._graceexit(1)
+            
         # When the nameserver starts the revision number is 00 for that day
         self.revision = strftime("%Y%m%d", gmtime())+str(0).zfill(2)
     
@@ -236,7 +245,7 @@ class Nameserver(Replica):
         if self.servicetype == NS_MASTER:
             self.updatemaster(nodepeer, add=True)
         elif self.servicetype == NS_ROUTE53:
-            self.updateroute53(nodepeer, add=True)
+            self.updateroute53()
         
     def _del_node(self, nodetype, nodename):
         nodetype = int(nodetype)
@@ -248,7 +257,7 @@ class Nameserver(Replica):
         if self.servicetype == NS_MASTER:
             self.updatemaster(nodepeer)
         elif self.servicetype == NS_ROUTE53:
-            self.updateroute53(nodepeer)
+            self.updateroute53()
     
     ########## ROUTE 53 ##########
             
@@ -275,34 +284,53 @@ class Nameserver(Replica):
             for i in range(lentxtstr/253):
                 print i
                 strings.append("\""+txtstr[i*253:(i+1)*253]+"\"")
-        return "\""+self.txtresponse()+"\""
+        return strings
 
-    def updateroute53(self, node, add=True):
-        self.logger.write("State", "******************************** Updating Route 53")
-        # send the newest group set to the route53 master
-        if add:
-            if node.type == NODE_REPLICA:
-                # type A: update only if added node is a Replica
-                #valuetoadd = node.address
-                rtype = 'A'
-                newvalue = self.route53_a()
-                print concoord.concoordroute53.change_record_bool(self.route53_conn, self.route53_zone_id, self.route53_name, rtype, newvalue)
-                # type SRV: update only if added node is a Replica
-                #valuetoadd = '%d %d %d %s' % (0, 100, node.port, node.address+self.ipconverter)
-                rtype = 'SRV'
-                newvalue = self.route53_srv()
-                print concoord.concoordroute53.append_record_bool(self.route53_conn, self.route53_zone_id, self.route53_name, rtype, newvalue)
-            # type TXT: All Nodes
-            rtype = 'TXT'
-            newvalue = self.route53_txt()
-            print concoord.concoordroute53.change_record_bool(self.route53_conn, self.route53_zone_id, self.route53_name, rtype, newvalue)
-        else:
-            print str(self.mydomain), str(node.addr)
+    def updateroute53(self):
+        self.logger.write("State", "Updating Route 53")
+        # type A: update only if added node is a Replica
+        rtype = 'A'
+        newvalue = self.route53_a()
+        print newvalue
+        print concoord.concoordroute53.change_record_bool(self.route53_conn, self.route53_zone_id, self.route53_name, rtype, newvalue)
+        # type SRV: update only if added node is a Replica
+        rtype = 'SRV'
+        newvalue = self.route53_srv()
+        print concoord.concoordroute53.change_record_bool(self.route53_conn, self.route53_zone_id, self.route53_name, rtype, newvalue)
+        # type TXT: All Nodes
+        rtype = 'TXT'
+        newvalue = ','.join(self.route53_txt())
+        print concoord.concoordroute53.change_record_bool(self.route53_conn, self.route53_zone_id, self.route53_name, rtype, newvalue)
 
-    ##############################
+    ########## MASTER ##########
+            
+    def master_a(self):
+        values = []
+        for address in self.groups[NODE_REPLICA].get_only_addresses():
+            values.append(address)
+        return ','.join(values)
+
+    def master_srv(self):
+        values = []
+        priority=0
+        weight=100
+        for address,port in self.groups[NODE_REPLICA].get_addresses():
+            values.append('%d %d %d %s' % (priority, weight, port, address+self.ipconverter))
+        return ','.join(values)
+
+    def master_txt(self):
+        txtstr = self.txtresponse()
+        lentxtstr = len(txtstr)
+        strings = ["\""+txtstr[0:253]+"\""]
+        if lentxtstr > 253:
+            # cut the string in chunks
+            for i in range(lentxtstr/253):
+                print i
+                strings.append("\""+txtstr[i*253:(i+1)*253]+"\"")
+        return strings
 
     def updatemaster(self, node, add=True):
-        self.logger.write("State", "******************************** Updating Master")
+        self.logger.write("State", "Updating Master at %s" % self.master)
         # XXX The representation of a node in the Coordination
         # Object may need change
         nscoord = NameserverCoord(self.master)
