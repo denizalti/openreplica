@@ -5,34 +5,26 @@
 '''
 class NameserverCoord():
     def __init__(self, **kwargs):
-        self.nodes = {} 
+        self.nodes = {} # slave domainname to answertypes
 
-    def addnodetosubdomain(self, subdomain, node, **kwargs):
+    def addanswertosubdomain(self, subdomain, answer, answertype **kwargs):
         if subdomain in self.nodes:
-            self.nodes[subdomain].add(node)
+            self.nodes[subdomain][answertype] = answer
         else:
-            self.nodes[subdomain] = set()
-            self.nodes[subdomain].add(node)
+            self.nodes[subdomain] = {}
+            self.nodes[subdomain][answertype] = answer
 
     def delsubdomain(self, subdomain, **kwargs):
         exists = subdomain in self.nodes
         if exists:
             del self.nodes[subdomain]
         return exists
-        
-    def delnodefromsubdomain(self, subdomain, node, **kwargs):
-        exists = subdomain in self.nodes
-        if exists:
-            self.nodes[subdomain].remove(node)
-        return exists
-
-    def getnodes(self, subdomain, **kwargs):
-        return self.nodes[subdomain]
 
     def getsubdomains(self, **kwargs):
         return self.nodes.keys()
 
     def _reinstantiatefromstr(self, state, **kwargs):
+        #XXX
         self.nodes = {}
         for subdomain in state.split('-'):
             if subdomain != '':
@@ -40,6 +32,7 @@ class NameserverCoord():
                 self.nodes[subdomainname] = set(subdomainitems.split(''))
 
     def __str__(self, **kwargs):
+        #XXX
         rstr = ''	
         for domain,nodes in self.nodes.iteritems():
             rstr += domain + ';' + ' '.join(nodes) + "-"
