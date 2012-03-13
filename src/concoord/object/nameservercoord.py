@@ -37,6 +37,13 @@ class NameserverCoord():
             self._nodes[subdomain][nodetype].remove(node)
         return exists
 
+    def updatesubdomain(self, subdomain, nodes, **kwargs):
+        if subdomain in self._nodes:
+            self._nodes[subdomain] = nodes
+        else:
+            self._nodes[subdomain] = {}
+            self._nodes[subdomain] = nodes
+
     def getnodes(self, subdomain, **kwargs):
         return self._nodes[subdomain]
 

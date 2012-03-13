@@ -22,7 +22,6 @@ from concoord.connection import ConnectionPool,Connection
 try:
     from credentials import LOGGERNODE
 except:
-    print sys.path
     print "To turn on Logging through the Network, edit NetworkLogger credentials"
     LOGGERNODE = None
 try:

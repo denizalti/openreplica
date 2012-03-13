@@ -57,6 +57,13 @@ class OpenReplicaNameserver(Nameserver):
             if dns.name.Name(nsdomain.split(".")) == question.name:
                 yield nsaddr
 
+    def aresponse_subdomain(self, question):
+        for subdomain in self.object.nodes.keys():
+            if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
+                for node in self.object.nodes[subdomain][NODE_REPLICA]:
+                    addr,port = node.split(":")
+                    yield addr
+
     def nsresponse(self, question):
         if question.name == self.mydomain or question.name.is_subdomain(self.specialdomain):
             for address,port in self.groups[NODE_NAMESERVER].get_addresses():
@@ -69,11 +76,28 @@ class OpenReplicaNameserver(Nameserver):
             yield nsdomain
 
     def nsresponse_subdomain(self, question):
+        #XXX For slave, master should answer with own nameservers?
         for subdomain in self.object.nodes.keys():
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
-                for node in self.object.nodes[subdomain]:
+                for node in self.object.nodes[subdomain][NODE_NAMESERVER]:
                     addr,port = node.split(":")
                     yield addr+IPCONVERTER
+
+    def txtresponse_subdomain(self, question):
+        txtstr = ''
+        for subdomain in self.object.nodes.keys():
+            if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
+                for nodetype,nodes in self.object.nodes[subdomain].iteritems():
+                    for node in nodes:
+                        txtstr += node_names[nodetype] +' '+ node + ';'
+        return txtstr
+
+    def srvresponse_subdomain(self, question):
+        for subdomain in self.object.nodes.keys():
+            if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
+                for node in self.object.nodes[subdomain][NODE_REPLICA]:
+                    addr,port = node.split(":")
+                    yield addr+self.ipconverter,port
 
     def should_answer(self, question):
         formyname = (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV or question.rdtype == dns.rdatatype.MX or question.rdtype == dns.rdatatype.SOA) and self.ismydomainname(question)
