@@ -136,7 +136,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     nameservercoordobj = NameserverCoord('openreplica.org')
     print "Adding Nameserver nodes to Nameserver Coordination Object:"
     for nodetype,node in processnames:
-        print "- "+ nodetype+ ": ", node
+        print "- ",  nodetype , "| ", node
         nameservercoordobj.addnodetosubdomain(subdomain, nodetype, node)
     return bootstrapname
 
