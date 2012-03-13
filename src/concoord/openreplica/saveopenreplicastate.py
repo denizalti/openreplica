@@ -3,10 +3,10 @@
 @note: Script to save openreplica coordination object automatically
 @copyright: See LICENSE
 '''
-from concoord.proxy.openreplicacoord import OpenReplicaCoord
+from concoord.proxy.nameservercoord import NameserverCoord
 
 def main():
-    openreplicacoord = OpenReplicaCoord('openreplica.org')
+    openreplicacoord = NameserverCoord('openreplica.org')
     print openreplicacoord.__str__()
     
 if __name__=='__main__':

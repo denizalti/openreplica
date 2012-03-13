@@ -80,7 +80,6 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     for node in allnodes.getHosts():
         print node
     processnames = []
-    nameservernames = []
     ## Fix the server object
     print "Fixing object file for use on the server side.."
     fixedfile = editproxyfile(clientobjectfilepath, classname)
@@ -95,7 +94,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
         port = random.randint(14000, 15000)
         p = bootstrap.executecommandone(bootstrap.getHosts()[0], "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s" % (bootstrap.getHosts()[0], port, clientobjectfilename, classname), False)
     bootstrapname = bootstrap.getHosts()[0]+':'+str(port)
-    processnames.append(bootstrapname)
+    processnames.append((NODE_REPLICA, bootstrapname))
     print bootstrapname
     # ACCEPTORS
     print "--- Acceptors ---"
@@ -106,7 +105,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
             port = random.randint(14000, 15000)
             p = acceptors.executecommandone(acceptor, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "acceptor.py -a %s -p %d -f %s -b %s" % (acceptor, port, clientobjectfilename, bootstrapname), False)
         acceptorname = acceptor+':'+str(port)
-        processnames.append(acceptorname)
+        processnames.append((NODE_ACCEPTOR, acceptorname))
         print acceptorname
     # REPLICAS
     if numreplicas-1 > 0:
@@ -118,7 +117,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
             port = random.randint(14000, 15000)
             p = replicas.executecommandone(replica, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -b %s" % (replica, port, clientobjectfilename, classname, bootstrapname), False)
         replicaname = replica+':'+str(port)
-        processnames.append(replicaname)
+        processnames.append((NODE_REPLICA, replicaname))
         print replicaname
     # NAMESERVERS
     print "--- Nameservers ---"
@@ -129,16 +128,15 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
             port = random.randint(14000, 15000)
             p = nameservers.executecommandone(nameserver, "sudo nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain+'.openreplica.org', nameserver, port, clientobjectfilename, classname, bootstrapname), False)
         nameservername = nameserver+':'+str(port)
-        processnames.append(nameservername)
-        nameservernames.append(nameservername)
+        processnames.append((NODE_NAMESERVER, nameservername))
         print nameservername
     print "All clear!"
     ## add the nameserver nodes to open replica coordinator object
     nameservercoordobj = NameserverCoord('openreplica.org')
     print "Adding Nameserver nodes to Nameserver Coordination Object:"
-    for node in nameservernames:
-        print "- ", node
-        nameservercoordobj.addnodetosubdomain(subdomain, node)
+    for nodetype,node in processnames:
+        print "- "+ nodetype+ ": ", node
+        nameservercoordobj.addnodetosubdomain(subdomain, nodetype, node)
     return bootstrapname
 
 def terminated(p):
