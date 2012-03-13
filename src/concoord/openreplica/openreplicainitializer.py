@@ -8,6 +8,7 @@ import subprocess
 import os, sys, time, shutil
 from time import sleep,time
 from optparse import OptionParser
+from concoord.enums import *
 from concoord.safetychecker import *
 from concoord.proxygenerator import *
 from concoord.serversideproxyast import *
