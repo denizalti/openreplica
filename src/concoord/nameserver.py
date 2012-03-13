@@ -299,12 +299,6 @@ class Nameserver(Replica):
 
     ########## MASTER ##########
 
-    def master_a(self):
-        values = []
-        for address in self.groups[NODE_REPLICA].get_only_addresses():
-            values.append(address)
-        return values
-
     def master_srv(self):
         values = []
         priority=0
@@ -313,24 +307,16 @@ class Nameserver(Replica):
             values.append('%d %d %d %s' % (priority, weight, port, address+self.ipconverter))
         return values
 
-    def master_txt(self):
-        return self.txtresponse()
-
     def updatemaster(self, node, add=True):
         self.logger.write("State", "Updating Master at %s" % self.master)
         nscoord = NameserverCoord(self.master)
-        # type A: update only if added node is a Replica
-        rtype = 'A'
-        newvalue = self.master_a()
-        nscoord.update_slave_subdomain(str(self.mydomain), newvalue, rtype)
-        # type SRV: update only if added node is a Replica
-        rtype = 'SRV'
-        newvalue = self.master_srv()
-        nscoord.update_slave_subdomain(str(self.mydomain), newvalue, rtype)
-        # type TXT: All Nodes
-        rtype = 'TXT'
-        newvalue = self.master_txt()
-        nscoord.update_slave_subdomain(str(self.mydomain), newvalue, rtype)
+        nodes = {}
+        for nodetype,group in self.groups.iteritems():
+            nodes[nodetype] = set()
+            for address,port in self.groups[nodetype].get_addresses():
+                nodes[nodetype].add(address + ':' + str(port))
+        nodes[self.type].add(self.addr + ':' + str(self.port))
+        nscoord.updatesubdomain(str(self.mydomain), nodes)
             
     def updaterevision(self):
         self.logger.write("State", "Updating Revision -- from: %s" % self.revision)
