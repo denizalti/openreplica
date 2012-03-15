@@ -65,14 +65,11 @@ class OpenReplicaNameserver(Nameserver):
                     yield addr
 
     def nsresponse(self, question):
-        if question.name == self.mydomain or question.name.is_subdomain(self.specialdomain):
+        if question.name == self.mydomain or question.name.is_subdomain(self.specialdomain) or self.ismysubdomainname(question):
             for address,port in self.groups[NODE_NAMESERVER].get_addresses():
-                print address+IPCONVERTER
-                yield address+IPCONVERTER
-            print self.addr+IPCONVERTER
-            yield self.addr+IPCONVERTER
+                yield address+self.ipconverter
+            yield self.addr+self.ipconverter
         for nsdomain,nsaddr in OPENREPLICANS.iteritems():
-            print nsdomain
             yield nsdomain
 
     def nsresponse_subdomain(self, question):
@@ -81,7 +78,7 @@ class OpenReplicaNameserver(Nameserver):
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
                 for node in self.object.getnodes(subdomain)[NODE_NAMESERVER]:
                     addr,port = node.split(":")
-                    yield addr+IPCONVERTER
+                    yield addr+self.ipconverter
 
     def txtresponse_subdomain(self, question):
         txtstr = ''
@@ -89,7 +86,7 @@ class OpenReplicaNameserver(Nameserver):
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
                 for nodetype,nodes in self.object.getnodes(subdomain).iteritems():
                     for node in nodes:
-                        txtstr += node_names[nodetype] +' '+ node + ';'
+                        txtstr += node_names[nodetype] + ' ' + node + ';'
         return txtstr
 
     def srvresponse_subdomain(self, question):
@@ -97,11 +94,11 @@ class OpenReplicaNameserver(Nameserver):
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
                 for node in self.object.getnodes(subdomain)[NODE_REPLICA]:
                     addr,port = node.split(":")
-                    yield addr+self.ipconverter,port
+                    yield addr+self.ipconverter,int(port)
 
     def should_answer(self, question):
         formyname = (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV or question.rdtype == dns.rdatatype.MX or question.rdtype == dns.rdatatype.SOA) and self.ismydomainname(question)
-        formysubdomainname = (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV) and self.ismysubdomainname(question)
+        formysubdomainname = (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV or question.rdtype == dns.rdatatype.SOA) and self.ismysubdomainname(question)
         myresponsibility_a = question.rdtype == dns.rdatatype.A and (self.ismynsname(question) or question.name.is_subdomain(self.specialdomain))
         myresponsibility_ns = question.rdtype == dns.rdatatype.NS and self.ismysubdomainname(question)
         return formyname or formysubdomainname or myresponsibility_a or myresponsibility_ns
@@ -123,7 +120,7 @@ class OpenReplicaNameserver(Nameserver):
                         for address in self.aresponse(question):
                             answerstr += self.create_answer_section(question, addr=address)
                     elif self.ismysubdomainname(question):
-                        for address in self.aresponse_subdomains(question):
+                        for address in self.aresponse_subdomain(question):
                             answerstr += self.create_answer_section(question, addr=address)
                     elif self.ismynsname(question):
                         # A Queries --> List all Replicas starting with the Leader
@@ -162,7 +159,7 @@ class OpenReplicaNameserver(Nameserver):
                         # MX Queries --> mail.systems.cs.cornell.edu
                         answerstr = self.create_mx_answer_section(question, ttl=86400, addr='mail.systems.cs.cornell.edu.')
                 elif question.rdtype == dns.rdatatype.SOA:
-                    if self.ismydomainname(question):
+                    if self.ismydomainname(question) or self.ismysubdomainname(question):
                         # SOA Query --> Reply with Metadata
                         answerstr = self.create_soa_answer_section(question)
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
