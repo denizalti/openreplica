@@ -34,7 +34,7 @@ class OpenReplicaNameserver(Nameserver):
         Replica.msg_perform(self, conn, msg)
         
     def ismysubdomainname(self, question):
-        for subdomain in self.object.nodes.keys():
+        for subdomain in self.object.getsubdomains():
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
                 return True
         return False
@@ -146,7 +146,8 @@ class OpenReplicaNameserver(Nameserver):
                             answerstr += self.create_answer_section(question, name=address)
                     elif self.ismysubdomainname(question):
                         # NS Queries --> List Nameservers of my subdomain
-                        for address in self.nsresponse_subdomain(question):
+                        #for address in self.nsresponse_subdomain(question):
+                        for address in self.nsresponse(question):
                             answerstr += self.create_answer_section(question, name=address)
                 elif question.rdtype == dns.rdatatype.SRV:
                     if self.ismydomainname(question):
