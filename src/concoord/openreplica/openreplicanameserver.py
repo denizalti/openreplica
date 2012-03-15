@@ -146,7 +146,8 @@ class OpenReplicaNameserver(Nameserver):
                             answerstr += self.create_answer_section(question, name=address)
                     elif self.ismysubdomainname(question):
                         # NS Queries --> List Nameservers of my subdomain
-                        for address in self.nsresponse_subdomain(question):
+                        #for address in self.nsresponse_subdomain(question):
+                        for address in self.nsresponse(question):
                             answerstr += self.create_answer_section(question, name=address)
                 elif question.rdtype == dns.rdatatype.SRV:
                     if self.ismydomainname(question):
