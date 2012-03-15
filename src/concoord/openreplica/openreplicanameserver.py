@@ -58,9 +58,9 @@ class OpenReplicaNameserver(Nameserver):
                 yield nsaddr
 
     def aresponse_subdomain(self, question):
-        for subdomain in self.object.nodes.keys():
+        for subdomain in self.object.getsubdomains():
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
-                for node in self.object.nodes[subdomain][NODE_REPLICA]:
+                for node in self.getsubdomains()[subdomain][NODE_REPLICA]:
                     addr,port = node.split(":")
                     yield addr
 
@@ -77,7 +77,7 @@ class OpenReplicaNameserver(Nameserver):
 
     def nsresponse_subdomain(self, question):
         #XXX For slave, master should answer with own nameservers?
-        for subdomain in self.object.nodes.keys():
+        for subdomain in self.object.getsubdomains():
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
                 for node in self.object.nodes[subdomain][NODE_NAMESERVER]:
                     addr,port = node.split(":")
@@ -85,7 +85,7 @@ class OpenReplicaNameserver(Nameserver):
 
     def txtresponse_subdomain(self, question):
         txtstr = ''
-        for subdomain in self.object.nodes.keys():
+        for subdomain in self.object.getsubdomains():
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
                 for nodetype,nodes in self.object.nodes[subdomain].iteritems():
                     for node in nodes:
@@ -93,7 +93,7 @@ class OpenReplicaNameserver(Nameserver):
         return txtstr
 
     def srvresponse_subdomain(self, question):
-        for subdomain in self.object.nodes.keys():
+        for subdomain in self.object.getsubdomains():
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
                 for node in self.object.nodes[subdomain][NODE_REPLICA]:
                     addr,port = node.split(":")
