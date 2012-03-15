@@ -60,7 +60,7 @@ class OpenReplicaNameserver(Nameserver):
     def aresponse_subdomain(self, question):
         for subdomain in self.object.getsubdomains():
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
-                for node in self.getsubdomains()[subdomain][NODE_REPLICA]:
+                for node in self.object.getnodes(subdomain)[NODE_REPLICA]:
                     addr,port = node.split(":")
                     yield addr
 
@@ -79,7 +79,7 @@ class OpenReplicaNameserver(Nameserver):
         #XXX For slave, master should answer with own nameservers?
         for subdomain in self.object.getsubdomains():
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
-                for node in self.object.nodes[subdomain][NODE_NAMESERVER]:
+                for node in self.object.getnodes(subdomain)[NODE_NAMESERVER]:
                     addr,port = node.split(":")
                     yield addr+IPCONVERTER
 
@@ -87,7 +87,7 @@ class OpenReplicaNameserver(Nameserver):
         txtstr = ''
         for subdomain in self.object.getsubdomains():
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
-                for nodetype,nodes in self.object.nodes[subdomain].iteritems():
+                for nodetype,nodes in self.object.getnodes(subdomain).iteritems():
                     for node in nodes:
                         txtstr += node_names[nodetype] +' '+ node + ';'
         return txtstr
@@ -95,7 +95,7 @@ class OpenReplicaNameserver(Nameserver):
     def srvresponse_subdomain(self, question):
         for subdomain in self.object.getsubdomains():
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
-                for node in self.object.nodes[subdomain][NODE_REPLICA]:
+                for node in self.object.getnodes(subdomain)[NODE_REPLICA]:
                     addr,port = node.split(":")
                     yield addr+self.ipconverter,port
 
