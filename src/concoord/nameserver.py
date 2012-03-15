@@ -45,7 +45,10 @@ class Nameserver(Replica):
     QUERY messages from dnsserver."""
     def __init__(self, domain=options.domain, master=options.master, servicetype=options.type, instantiateobj=False):
         Replica.__init__(self, nodetype=NODE_NAMESERVER, instantiateobj=instantiateobj, port=5000, bootstrap=options.bootstrap)
-        self.servicetype = int(servicetype)
+        if servicetype:
+            self.servicetype = int(servicetype)
+        else:
+            self.logger.write("Initialization Error", "Service type of the nameserver is required. Use -t option.")
         self.ipconverter = '.ipaddr.'+domain+'.'
         try:
             self.mydomain = dns.name.Name((domain+'.').split('.'))
@@ -105,20 +108,20 @@ class Nameserver(Replica):
         self.udpsocket.close()
         return
 
-    def aresponse(self):
+    def aresponse(self, question):
         for address in self.groups[NODE_REPLICA].get_only_addresses():
             yield address
 
-    def nsresponse(self):
+    def nsresponse(self, question):
         for address in self.groups[NODE_NAMESERVER].get_only_addresses():
             yield address
         yield self.addr
 
-    def srvresponse(self):
+    def srvresponse(self, question):
         for address,port in self.groups[NODE_REPLICA].get_addresses():
             yield address+self.ipconverter,port
         
-    def txtresponse(self):
+    def txtresponse(self, question):
         txtstr = ''
         for groupname,group in self.groups.iteritems():
             for peer in group:
@@ -145,21 +148,21 @@ class Nameserver(Replica):
                 answerstr = ''
                 if question.rdtype == dns.rdatatype.A:
                     # A Queries --> List all Replicas starting with the Leader
-                    for address in self.aresponse():
+                    for address in self.aresponse(question):
                         answerstr += self.create_answer_section(question, addr=address)
                 elif question.rdtype == dns.rdatatype.TXT:
                     # TXT Queries --> List all nodes
-                    answerstr = self.create_answer_section(question, txt=self.txtresponse())
+                    answerstr = self.create_answer_section(question, txt=self.txtresponse(question))
                 elif question.rdtype == dns.rdatatype.NS:
                     # NS Queries --> List all Nameserver nodes
-                    for address in self.nsresponse():
+                    for address in self.nsresponse(question):
                         answerstr += self.create_answer_section(question, name=address)
                 elif question.rdtype == dns.rdatatype.SOA:
                     # SOA Query --> Reply with Metadata
                     answerstr = self.create_soa_answer_section(question)
                 elif question.rdtype == dns.rdatatype.SRV:
                     # SRV Queries --> List all Replicas with addr:port
-                    for address,port in self.srvresponse():
+                    for address,port in self.srvresponse(question):
                         answerstr += self.create_srv_answer_section(question, addr=address, port=port)
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,
                                                    rcode=dns.rcode.NOERROR,flags=flagstr,
