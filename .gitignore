@@ -4,7 +4,7 @@ src/MANIFEST
 secret
 scripts
 packages
-openreplicasecret.py
+credentials.py
 *.tar.gz
 *~
 *.pyc
