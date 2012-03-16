@@ -33,7 +33,7 @@ class PLConnection():
             for pickednode in all_nodes:
                 pickednode = socket.gethostbyname(pickednode) #Convert to IP addr
                 if self._tryconnect(pickednode):
-                    successful = nodecheckers is not None
+                      successful = nodecheckers is not None
                     if nodecheckers:
                         for nodechecker in nodecheckers:
                             successful = successful and nodechecker(self, pickednode)[0]

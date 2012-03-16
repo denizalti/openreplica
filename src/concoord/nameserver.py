@@ -53,7 +53,7 @@ class Nameserver(Replica):
             self.logger.write("Initialization Error", "A DNS name is required. Use -n option.")
             
         if self.servicetype == NS_MASTER:
-            if self.master:
+            if master:
                 self.master = master
             else:
                 self.logger.write("Initialization Error", "A master is required. Use -m option.")
