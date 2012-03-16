@@ -14,6 +14,19 @@ def findOwnIP():
     """Retrieves the hostname of the caller"""
     return socket.gethostbyname(socket.gethostname())
 
+def load_configdict(configpath):
+    configfile = os.path.basename(configpath)
+    configdir = os.path.dirname(configpath)
+    sys.path.append(configdir)
+    configmodule = __import__(configfile[:-3], globals(), locals(), [], -1)
+    config_dict = {}
+    for key in dir(configmodule):
+        if key.startswith('__'):
+            continue
+        else:
+            config_dict[key] = getattr(configmodule, key)
+    return config_dict
+
 class ConsoleLogger():
     def __init__(self, name):
         self.prefix = name

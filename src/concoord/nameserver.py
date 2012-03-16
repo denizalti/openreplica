@@ -28,10 +28,6 @@ try:
     import boto
 except:
     print "To use Amazon Route 53, install boto: http://github.com/boto/boto/"
-try:
-    from credentials import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
-except:
-    print "To use Amazon Route 53, set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY credentials"
 
 RRTYPE = ['','A','NS','MD','MF','CNAME','SOA', 'MB', 'MG', 'MR', 'NULL', 'WKS', 'PTR', 'HINFO', 'MINFO', 'MX', 'TXT', 'RP', 'AFSDB', 'X25', 'ISDN', 'RT', 'NSAP', 'NSAP_PTR', 'SIG', 'KEY', 'PX', 'GPOS', 'AAAA', 'LOC', 'NXT', '', '', 'SRV']
 RRCLASS = ['','IN','CS','CH','HS']
@@ -63,6 +59,12 @@ class Nameserver(Replica):
                 self.logger.write("Initialization Error", "A master is required. Use -m option.")
                 self._graceexit(1)
         elif self.servicetype == NS_ROUTE53:
+            try:
+                CONFIGDICT = load_configdict(options.configpath)
+                AWS_ACCESS_KEY_ID = CONFIGDICT['AWS_ACCESS_KEY_ID']
+                AWS_SECRET_ACCESS_KEY = CONFIGDICT['AWS_SECRET_ACCESS_KEY']
+            except:
+                print "To use Amazon Route 53, set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY"
             # initialize Route 53 connection
             self.route53_name = domain+'.'
             self.route53_conn = Route53Connection(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)

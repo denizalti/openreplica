@@ -20,11 +20,6 @@ from concoord.command import Command
 from concoord.pvalue import PValue, PValueSet
 from concoord.connection import ConnectionPool,Connection
 try:
-    from credentials import LOGGERNODE
-except:
-    print "To turn on Logging through the Network, edit NetworkLogger credentials"
-    LOGGERNODE = None
-try:
     import dns.resolver, dns.exception
 except:
     print("Install dnspython: http://www.dnspython.org/")
@@ -35,6 +30,7 @@ parser.add_option("-p", "--port", action="store", dest="port", type="int", help=
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
 parser.add_option("-f", "--objectfilename", action="store", dest="objectfilename", default='', help="client object file name")
 parser.add_option("-c", "--objectname", action="store", dest="objectname", help="object name")
+parser.add_option("-o", "--configpath", action="store", dest="configpath", default='', help="config file path")
 parser.add_option("-n", "--name", action="store", dest="domain", default='', help="domainname that the nameserver will accept queries for")
 parser.add_option("-t", "--type", action="store", dest="type", default='', help="1: Master Nameserver 2: Slave Nameserver (requires a Master) 3:Route53 (requires a Route53 zone)")
 parser.add_option("-m", "--master", action="store", dest="master", default='', help="ipaddr:port for the master nameserver")
@@ -49,7 +45,7 @@ class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
     """ 
-    def __init__(self, nodetype, addr=options.addr, port=options.port, givenbootstraplist=options.bootstrap, debugoption=options.debug, objectfilename=options.objectfilename, objectname=options.objectname, instantiateobj=False):
+    def __init__(self, nodetype, addr=options.addr, port=options.port, givenbootstraplist=options.bootstrap, debugoption=options.debug, objectfilename=options.objectfilename, objectname=options.objectname, instantiateobj=False, configpath=options.configpath):
         """Node State
         - addr: hostname for Node, detected automatically
         - port: port for Node, can be taken from the commandline (-p [port]) or
@@ -120,6 +116,11 @@ class Node():
         # initialize empty groups
         self.me = Peer(self.addr,self.port,self.type)
         self.id = self.me.getid()
+        self.configpath = configpath
+        try:
+            LOGGERNODE = load_configdict(self.configpath)['LOGGERNODE']
+        except:
+            LOGGERNODE = None
         self.logger = NetworkLogger("%s-%s" % (node_names[self.type],self.id), LOGGERNODE)
         self.logger.write("State", "Connected.")
         self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_NAMESERVER:Group(self.me)}
