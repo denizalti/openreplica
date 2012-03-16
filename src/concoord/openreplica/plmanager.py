@@ -6,20 +6,20 @@
 import sys, os, socket, os.path
 import random, time
 import subprocess, signal
-try:
-    from credentials import USERNAME, USERKEYFILE, NODESFILE
-except:
-    print "To use this script, create your own ssh credentials."
-    os._exit(1)
-
-with open(NODESFILE, 'r') as f:
-    all_nodes = []
-    for node in f.readlines():
-        node = node.strip()
-        all_nodes.append(node)
 
 class PLConnection():
-    def __init__(self, num=0, nodecheckers=None, nodes=[]):
+    def __init__(self, num=0, nodecheckers=None, nodes=[], configdict={}):
+        global USERNAME, USERKEYFILE, NODESFILE
+        USERNAME = configdict['USERNAME']
+        USERKEYFILE = configdict['USERKEYFILE']
+        NODESFILE = configdict['NODESFILE']
+
+        with open(NODESFILE, 'r') as f:
+            all_nodes = []
+            for node in f.readlines():
+                node = node.strip()
+                all_nodes.append(node)
+
         self.procs = []
         if num == 0 and len(nodes) == 0:
             self.nodes = []

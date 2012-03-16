@@ -9,15 +9,12 @@ import os, sys, time, shutil
 from time import sleep,time
 from optparse import OptionParser
 from concoord.enums import *
+from concoord.utils import *
 from concoord.safetychecker import *
 from concoord.proxygenerator import *
 from concoord.serversideproxyast import *
 from concoord.openreplica.plmanager import *
 from concoord.proxy.nameservercoord import *
-try:
-    from credentials import NPYTHONPATH
-except:
-    NPYTHONPATH = 'python'
 
 parser = OptionParser(usage="usage: %prog -s subdomain -f objectfilepath -c classname -r replicas -a acceptors -n nameservers")
 parser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
@@ -26,9 +23,17 @@ parser.add_option("-c", "--classname", action="store", dest="classname", help="m
 parser.add_option("-r", "--replicas", action="store", dest="replicanum", default=1, help="number of replicas")
 parser.add_option("-a", "--acceptors", action="store", dest="acceptornum", default=1, help="number of acceptor")
 parser.add_option("-n", "--nameservers", action="store", dest="nameservernum", default=1, help="number of nameservers")
+parser.add_option("-o", "--configpath", action="store", dest="configpath", default='', help="config file path")
 (options, args) = parser.parse_args()
 
 CONCOORDPATH = 'concoord/src/concoord/'
+
+try:
+    CONFIGDICT = load_configdict(options.configpath)
+    NPYTHONPATH = CONFIGDICT['NPYTHONPATH']
+    CONCOORD_HELPERDIR = CONFIGDICT['CONCOORD_HELPERDIR']
+except:
+    NPYTHONPATH = 'python'
 
 def check_object(clientcode):
     print "Checking object safety"
@@ -40,7 +45,7 @@ def check_object(clientcode):
 # checks if a PL node is suitable for running a nameserver
 def check_planetlab_dnsport(plconn, node):
     print "Uploading DNS tester to ", node
-    pathtodnstester = os.getenv('CONCOORD_HELPERDIR')+'/testdnsport.py'
+    pathtodnstester = CONCOORD_HELPERDIR+'testdnsport.py'
     plconn.uploadone(node, pathtodnstester)
     print "Trying to bind to DNS port"
     rtv, output = plconn.executecommandone(node, "sudo " + NPYTHONPATH + " testdnsport.py")
@@ -53,7 +58,7 @@ def check_planetlab_dnsport(plconn, node):
 
 def check_planetlab_pythonversion(plconn, node):
     print "Uploading Python version tester to ", node
-    pathtopvtester = os.getenv('CONCOORD_HELPERDIR')+'/testpythonversion.py' 
+    pathtopvtester = CONCOORD_HELPERDIR+'testpythonversion.py' 
     plconn.uploadone(node, pathtopvtester)
     print "Checking Python version"
     rtv, output = plconn.executecommandone(node, NPYTHONPATH + " testpythonversion.py")
@@ -72,11 +77,11 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
         print "Invalid configuration:"
         print "The configuration requires at least 1 Replica, 1 Acceptor and 1 Nameserver"
         os._exit()
-    bootstrap = PLConnection(1, [check_planetlab_pythonversion])
-    nameservers = PLConnection(numnameservers, [check_planetlab_dnsport, check_planetlab_pythonversion])
-    replicas = PLConnection(numreplicas-1, [check_planetlab_pythonversion])
-    acceptors = PLConnection(numacceptors, [check_planetlab_pythonversion])
-    allnodes = PLConnection(nodes=nameservers.getHosts() + replicas.getHosts() + acceptors.getHosts() + bootstrap.getHosts())
+    bootstrap = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
+    nameservers = PLConnection(numnameservers, [check_planetlab_dnsport, check_planetlab_pythonversion], configdict=CONFIGDICT)
+    replicas = PLConnection(numreplicas-1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
+    acceptors = PLConnection(numacceptors, [check_planetlab_pythonversion], configdict=CONFIGDICT)
+    allnodes = PLConnection(nodes=nameservers.getHosts() + replicas.getHosts() + acceptors.getHosts() + bootstrap.getHosts(), configdict=CONFIGDICT)
     print "=== Picked Nodes ==="
     for node in allnodes.getHosts():
         print node
@@ -150,26 +155,26 @@ def terminated(p):
     return done
 
 def main():
-    try:
-        with open(options.objectfilepath, 'rU') as fd:
-            clientcode = fd.read()
+#    try:
+    with open(options.objectfilepath, 'rU') as fd:
+        clientcode = fd.read()
         # Check safety
-        if not check_object(clientcode):
-            print "Object is not safe for us to execute."
-            os._exit(1)
+    if not check_object(clientcode):
+        print "Object is not safe for us to execute."
+        os._exit(1)
         # Start Nodes
-        print "Connecting to Planet Lab"
-        configuration = (int(options.replicanum), int(options.acceptornum), int(options.nameservernum))
-        start_nodes(options.subdomain, options.objectfilepath, options.classname, configuration)
+    print "Connecting to Planet Lab"
+    configuration = (int(options.replicanum), int(options.acceptornum), int(options.nameservernum))
+    start_nodes(options.subdomain, options.objectfilepath, options.classname, configuration)
         # Create Proxy
-        print "Creating proxy..."
-        clientproxycode = createclientproxy(clientcode, options.classname, None)
-        clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
-        print "Proxy Code:"
-        print clientproxycode
-    except Exception as e:
-        print e
-        parser.print_help()
+    print "Creating proxy..."
+    clientproxycode = createclientproxy(clientcode, options.classname, None)
+    clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
+    print "Proxy Code:"
+    print clientproxycode
+#    except Exception as e:
+#        print e
+#        parser.print_help()
     
 if __name__=='__main__':
     main()

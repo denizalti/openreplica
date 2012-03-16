@@ -4,11 +4,7 @@
 @copyright: See LICENSE
 """
 import socket, time, os, sys, select
-try:
-    from credentials import LOGGERNODE
-except:
-    print "To turn on Logging through the Network, edit NetworkLogger credentials"
-    LOGGERNODE = 'addr:12000'
+from concoord.utils import *
 
 def collect_input(s):
     msg = ''
@@ -24,7 +20,8 @@ def print_event(event):
     print "%s: %s" % (time.asctime(time.localtime(time.time())), event.strip())
     
 def main():
-    addr, port = LOGGERNODE.split(':')
+    addr = findOwnIP()
+    port = 12000
     try:
         daemonsocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         daemonsocket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
@@ -33,7 +30,7 @@ def main():
         daemonsocket.listen(10)
     except socket.error:
         pass
-    print_event("server ready on port %d\n" % 12000)
+    print_event("server ready on port %d\n" % port)
 
     socketset = [daemonsocket]
     while True:
