@@ -52,7 +52,6 @@ class PLConnection():
     def _tryconnect(self, node):
         host = USERNAME + "@" + node
         cmd = ["ssh", "-i", USERKEYFILE, "-o", "StrictHostKeyChecking=no", host, "ls"]
-        print cmd
         return self._system(cmd, timeout=20) == 0
 
     def _system(self, cmd, timeout=300):
@@ -61,7 +60,6 @@ class PLConnection():
         return self._waitforall([p], timeout)
 
     def _issuecommand(self, cmd):
-        print cmd
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         return p
 
