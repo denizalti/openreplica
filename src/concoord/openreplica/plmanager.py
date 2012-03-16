@@ -6,11 +6,12 @@
 import sys, os, socket, os.path
 import random, time
 import subprocess, signal
-try:
-    from credentials import USERNAME, USERKEYFILE, NODESFILE
-except:
-    print "To use this script, create your own ssh credentials."
-    os._exit(1)
+print sys.path
+#try:
+from credentials import USERNAME, USERKEYFILE, NODESFILE
+#except:
+#    print "To use this script, create your own ssh credentials."
+#    os._exit(1)
 
 with open(NODESFILE, 'r') as f:
     all_nodes = []
