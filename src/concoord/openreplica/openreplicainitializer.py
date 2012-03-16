@@ -33,6 +33,7 @@ try:
     NPYTHONPATH = CONFIGDICT['NPYTHONPATH']
     CONCOORD_HELPERDIR = CONFIGDICT['CONCOORD_HELPERDIR']
 except:
+    print "You need to set ssh credentials to use this script. Use -o option to provide configuration file path."
     NPYTHONPATH = 'python'
 
 def check_object(clientcode):

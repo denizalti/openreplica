@@ -66,12 +66,13 @@ def del_record_bool(conn, zone_id, name, type, values, ttl=600, identifier=None,
         print e
 
 if __name__ == '__main__':
-     try:
-         CONFIGDICT = load_configdict(sys.argv[1])
-         AWS_ACCESS_KEY_ID = CONFIGDICT['AWS_ACCESS_KEY_ID']
-         AWS_SECRET_ACCESS_KEY = CONFIGDICT['AWS_SECRET_ACCESS_KEY']
-     except:
-         print "To set Amazon Route 53 keys, pass the configuration file path"
+    try:
+        CONFIGDICT = load_configdict(sys.argv[1])
+        AWS_ACCESS_KEY_ID = CONFIGDICT['AWS_ACCESS_KEY_ID']
+        AWS_SECRET_ACCESS_KEY = CONFIGDICT['AWS_SECRET_ACCESS_KEY']
+    except:
+        print "To set Amazon Route 53 keys, pass the configuration file path"
+
     zone_id = 'Z1A1MS4JFD4PLW'
     name = 'ecoviews.org.'
     type = 'A'
