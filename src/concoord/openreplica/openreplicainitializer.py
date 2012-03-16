@@ -122,12 +122,14 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
         print replicaname
     # NAMESERVERS
     print "--- Nameservers ---"
+    servicetype = NS_MASTER
+    master = 'openreplica.org'
     for nameserver in nameservers.getHosts():
         port = random.randint(14000, 15000)
-        p = nameservers.executecommandone(nameserver, "sudo nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain+'.openreplica.org', nameserver, port, clientobjectfilename, classname, bootstrapname), False)
+        p = nameservers.executecommandone(nameserver, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s -t %d -m %s" % (subdomain, nameserver, port, clientobjectfilename, classname, bootstrapname, servicetype, master), False)
         while terminated(p):
             port = random.randint(14000, 15000)
-            p = nameservers.executecommandone(nameserver, "sudo nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain+'.openreplica.org', nameserver, port, clientobjectfilename, classname, bootstrapname), False)
+            p = nameservers.executecommandone(nameserver, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s -t %d -m %s" % (subdomain, nameserver, port, clientobjectfilename, classname, bootstrapname, servicetype, master), False)
         nameservername = nameserver+':'+str(port)
         processnames.append((NODE_NAMESERVER, nameservername))
         print nameservername
