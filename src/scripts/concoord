@@ -68,9 +68,10 @@ def concoordify():
     try:
         with open(options.objectfilepath, 'rU') as fd:
             clientcode = fd.read()
-        if not check_object(clientcode):
-            print "Object is not safe for us to execute."
-            os._exit(1)
+        if options.safe:
+            if not check_object(clientcode):
+                print "Object is not safe for us to execute."
+                os._exit(1)
         fixedfile = editproxyfile(options.objectfilepath, options.classname)
         print "Fixed server-side object: ", fixedfile.name
         clientproxycode = createclientproxy(clientcode, options.classname, None)
