@@ -157,7 +157,6 @@ class Replica(Node):
                     unblocked = {}
                 self.lock.acquire()
         except (TypeError, AttributeError) as t:
-            print "^^^^^^^^^^^^^^^^^^^^^", t
             self.logger.write("Execution Error", "command not supported: %s" % (command))
             givenresult = 'Method Does Not Exist: ', commandname
             clientreplycode = CR_EXCEPTION
