@@ -16,7 +16,7 @@ from concoord.serversideproxyast import *
 from concoord.openreplica.plmanager import *
 from concoord.proxy.nameservercoord import *
 
-parser = OptionParser(usage="usage: %prog -s subdomain -f objectfilepath -c classname -r replicas -a acceptors -n nameservers")
+parser = OptionParser(usage="usage: %prog -s subdomain -f objectfilepath -c classname -r replicas -a acceptors -n nameservers -o configpath")
 parser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
 parser.add_option("-f", "--objectfilepath", action="store", dest="objectfilepath", help="client object file path")
 parser.add_option("-c", "--classname", action="store", dest="classname", help="main class name")
@@ -70,6 +70,16 @@ def check_planetlab_pythonversion(plconn, node):
         plconn.executecommandone(node, "rm testpythonversion.py")
     return rtv,output
 
+def kill_node(node, uniqueid):
+    addr,port = node.split(':')
+    cmd = 'ps auxww | sed -e \'s/[ ][^ ]*$//\' | grep pytho[n] | grep '+uniqueid+' | grep '+port+' | awk \'{print $2}\' | sudo -A xargs kill -9'
+    try:
+        nodeconn = PLConnection(nodes=[addr], configdict=CONFIGDICT)
+        reply = nodeconn.executecommandone(addr, cmd)
+        return reply
+    except:
+        return CONFIGDICT
+
 def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     # locate the right number of suitable PlanetLab nodes
     clientobjectfilename = os.path.basename(clientobjectfilepath)
@@ -79,7 +89,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
         print "The configuration requires at least 1 Replica, 1 Acceptor and 1 Nameserver"
         os._exit()
     bootstrap = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
-    nameservers = PLConnection(numnameservers, [check_planetlab_dnsport, check_planetlab_pythonversion], configdict=CONFIGDICT)
+    nameservers = PLConnection(numnameservers, [check_planetlab_pythonversion], configdict=CONFIGDICT)
     replicas = PLConnection(numreplicas-1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
     acceptors = PLConnection(numacceptors, [check_planetlab_pythonversion], configdict=CONFIGDICT)
     allnodes = PLConnection(nodes=nameservers.getHosts() + replicas.getHosts() + acceptors.getHosts() + bootstrap.getHosts(), configdict=CONFIGDICT)
@@ -142,9 +152,9 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     print "All clear!"
     ## add the nameserver nodes to open replica coordinator object
     nameservercoordobj = NameserverCoord('openreplica.org')
-    print "Adding Nameserver nodes to Nameserver Coordination Object:"
+    print "Adding nodes to OpenReplica Nameserver Coordination Object:"
     for nodetype,node in processnames:
-        print "- ",  nodetype , "| ", node
+        print "- ",  node_names[nodetype] , "| ", node
         nameservercoordobj.addnodetosubdomain(subdomain, nodetype, node)
     return bootstrapname
 
