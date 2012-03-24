@@ -25,7 +25,7 @@ REPLY = 0
 CONDITION = 1
 
 class ClientProxy():
-    def __init__(self, bootstrap, timeout=30, debug=False):
+    def __init__(self, bootstrap, timeout=120, debug=False):
         self.debug = debug
         self.timeout = timeout 
         self.domainname = None
@@ -105,9 +105,6 @@ class ClientProxy():
         else:
             oldbootstrap = self.bootstraplist.pop(0)
             self.bootstraplist.append(oldbootstrap)
-        print triedreplicas
-        for i in self.bootstraplist:
-            print i
         if triedreplicas == set(self.bootstraplist):
             # If all replicas in the list are tried already, return False
             return False
