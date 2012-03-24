@@ -10,7 +10,19 @@ class ConCoordException(Exception):
 
 class Timeout(ConCoordException):
     """The operation timed out."""
-    pass
+    def __init__(self, value=''):
+        self.value = value
+
+    def __str__(self):
+        return str(self.value)
+
+class ConnectionError(ConCoordException):
+    """Connection cannot be established"""
+    def __init__(self, value=''):
+        self.value = value
+
+    def __str__(self):
+        return str(self.value)
 
 class BlockingReturn(ConCoordException):
     """Blocking Return"""
@@ -18,7 +30,7 @@ class BlockingReturn(ConCoordException):
         self.returnvalue = returnvalue
 
     def __str__(self):
-        return "ConCoord BlockingReturn Exception: " + str(self.returnvalue)
+        return str(self.returnvalue)
 
 class UnblockingReturn(ConCoordException):
     """Unblocking Return"""
@@ -27,4 +39,4 @@ class UnblockingReturn(ConCoordException):
         self.unblocked = unblockeddict
 
     def __str__(self):
-        return "ConCoord UnblockingReturn Exception: " + str(self.returnvalue) + " ".join(unblockeddict.keys())
+        return str(self.returnvalue) + " ".join(unblockeddict.keys())
