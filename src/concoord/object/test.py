@@ -11,7 +11,7 @@ class Test():
         return self.value
 
     def setvalue(self, newvalue, **kwargs):
-        self.value = newvalue
+        self.value = int(newvalue)
     
     def __str__(self, **kwargs):
         return "The value is %d" % self.value
