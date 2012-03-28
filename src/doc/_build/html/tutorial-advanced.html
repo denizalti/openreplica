@@ -1,0 +1,165 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Creating Source Bundles &mdash; ConCoord 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="ConCoord 0.2.0 documentation" href="index.html" />
+    <link rel="prev" title="Getting Started" href="tutorial.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="tutorial.html" title="Getting Started"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">ConCoord 0.2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="creating-source-bundles">
+<h1>Creating Source Bundles<a class="headerlink" href="#creating-source-bundles" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><p>To create bundles to use at the server and client sides you can
+use the Makefile provided under &#8216;concoord/&#8217;</p>
+<p>Remember to add the objects you have created in these
+bundles.</p>
+</div></blockquote>
+</div>
+<div class="section" id="creating-a-server-bundle">
+<h1>Creating A Server Bundle<a class="headerlink" href="#creating-a-server-bundle" title="Permalink to this headline">¶</a></h1>
+<p>To create a bundle that can run replica, acceptor and nameserver nodes:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> make server
+</pre></div>
+</div>
+</div>
+<div class="section" id="creating-a-client-bundle">
+<h1>Creating A Client Bundle<a class="headerlink" href="#creating-a-client-bundle" title="Permalink to this headline">¶</a></h1>
+<p>To create a bundle that can run a client and connect to an existing
+ConCoord instance:</p>
+</div>
+<div class="section" id="logging">
+<h1>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h1>
+<p>We have two kinds of loggers for ConCoord:
+* Console Logger
+* Network Logger</p>
+<p>Both of these loggers are included under utils.py</p>
+<p>To start the NetworkLogger, use the logdaemon.py on the host you
+want to keep the Logger.</p>
+</div>
+<div class="section" id="synchronization-threading">
+<h1>Synchronization &amp; Threading<a class="headerlink" href="#synchronization-threading" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="nameserver-options">
+<h2>Nameserver Options<a class="headerlink" href="#nameserver-options" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+<div class="section" id="running-a-master-nameserver">
+<h1>Running A Master Nameserver<a class="headerlink" href="#running-a-master-nameserver" title="Permalink to this headline">¶</a></h1>
+</div>
+<div class="section" id="running-a-slave-nameserver">
+<h1>Running A Slave Nameserver<a class="headerlink" href="#running-a-slave-nameserver" title="Permalink to this headline">¶</a></h1>
+</div>
+<div class="section" id="amazon-route-53">
+<h1>Amazon Route 53<a class="headerlink" href="#amazon-route-53" title="Permalink to this headline">¶</a></h1>
+<p>To use Amazon Route 53 you can pass your credentials into the methods
+that create connections.  Alternatively, boto will check for the
+existance of the following environment variables to ascertain your credentials:</p>
+<blockquote>
+<div>AWS_ACCESS_KEY_ID - Your AWS Access Key ID
+AWS_SECRET_ACCESS_KEY - Your AWS Secret Access Key</div></blockquote>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Creating Source Bundles</a></li>
+<li><a class="reference internal" href="#creating-a-server-bundle">Creating A Server Bundle</a></li>
+<li><a class="reference internal" href="#creating-a-client-bundle">Creating A Client Bundle</a></li>
+<li><a class="reference internal" href="#logging">Logging</a></li>
+<li><a class="reference internal" href="#synchronization-threading">Synchronization &amp; Threading</a><ul>
+<li><a class="reference internal" href="#nameserver-options">Nameserver Options</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#running-a-master-nameserver">Running A Master Nameserver</a></li>
+<li><a class="reference internal" href="#running-a-slave-nameserver">Running A Slave Nameserver</a></li>
+<li><a class="reference internal" href="#amazon-route-53">Amazon Route 53</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tutorial.html"
+                        title="previous chapter">Getting Started</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/tutorial-advanced.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="tutorial.html" title="Getting Started"
+             >previous</a> |</li>
+        <li><a href="index.html">ConCoord 0.2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Deniz Altinbuken, Emin Gun Sirer.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
