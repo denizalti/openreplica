@@ -114,8 +114,14 @@ class ClientProxy():
         with self.lock:
             mynumber = self.commandnumber
             self.commandnumber += 1
-            argstr = " ".join(str(arg) for arg in args)
-            commandstr = commandname + " " + argstr
+            if args:
+                argstr = CONCOORD_ESCAPE_SEQ.join(str(arg) for arg in args)
+                commandstr = commandname + CONCOORD_ESCAPE_SEQ + argstr
+            else:
+                commandstr = commandname
+            print "*******************************************************"
+            print commandstr
+            print "*******************************************************"
             command = Command(self.me, mynumber, commandstr)
             cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
             replied = False

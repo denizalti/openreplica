@@ -16,7 +16,6 @@ class NameserverCoord():
     def addnodetosubdomain(self, subdomain, nodetype, node, **kwargs):
         nodetype = int(nodetype)
         if subdomain in self._nodes:
-            print "*****************************************************", nodetype, type(nodetype)
             if nodetype in self._nodes[subdomain]:
                 self._nodes[subdomain][nodetype].add(node)
             else:
@@ -41,6 +40,10 @@ class NameserverCoord():
         return exists
 
     def updatesubdomain(self, subdomain, nodes, **kwargs):
+        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
+        print subdomain
+        print nodes
+        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
         if subdomain in self._nodes:
             self._nodes[subdomain] = nodes
         else:

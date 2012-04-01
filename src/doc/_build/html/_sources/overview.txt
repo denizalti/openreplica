@@ -13,6 +13,5 @@ a transparent way of providing a coordination service.
 
 .. image:: _static/concoord.jpg
     :align: center
-    :width: 200pt
 
 
