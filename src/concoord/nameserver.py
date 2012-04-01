@@ -45,14 +45,16 @@ class Nameserver(Replica):
             self.servicetype = int(servicetype)
         else:
             self.logger.write("Initialization Error", "Service type of the nameserver is required. Use -t option.")
+            self._graceexit(1)
         self.ipconverter = '.ipaddr.'+domain+'.'
         try:
             self.mydomain = dns.name.Name((domain+'.').split('.'))
             self.mysrvdomain = dns.name.Name((SRVNAME+domain+'.').split('.'))
         except dns.name.EmptyLabel:
             self.logger.write("Initialization Error", "A DNS name is required. Use -n option.")
+            self._graceexit(1)
             
-        if self.servicetype == NS_MASTER:
+        if self.servicetype == NS_SLAVE:
             if master:
                 self.master = master
             else:
@@ -72,7 +74,7 @@ class Nameserver(Replica):
             # should be added to the zones beforehand
             self.route53_zone_id = concoord.concoordroute53.get_zone_id(self.route53_conn, self.route53_name)
             self.updateroute53()
-        elif self.servicetype == NS_SELF:            
+        elif self.servicetype == NS_MASTER:            
             self.udpport = 53
             self.udpsocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
             try:
@@ -90,7 +92,7 @@ class Nameserver(Replica):
     def startservice(self):
         """Starts the background services associated with a node."""
         Replica.startservice(self)
-        if self.servicetype == NS_SELF:
+        if self.servicetype == NS_MASTER:
             # Start a thread for the UDP server
             UDP_server_thread = Thread(target=self.udp_server_loop, name='UDPServerThread')
             UDP_server_thread.start()
@@ -242,7 +244,7 @@ class Nameserver(Replica):
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype].add(nodepeer)
         self.updaterevision()
-        if self.servicetype == NS_MASTER:
+        if self.servicetype == NS_SLAVE:
             self.updatemaster(nodepeer, add=True)
         elif self.servicetype == NS_ROUTE53:
             self.updateroute53()
@@ -254,7 +256,7 @@ class Nameserver(Replica):
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype].remove(nodepeer)
         self.updaterevision()
-        if self.servicetype == NS_MASTER:
+        if self.servicetype == NS_SLAVE:
             self.updatemaster(nodepeer)
         elif self.servicetype == NS_ROUTE53:
             self.updateroute53()
@@ -321,6 +323,11 @@ class Nameserver(Replica):
             for address,port in self.groups[nodetype].get_addresses():
                 nodes[nodetype].add(address + ':' + str(port))
         nodes[self.type].add(self.addr + ':' + str(self.port))
+        print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        print str(self.mydomain)
+        print type(str(self.mydomain))
+        print type(nodes)
+        print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
         nscoord.updatesubdomain(str(self.mydomain), nodes)
             
     def updaterevision(self):

@@ -9,7 +9,7 @@ Welcome to ConCoord's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    overview
    install

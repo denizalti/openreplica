@@ -90,7 +90,10 @@ class Replica(Node):
         executes regular commands as well as META-level commands (commands related
         to the managements of the Paxos protocol) with a delay of WINDOW commands."""
         command = self.decisions[slotnumber]
-        commandlist = command.command.split()
+        commandlist = command.command.split(CONCOORD_ESCAPE_SEQ)
+        print "************************************"
+        print commandlist
+        print "************************************"
         commandname = commandlist[0]
         commandargs = commandlist[1:]
         ismeta = (commandname in METACOMMANDS)
@@ -549,7 +552,7 @@ class Replica(Node):
     def msg_incclientrequest(self, conn, msg):
         """handles inconsistent requests from the client"""
         command = msg.command
-        commandlist = command.command.split()
+        commandlist = command.command.split(CONCOORD_ESCAPE_SEQ)
         commandname = commandlist[0]
         commandargs = commandlist[1:]
         send_result_to_client = True
@@ -859,14 +862,14 @@ class Replica(Node):
     def create_delete_command(self, node):
         mynumber = self.metacommandnumber
         self.metacommandnumber += 1
-        operation = "_del_node %d %s:%d" % (node.type, node.addr, node.port)
+        operation = "_del_node%s%d%s%s:%d" % (CONCOORD_ESCAPE_SEQ, node.type, CONCOORD_ESCAPE_SEQ, node.addr, node.port)
         command = Command(self.me, mynumber, operation)
         return command
 
     def create_add_command(self, node):
         mynumber = self.metacommandnumber
         self.metacommandnumber += 1
-        operation = "_add_node %d %s:%d" % (node.type, node.addr, node.port)
+        operation = "_add_node%s%d%s%s:%d" % (CONCOORD_ESCAPE_SEQ, node.type, CONCOORD_ESCAPE_SEQ, node.addr, node.port)
         command = Command(self.me, mynumber, operation)
         return command
 

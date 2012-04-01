@@ -1,22 +1,23 @@
+Advanced Tutorial
+===================
+
 Creating Source Bundles
 ------------------------
-      To create bundles to use at the server and client sides you can
-      use the Makefile provided under 'concoord/'
+You can create bundles to use at the server and client sides using the
+Makefile provided under ``concoord/``
 
-      Remember to add the objects you have created in these
-      bundles.
+Remember to add the objects you have created in these bundles.
 
 Creating A Server Bundle
-------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^
 To create a bundle that can run replica, acceptor and nameserver nodes:
 
 .. sourcecode:: console
 
 	$ make server
 
-
 Creating A Client Bundle
-------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^
 To create a bundle that can run a client and connect to an existing
 ConCoord instance:
 
@@ -40,20 +41,4 @@ want to keep the Logger.
 Synchronization & Threading
 ------------------------
 
-Nameserver Options
-===================
 
-Running A Master Nameserver
-------------------------
-
-Running A Slave Nameserver
-------------------------
-
-Amazon Route 53
-------------------------
-To use Amazon Route 53 you can pass your credentials into the methods
-that create connections.  Alternatively, boto will check for the
-existance of the following environment variables to ascertain your credentials:
-
-	  AWS_ACCESS_KEY_ID - Your AWS Access Key ID
-	  AWS_SECRET_ACCESS_KEY - Your AWS Secret Access Key

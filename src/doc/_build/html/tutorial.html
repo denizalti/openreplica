@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Getting Started &mdash; ConCoord 0.2.0 documentation</title>
+    <title>Tutorial &mdash; ConCoord 0.2.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -26,8 +26,8 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="ConCoord 0.2.0 documentation" href="index.html" />
-    <link rel="next" title="Creating Source Bundles" href="tutorial-advanced.html" />
-    <link rel="prev" title="Requirements" href="install.html" /> 
+    <link rel="next" title="Advanced Tutorial" href="tutorial-advanced.html" />
+    <link rel="prev" title="Installing ConCoord" href="install.html" /> 
   </head>
   <body>
     <div class="related">
@@ -37,10 +37,10 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="tutorial-advanced.html" title="Creating Source Bundles"
+          <a href="tutorial-advanced.html" title="Advanced Tutorial"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="install.html" title="Requirements"
+          <a href="install.html" title="Installing ConCoord"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">ConCoord 0.2.0 documentation</a> &raquo;</li> 
       </ul>
@@ -51,35 +51,36 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="getting-started">
-<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="tutorial">
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
 <p>To use ConCoord, first you need to create the local python object to
 represent the state you want to replicate. To walk you through the
 ConCoord approach, we will use one of the example coordination objects
 we have provided, namely Counter. In the source distribution wou can
-locate the Counter object under concoord/object/counter.py. Once you
+locate the Counter object under <tt class="docutils literal"><span class="pre">concoord/object/counter.py</span></tt>. Once you
 install ConCoord, you can create coordination objects and save them
 anywhere in your filesystem. To demonstrate this, we will save
-counter.py under /foo/counter.py</p>
+counter.py under <tt class="docutils literal"><span class="pre">/foo/counter.py</span></tt></p>
 </div>
-<div class="section" id="concoordify-python-objects">
-<h1>Concoordify Python Objects<a class="headerlink" href="#concoordify-python-objects" title="Permalink to this headline">¶</a></h1>
-<blockquote>
-<div>To create concoord objects (to be used by the client and the
-server) you can use:</div></blockquote>
+<div class="section" id="concoordifying-python-objects">
+<h2>Concoordifying Python Objects<a class="headerlink" href="#concoordifying-python-objects" title="Permalink to this headline">¶</a></h2>
+<p>To create concoord objects (to be used by the client and the server)
+you can use:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord object -f /foo/counter.py -c Counter -s
 </pre></div>
 </div>
-<p>The Usage: concoord object -f objectfilepath -c classname -s safe</p>
+<p><tt class="docutils literal"><span class="pre">Usage:</span> <span class="pre">concoord</span> <span class="pre">object</span> <span class="pre">-f</span> <span class="pre">objectfilepath</span> <span class="pre">-c</span> <span class="pre">classname</span> <span class="pre">-s</span> <span class="pre">safe</span></tt></p>
 <dl class="docutils">
-<dt>where objectfilepath:= path of the object you want to concoordify</dt>
-<dd>classname := name of the class that you&#8217;ll use to access your object
-safe := boolean flag to include safety checks for the object</dd>
+<dt>where <tt class="docutils literal"><span class="pre">objectfilepath</span></tt> := path of the object you want to concoordify</dt>
+<dd><tt class="docutils literal"><span class="pre">classname</span></tt> := name of the class that you&#8217;ll use to access your object
+<tt class="docutils literal"><span class="pre">safe</span></tt> := boolean flag to include safety checks for the object</dd>
 </dl>
-<p>This script will create two files under the directory that the object resides (i.e. /foo/):</p>
+<p>This script will create two files under the directory that the object resides (i.e. <tt class="docutils literal"><span class="pre">/foo/</span></tt>):</p>
 <ul class="simple">
-<li>/foo/counter.pyfixed := the object that can be used on the server side by replicas and nameservers</li>
-<li>/foo/counter.pyproxy := the proxy that can be used like the original object by the client</li>
+<li><tt class="docutils literal"><span class="pre">/foo/counter.pyfixed</span></tt> := the object that can be used on the server side by replicas and nameservers</li>
+<li><tt class="docutils literal"><span class="pre">/foo/counter.pyproxy</span></tt> := the proxy that can be used like the original object by the client</li>
 </ul>
 <p>Remember to rename the files back to the original filename before you
 import them on the client or server side. To avoid confusion, we will
@@ -94,8 +95,8 @@ so that the objects can be found and imported:</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="start-nodes-manually">
-<h1>Start Nodes Manually<a class="headerlink" href="#start-nodes-manually" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="starting-nodes-manually">
+<h2>Starting Nodes Manually<a class="headerlink" href="#starting-nodes-manually" title="Permalink to this headline">¶</a></h2>
 <p>To start the system you need to start at least one replica and one
 acceptor. To support bootstrapping through DNS queries, you will also
 need at least one nameserver node that has the necessary delegation
@@ -104,54 +105,53 @@ nameserver node is set up and you can send dig queries to the
 nameserver and learn the node to bootstrap, current set of nodes and
 current set of replicas.</p>
 <ul class="simple">
-<li>For bootstrapping concoord requires at least one replica node. If a</li>
-</ul>
-<p>nameserver node is up, bootstrap can be the domainname for the
+<li>For bootstrapping concoord requires at least one replica node. If a
+nameserver node is up, bootstrap can be the domainname for the
 concoord instance as new nodes can retrieve the bootstrap node
 automatically through DNS queries. If the nameserver is not running,
-bootstrap is a list of &#8216;ipaddr:port&#8217; strings.</p>
-<ul class="simple">
+bootstrap is a list of &#8216;ipaddr:port&#8217; strings.</li>
 <li>Note that for the system to be able to add new nodes and accept
 client requests, there has to be at least one replica and one
 acceptor node present initially.</li>
 </ul>
 <div class="section" id="starting-replica-nodes">
-<h2>Starting Replica Nodes<a class="headerlink" href="#starting-replica-nodes" title="Permalink to this headline">¶</a></h2>
-<blockquote>
-<div>To start the bootstrap replica node manually, use the following command:</div></blockquote>
+<h3>Starting Replica Nodes<a class="headerlink" href="#starting-replica-nodes" title="Permalink to this headline">¶</a></h3>
+<p>To start the bootstrap replica node manually, use the following
+command:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord replica -f counter.py -c Counter
 </pre></div>
 </div>
 <p>Note that you can specify the port the replica binds to with option
-&#8216;-p&#8217;, if not specified port defaults to the first available port, randomly chosen between 14000 and 15000.</p>
-<p>To start replica nodes to join an active concoord instance, use the following command:</p>
+&#8216;-p&#8217;, if not specified port defaults to the first available port,
+randomly chosen between 14000 and 15000.</p>
+<p>To start replica nodes to join an active concoord instance, use the
+following command:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord replica -f counter.py -c Counter -b <span class="s1">&#39;ipaddr:port&#39;</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="starting-acceptor-nodes">
-<h2>Starting Acceptor Nodes<a class="headerlink" href="#starting-acceptor-nodes" title="Permalink to this headline">¶</a></h2>
-<blockquote>
-<div>To start an acceptor node manually, use the following command:</div></blockquote>
+<h3>Starting Acceptor Nodes<a class="headerlink" href="#starting-acceptor-nodes" title="Permalink to this headline">¶</a></h3>
+<p>To start an acceptor node manually, use the following command:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord acceptor -b <span class="s1">&#39;ipaddr:port&#39;</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="starting-nameserver-nodes">
-<h2>Starting Nameserver Nodes<a class="headerlink" href="#starting-nameserver-nodes" title="Permalink to this headline">¶</a></h2>
-<blockquote>
-<div>To start a nameserver node manually, make sure that you have
-at least one replica and one acceptor running. You can start
-the nameserver to answer queries for &#8216;counterdomain&#8217; as
-follows:</div></blockquote>
+<h3>Starting Nameserver Nodes<a class="headerlink" href="#starting-nameserver-nodes" title="Permalink to this headline">¶</a></h3>
+<p>To start a nameserver node manually, make sure that you have at least
+one replica and one acceptor running. You can start the nameserver to
+answer queries for &#8216;counterdomain&#8217; as follows:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord nameserver -n counterdomain -f counter.py -c Counter -b <span class="s1">&#39;ipaddr:port&#39;</span>
 </pre></div>
 </div>
 <ul class="simple">
 <li>Make sure that nameserver delegations are set up.</li>
-<li>Note that the command has to be run with su privileges as it binds to UDP port 53.</li>
+<li>Note that the command has to be run with su privileges as it binds
+to UDP port 53.</li>
 </ul>
-<p>From this point on, you can send queries for counterdomain and see the most current set of nodes:</p>
+<p>From this point on, you can send queries for counterdomain and see the
+most current set of nodes:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> dig -t a counterdomain                             <span class="c"># returns set of Replicas</span>
 
 <span class="gp">$</span> dig -t srv _concoord._tcp.counterdomain  <span class="c"># returns set of Replicas with ports</span>
@@ -164,38 +164,33 @@ follows:</div></blockquote>
 </div>
 </div>
 <div class="section" id="starting-nodes-automatically">
-<h1>Starting Nodes Automatically<a class="headerlink" href="#starting-nodes-automatically" title="Permalink to this headline">¶</a></h1>
-<blockquote>
-<div><p>We have a script we use for openreplica.org to start desired
-number of nodes on PlanetLab servers automatically. This
-script is included for your reference.</p>
+<h2>Starting Nodes Automatically<a class="headerlink" href="#starting-nodes-automatically" title="Permalink to this headline">¶</a></h2>
+<p>We have a script we use for openreplica.org to start desired number of
+nodes on PlanetLab servers automatically. This script is included for
+your reference.</p>
 <blockquote>
 <div>concoord/openreplica/openreplicainitializer.py</div></blockquote>
 <ul class="simple">
-<li>Note that the script requires host and user-specific</li>
+<li>Note that the script requires host and user-specific credentials and
+you will have to edit the script for your own use.</li>
 </ul>
-<p>credentials and you will have to edit the script for your own
-use.</p>
-<p>To call the script:</p>
-</div></blockquote>
+<p>You can run the script as follows:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord initialize -s counterdomain -f /foo/counter.py -c Counter -r 3 -a 3 -n 3
 </pre></div>
 </div>
+</div>
 <div class="section" id="adding-nodes-automatically">
 <h2>Adding Nodes Automatically<a class="headerlink" href="#adding-nodes-automatically" title="Permalink to this headline">¶</a></h2>
-<blockquote>
-<div><p>We also have a script we use for openreplica.org to add nodes on
-PlanetLab servers automatically. This script is included for
-your reference.</p>
+<p>We also have a script we use for openreplica.org to add nodes on
+PlanetLab servers automatically. This script is included for your
+reference.</p>
 <blockquote>
 <div>concoord/openreplica/openreplicaaddnode.py</div></blockquote>
 <ul class="simple">
-<li>Note that the script requires host and user-specific</li>
+<li>Note that the script requires host and user-specific credentials and
+you will have to edit the script for your own use.</li>
 </ul>
-<p>credentials and you will have to edit the script for your own
-use.</p>
-<p>To call the script:</p>
-</div></blockquote>
+<p>You can run the script as follows:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord addnode -t nodetype -s counterdomain -f /foo/counter.py -c Counter -b bootstrap
 </pre></div>
 </div>
@@ -204,16 +199,13 @@ use.</p>
 <dd>bootstrap:= &#8216;ipaddr:port&#8217; or domainname for an instance that has a nameserver</dd>
 </dl>
 </div>
-</div>
 <div class="section" id="connecting-to-concoord-objects">
-<h1>Connecting to ConCoord Objects<a class="headerlink" href="#connecting-to-concoord-objects" title="Permalink to this headline">¶</a></h1>
-<blockquote>
-<div><p>Once you have concoord up and running for your object, it is
-easy to access your object.</p>
-<p>Now we will use the proxy object we generated at (3.1) and
-saved under /foo/concoordproxy.py. Now you can import and use
-this proxy object in your code as follows:</p>
-</div></blockquote>
+<h2>Connecting to ConCoord Objects<a class="headerlink" href="#connecting-to-concoord-objects" title="Permalink to this headline">¶</a></h2>
+<p>Once you have concoord up and running for your object, it is easy to
+access your object.</p>
+<p>Now we will use the proxy object we generated at (3.1) and saved under
+/foo/concoordproxy.py. Now you can import and use this proxy object in
+your code as follows:</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">counterproxy</span> <span class="kn">import</span> <span class="n">Counter</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="s">&#39;ipaddr:port&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">increment</span><span class="p">()</span>
@@ -227,13 +219,13 @@ this proxy object in your code as follows:</p>
 <li>Note that the objects on the Replica side are initialized without</li>
 </ul>
 <p>parameters. For you this has two implications:</p>
-<p>1) While implementing your objects you should create your  __init__
+<p>1. While implementing your objects you should create your  __init__
 functions to be called without parameters.
-2) Keep in mind that when you initialize an object through the proxy,
+2. Keep in mind that when you initialize an object through the proxy,
 it only connects to the specified bootstrap, it does not reinitialize
 the object. This way multiple clients can connect to the same object
 using their proxies without reinitializing the object.
-3) At any point to reinitialize an object after it is deployed on
+3. At any point to reinitialize an object after it is deployed on
 replicas, you should call __concoordinit__ function:</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">counterproxy</span> <span class="kn">import</span> <span class="n">Counter</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="s">&#39;ipaddr:port&#39;</span><span class="p">)</span>
@@ -246,6 +238,7 @@ replicas, you should call __concoordinit__ function:</p>
 </pre></div>
 </div>
 </div>
+</div>
 
 
           </div>
@@ -255,27 +248,28 @@ replicas, you should call __concoordinit__ function:</p>
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Getting Started</a></li>
-<li><a class="reference internal" href="#concoordify-python-objects">Concoordify Python Objects</a></li>
-<li><a class="reference internal" href="#start-nodes-manually">Start Nodes Manually</a><ul>
+<li><a class="reference internal" href="#">Tutorial</a><ul>
+<li><a class="reference internal" href="#getting-started">Getting Started</a></li>
+<li><a class="reference internal" href="#concoordifying-python-objects">Concoordifying Python Objects</a></li>
+<li><a class="reference internal" href="#starting-nodes-manually">Starting Nodes Manually</a><ul>
 <li><a class="reference internal" href="#starting-replica-nodes">Starting Replica Nodes</a></li>
 <li><a class="reference internal" href="#starting-acceptor-nodes">Starting Acceptor Nodes</a></li>
 <li><a class="reference internal" href="#starting-nameserver-nodes">Starting Nameserver Nodes</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#starting-nodes-automatically">Starting Nodes Automatically</a><ul>
+<li><a class="reference internal" href="#starting-nodes-automatically">Starting Nodes Automatically</a></li>
 <li><a class="reference internal" href="#adding-nodes-automatically">Adding Nodes Automatically</a></li>
+<li><a class="reference internal" href="#connecting-to-concoord-objects">Connecting to ConCoord Objects</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#connecting-to-concoord-objects">Connecting to ConCoord Objects</a></li>
 </ul>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="install.html"
-                        title="previous chapter">Requirements</a></p>
+                        title="previous chapter">Installing ConCoord</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="tutorial-advanced.html"
-                        title="next chapter">Creating Source Bundles</a></p>
+                        title="next chapter">Advanced Tutorial</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/tutorial.txt"
@@ -305,10 +299,10 @@ replicas, you should call __concoordinit__ function:</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="tutorial-advanced.html" title="Creating Source Bundles"
+          <a href="tutorial-advanced.html" title="Advanced Tutorial"
              >next</a> |</li>
         <li class="right" >
-          <a href="install.html" title="Requirements"
+          <a href="install.html" title="Installing ConCoord"
              >previous</a> |</li>
         <li><a href="index.html">ConCoord 0.2.0 documentation</a> &raquo;</li> 
       </ul>
