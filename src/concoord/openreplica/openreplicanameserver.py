@@ -21,8 +21,8 @@ class OpenReplicaNameserver(Nameserver):
         # When the nameserver starts the revision number is 00 for that day
         self.revision = strftime("%Y%m%d", gmtime())+str(0).zfill(2)
 
-    def performcore(self, msg, slotno, dometaonly=False, designated=False):
-        Replica.performcore(self, msg, slotno, dometaonly, designated)
+    def performcore(self, msg, slotnumber, dometaonly=False, designated=False):
+        Replica.performcore(self, msg, slotnumber, dometaonly, designated)
         command = self.decisions[slotnumber]
         commandtuple = command.command
         if type(commandtuple) == str:
