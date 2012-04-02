@@ -6,7 +6,6 @@
 import math, random, time
 import os, sys
 import signal
-import cPickle as pickle
 from threading import Thread, Lock, Condition, Timer, Event
 from concoord.peer import Peer
 from concoord.group import Group
@@ -91,9 +90,13 @@ class Replica(Node):
         executes regular commands as well as META-level commands (commands related
         to the managements of the Paxos protocol) with a delay of WINDOW commands."""
         command = self.decisions[slotnumber]
-        commandtuple = pickle.loads(command.command)
-        commandname = commandtuple[0]
-        commandargs = commandtuple[1:]
+        commandtuple = command.command
+        if type(commandtuple) == str:
+            commandname = commandtuple
+            commandargs = []
+        else:
+            commandname = commandtuple[0]
+            commandargs = commandtuple[1:]
         ismeta = (commandname in METACOMMANDS)
         noop = (commandname == "noop")
         send_result_to_client = True
@@ -174,7 +177,7 @@ class Replica(Node):
             mynumber = self.metacommandnumber
             self.metacommandnumber += 1
             garbagetuple = ("garbage_collect", slotnumber)
-            garbagecommand = Command(self.me, mynumber, pickle.dumps(garbagetuple))
+            garbagecommand = Command(self.me, mynumber, garbagetuple)
             if self.leader_initializing:
                 self.handle_client_command(garbagecommand, prepare=True)
             else:
@@ -551,8 +554,7 @@ class Replica(Node):
 
     def msg_incclientrequest(self, conn, msg):
         """handles inconsistent requests from the client"""
-        command = msg.command
-        commandtuple = pickle.loads(command.command)
+        commandtuple = tuple(msg.command.command)
         commandname = commandtuple[0]
         commandargs = commandtuple[1:]
         send_result_to_client = True
@@ -864,7 +866,7 @@ class Replica(Node):
         self.metacommandnumber += 1
         nodename = node.addr + ":" + str(node.port)
         operationtuple = ("_del_node", node.type, nodename)
-        command = Command(self.me, mynumber, pickle.dumps(operationtuple))
+        command = Command(self.me, mynumber, operationtuple)
         return command
 
     def create_add_command(self, node):
@@ -872,21 +874,21 @@ class Replica(Node):
         self.metacommandnumber += 1
         nodename = node.addr + ":" + str(node.port)
         operationtuple = ("_add_node", node.type, nodename)
-        command = Command(self.me, mynumber, pickle.dumps(operationtuple))
+        command = Command(self.me, mynumber, operationtuple)
         return command
 
     def create_noop_command(self):
         mynumber = self.metacommandnumber
         self.metacommandnumber += 1
         nooptuple = ("noop")
-        command = Command(self.me, mynumber, pickle.dumps(nooptuple))
+        command = Command(self.me, mynumber, nooptuple)
         return command
 
 ## SHELL COMMANDS
     def cmd_command(self, *args):
         """shell command [command]: initiate a new command."""
         try:
-            cmdproposal = Command(self.me, random.randint(1,10000000), pickle.dumps(args[1:]))
+            cmdproposal = Command(self.me, random.randint(1,10000000), args[1:])
             self.handle_client_command(cmdproposal)
         except IndexError:
             print "command expects only one command"
