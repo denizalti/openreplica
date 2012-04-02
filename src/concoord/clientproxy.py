@@ -116,7 +116,7 @@ class ClientProxy():
             mynumber = self.commandnumber
             self.commandnumber += 1
             argstuple = args
-            command = Command(self.me, mynumber, pickle.dumps(argstuple))
+            command = Command(self.me, mynumber, argstuple)
             cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
             replied = False
             if self.debug:
