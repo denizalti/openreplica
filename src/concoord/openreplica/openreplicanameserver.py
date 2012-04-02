@@ -23,7 +23,12 @@ class OpenReplicaNameserver(Nameserver):
 
     def performcore(self, msg, slotno, dometaonly=False, designated=False):
         Replica.performcore(self, msg, slotno, dometaonly, designated)
-        commandname = self.decisions[slotno].command.split()[0]
+        command = self.decisions[slotnumber]
+        commandtuple = command.command
+        if type(commandtuple) == str:
+            commandname = commandtuple
+        else:
+            commandname = commandtuple[0]
         if commandname in VIEWCHANGEFUNCTIONS:
             self.updaterevision()
 
