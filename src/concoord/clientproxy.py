@@ -5,6 +5,7 @@
 '''
 import socket, os, sys, time, random, threading
 from threading import Thread, Lock, Condition
+import pickle
 from concoord.enums import *
 from concoord.utils import *
 from concoord.exception import *
@@ -110,19 +111,12 @@ class ClientProxy():
             return False
         return self.connecttobootstrap()
 
-    def invoke_command(self, commandname, *args):
+    def invoke_command(self, *args):
         with self.lock:
             mynumber = self.commandnumber
             self.commandnumber += 1
-            if args:
-                argstr = CONCOORD_ESCAPE_SEQ.join(str(arg) for arg in args)
-                commandstr = commandname + CONCOORD_ESCAPE_SEQ + argstr
-            else:
-                commandstr = commandname
-            print "*******************************************************"
-            print commandstr
-            print "*******************************************************"
-            command = Command(self.me, mynumber, commandstr)
+            argstuple = args
+            command = Command(self.me, mynumber, pickle.dumps(argstuple))
             cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
             replied = False
             if self.debug:

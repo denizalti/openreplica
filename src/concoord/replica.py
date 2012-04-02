@@ -6,6 +6,7 @@
 import math, random, time
 import os, sys
 import signal
+import cPickle as pickle
 from threading import Thread, Lock, Condition, Timer, Event
 from concoord.peer import Peer
 from concoord.group import Group
@@ -90,12 +91,9 @@ class Replica(Node):
         executes regular commands as well as META-level commands (commands related
         to the managements of the Paxos protocol) with a delay of WINDOW commands."""
         command = self.decisions[slotnumber]
-        commandlist = command.command.split(CONCOORD_ESCAPE_SEQ)
-        print "************************************"
-        print commandlist
-        print "************************************"
-        commandname = commandlist[0]
-        commandargs = commandlist[1:]
+        commandtuple = pickle.loads(command.command)
+        commandname = commandtuple[0]
+        commandargs = commandtuple[1:]
         ismeta = (commandname in METACOMMANDS)
         noop = (commandname == "noop")
         send_result_to_client = True
@@ -173,8 +171,10 @@ class Replica(Node):
                 self.send_reply_to_client(clientreplycode, givenresult, command)
 
         if slotnumber % GARBAGEPERIOD == 0 and self.isleader:
-            garbagecommand = Command(self.me, self.metacommandnumber, "garbage_collect %d" % slotnumber)
+            mynumber = self.metacommandnumber
             self.metacommandnumber += 1
+            garbagetuple = ("garbage_collect", slotnumber)
+            garbagecommand = Command(self.me, mynumber, pickle.dumps(garbagetuple))
             if self.leader_initializing:
                 self.handle_client_command(garbagecommand, prepare=True)
             else:
@@ -552,9 +552,9 @@ class Replica(Node):
     def msg_incclientrequest(self, conn, msg):
         """handles inconsistent requests from the client"""
         command = msg.command
-        commandlist = command.command.split(CONCOORD_ESCAPE_SEQ)
-        commandname = commandlist[0]
-        commandargs = commandlist[1:]
+        commandtuple = pickle.loads(command.command)
+        commandname = commandtuple[0]
+        commandargs = commandtuple[1:]
         send_result_to_client = True
         try:
             method = getattr(self.object, commandname)
@@ -862,29 +862,31 @@ class Replica(Node):
     def create_delete_command(self, node):
         mynumber = self.metacommandnumber
         self.metacommandnumber += 1
-        operation = "_del_node%s%d%s%s:%d" % (CONCOORD_ESCAPE_SEQ, node.type, CONCOORD_ESCAPE_SEQ, node.addr, node.port)
-        command = Command(self.me, mynumber, operation)
+        nodename = node.addr + ":" + str(node.port)
+        operationtuple = ("_del_node", node.type, nodename)
+        command = Command(self.me, mynumber, pickle.dumps(operationtuple))
         return command
 
     def create_add_command(self, node):
         mynumber = self.metacommandnumber
         self.metacommandnumber += 1
-        operation = "_add_node%s%d%s%s:%d" % (CONCOORD_ESCAPE_SEQ, node.type, CONCOORD_ESCAPE_SEQ, node.addr, node.port)
-        command = Command(self.me, mynumber, operation)
+        nodename = node.addr + ":" + str(node.port)
+        operationtuple = ("_add_node", node.type, nodename)
+        command = Command(self.me, mynumber, pickle.dumps(operationtuple))
         return command
 
     def create_noop_command(self):
         mynumber = self.metacommandnumber
         self.metacommandnumber += 1
-        command = Command(self.me, mynumber, 'noop')
+        nooptuple = ("noop")
+        command = Command(self.me, mynumber, pickle.dumps(nooptuple))
         return command
 
 ## SHELL COMMANDS
-    def cmd_command(self, args):
+    def cmd_command(self, *args):
         """shell command [command]: initiate a new command."""
         try:
-            proposal = ' '.join(args[1:])
-            cmdproposal = Command(client=self.me, clientcommandnumber=random.randint(1,10000000), command=proposal)
+            cmdproposal = Command(self.me, random.randint(1,10000000), pickle.dumps(args[1:]))
             self.handle_client_command(cmdproposal)
         except IndexError:
             print "command expects only one command"

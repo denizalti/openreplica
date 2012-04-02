@@ -16,7 +16,7 @@ class Command():
         """
         self.client = client
         self.clientcommandnumber = clientcommandnumber
-        self.command = command
+        self.command = command #commandtuple
 
     def __hash__(self):
         return hash(str(self.client)+str(self.clientcommandnumber)+str(self.command))

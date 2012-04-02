@@ -40,10 +40,6 @@ class NameserverCoord():
         return exists
 
     def updatesubdomain(self, subdomain, nodes, **kwargs):
-        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
-        print subdomain
-        print nodes
-        print "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
         if subdomain in self._nodes:
             self._nodes[subdomain] = nodes
         else:
