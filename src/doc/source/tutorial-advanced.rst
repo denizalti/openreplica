@@ -32,13 +32,23 @@ We have two kinds of loggers for ConCoord:
 
 Both of these loggers are included under utils.py
 
-To start the NetworkLogger, use the logdaemon.py on the host you
-want to keep the Logger.
+To start the NetworkLogger, use the logdaemon.py on the host you want to keep the Logger.
 
 .. sourcecode:: console
         $ python logdaemon.py
 
 Synchronization & Threading
 ------------------------
+ConCoord provides a distributed and fault-tolerant threading
+library. The library includes:
 
+* Lock
+* RLock
+* Semaphore
+* BoundedSemaphore
+* Barrier
+* Condition
+
+The implementations of distributed synchronization objects follow the
+implementations in the Python threading library.
 
