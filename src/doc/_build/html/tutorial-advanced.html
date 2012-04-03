@@ -51,8 +51,8 @@
 <h1>Advanced Tutorial<a class="headerlink" href="#advanced-tutorial" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="creating-source-bundles">
 <h2>Creating Source Bundles<a class="headerlink" href="#creating-source-bundles" title="Permalink to this headline">¶</a></h2>
-<p>To create bundles to use at the server and client sides you can use
-the Makefile provided under <tt class="docutils literal"><span class="pre">concoord/</span></tt></p>
+<p>You can create bundles to use at the server and client sides using the
+Makefile provided under <tt class="docutils literal"><span class="pre">concoord/</span></tt></p>
 <p>Remember to add the objects you have created in these bundles.</p>
 <div class="section" id="creating-a-server-bundle">
 <h3>Creating A Server Bundle<a class="headerlink" href="#creating-a-server-bundle" title="Permalink to this headline">¶</a></h3>
@@ -73,29 +73,22 @@ ConCoord instance:</p>
 * Console Logger
 * Network Logger</p>
 <p>Both of these loggers are included under utils.py</p>
-<p>To start the NetworkLogger, use the logdaemon.py on the host you
-want to keep the Logger.</p>
+<p>To start the NetworkLogger, use the logdaemon.py on the host you want to keep the Logger.</p>
 </div>
 <div class="section" id="synchronization-threading">
 <h2>Synchronization &amp; Threading<a class="headerlink" href="#synchronization-threading" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="nameserver-options">
-<h2>Nameserver Options<a class="headerlink" href="#nameserver-options" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="running-a-master-nameserver">
-<h3>Running A Master Nameserver<a class="headerlink" href="#running-a-master-nameserver" title="Permalink to this headline">¶</a></h3>
-</div>
-<div class="section" id="running-a-slave-nameserver">
-<h3>Running A Slave Nameserver<a class="headerlink" href="#running-a-slave-nameserver" title="Permalink to this headline">¶</a></h3>
-</div>
-<div class="section" id="amazon-route-53">
-<h3>Amazon Route 53<a class="headerlink" href="#amazon-route-53" title="Permalink to this headline">¶</a></h3>
-<p>To use Amazon Route 53 you can pass your credentials into the methods
-that create connections.  Alternatively, boto will check for the
-existance of the following environment variables to ascertain your credentials:</p>
-<blockquote>
-<div>AWS_ACCESS_KEY_ID - Your AWS Access Key ID
-AWS_SECRET_ACCESS_KEY - Your AWS Secret Access Key</div></blockquote>
-</div>
+<p>ConCoord provides a distributed and fault-tolerant threading
+library. The library includes:</p>
+<ul class="simple">
+<li>Lock</li>
+<li>RLock</li>
+<li>Semaphore</li>
+<li>BoundedSemaphore</li>
+<li>Barrier</li>
+<li>Condition</li>
+</ul>
+<p>The implementations of distributed synchronization objects follow the
+implementations in the Python threading library.</p>
 </div>
 </div>
 
@@ -115,12 +108,6 @@ AWS_SECRET_ACCESS_KEY - Your AWS Secret Access Key</div></blockquote>
 </li>
 <li><a class="reference internal" href="#logging">Logging</a></li>
 <li><a class="reference internal" href="#synchronization-threading">Synchronization &amp; Threading</a></li>
-<li><a class="reference internal" href="#nameserver-options">Nameserver Options</a><ul>
-<li><a class="reference internal" href="#running-a-master-nameserver">Running A Master Nameserver</a></li>
-<li><a class="reference internal" href="#running-a-slave-nameserver">Running A Slave Nameserver</a></li>
-<li><a class="reference internal" href="#amazon-route-53">Amazon Route 53</a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>

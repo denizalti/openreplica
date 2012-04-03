@@ -64,6 +64,7 @@ class OpenReplicaNameserver(Nameserver):
 
     def aresponse_subdomain(self, question):
         for subdomain in self.object.getsubdomains():
+            subdomain = subdomain.strip('.')
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
                 for node in self.object.getnodes(subdomain)[NODE_REPLICA]:
                     addr,port = node.split(":")
@@ -78,8 +79,8 @@ class OpenReplicaNameserver(Nameserver):
             yield nsdomain
 
     def nsresponse_subdomain(self, question):
-        #XXX For slave, master should answer with own nameservers?
         for subdomain in self.object.getsubdomains():
+            subdomain = subdomain.strip('.')
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
                 for node in self.object.getnodes(subdomain)[NODE_NAMESERVER]:
                     addr,port = node.split(":")
@@ -88,6 +89,7 @@ class OpenReplicaNameserver(Nameserver):
     def txtresponse_subdomain(self, question):
         txtstr = ''
         for subdomain in self.object.getsubdomains():
+            subdomain = subdomain.strip('.')
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
                 for nodetype,nodes in self.object.getnodes(subdomain).iteritems():
                     for node in nodes:
@@ -96,6 +98,7 @@ class OpenReplicaNameserver(Nameserver):
 
     def srvresponse_subdomain(self, question):
         for subdomain in self.object.getsubdomains():
+            subdomain = subdomain.strip('.')
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
                 for node in self.object.getnodes(subdomain)[NODE_REPLICA]:
                     addr,port = node.split(":")

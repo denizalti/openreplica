@@ -26,7 +26,7 @@ REPLY = 0
 CONDITION = 1
 
 class ClientProxy():
-    def __init__(self, bootstrap, timeout=120, debug=False):
+    def __init__(self, bootstrap, timeout=60, debug=False):
         self.debug = debug
         self.timeout = timeout 
         self.domainname = None

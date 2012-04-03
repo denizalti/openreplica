@@ -138,7 +138,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
         print replicaname
     # NAMESERVERS
     print "--- Nameservers ---"
-    servicetype = NS_MASTER
+    servicetype = NS_SLAVE
     master = 'openreplica.org'
     for nameserver in nameservers.getHosts():
         port = random.randint(14000, 15000)

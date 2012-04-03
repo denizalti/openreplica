@@ -22,8 +22,6 @@ class NameserverCoord:
         return self.proxy.invoke_command('delnodefromsubdomain', subdomain, nodetype, node)
 
     def updatesubdomain(self, subdomain, nodes):
-        print subdomain
-        print nodes
         return self.proxy.invoke_command('updatesubdomain', subdomain, nodes)
 
     def getnodes(self, subdomain):

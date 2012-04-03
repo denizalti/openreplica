@@ -119,7 +119,7 @@ To start an acceptor node manually, use the following command:
 Starting Nameserver Nodes
 ^^^^^^^^^^^^^^^^^^^^^^^^
 There are three ways you can run a ConCoord Nameserver.
-* **Master Nameserver** Keeps track of the view and responds to DNS
+* **Standalone Nameserver** Keeps track of the view and responds to DNS
   queries itself. Requires su privileges to bind to Port 53.
 * **Slave Nameserver** Keeps track of the view and updates a master
   nameserver that answers to DNS queries on behalf of the slave
@@ -128,18 +128,17 @@ There are three ways you can run a ConCoord Nameserver.
   Route53 account. Amazon Route53 answers to DNS queries on behalf of the slave
   nameserver. Requires a ready-to-use Amazon Route53 account.
 
-Master Nameserver
+Standalone Nameserver
 ^^^^^^^^^^^^^^^^^^^^^^^^
-Before starting a master nameserver node manually, first make sure
+Before starting a standalone nameserver node manually, first make sure
 that you have at least one replica and one acceptor running. Once your
 replica and acceptor nodes are set up, you can start the nameserver to
 answer queries for **counterdomain** as follows:
 
 .. sourcecode:: console
 
-	$ sudo concoord nameserver -n counterdomain -f counter.py -c Counter -b 'ipaddr:port' -t 1
+	$ sudo concoord nameserver -n counterdomain -f counter.py -c Counter -b ipaddr:port -t 1
 	
-
 When you set up the nameserver delegations, you can send queries for
 counterdomain and see the most current set of nodes as follows:
 
@@ -157,19 +156,19 @@ Slave Nameserver
 ^^^^^^^^^^^^^^^^^^^^^^^^ 
 Before starting a slave nameserver node manually, you should have a
 master nameserver set up and running. The master nameserver should be
-set up to answer the queries for its slave nameservers. We provide a Nameserver
-Coordination Object in our example object set, using this coordination
-object the master nameserver can keep track of its slave nameserver
-delegations and the slave nameserver can update the coordination
-object every time the view of its system changes using this
-coordination object.
+set up to answer the queries for its slave nameservers. We provide
+OpenReplica Nameserver as a ready to deploy master nameserver and a
+Nameserver Coordination Object in our example objects set to keep track
+of slave nameserver information. Using this coordination object, the
+master nameserver can keep track of its slave nameserver delegations
+and the slave nameserver can update the master every time the view of
+its system changes.
 
-First make sure that you have a master nameserver running. Once your
-master nameserver is set up, you can start the slave nameserver as follows:
+Once your master nameserver is set up, you can start the slave nameserver as follows:
 
 .. sourcecode:: console
 
-	$ sudo concoord nameserver -n counterdomain -f counter.py -c Counter -b 'ipaddr:port' -t 1 -m masterdomain
+	$ concoord nameserver -n counterdomain -f counter.py -c Counter -b ipaddr:port -t 2 -m masterdomain
 
 When the slave nameserver starts running, you can send queries for counterdomain and see the most current set of nodes as follows:
 
@@ -183,17 +182,25 @@ When the slave nameserver starts running, you can send queries for counterdomain
 
 	$ dig -t ns counterdomain		             # returns set of nameservers
 
-
-
 Amazon Route 53 Nameserver
 ^^^^^^^^^^^^^^^^^^^^^^^^
+Before starting a nameserver connected to Amazon Route 53, you should have a
+Route 53 account set up and ready to receive requests. After your
+Route 53 account is ready, the nameserver can update the master every time the view of
+its system changes automatically.
+
 To use Amazon Route 53 you can pass your credentials into the methods
-that create connections.  Alternatively, boto will check for the
-existance of the following environment variables to ascertain your credentials:
+that create connections or edit them in the configuration file.
 
 	  AWS_ACCESS_KEY_ID - Your AWS Access Key ID
 	  AWS_SECRET_ACCESS_KEY - Your AWS Secret Access Key
 
+Once you make sure that your Route53 account is set up and your
+credentials are updated, you can start the nameserver as follows:
+
+.. sourcecode:: console
+
+	$ concoord nameserver -n counterdomain -f counter.py -c	Counter -b ipaddr:port -t 3 -o configfilepath
 
 Starting Nodes Automatically
 ------------------------
@@ -205,6 +212,8 @@ your reference.
 
 * Note that the script requires host and user-specific credentials and
   you will have to edit the script for your own use.
+
+* Note that the nameserver nodes are started in the slave mode.
 
 You can run the script as follows:
 

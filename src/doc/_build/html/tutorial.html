@@ -62,7 +62,7 @@ we have provided, namely Counter. In the source distribution wou can
 locate the Counter object under <tt class="docutils literal"><span class="pre">concoord/object/counter.py</span></tt>. Once you
 install ConCoord, you can create coordination objects and save them
 anywhere in your filesystem. To demonstrate this, we will save
-counter.py under <tt class="docutils literal"><span class="pre">/foo/counter.py</span></tt></p>
+<tt class="docutils literal"><span class="pre">counter.py</span></tt> under <tt class="docutils literal"><span class="pre">/foo/counter.py</span></tt>.</p>
 </div>
 <div class="section" id="concoordifying-python-objects">
 <h2>Concoordifying Python Objects<a class="headerlink" href="#concoordifying-python-objects" title="Permalink to this headline">¶</a></h2>
@@ -84,12 +84,12 @@ you can use:</p>
 </ul>
 <p>Remember to rename the files back to the original filename before you
 import them on the client or server side. To avoid confusion, we will
-name them counter.py and counterproxy.py in this tutorial.</p>
+name them <tt class="docutils literal"><span class="pre">counter.py</span></tt> and <tt class="docutils literal"><span class="pre">counterproxy.py</span></tt> in this tutorial.</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> mv /foo/counter.pyfixed /foo/counter.py
 <span class="gp">$</span> mv /foo/counter.pyproxy /foo/counterproxy.py
 </pre></div>
 </div>
-<p>Once you have created the objects, update your PYTHONPATH accordingly,
+<p>Once you have created the objects, update your <tt class="docutils literal"><span class="pre">PYTHONPATH</span></tt> accordingly,
 so that the objects can be found and imported:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> <span class="nb">export </span><span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$PYTHONPATH</span>:/foo/
 </pre></div>
@@ -122,7 +122,7 @@ command:</p>
 </pre></div>
 </div>
 <p>Note that you can specify the port the replica binds to with option
-&#8216;-p&#8217;, if not specified port defaults to the first available port,
+<tt class="docutils literal"><span class="pre">-p</span></tt>, if not specified port defaults to the first available port,
 randomly chosen between 14000 and 15000.</p>
 <p>To start replica nodes to join an active concoord instance, use the
 following command:</p>
@@ -139,19 +139,30 @@ following command:</p>
 </div>
 <div class="section" id="starting-nameserver-nodes">
 <h3>Starting Nameserver Nodes<a class="headerlink" href="#starting-nameserver-nodes" title="Permalink to this headline">¶</a></h3>
-<p>To start a nameserver node manually, make sure that you have at least
-one replica and one acceptor running. You can start the nameserver to
-answer queries for &#8216;counterdomain&#8217; as follows:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord nameserver -n counterdomain -f counter.py -c Counter -b <span class="s1">&#39;ipaddr:port&#39;</span>
+<p>There are three ways you can run a ConCoord Nameserver.
+* <strong>Standalone Nameserver</strong> Keeps track of the view and responds to DNS</p>
+<blockquote>
+<div>queries itself. Requires su privileges to bind to Port 53.</div></blockquote>
+<ul class="simple">
+<li><strong>Slave Nameserver</strong> Keeps track of the view and updates a master
+nameserver that answers to DNS queries on behalf of the slave
+nameserver. Requires an active master nameserver.</li>
+<li><strong>Route53 Nameserver</strong> Keeps track of the view and updates an Amazon
+Route53 account. Amazon Route53 answers to DNS queries on behalf of the slave
+nameserver. Requires a ready-to-use Amazon Route53 account.</li>
+</ul>
+</div>
+<div class="section" id="standalone-nameserver">
+<h3>Standalone Nameserver<a class="headerlink" href="#standalone-nameserver" title="Permalink to this headline">¶</a></h3>
+<p>Before starting a standalone nameserver node manually, first make sure
+that you have at least one replica and one acceptor running. Once your
+replica and acceptor nodes are set up, you can start the nameserver to
+answer queries for <strong>counterdomain</strong> as follows:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo concoord nameserver -n counterdomain -f counter.py -c Counter -b ipaddr:port -t 1
 </pre></div>
 </div>
-<ul class="simple">
-<li>Make sure that nameserver delegations are set up.</li>
-<li>Note that the command has to be run with su privileges as it binds
-to UDP port 53.</li>
-</ul>
-<p>From this point on, you can send queries for counterdomain and see the
-most current set of nodes:</p>
+<p>When you set up the nameserver delegations, you can send queries for
+counterdomain and see the most current set of nodes as follows:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> dig -t a counterdomain                             <span class="c"># returns set of Replicas</span>
 
 <span class="gp">$</span> dig -t srv _concoord._tcp.counterdomain  <span class="c"># returns set of Replicas with ports</span>
@@ -162,6 +173,49 @@ most current set of nodes:</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="slave-nameserver">
+<h3>Slave Nameserver<a class="headerlink" href="#slave-nameserver" title="Permalink to this headline">¶</a></h3>
+<p>Before starting a slave nameserver node manually, you should have a
+master nameserver set up and running. The master nameserver should be
+set up to answer the queries for its slave nameservers. We provide
+OpenReplica Nameserver as a ready to deploy master nameserver and a
+Nameserver Coordination Object in our example objects set to keep track
+of slave nameserver information. Using this coordination object, the
+master nameserver can keep track of its slave nameserver delegations
+and the slave nameserver can update the master every time the view of
+its system changes.</p>
+<p>Once your master nameserver is set up, you can start the slave nameserver as follows:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord nameserver -n counterdomain -f counter.py -c Counter -b ipaddr:port -t 2 -m masterdomain
+</pre></div>
+</div>
+<p>When the slave nameserver starts running, you can send queries for counterdomain and see the most current set of nodes as follows:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> dig -t a counterdomain                             <span class="c"># returns set of Replicas</span>
+
+<span class="gp">$</span> dig -t srv _concoord._tcp.counterdomain  <span class="c"># returns set of Replicas with ports</span>
+
+<span class="gp">$</span> dig -t txt counterdomain                           <span class="c"># returns set of all nodes</span>
+
+<span class="gp">$</span> dig -t ns counterdomain                            <span class="c"># returns set of nameservers</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="amazon-route-53-nameserver">
+<h3>Amazon Route 53 Nameserver<a class="headerlink" href="#amazon-route-53-nameserver" title="Permalink to this headline">¶</a></h3>
+<p>Before starting a nameserver connected to Amazon Route 53, you should have a
+Route 53 account set up and ready to receive requests. After your
+Route 53 account is ready, the nameserver can update the master every time the view of
+its system changes automatically.</p>
+<p>To use Amazon Route 53 you can pass your credentials into the methods
+that create connections or edit them in the configuration file.</p>
+<blockquote>
+<div>AWS_ACCESS_KEY_ID - Your AWS Access Key ID
+AWS_SECRET_ACCESS_KEY - Your AWS Secret Access Key</div></blockquote>
+<p>Once you make sure that your Route53 account is set up and your
+credentials are updated, you can start the nameserver as follows:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord nameserver -n counterdomain -f counter.py -c Counter -b ipaddr:port -t 3 -o configfilepath
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="starting-nodes-automatically">
 <h2>Starting Nodes Automatically<a class="headerlink" href="#starting-nodes-automatically" title="Permalink to this headline">¶</a></h2>
@@ -169,10 +223,11 @@ most current set of nodes:</p>
 nodes on PlanetLab servers automatically. This script is included for
 your reference.</p>
 <blockquote>
-<div>concoord/openreplica/openreplicainitializer.py</div></blockquote>
+<div><tt class="docutils literal"><span class="pre">concoord/openreplica/openreplicainitializer.py</span></tt></div></blockquote>
 <ul class="simple">
 <li>Note that the script requires host and user-specific credentials and
 you will have to edit the script for your own use.</li>
+<li>Note that the nameserver nodes are started in the slave mode.</li>
 </ul>
 <p>You can run the script as follows:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord initialize -s counterdomain -f /foo/counter.py -c Counter -r 3 -a 3 -n 3
@@ -185,7 +240,7 @@ you will have to edit the script for your own use.</li>
 PlanetLab servers automatically. This script is included for your
 reference.</p>
 <blockquote>
-<div>concoord/openreplica/openreplicaaddnode.py</div></blockquote>
+<div><tt class="docutils literal"><span class="pre">concoord/openreplica/openreplicaaddnode.py</span></tt></div></blockquote>
 <ul class="simple">
 <li>Note that the script requires host and user-specific credentials and
 you will have to edit the script for your own use.</li>
@@ -195,8 +250,8 @@ you will have to edit the script for your own use.</li>
 </pre></div>
 </div>
 <dl class="docutils">
-<dt>where nodetype:= 1 for Acceptor, 2 for Replica, 3 for Nameserver</dt>
-<dd>bootstrap:= &#8216;ipaddr:port&#8217; or domainname for an instance that has a nameserver</dd>
+<dt>where <tt class="docutils literal"><span class="pre">nodetype</span></tt> := 1 for Acceptor, 2 for Replica, 3 for Nameserver</dt>
+<dd><tt class="docutils literal"><span class="pre">bootstrap</span></tt> := &#8216;ipaddr:port&#8217; or domainname for an instance that has a nameserver</dd>
 </dl>
 </div>
 <div class="section" id="connecting-to-concoord-objects">
@@ -204,7 +259,7 @@ you will have to edit the script for your own use.</li>
 <p>Once you have concoord up and running for your object, it is easy to
 access your object.</p>
 <p>Now we will use the proxy object we generated at (3.1) and saved under
-/foo/concoordproxy.py. Now you can import and use this proxy object in
+<tt class="docutils literal"><span class="pre">/foo/concoordproxy.py</span></tt>. Now you can import and use this proxy object in
 your code as follows:</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">counterproxy</span> <span class="kn">import</span> <span class="n">Counter</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="s">&#39;ipaddr:port&#39;</span><span class="p">)</span>
@@ -212,21 +267,34 @@ your code as follows:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">increment</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
 <span class="go">2</span>
-<span class="go">&gt;&gt;&gt;</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li>Note that the objects on the Replica side are initialized without</li>
+<li>Note that the objects on the Replica side are initialized without
+parameters. For you this has two implications:</li>
 </ul>
-<p>parameters. For you this has two implications:</p>
-<p>1. While implementing your objects you should create your  __init__
-functions to be called without parameters.
-2. Keep in mind that when you initialize an object through the proxy,
-it only connects to the specified bootstrap, it does not reinitialize
+<ol class="arabic">
+<li><dl class="first docutils">
+<dt>While implementing your objects you should create your  <tt class="docutils literal"><span class="pre">__init__</span></tt></dt>
+<dd><p class="first last">functions to be called without parameters.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Keep in mind that when you initialize an object through the proxy,</dt>
+<dd><p class="first last">it only connects to the specified bootstrap, it does not reinitialize
 the object. This way multiple clients can connect to the same object
-using their proxies without reinitializing the object.
-3. At any point to reinitialize an object after it is deployed on
-replicas, you should call __concoordinit__ function:</p>
+using their proxies without reinitializing the object.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>At any point to reinitialize an object after it is deployed on</dt>
+<dd><p class="first last">replicas, you should call <tt class="docutils literal"><span class="pre">__concoordinit__</span></tt> function:</p>
+</dd>
+</dl>
+</li>
+</ol>
 <div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">counterproxy</span> <span class="kn">import</span> <span class="n">Counter</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="s">&#39;ipaddr:port&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">increment</span><span class="p">()</span>
@@ -234,7 +302,6 @@ replicas, you should call __concoordinit__ function:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">increment</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
 <span class="go">1</span>
-<span class="go">&gt;&gt;&gt;</span>
 </pre></div>
 </div>
 </div>
@@ -255,6 +322,9 @@ replicas, you should call __concoordinit__ function:</p>
 <li><a class="reference internal" href="#starting-replica-nodes">Starting Replica Nodes</a></li>
 <li><a class="reference internal" href="#starting-acceptor-nodes">Starting Acceptor Nodes</a></li>
 <li><a class="reference internal" href="#starting-nameserver-nodes">Starting Nameserver Nodes</a></li>
+<li><a class="reference internal" href="#standalone-nameserver">Standalone Nameserver</a></li>
+<li><a class="reference internal" href="#slave-nameserver">Slave Nameserver</a></li>
+<li><a class="reference internal" href="#amazon-route-53-nameserver">Amazon Route 53 Nameserver</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#starting-nodes-automatically">Starting Nodes Automatically</a></li>

@@ -66,7 +66,8 @@ class Nameserver(Replica):
                 AWS_ACCESS_KEY_ID = CONFIGDICT['AWS_ACCESS_KEY_ID']
                 AWS_SECRET_ACCESS_KEY = CONFIGDICT['AWS_SECRET_ACCESS_KEY']
             except:
-                print "To use Amazon Route 53, set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY"
+                print "To use Amazon Route 53, set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY in the configfile and use -o option for configpath."
+                self._graceexit(1)
             # initialize Route 53 connection
             self.route53_name = domain+'.'
             self.route53_conn = Route53Connection(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
@@ -112,20 +113,20 @@ class Nameserver(Replica):
         self.udpsocket.close()
         return
 
-    def aresponse(self, question):
+    def aresponse(self, question=''):
         for address in self.groups[NODE_REPLICA].get_only_addresses():
             yield address
 
-    def nsresponse(self, question):
+    def nsresponse(self, question=''):
         for address in self.groups[NODE_NAMESERVER].get_only_addresses():
             yield address
         yield self.addr
 
-    def srvresponse(self, question):
+    def srvresponse(self, question=''):
         for address,port in self.groups[NODE_REPLICA].get_addresses():
             yield address+self.ipconverter,port
         
-    def txtresponse(self, question):
+    def txtresponse(self, question=''):
         txtstr = ''
         for groupname,group in self.groups.iteritems():
             for peer in group:
@@ -323,11 +324,6 @@ class Nameserver(Replica):
             for address,port in self.groups[nodetype].get_addresses():
                 nodes[nodetype].add(address + ':' + str(port))
         nodes[self.type].add(self.addr + ':' + str(self.port))
-        print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-        print str(self.mydomain)
-        print type(str(self.mydomain))
-        print type(nodes)
-        print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
         nscoord.updatesubdomain(str(self.mydomain), nodes)
             
     def updaterevision(self):
