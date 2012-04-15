@@ -138,8 +138,11 @@ class Nameserver(Replica):
         return question.name == self.mydomain or (question.rdtype == dns.rdatatype.SRV and question.name == self.mysrvdomain)
 
     def should_answer(self, question):
-        return (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or \
-                question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV or question.rdtype == dns.rdatatype.SOA) and self.ismydomainname(question)
+        return (question.rdtype == dns.rdatatype.A or \
+                    question.rdtype == dns.rdatatype.TXT or \
+                    question.rdtype == dns.rdatatype.NS or \
+                    question.rdtype == dns.rdatatype.SRV or \
+                    question.rdtype == dns.rdatatype.SOA) and self.ismydomainname(question)
 
     def handle_query(self, data, addr):
         query = dns.message.from_wire(data)
