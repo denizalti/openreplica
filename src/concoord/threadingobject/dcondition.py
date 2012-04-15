@@ -10,7 +10,7 @@ from concoord.threadingobject.drlock import DRLock
 class DCondition():
     def __init__(self, lock=None):
         if lock is None:
-            lock = DRLock() #This might cause circular problems!
+            lock = DRLock()
         self.__lock = lock
         # Export the lock's acquire() and release() methods                                                                                                           
         self.acquire = lock.acquire

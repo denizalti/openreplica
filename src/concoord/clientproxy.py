@@ -4,7 +4,7 @@
 @copyright: See LICENSE
 '''
 import socket, os, sys, time, random, threading
-from threading import Thread, Lock, Condition
+from threading import Thread, Condition
 import pickle
 from concoord.enums import *
 from concoord.utils import *
@@ -26,7 +26,7 @@ REPLY = 0
 CONDITION = 1
 
 class ClientProxy():
-    def __init__(self, bootstrap, timeout=60, debug=False):
+    def __init__(self, bootstrap, timeout=60, debug=True):
         self.debug = debug
         self.timeout = timeout 
         self.domainname = None
@@ -42,7 +42,18 @@ class ClientProxy():
         myport = self.socket.getsockname()[1]
         self.me = Peer(myaddr,myport,NODE_CLIENT)
         self.commandnumber = random.randint(1, sys.maxint)
-        self.lock = Lock()
+
+        # synchronization
+        self.sendcond = Condition()
+        self.recvcond = Condition()
+        self.sendlist = [] # fifo
+        self.recvdict = {}
+
+        # threads
+        send_thread = Thread(target=self.send_loop, name='ClientProxySendThread')
+        recv_thread = Thread(target=self.recv_loop, name='ClientProxyRecvThread')
+        send_thread.start()
+        recv_thread.start()
 
     def getipportpairs(self, bootaddr, bootport):
         for node in socket.getaddrinfo(bootaddr, bootport):
@@ -111,8 +122,17 @@ class ClientProxy():
             return False
         return self.connecttobootstrap()
 
+    def send_loop(self):
+        pass
+
+    def recv_loop(self):
+        pass
+
+    def handle_reply(self, reply):
+        pass
+
     def invoke_command(self, *args):
-        with self.lock:
+        with self.conditionvar:
             mynumber = self.commandnumber
             self.commandnumber += 1
             argstuple = args
@@ -166,7 +186,11 @@ class ClientProxy():
             elif reply.replycode == CR_EXCEPTION:
                 raise Exception(reply.reply)
             elif reply.replycode == CR_BLOCK:
-                # Wait until an UNBLOCK msg is received
+                # XXX There should always be at least one thread to recv?!
+                # Add the commandnumber to the conditiondict
+                self.conditiondict[mynumber] = None # This will be filled by the thread that notifies me
+                # Wait until a reply is received
+                self.conditionvar.wait()
                 replied = False
                 while not replied:
                     try:
@@ -186,10 +210,12 @@ class ClientProxy():
                     except KeyboardInterrupt:
                         self._graceexit()
                 if reply.replycode == CR_UNBLOCK:
+                    print "UNBLOCKING.."
                     return
             elif reply.replycode == CR_UNBLOCK:
                 return    
             else:
+                print "Returning ", reply.reply
                 return reply.reply
             
     def _graceexit(self):

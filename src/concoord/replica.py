@@ -508,6 +508,8 @@ class Replica(Node):
             # Check if the request has been executed
             if self.executed.has_key(givencommand):
                 # send REPLY
+                print self.executed[givencommand]
+                print self.executed[givencommand][RESULT]
                 clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=self.executed[givencommand][RESULT], \
                                                  replycode=self.executed[givencommand][RCODE], inresponseto=givencommand.clientcommandnumber)
                 self.logger.write("State", "Clientreply: %s" % str(clientreply))

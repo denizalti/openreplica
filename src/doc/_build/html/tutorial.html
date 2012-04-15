@@ -109,7 +109,7 @@ current set of replicas.</p>
 nameserver node is up, bootstrap can be the domainname for the
 concoord instance as new nodes can retrieve the bootstrap node
 automatically through DNS queries. If the nameserver is not running,
-bootstrap is a list of &#8216;ipaddr:port&#8217; strings.</li>
+bootstrap is a list of ipaddr:port pairs.</li>
 <li>Note that for the system to be able to add new nodes and accept
 client requests, there has to be at least one replica and one
 acceptor node present initially.</li>
@@ -126,14 +126,14 @@ command:</p>
 randomly chosen between 14000 and 15000.</p>
 <p>To start replica nodes to join an active concoord instance, use the
 following command:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord replica -f counter.py -c Counter -b <span class="s1">&#39;ipaddr:port&#39;</span>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord replica -f counter.py -c Counter -b ipaddr:port
 </pre></div>
 </div>
 </div>
 <div class="section" id="starting-acceptor-nodes">
 <h3>Starting Acceptor Nodes<a class="headerlink" href="#starting-acceptor-nodes" title="Permalink to this headline">¶</a></h3>
 <p>To start an acceptor node manually, use the following command:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord acceptor -b <span class="s1">&#39;ipaddr:port&#39;</span>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord acceptor -b ipaddr:port
 </pre></div>
 </div>
 </div>
@@ -163,13 +163,13 @@ answer queries for <strong>counterdomain</strong> as follows:</p>
 </div>
 <p>When you set up the nameserver delegations, you can send queries for
 counterdomain and see the most current set of nodes as follows:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> dig -t a counterdomain                             <span class="c"># returns set of Replicas</span>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> dig -t a counterdomain                              <span class="c"># returns set of Replicas</span>
 
-<span class="gp">$</span> dig -t srv _concoord._tcp.counterdomain  <span class="c"># returns set of Replicas with ports</span>
+<span class="gp">$</span> dig -t srv _concoord._tcp.counterdomain             <span class="c"># returns set of Replicas with ports</span>
 
-<span class="gp">$</span> dig -t txt counterdomain                           <span class="c"># returns set of all nodes</span>
+<span class="gp">$</span> dig -t txt counterdomain                            <span class="c"># returns set of all nodes</span>
 
-<span class="gp">$</span> dig -t ns counterdomain                            <span class="c"># returns set of nameservers</span>
+<span class="gp">$</span> dig -t ns counterdomain                             <span class="c"># returns set of nameservers</span>
 </pre></div>
 </div>
 </div>
@@ -191,7 +191,7 @@ its system changes.</p>
 <p>When the slave nameserver starts running, you can send queries for counterdomain and see the most current set of nodes as follows:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> dig -t a counterdomain                             <span class="c"># returns set of Replicas</span>
 
-<span class="gp">$</span> dig -t srv _concoord._tcp.counterdomain  <span class="c"># returns set of Replicas with ports</span>
+<span class="gp">$</span> dig -t srv _concoord._tcp.counterdomain            <span class="c"># returns set of Replicas with ports</span>
 
 <span class="gp">$</span> dig -t txt counterdomain                           <span class="c"># returns set of all nodes</span>
 
@@ -251,7 +251,7 @@ you will have to edit the script for your own use.</li>
 </div>
 <dl class="docutils">
 <dt>where <tt class="docutils literal"><span class="pre">nodetype</span></tt> := 1 for Acceptor, 2 for Replica, 3 for Nameserver</dt>
-<dd><tt class="docutils literal"><span class="pre">bootstrap</span></tt> := &#8216;ipaddr:port&#8217; or domainname for an instance that has a nameserver</dd>
+<dd><tt class="docutils literal"><span class="pre">bootstrap</span></tt> := ipaddr:port or domainname for an instance that has a nameserver</dd>
 </dl>
 </div>
 <div class="section" id="connecting-to-concoord-objects">
@@ -260,9 +260,10 @@ you will have to edit the script for your own use.</li>
 access your object.</p>
 <p>Now we will use the proxy object we generated at (3.1) and saved under
 <tt class="docutils literal"><span class="pre">/foo/concoordproxy.py</span></tt>. Now you can import and use this proxy object in
-your code as follows:</p>
+your code. Depending on how you set your nameserver node up, you can
+access your object with the <strong>ipaddr:port</strong> pair or the <strong>domainname</strong>.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">counterproxy</span> <span class="kn">import</span> <span class="n">Counter</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="s">&#39;ipaddr:port&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">domainname</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">increment</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">increment</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
@@ -296,7 +297,7 @@ using their proxies without reinitializing the object.</p>
 </li>
 </ol>
 <div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">counterproxy</span> <span class="kn">import</span> <span class="n">Counter</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="s">&#39;ipaddr:port&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">domainname</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">increment</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">__concoordinit__</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">increment</span><span class="p">()</span>
