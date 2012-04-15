@@ -80,7 +80,7 @@ current set of replicas.
   nameserver node is up, bootstrap can be the domainname for the
   concoord instance as new nodes can retrieve the bootstrap node
   automatically through DNS queries. If the nameserver is not running,
-  bootstrap is a list of 'ipaddr:port' strings.
+  bootstrap is a list of ipaddr:port pairs.
 
 
 * Note that for the system to be able to add new nodes and accept
@@ -106,7 +106,7 @@ following command:
 
 .. sourcecode:: console
 
-	$ concoord replica -f counter.py -c Counter -b 'ipaddr:port'
+	$ concoord replica -f counter.py -c Counter -b ipaddr:port
 
 Starting Acceptor Nodes
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -114,7 +114,7 @@ To start an acceptor node manually, use the following command:
 
 .. sourcecode:: console
 
-	$ concoord acceptor -b 'ipaddr:port'
+	$ concoord acceptor -b ipaddr:port
 	
 Starting Nameserver Nodes
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -144,13 +144,13 @@ counterdomain and see the most current set of nodes as follows:
 
 .. sourcecode:: console
 
-	$ dig -t a counterdomain		             # returns set of Replicas
+	$ dig -t a counterdomain                              # returns set of Replicas
 
-	$ dig -t srv _concoord._tcp.counterdomain  # returns set of Replicas with ports
+	$ dig -t srv _concoord._tcp.counterdomain  	      # returns set of Replicas with ports
 
-	$ dig -t txt counterdomain		             # returns set of all nodes
+	$ dig -t txt counterdomain		              # returns set of all nodes
 
-	$ dig -t ns counterdomain		             # returns set of nameservers
+	$ dig -t ns counterdomain		              # returns set of nameservers
 
 Slave Nameserver
 ^^^^^^^^^^^^^^^^^^^^^^^^ 
@@ -176,7 +176,7 @@ When the slave nameserver starts running, you can send queries for counterdomain
 
 	$ dig -t a counterdomain		             # returns set of Replicas
 
-	$ dig -t srv _concoord._tcp.counterdomain  # returns set of Replicas with ports
+	$ dig -t srv _concoord._tcp.counterdomain  	     # returns set of Replicas with ports
 
 	$ dig -t txt counterdomain		             # returns set of all nodes
 
@@ -239,7 +239,7 @@ You can run the script as follows:
 	$ concoord addnode -t nodetype -s counterdomain -f /foo/counter.py -c Counter -b bootstrap
 
 where ``nodetype`` := 1 for Acceptor, 2 for Replica, 3 for Nameserver
-          ``bootstrap`` := 'ipaddr:port' or domainname for an instance that has a nameserver
+          ``bootstrap`` := ipaddr:port or domainname for an instance that has a nameserver
 
 Connecting to ConCoord Objects
 ------------------------
@@ -248,12 +248,13 @@ access your object.
 
 Now we will use the proxy object we generated at (3.1) and saved under
 ``/foo/concoordproxy.py``. Now you can import and use this proxy object in
-your code as follows:
+your code. Depending on how you set your nameserver node up, you can
+access your object with the **ipaddr:port** pair or the **domainname**.
 
 .. sourcecode:: pycon
 
 	>>> from counterproxy import Counter
-	>>> c = Counter('ipaddr:port')
+	>>> c = Counter(domainname)
 	>>> c.increment()
 	>>> c.increment()
 	>>> c.getvalue()
@@ -274,7 +275,7 @@ your code as follows:
 .. sourcecode:: pycon
 
 	>>> from counterproxy import Counter
-	>>> c = Counter('ipaddr:port')
+	>>> c = Counter(domainname)
 	>>> c.increment()
 	>>> c.__concoordinit__()
 	>>> c.increment()
