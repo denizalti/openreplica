@@ -4,7 +4,7 @@
 @copyright: See LICENSE
 '''
 import socket, os, sys, time, random, threading
-from threading import Thread, Condition
+from threading import Thread, Condition, RLock, Lock
 import pickle
 from concoord.enums import *
 from concoord.utils import *
@@ -59,12 +59,14 @@ class ClientProxy():
         self.commandnumber = random.randint(1, sys.maxint)
 
         # synchronization
-        self.lock = Lock()
+        self.lock = RLock()
         self.ctrlsockets, self.ctrlsocketr = socket.socketpair()
         self.reqlist = []     # requests we have received from client threads
         self.pendingops = {}  # pending requests indexed by command number
 
-        # XXX spawn thread, invoke comm_loop
+        # spawn thread, invoke comm_loop
+        commthread = Thread(target=self.comm_loop, name="Communication Loop")
+        commthread.start()
 
     def getipportpairs(self, bootaddr, bootport):
         for node in socket.getaddrinfo(bootaddr, bootport):
