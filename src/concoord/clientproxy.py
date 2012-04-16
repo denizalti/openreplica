@@ -121,8 +121,6 @@ class ClientProxy():
             command = Command(self.me, mynumber, args)
             cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
             replied = False
-            if self.debug:
-                print "Initiating command %s" % str(command)
             starttime = time.time()
             triedreplicas = set()
             needreconfig = False
@@ -130,9 +128,8 @@ class ClientProxy():
             try:
                 while not replied:
                     triedreplicas.add(self.bootstrap)
-                    success = self.conn.send(cm)
-                    if not success:
-                        needreconfig = True
+                    if lastcr != CR_BLOCK:
+                        needreconfig = not self.conn.send(cm)
 
                     timestamp, reply = self.conn.receive()
                     if self.debug:
@@ -156,12 +153,7 @@ class ClientProxy():
                         if not self.trynewbootstrap(triedreplicas):
                             raise ConnectionError("Cannot connect to any bootstrap")
                         needreconfig = False
-
-                    # check if we need to re-send the message
-                    if not replied and lastcr != CR_BLOCK:
-                        if not self.conn.send(cm):
-                            needreconfig = True
-                        continue
+                        
             except KeyboardInterrupt:
                 self._graceexit()
 
@@ -170,8 +162,6 @@ class ClientProxy():
                 return reply.reply
             elif reply.replycode == CR_EXCEPTION:
                 raise Exception(reply.reply)
-            else:
-                print "should not happen -- client thread saw reply code %d" % reply.replycode
                 
     def _graceexit(self):
         return
