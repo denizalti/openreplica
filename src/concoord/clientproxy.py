@@ -4,7 +4,7 @@
 @copyright: See LICENSE
 '''
 import socket, os, sys, time, random, threading
-from threading import Thread, Condition
+from threading import Thread, Lock
 import pickle
 from concoord.enums import *
 from concoord.utils import *
@@ -44,7 +44,7 @@ class ClientProxy():
         self.commandnumber = random.randint(1, sys.maxint)
 
         # synchronization
-        self.blocksema = {}
+        self.lock = Lock()
 
     def getipportpairs(self, bootaddr, bootport):
         for node in socket.getaddrinfo(bootaddr, bootport):
@@ -91,6 +91,7 @@ class ClientProxy():
                 self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
                 self.socket.connect(boottuple)
                 self.conn = Connection(self.socket)
+                self.conn.settimeout(CLIENTRESENDTIMEOUT)
                 self.bootstrap = boottuple
                 connected = True
                 if self.debug:
@@ -113,101 +114,64 @@ class ClientProxy():
             return False
         return self.connecttobootstrap()
 
-    def send_loop(self):
-        pass
-
-    def recv_loop(self):
-        pass
-
-    def handle_reply(self, reply):
-        pass
-
     def invoke_command(self, *args):
-        with self.conditionvar:
+        with self.lock:
             mynumber = self.commandnumber
             self.commandnumber += 1
-            argstuple = args
-            command = Command(self.me, mynumber, argstuple)
+            command = Command(self.me, mynumber, args)
             cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
             replied = False
             if self.debug:
                 print "Initiating command %s" % str(command)
             starttime = time.time()
-            try:
-                self.conn.settimeout(CLIENTRESENDTIMEOUT)
-            except:
-                return "Cannot connect to object"
             triedreplicas = set()
-            while not replied:
-                triedreplicas.add(self.bootstrap)
-                try:
+            needreconfig = False
+            lastcr = -1
+            try:
+                while not replied:
+                    triedreplicas.add(self.bootstrap)
                     success = self.conn.send(cm)
-                    if self.debug:
-                        print "Bootstrap: ", self.bootstrap
-                        print "Sent: %s" % str(cm)
                     if not success:
-                        raise IOError
+                        needreconfig = True
+
                     timestamp, reply = self.conn.receive()
                     if self.debug:
                         print "Received: %s" % str(reply)
+
                     if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
-                        if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
-                            raise IOError
-                        elif reply.replycode == CR_INPROGRESS:
-                            continue
+                        if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode = CR_UNBLOCK:
+                            if reply.replycode == CR_UNBLOCK:
+                                assert lastcr == CR_BLOCK, "unblocked thread not previously blocked"
+                            lastcr = reply.replycode
+                            replied = True
+                        elif reply.replycode == CR_INPROGRESS or reply.replycode = CR_BLOCK:
+                            # the thread is already in the loop, no need to do anything
+                            lastcr = reply.replycode
+                        elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
+                            needreconfig = True
                         else:
-                            replied = True
-                    timecheck = time.time() - starttime
-                    if timecheck > CLIENTRESENDTIMEOUT:
-                        if self.debug:
-                            print "Timed out: %d seconds" % CLIENTRESENDTIMEOUT
-                        if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
-                            replied = True
-                        if not replied and timecheck > self.timeout:
-                            if self.debug:
-                                print "Connection timed out"
-                            raise IOError
-                except (IOError, EOFError):
-                    if not self.trynewbootstrap(triedreplicas):
-                        raise ConnectionError("Cannot connect to any bootstrap")
-                except KeyboardInterrupt:
-                    self._graceexit()
-            if reply.replycode == CR_META:
-                return
-            elif reply.replycode == CR_EXCEPTION:
-                raise Exception(reply.reply)
-            elif reply.replycode == CR_BLOCK:
-                # XXX There should always be at least one thread to recv?!
-                # Add the commandnumber to the conditiondict
-                self.conditiondict[mynumber] = None # This will be filled by the thread that notifies me
-                # Wait until a reply is received
-                self.conditionvar.wait()
-                replied = False
-                while not replied:
-                    try:
-                        timestamp, reply = self.conn.receive()
-                        if self.debug:
-                            print "Received:  %s" % str(reply)
-                        if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
-                            if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
-                                raise IOError
-                            elif reply.replycode == CR_INPROGRESS:
-                                continue
-                            else:
-                                replied = True
-                    except ( IOError, EOFError ):
+                            print "should not happen -- unknown response type"
+
+                    while needreconfig:
                         if not self.trynewbootstrap(triedreplicas):
                             raise ConnectionError("Cannot connect to any bootstrap")
-                    except KeyboardInterrupt:
-                        self._graceexit()
-                if reply.replycode == CR_UNBLOCK:
-                    print "UNBLOCKING.."
-                    return
-            elif reply.replycode == CR_UNBLOCK:
-                return    
-            else:
+                        needreconfig = False
+
+                    # check if we need to re-send the message
+                    if not replied and lastcr != CR_BLOCK:
+                        if not self.conn.send(cm):
+                            needreconfig = True
+                        continue
+            except KeyboardInterrupt:
+                self._graceexit()
+
+            if reply.replycode == CR_OK or reply.replycode == CR_UNBLOCK:
                 print "Returning ", reply.reply
                 return reply.reply
-            
+            elif reply.replycode == CR_EXCEPTION:
+                raise Exception(reply.reply)
+            else:
+                print "should not happen -- client thread saw reply code %d" % reply.replycode
+                
     def _graceexit(self):
         return

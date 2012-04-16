@@ -144,7 +144,7 @@ class ClientProxy():
             while not reqdesc.replyvalid:
                 reqdesc.replyarrived.wait()
             del self.pendingops[reqdesc.mynumber]
-        if reqdesc.reply.replycode == CR_OK:
+        if reqdesc.reply.replycode == CR_OK or reply.replycode == CR_UNBLOCK:
             print "Returning ", reply.reply
             return reqdesc.reply.reply
         elif reqdesc.reply.replycode == CR_EXCEPTION:
@@ -179,7 +179,7 @@ class ClientProxy():
                         with self.lock:
                             if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode = CR_UNBLOCK:
                                 # actionable response, wake up the thread
-                                if reply.replycode = CR_UNBLOCK:
+                                if reply.replycode == CR_UNBLOCK:
                                     assert reqdesc.lastcr == CR_BLOCK, "unblocked thread not previously blocked"
                                 reqdesc.lastcr = reply.replycode
                                 reqdesc.reply = reply
@@ -189,7 +189,7 @@ class ClientProxy():
                                 # the thread is already waiting, no need to do anything
                                 reqdesc.lastcr = reply.replycode
                             elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
-                                needreconfig=True
+                                needreconfig = True
                             else:
                                 print "should not happen -- unknown response type"
 
