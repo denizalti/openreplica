@@ -25,14 +25,29 @@ except:
 REPLY = 0
 CONDITION = 1
 
+class ReqDesc:
+    def __init__(self, clientproxy, args):
+        with clientproxy.lock:
+            # acquire a unique command number
+            self.mynumber = clientproxy.commandnumber
+            clientproxy.commandnumber += 1
+        self.cm = ClientMessage(MSG_CLIENTREQUEST, self.me, Command(clientproxy.me, self.mynumber, args))
+        self.starttime = time.time()
+        self.replyarrived = Condition(clientproxy.lock)
+        self.lastreplycr = -1
+        self.replyvalid = False
+        self.reply = None
+
 class ClientProxy():
     def __init__(self, bootstrap, timeout=60, debug=True):
         self.debug = debug
         self.timeout = timeout 
         self.domainname = None
+
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
+
         self.bootstraplist = self.discoverbootstrap(bootstrap)
         if len(self.bootstraplist) == 0:
             raise ConnectionError("No bootstrap found")
@@ -44,7 +59,12 @@ class ClientProxy():
         self.commandnumber = random.randint(1, sys.maxint)
 
         # synchronization
-        self.blocksema = {}
+        self.lock = Lock()
+        self.ctrlsockets, self.ctrlsocketr = socket.socketpair()
+        self.reqlist = []     # requests we have received from client threads
+        self.pendingops = {}  # pending requests indexed by command number
+
+        # XXX spawn thread, invoke comm_loop
 
     def getipportpairs(self, bootaddr, bootport):
         for node in socket.getaddrinfo(bootaddr, bootport):
@@ -91,6 +111,7 @@ class ClientProxy():
                 self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
                 self.socket.connect(boottuple)
                 self.conn = Connection(self.socket)
+                self.conn.settimeout(CLIENTRESENDTIMEOUT)
                 self.bootstrap = boottuple
                 connected = True
                 if self.debug:
@@ -113,101 +134,81 @@ class ClientProxy():
             return False
         return self.connecttobootstrap()
 
-    def send_loop(self):
-        pass
-
-    def recv_loop(self):
-        pass
-
-    def handle_reply(self, reply):
-        pass
-
     def invoke_command(self, *args):
-        with self.conditionvar:
-            mynumber = self.commandnumber
-            self.commandnumber += 1
-            argstuple = args
-            command = Command(self.me, mynumber, argstuple)
-            cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
-            replied = False
-            if self.debug:
-                print "Initiating command %s" % str(command)
-            starttime = time.time()
-            try:
-                self.conn.settimeout(CLIENTRESENDTIMEOUT)
-            except:
-                return "Cannot connect to object"
-            triedreplicas = set()
-            while not replied:
-                triedreplicas.add(self.bootstrap)
-                try:
-                    success = self.conn.send(cm)
-                    if self.debug:
-                        print "Bootstrap: ", self.bootstrap
-                        print "Sent: %s" % str(cm)
-                    if not success:
-                        raise IOError
+        reqdesc = ReqDesc(self, args)
+        with self.lock:
+            self.reqlist.append(reqdesc)
+            self.ctrlsockets.send('a')
+            while not reqdesc.replyvalid:
+                reqdesc.replyarrived.wait()
+            del self.pendingops[reqdesc.mynumber]
+        if reqdesc.reply.replycode == CR_OK:
+            print "Returning ", reply.reply
+            return reqdesc.reply.reply
+        elif reqdesc.reply.replycode == CR_EXCEPTION:
+            raise Exception(reply.reply)
+        else:
+            print "should not happen -- client thread saw reply code %d" % reqdesc.reply.replycode
+
+    def comm_loop(self, *args):
+        try:
+            while True:
+                socketset = [self.ctrlsocketr, self.conn.thesocket]
+            inputready,outputready,exceptready = select.select(socketset,[],socketset,0)
+
+            needreconfig = False
+            for s in exceptready:
+                print "EXCEPTION ", s
+            for s in inputready:
+                if s == self.ctrlsocketr:
+                    # a local thread has queued up a request and needs our attention
+                    self.ctrlsocketr.read(1)
+                    with self.lock:
+                        while len(self.reqlist) > 0:
+                            reqdesc = self.reqlist.pop(0)
+                            self.pendingops[reqdesc.mynumber] = reqdesc
+                            success = self.conn.send(reqdesc.cm)
+                            needreconfig = not success
+                else:
+                    # server has sent us something and we need to process it
                     timestamp, reply = self.conn.receive()
-                    if self.debug:
-                        print "Received: %s" % str(reply)
-                    if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
-                        if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
-                            raise IOError
-                        elif reply.replycode == CR_INPROGRESS:
-                            continue
-                        else:
-                            replied = True
-                    timecheck = time.time() - starttime
-                    if timecheck > CLIENTRESENDTIMEOUT:
-                        if self.debug:
-                            print "Timed out: %d seconds" % CLIENTRESENDTIMEOUT
-                        if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
-                            replied = True
-                        if not replied and timecheck > self.timeout:
-                            if self.debug:
-                                print "Connection timed out"
-                            raise IOError
-                except (IOError, EOFError):
-                    if not self.trynewbootstrap(triedreplicas):
-                        raise ConnectionError("Cannot connect to any bootstrap")
-                except KeyboardInterrupt:
-                    self._graceexit()
-            if reply.replycode == CR_META:
-                return
-            elif reply.replycode == CR_EXCEPTION:
-                raise Exception(reply.reply)
-            elif reply.replycode == CR_BLOCK:
-                # XXX There should always be at least one thread to recv?!
-                # Add the commandnumber to the conditiondict
-                self.conditiondict[mynumber] = None # This will be filled by the thread that notifies me
-                # Wait until a reply is received
-                self.conditionvar.wait()
-                replied = False
-                while not replied:
-                    try:
-                        timestamp, reply = self.conn.receive()
-                        if self.debug:
-                            print "Received:  %s" % str(reply)
-                        if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
-                            if reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
-                                raise IOError
-                            elif reply.replycode == CR_INPROGRESS:
-                                continue
+                    if reply and reply.type == MSG_CLIENTREPLY:
+                        reqdesc = self.pendingops[reply.inresponseto]
+                        with self.lock:
+                            if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode = CR_UNBLOCK:
+                                # actionable response, wake up the thread
+                                if reply.replycode = CR_UNBLOCK:
+                                    assert reqdesc.lastcr == CR_BLOCK, "unblocked thread not previously blocked"
+                                reqdesc.lastcr = reply.replycode
+                                reqdesc.reply = reply
+                                reqdesc.replyvalid = True
+                                reqdesc.replyarrived.notify()
+                            elif reply.replycode == CR_INPROGRESS or reply.replycode = CR_BLOCK:
+                                # the thread is already waiting, no need to do anything
+                                reqdesc.lastcr = reply.replycode
+                            elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
+                                needreconfig=True
                             else:
-                                replied = True
-                    except ( IOError, EOFError ):
-                        if not self.trynewbootstrap(triedreplicas):
-                            raise ConnectionError("Cannot connect to any bootstrap")
-                    except KeyboardInterrupt:
-                        self._graceexit()
-                if reply.replycode == CR_UNBLOCK:
-                    print "UNBLOCKING.."
-                    return
-            elif reply.replycode == CR_UNBLOCK:
-                return    
-            else:
-                print "Returning ", reply.reply
-                return reply.reply
+                                print "should not happen -- unknown response type"
+
+            while needreconfig:
+                if not self.trynewbootstrap(triedreplicas):
+                    raise ConnectionError("Cannot connect to any bootstrap")
+                needreconfig = False
+
+                # check if we need to re-send any pending operations
+                for reqdesc in self.pendingops:
+                    if not reqdesc.replyvalid and reqdesc.lastcr != CR_BLOCK:
+                        if not self.conn.send(reqdesc.cm):
+                            needreconfig = True
+                            continue
+
+        except KeyboardInterrupt:
+            self._graceexit()
             
     def _graceexit(self):
         return
+  
+
+
+    
