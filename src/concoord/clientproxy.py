@@ -139,12 +139,12 @@ class ClientProxy():
                         print "Received: %s" % str(reply)
 
                     if reply and reply.type == MSG_CLIENTREPLY and reply.inresponseto == mynumber:
-                        if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode = CR_UNBLOCK:
+                        if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode == CR_UNBLOCK:
                             if reply.replycode == CR_UNBLOCK:
                                 assert lastcr == CR_BLOCK, "unblocked thread not previously blocked"
                             lastcr = reply.replycode
                             replied = True
-                        elif reply.replycode == CR_INPROGRESS or reply.replycode = CR_BLOCK:
+                        elif reply.replycode == CR_INPROGRESS or reply.replycode == CR_BLOCK:
                             # the thread is already in the loop, no need to do anything
                             lastcr = reply.replycode
                         elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
