@@ -31,7 +31,7 @@ class ReqDesc:
             # acquire a unique command number
             self.mynumber = clientproxy.commandnumber
             clientproxy.commandnumber += 1
-        self.cm = ClientMessage(MSG_CLIENTREQUEST, self.me, Command(clientproxy.me, self.mynumber, args))
+        self.cm = ClientMessage(MSG_CLIENTREQUEST, clientproxy.me, Command(clientproxy.me, self.mynumber, args))
         self.starttime = time.time()
         self.replyarrived = Condition(clientproxy.lock)
         self.lastreplycr = -1
@@ -177,7 +177,7 @@ class ClientProxy():
                     if reply and reply.type == MSG_CLIENTREPLY:
                         reqdesc = self.pendingops[reply.inresponseto]
                         with self.lock:
-                            if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode = CR_UNBLOCK:
+                            if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode == CR_UNBLOCK:
                                 # actionable response, wake up the thread
                                 if reply.replycode == CR_UNBLOCK:
                                     assert reqdesc.lastcr == CR_BLOCK, "unblocked thread not previously blocked"
@@ -185,7 +185,7 @@ class ClientProxy():
                                 reqdesc.reply = reply
                                 reqdesc.replyvalid = True
                                 reqdesc.replyarrived.notify()
-                            elif reply.replycode == CR_INPROGRESS or reply.replycode = CR_BLOCK:
+                            elif reply.replycode == CR_INPROGRESS or reply.replycode == CR_BLOCK:
                                 # the thread is already waiting, no need to do anything
                                 reqdesc.lastcr = reply.replycode
                             elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
