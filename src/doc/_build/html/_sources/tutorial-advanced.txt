@@ -18,10 +18,10 @@ To create a bundle that can run replica, acceptor and nameserver nodes:
 
 Creating A Client Bundle
 ^^^^^^^^^^^^^^^^^^^^^^^^
-To create a bundle that can run a client and connect to an existing
-ConCoord instance:
+To create a bundle that can run a client and connect to an existing ConCoord instance:
 
 .. sourcecode:: console
+
 	$ make client
 
 Logging
