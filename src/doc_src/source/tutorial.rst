@@ -119,6 +119,7 @@ To start an acceptor node manually, use the following command:
 Starting Nameserver Nodes
 ^^^^^^^^^^^^^^^^^^^^^^^^
 There are three ways you can run a ConCoord Nameserver.
+
 * **Standalone Nameserver** Keeps track of the view and responds to DNS
   queries itself. Requires su privileges to bind to Port 53.
 * **Slave Nameserver** Keeps track of the view and updates a master
