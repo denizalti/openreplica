@@ -3,7 +3,7 @@
 @note: Herbivore coordination object
 @copyright: See LICENSE
 """
-from concoord.clientproxy import ClientProxy
+from concoord.clientproxymultithreaded import ClientProxy
 
 class HerbivoreCoord():
     def __init__(self, bootstrap):
