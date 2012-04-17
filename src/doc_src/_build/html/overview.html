@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Concepts &mdash; ConCoord 0.2.0 documentation</title>
+    <title>Overview &mdash; ConCoord 0.2.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -26,7 +26,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="ConCoord 0.2.0 documentation" href="index.html" />
-    <link rel="next" title="Installing HyperDex" href="install.html" />
+    <link rel="next" title="Installing ConCoord" href="install.html" />
     <link rel="prev" title="Welcome to ConCoord’s documentation!" href="index.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="install.html" title="Installing HyperDex"
+          <a href="install.html" title="Installing ConCoord"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Welcome to ConCoord’s documentation!"
@@ -51,25 +51,18 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="concepts">
-<h1>Concepts<a class="headerlink" href="#concepts" title="Permalink to this headline">¶</a></h1>
-<p>HyperDex is a distributed, searchable key-value store. The key features of HyperDex are:</p>
-<blockquote>
-<div><ul class="simple">
-<li><strong>Fast</strong>: HyperDex has lower latency, higher throughput, and lower variance than other key-value stores.</li>
-<li><strong>Scalable</strong>: HyperDex scales as more machines are added to the system.</li>
-<li><strong>Consistent</strong>: HyperDex guarantees linearizability for key-based operations. Thus, it a GET always returns the latest value inserted into the system. Not just &#8220;eventually,&#8221; but immediately and always.</li>
-<li><strong>Fault tolerant</strong>: HyperDex automatically replicates data on multiple machines so that concurrent failures, up to an application-determined limit, will not cause data loss.</li>
-<li><strong>Searchable</strong>: HyperDex enables lookups of non-primary data attributes. Such searches are implemented efficiently and contact a small number</li>
-</ul>
-</div></blockquote>
-<div class="section" id="node-and-object-placement">
-<h2>Node and Object Placement<a class="headerlink" href="#node-and-object-placement" title="Permalink to this headline">¶</a></h2>
-<p>Testtext</p>
-<img alt="_static/axis.png" class="align-center" src="_static/axis.png" style="width: 200pt;" />
-<p>For example a table of
-operations and ensures system-wide key uniqueness.</p>
-</div>
+  <div class="section" id="overview">
+<h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
+<p>ConCoord is a novel coordination service that provides replication and
+synchronization support for large-scale distributed systems. ConCoord
+employs an object-oriented approach, in which the system actively
+creates and maintains live replicas for user-provided objects. Through
+ConCoord,  the clients are able to access these replicated objects
+transparently as if they are local objects. ConCoord uses these
+replicated objects to implement coordination and synchronization
+constructs in large-scale distributed systems, in effect establishing
+a transparent way of providing a coordination service.</p>
+<img alt="_images/concoord.jpg" class="align-center" src="_images/concoord.jpg" />
 </div>
 
 
@@ -78,23 +71,15 @@ operations and ensures system-wide key uniqueness.</p>
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Concepts</a><ul>
-<li><a class="reference internal" href="#node-and-object-placement">Node and Object Placement</a></li>
-</ul>
-</li>
-</ul>
-
   <h4>Previous topic</h4>
   <p class="topless"><a href="index.html"
                         title="previous chapter">Welcome to ConCoord&#8217;s documentation!</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="install.html"
-                        title="next chapter">Installing HyperDex</a></p>
+                        title="next chapter">Installing ConCoord</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="_sources/concepts.txt"
+    <li><a href="_sources/overview.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -121,7 +106,7 @@ operations and ensures system-wide key uniqueness.</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="install.html" title="Installing HyperDex"
+          <a href="install.html" title="Installing ConCoord"
              >next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Welcome to ConCoord’s documentation!"

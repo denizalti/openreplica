@@ -1,0 +1,157 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Advanced Tutorial &mdash; ConCoord 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="ConCoord 0.2.0 documentation" href="index.html" />
+    <link rel="prev" title="Tutorial" href="tutorial.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">ConCoord 0.2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="advanced-tutorial">
+<h1>Advanced Tutorial<a class="headerlink" href="#advanced-tutorial" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="creating-source-bundles">
+<h2>Creating Source Bundles<a class="headerlink" href="#creating-source-bundles" title="Permalink to this headline">¶</a></h2>
+<p>You can create bundles to use at the server and client sides using the
+Makefile provided under <tt class="docutils literal"><span class="pre">concoord/</span></tt></p>
+<p>Remember to add the objects you have created in these bundles.</p>
+<div class="section" id="creating-a-server-bundle">
+<h3>Creating A Server Bundle<a class="headerlink" href="#creating-a-server-bundle" title="Permalink to this headline">¶</a></h3>
+<p>To create a bundle that can run replica, acceptor and nameserver nodes:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> make server
+</pre></div>
+</div>
+</div>
+<div class="section" id="creating-a-client-bundle">
+<h3>Creating A Client Bundle<a class="headerlink" href="#creating-a-client-bundle" title="Permalink to this headline">¶</a></h3>
+<p>To create a bundle that can run a client and connect to an existing
+ConCoord instance:</p>
+</div>
+</div>
+<div class="section" id="logging">
+<h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
+<p>We have two kinds of loggers for ConCoord:
+* Console Logger
+* Network Logger</p>
+<p>Both of these loggers are included under utils.py</p>
+<p>To start the NetworkLogger, use the logdaemon.py on the host you want to keep the Logger.</p>
+</div>
+<div class="section" id="synchronization-threading">
+<h2>Synchronization &amp; Threading<a class="headerlink" href="#synchronization-threading" title="Permalink to this headline">¶</a></h2>
+<p>ConCoord provides a distributed and fault-tolerant threading
+library. The library includes:</p>
+<ul class="simple">
+<li>Lock</li>
+<li>RLock</li>
+<li>Semaphore</li>
+<li>BoundedSemaphore</li>
+<li>Barrier</li>
+<li>Condition</li>
+</ul>
+<p>The implementations of distributed synchronization objects follow the
+implementations in the Python threading library.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Advanced Tutorial</a><ul>
+<li><a class="reference internal" href="#creating-source-bundles">Creating Source Bundles</a><ul>
+<li><a class="reference internal" href="#creating-a-server-bundle">Creating A Server Bundle</a></li>
+<li><a class="reference internal" href="#creating-a-client-bundle">Creating A Client Bundle</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#logging">Logging</a></li>
+<li><a class="reference internal" href="#synchronization-threading">Synchronization &amp; Threading</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tutorial.html"
+                        title="previous chapter">Tutorial</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/tutorial-advanced.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             >previous</a> |</li>
+        <li><a href="index.html">ConCoord 0.2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Deniz Altinbuken, Emin Gun Sirer.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
