@@ -102,7 +102,9 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
         nodename = node+':'+str(port)
         print "Node is started: %s" % nodename
     # Add it to the object if it is a nameserver
-    nameservercoordobj = NameserverProxy('openreplica.org')
+    nameservercoordobj = NameserverCoord('openreplica.org')
+    print "Adding node to OpenReplica Nameserver Coordination Object:"
+    print "- ",  node_names[nodetype] , "| ", nodename
     nameservercoordobj.addnodetosubdomain(subdomain, nodetype, nodename)
 
 def main():
