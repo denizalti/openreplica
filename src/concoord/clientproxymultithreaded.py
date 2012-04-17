@@ -141,17 +141,11 @@ class ClientProxy():
 
     def invoke_command(self, *args):
         reqdesc = ReqDesc(self, args)
-        if self.debug:
-            print "Created ", reqdesc
         with self.lock:
-            print "Appending the request to list"
             self.reqlist.append(reqdesc)
-            print "Send msg to ctrl socket"
             self.ctrlsockets.send('a')
             while not reqdesc.replyvalid:
-                print "Waiting for the reply"
                 reqdesc.replyarrived.wait()
-            print "Removing request from the list"
             del self.pendingops[reqdesc.mynumber]
         if reqdesc.reply.replycode == CR_OK or reqdesc.reply.replycode == CR_UNBLOCK:
             print "Returning ", reqdesc.reply.reply
@@ -173,41 +167,31 @@ class ClientProxy():
                     print "EXCEPTION ", s
                 for s in inputready:
                     if s == self.ctrlsocketr:
-                        print "Receiving msg from ctrl socket"
                         # a local thread has queued up a request and needs our attention
                         self.ctrlsocketr.recv(1)
                         with self.lock:
                             while len(self.reqlist) > 0:
                                 reqdesc = self.reqlist.pop(0)
-                                print "Got ", reqdesc
                                 self.pendingops[reqdesc.mynumber] = reqdesc
-                                print "Added to pendingops"
                                 needreconfig = not self.conn.send(reqdesc.cm)
                     else:
                         # server has sent us something and we need to process it
-                        print "Receiving msg from server"
                         timestamp, reply = self.conn.receive()
-                        print timestamp, reply
                         if reply and reply.type == MSG_CLIENTREPLY:
                             reqdesc = self.pendingops[reply.inresponseto]
                             with self.lock:
                                 if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode == CR_UNBLOCK:
                                     # actionable response, wake up the thread
-                                    print "Actionable response"
                                     if reply.replycode == CR_UNBLOCK:
                                         assert reqdesc.lastcr == CR_BLOCK, "unblocked thread not previously blocked"
                                     reqdesc.lastcr = reply.replycode
-                                    print "Reply: ", reply
                                     reqdesc.reply = reply
                                     reqdesc.replyvalid = True
-                                    print "Notifying the thread"
                                     reqdesc.replyarrived.notify()
                                 elif reply.replycode == CR_INPROGRESS or reply.replycode == CR_BLOCK:
                                     # the thread is already waiting, no need to do anything
-                                    print "The thread is still blocked"
                                     reqdesc.lastcr = reply.replycode
                                 elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
-                                    print "Need reconfiguration"
                                     needreconfig = True
                                 else:
                                     print "should not happen -- unknown response type"
