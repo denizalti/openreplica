@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Installing ConCoord &mdash; ConCoord 0.2.0 documentation</title>
+    <title>Advanced Tutorial &mdash; ConCoord 0.2.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -26,8 +26,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="ConCoord 0.2.0 documentation" href="index.html" />
-    <link rel="next" title="Tutorial" href="tutorial.html" />
-    <link rel="prev" title="Overview" href="overview.html" /> 
+    <link rel="prev" title="Tutorial" href="tutorial.html" /> 
   </head>
   <body>
     <div class="related">
@@ -38,9 +37,6 @@
              accesskey="I">index</a></li>
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="overview.html" title="Overview"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">ConCoord 0.2.0 documentation</a> &raquo;</li> 
       </ul>
@@ -51,34 +47,50 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="installing-concoord">
-<h1>Installing ConCoord<a class="headerlink" href="#installing-concoord" title="Permalink to this headline">¶</a></h1>
-<p>For the purposes of this document, we will need a working copy of
-ConCoord. There are two ways of installing the most recent version of
-the system: from precompiled binaries, or from source.</p>
-<div class="section" id="requirements">
-<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
-<p>The minimum requirements for ConCoord are:</p>
-<ul class="simple">
-<li>python 2.6.6 or later</li>
-<li>dnspython-1.9.4</li>
-</ul>
-</div>
-<div class="section" id="installing-precompiled-binaries">
-<h2>Installing Precompiled Binaries<a class="headerlink" href="#installing-precompiled-binaries" title="Permalink to this headline">¶</a></h2>
-<p>The easiest way to install ConCoord is through the precompiled
-packages. The ConCoord distribution currently supports Debian, Ubuntu
-and Fedora.</p>
-<p>The precompiled binaries have the necessary dependencies built into
-them so installing them should pull in all other required components.</p>
-</div>
-<div class="section" id="installing-from-source">
-<h2>Installing From Source<a class="headerlink" href="#installing-from-source" title="Permalink to this headline">¶</a></h2>
-<p>It is very easy to build ConCoord from source. Once you’ve installed
-all of the prerequisites, you can build and install ConCoord with:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python setup.py install
+  <div class="section" id="advanced-tutorial">
+<h1>Advanced Tutorial<a class="headerlink" href="#advanced-tutorial" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="creating-source-bundles">
+<h2>Creating Source Bundles<a class="headerlink" href="#creating-source-bundles" title="Permalink to this headline">¶</a></h2>
+<p>You can create bundles to use at the server and client sides using the
+Makefile provided under <tt class="docutils literal"><span class="pre">concoord/</span></tt></p>
+<p>Remember to add the objects you have created in these bundles.</p>
+<div class="section" id="creating-a-server-bundle">
+<h3>Creating A Server Bundle<a class="headerlink" href="#creating-a-server-bundle" title="Permalink to this headline">¶</a></h3>
+<p>To create a bundle that can run replica, acceptor and nameserver nodes:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> make server
 </pre></div>
 </div>
+</div>
+<div class="section" id="creating-a-client-bundle">
+<h3>Creating A Client Bundle<a class="headerlink" href="#creating-a-client-bundle" title="Permalink to this headline">¶</a></h3>
+<p>To create a bundle that can run a client and connect to an existing ConCoord instance:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> make client
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="logging">
+<h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
+<p>We have two kinds of loggers for ConCoord:
+* Console Logger
+* Network Logger</p>
+<p>Both of these loggers are included under utils.py</p>
+<p>To start the NetworkLogger, use the logdaemon.py on the host you want to keep the Logger.</p>
+</div>
+<div class="section" id="synchronization-threading">
+<h2>Synchronization &amp; Threading<a class="headerlink" href="#synchronization-threading" title="Permalink to this headline">¶</a></h2>
+<p>ConCoord provides a distributed and fault-tolerant threading
+library. The library includes:</p>
+<ul class="simple">
+<li>Lock</li>
+<li>RLock</li>
+<li>Semaphore</li>
+<li>BoundedSemaphore</li>
+<li>Barrier</li>
+<li>Condition</li>
+</ul>
+<p>The implementations of distributed synchronization objects follow the
+implementations in the Python threading library.</p>
 </div>
 </div>
 
@@ -90,23 +102,24 @@ all of the prerequisites, you can build and install ConCoord with:</p>
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Installing ConCoord</a><ul>
-<li><a class="reference internal" href="#requirements">Requirements</a></li>
-<li><a class="reference internal" href="#installing-precompiled-binaries">Installing Precompiled Binaries</a></li>
-<li><a class="reference internal" href="#installing-from-source">Installing From Source</a></li>
+<li><a class="reference internal" href="#">Advanced Tutorial</a><ul>
+<li><a class="reference internal" href="#creating-source-bundles">Creating Source Bundles</a><ul>
+<li><a class="reference internal" href="#creating-a-server-bundle">Creating A Server Bundle</a></li>
+<li><a class="reference internal" href="#creating-a-client-bundle">Creating A Client Bundle</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#logging">Logging</a></li>
+<li><a class="reference internal" href="#synchronization-threading">Synchronization &amp; Threading</a></li>
 </ul>
 </li>
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="overview.html"
-                        title="previous chapter">Overview</a></p>
-  <h4>Next topic</h4>
   <p class="topless"><a href="tutorial.html"
-                        title="next chapter">Tutorial</a></p>
+                        title="previous chapter">Tutorial</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="_sources/install.txt"
+    <li><a href="_sources/tutorial-advanced.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -134,9 +147,6 @@ all of the prerequisites, you can build and install ConCoord with:</p>
              >index</a></li>
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="overview.html" title="Overview"
              >previous</a> |</li>
         <li><a href="index.html">ConCoord 0.2.0 documentation</a> &raquo;</li> 
       </ul>
