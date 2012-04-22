@@ -7,8 +7,9 @@ import re
 import random
 from concoord.enums import *
 from concoord.utils import *
-from concoord.openreplica.openreplicainitializer import *
+from concoord.openreplica.plmanager import *
 from concoord.openreplica.openreplicaaddnode import *
+from concoord.openreplica.openreplicainitializer import *
 
 class Tracker():
     def __init__(self, debug=True):
@@ -53,6 +54,8 @@ def main():
     t.parse_input_file(filename)
     picked_nodes = t.pick_set(config)
     # initialize the system with picked nodes
+    for node in picked_nodes:
+        nodeconn = PLConnection(nodes=[node])
     
 if __name__=='__main__':
     main()
