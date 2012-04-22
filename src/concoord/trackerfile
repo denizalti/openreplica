@@ -1,0 +1,8 @@
+Node1: main, p1, ac1, s1, r1, u18
+Node2: main, p1, ac1, s1, r1, u19
+Node3: main, p2, ac1, s1, r1, u20
+Node4: main, p1, ac1, s1, r2, u3
+Node5: second, p3, ac2, s1, r3, u28
+Node6: second, p3, ac2, s1, r3, u23
+Node7: third, p4, ac3, s2, r3, u30
+Node8: third, p3, ac3, s2, r4, u33
