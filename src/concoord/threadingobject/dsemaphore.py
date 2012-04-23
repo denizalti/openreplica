@@ -32,7 +32,6 @@ class DSemaphore():
             self.__count += 1
             if len(self.__queue) > 0:
                 unblockcommand = self.__queue.pop(0)
-                # add the popped command to the exception args
                 unblocked = {}
                 unblocked[unblockcommand] = True
                 raise UnblockingReturn(unblockeddict=unblocked)
