@@ -48,14 +48,15 @@ class Tracker():
         return picked
     
 def main():
-    t = Tracker()
     filename = 'trackerfile'
     config = (2,1,1)
+    t = Tracker()
     t.parse_input_file(filename)
     picked_nodes = t.pick_set(config)
     # initialize the system with picked nodes
+    node_connections = []
     for node in picked_nodes:
-        nodeconn = PLConnection(nodes=[node])
+        node_connections.append(PLConnection(nodes=[node], configdict=CONFIGDICT))
     
 if __name__=='__main__':
     main()

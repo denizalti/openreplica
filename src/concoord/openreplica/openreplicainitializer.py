@@ -168,7 +168,6 @@ def terminated(p):
     return done
 
 def main():
-#    try:
     with open(options.objectfilepath, 'rU') as fd:
         clientcode = fd.read()
         # Check safety
@@ -185,9 +184,6 @@ def main():
     clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
     print "Proxy Code:"
     print clientproxycode
-#    except Exception as e:
-#        print e
-#        parser.print_help()
     
 if __name__=='__main__':
     main()
