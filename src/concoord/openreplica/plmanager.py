@@ -10,6 +10,10 @@ import subprocess, signal
 class PLConnection():
     def __init__(self, num=0, nodecheckers=None, nodes=[], configdict={}):
         global USERNAME, USERKEYFILE, NODESFILE
+        if not configdict:
+            print "Configuration file is required."
+            return
+        
         USERNAME = configdict['USERNAME']
         USERKEYFILE = configdict['USERKEYFILE']
         NODESFILE = configdict['NODESFILE']
