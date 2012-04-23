@@ -108,12 +108,12 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
     nameservercoordobj.addnodetosubdomain(subdomain, nodetype, nodename)
 
 def main():
-    try:
-        print "Connecting to Planet Lab"
-        start_node(options.nodetype, options.subdomain, options.objectfilepath,
-                   options.classname, options.bootstrapname)
-    except Exception as e:
-        parser.print_help()
+#    try:
+    print "Connecting to Planet Lab"
+    start_node(options.nodetype, options.subdomain, options.objectfilepath,
+               options.classname, options.bootstrapname)
+#    except Exception as e:
+#        parser.print_help()
     
 if __name__=='__main__':
     main()
