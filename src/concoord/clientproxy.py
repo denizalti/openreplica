@@ -153,6 +153,9 @@ class ClientProxy():
                         if not self.trynewbootstrap(triedreplicas):
                             raise ConnectionError("Cannot connect to any bootstrap")
                         needreconfig = False
+
+                    if self.timeout > time.time()-starttime:
+                        raise ConnectionError("Cannot connect to any bootstrap")
                         
             except KeyboardInterrupt:
                 self._graceexit()
