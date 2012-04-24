@@ -30,6 +30,7 @@ parser.add_option("-p", "--port", action="store", dest="port", type="int", help=
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
 parser.add_option("-f", "--objectfilename", action="store", dest="objectfilename", default='', help="client object file name")
 parser.add_option("-c", "--objectname", action="store", dest="objectname", help="object name")
+parser.add_option("-l", "--logger", action="store", dest="logger", help="logger address")
 parser.add_option("-o", "--configpath", action="store", dest="configpath", default='', help="config file path")
 parser.add_option("-n", "--name", action="store", dest="domain", default='', help="domainname that the nameserver will accept queries for")
 parser.add_option("-t", "--type", action="store", dest="type", default='', help="1: Master Nameserver 2: Slave Nameserver (requires a Master) 3:Route53 (requires a Route53 zone)")
