@@ -26,6 +26,7 @@ try:
     CONFIGDICT = load_configdict(options.configpath)
     NPYTHONPATH = CONFIGDICT['NPYTHONPATH']
     CONCOORD_HELPERDIR = CONFIGDICT['CONCOORD_HELPERDIR']
+    LOGGERNODE = CONFIGDICT['LOGGERNODE']
 except:
     NPYTHONPATH = 'python'
 
@@ -68,15 +69,17 @@ def check_planetlab_pythonversion(plconn, node):
 def get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, classname, bootstrapname):
     startupcmd = ''
     if nodetype == NODE_REPLICA:
-        startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -b %s" % (node, port, clientobjectfilename, classname, bootstrapname)
+        startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -b %s -l %s" % (node, port, clientobjectfilename, classname, bootstrapname, LOGGERNODE)
     elif nodetype == NODE_ACCEPTOR:
-        startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "acceptor.py -a %s -p %d -f %s -b %s" % (node, port, clientobjectfilename, bootstrapname)
+        startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "acceptor.py -a %s -p %d -f %s -b %s -l %s" % (node, port, clientobjectfilename, bootstrapname, LOGGERNODE)
     elif nodetype == NODE_NAMESERVER:
-        startupcmd =  "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s" % (subdomain+'.openreplica.org', node, port, clientobjectfilename, classname, bootstrapname)
+        startupcmd =  "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s -t %d -m %s -l %s" % (subdomain+'.openreplica.org', node, port, clientobjectfilename, classname, bootstrapname, servicetype, master, LOGGERNODE)
     return startupcmd
         
 def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapname):
     nodetype = int(nodetype)
+    servicetype = NS_SLAVE
+    master = 'openreplica.org'
     print "==== Adding %s ====" % node_names[nodetype]
     clientobjectfilename = os.path.basename(clientobjectfilepath)
     if nodetype == NODE_NAMESERVER:
@@ -91,13 +94,13 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
         port = random.randint(14000, 15000)
         p = nodeconn.executecommandone(node, get_startup_cmd(nodetype, subdomain, node, port,
                                                              clientobjectfilename, classname,
-                                                             bootstrapname), False)
+                                                             bootstrapname, servicetype, master), False)
         while terminated(p):
             port = random.randint(14000, 15000)
-            print get_startup_cmd(nodetype, subdomain, node, port,clientobjectfilename, classname, bootstrapname)
+            print get_startup_cmd(nodetype, subdomain, node, port,clientobjectfilename, classname, bootstrapname, servicetype, master)
             p = nodeconn.executecommandone(node, get_startup_cmd(nodetype, subdomain, node, port,
                                                                  clientobjectfilename, classname,
-                                                                 bootstrapname), False)
+                                                                 bootstrapname, servicetype, master), False)
             print p
         nodename = node+':'+str(port)
         print "Node is started: %s" % nodename
