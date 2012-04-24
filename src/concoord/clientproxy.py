@@ -26,7 +26,7 @@ REPLY = 0
 CONDITION = 1
 
 class ClientProxy():
-    def __init__(self, bootstrap, timeout=60, debug=True):
+    def __init__(self, bootstrap, timeout=30, debug=True):
         self.debug = debug
         self.timeout = timeout 
         self.domainname = None
@@ -154,7 +154,7 @@ class ClientProxy():
                             raise ConnectionError("Cannot connect to any bootstrap")
                         needreconfig = False
 
-                    if self.timeout > time.time()-starttime:
+                    if self.timeout < time.time()-starttime:
                         raise ConnectionError("Cannot connect to any bootstrap")
                         
             except KeyboardInterrupt:

@@ -106,10 +106,10 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     # BOOTSTRAP
     print "--- Bootstrap Replica ---"
     port = random.randint(14000, 15000)
-    p = bootstrap.executecommandone(bootstrap.getHosts()[0], "nohup "+ NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s" % (bootstrap.getHosts()[0], port, clientobjectfilename, classname), False)
+    p = bootstrap.executecommandone(bootstrap.getHosts()[0], "nohup "+ NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s >> /tmp/test 2>&1 &" % (bootstrap.getHosts()[0], port, clientobjectfilename, classname), False)
     while terminated(p):
         port = random.randint(14000, 15000)
-        p = bootstrap.executecommandone(bootstrap.getHosts()[0], "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s" % (bootstrap.getHosts()[0], port, clientobjectfilename, classname), False)
+        p = bootstrap.executecommandone(bootstrap.getHosts()[0], "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s >> /tmp/test 2>&1 &" % (bootstrap.getHosts()[0], port, clientobjectfilename, classname), False)
     bootstrapname = bootstrap.getHosts()[0]+':'+str(port)
     processnames.append((NODE_REPLICA, bootstrapname))
     print bootstrapname
@@ -117,10 +117,10 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     print "--- Acceptors ---"
     for acceptor in acceptors.getHosts():
         port = random.randint(14000, 15000)
-        p = acceptors.executecommandone(acceptor, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "acceptor.py -a %s -p %d -f %s -b %s" % (acceptor, port, clientobjectfilename, bootstrapname), False)
+        p = acceptors.executecommandone(acceptor, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "acceptor.py -a %s -p %d -f %s -b %s >> /tmp/test 2>&1 &" % (acceptor, port, clientobjectfilename, bootstrapname), False)
         while terminated(p):
             port = random.randint(14000, 15000)
-            p = acceptors.executecommandone(acceptor, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "acceptor.py -a %s -p %d -f %s -b %s" % (acceptor, port, clientobjectfilename, bootstrapname), False)
+            p = acceptors.executecommandone(acceptor, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "acceptor.py -a %s -p %d -f %s -b %s >> /tmp/test 2>&1 &" % (acceptor, port, clientobjectfilename, bootstrapname), False)
         acceptorname = acceptor+':'+str(port)
         processnames.append((NODE_ACCEPTOR, acceptorname))
         print acceptorname
@@ -129,10 +129,10 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
         print "--- Replicas ---"
     for replica in replicas.getHosts():
         port = random.randint(14000, 15000)
-        p = replicas.executecommandone(replica, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -b %s" % (replica, port, clientobjectfilename, classname, bootstrapname), False)
+        p = replicas.executecommandone(replica, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -b %s >> /tmp/%s 2>&1 &" % (replica, port, clientobjectfilename, classname, bootstrapname, clientobjectfilename), False)
         while terminated(p):
             port = random.randint(14000, 15000)
-            p = replicas.executecommandone(replica, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -b %s" % (replica, port, clientobjectfilename, classname, bootstrapname), False)
+            p = replicas.executecommandone(replica, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -b %s >> /tmp/%s 2>&1 &" % (replica, port, clientobjectfilename, classname, bootstrapname, clientobjectfilename), False)
         replicaname = replica+':'+str(port)
         processnames.append((NODE_REPLICA, replicaname))
         print replicaname
@@ -142,10 +142,10 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     master = 'openreplica.org'
     for nameserver in nameservers.getHosts():
         port = random.randint(14000, 15000)
-        p = nameservers.executecommandone(nameserver, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s -t %d -m %s" % (subdomain, nameserver, port, clientobjectfilename, classname, bootstrapname, servicetype, master), False)
+        p = nameservers.executecommandone(nameserver, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s -t %d -m %s >> /tmp/%s 2>&1 &" % (subdomain, nameserver, port, clientobjectfilename, classname, bootstrapname, servicetype, master, clientobjectfilename), False)
         while terminated(p):
             port = random.randint(14000, 15000)
-            p = nameservers.executecommandone(nameserver, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s -t %d -m %s" % (subdomain, nameserver, port, clientobjectfilename, classname, bootstrapname, servicetype, master), False)
+            p = nameservers.executecommandone(nameserver, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s -t %d -m %s >> /tmp/%s 2>&1 &" % (subdomain, nameserver, port, clientobjectfilename, classname, bootstrapname, servicetype, master, clientobjectfilename), False)
         nameservername = nameserver+':'+str(port)
         processnames.append((NODE_NAMESERVER, nameservername))
         print nameservername

@@ -196,8 +196,8 @@ class Node():
         main_thread = Thread(target=self.handle_messages, name='MainThread')
         main_thread.start()
         # Start a thread that waits for inputs
-        input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
-        input_thread.start()
+        #input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
+        #input_thread.start()
         # Start a thread that pings neighbors
         timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
         timer_thread.name = 'PeriodicThread'
