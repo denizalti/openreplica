@@ -123,7 +123,8 @@ class Node():
         except:
             if logger:
                 LOGGERNODE=logger
-            LOGGERNODE = None
+            else:
+                LOGGERNODE = None
         self.logger = NetworkLogger("%s-%s" % (node_names[self.type],self.id), LOGGERNODE)
         self.logger.write("State", "Connected.")
         self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_NAMESERVER:Group(self.me)}
