@@ -148,10 +148,8 @@ class ClientProxy():
                 reqdesc.replyarrived.wait()
             del self.pendingops[reqdesc.mynumber]
         if reqdesc.reply.replycode == CR_OK or reqdesc.reply.replycode == CR_UNBLOCK:
-            print "Returning ", reqdesc.reply.reply
             return reqdesc.reply.reply
         elif reqdesc.reply.replycode == CR_EXCEPTION:
-            print "Raising an exception"
             raise Exception(reqdesc.reply.reply)
         else:
             print "should not happen -- client thread saw reply code %d" % reqdesc.reply.replycode

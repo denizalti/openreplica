@@ -161,7 +161,6 @@ class ClientProxy():
                 self._graceexit()
 
             if reply.replycode == CR_OK or reply.replycode == CR_UNBLOCK:
-                print "Returning ", reply.reply
                 return reply.reply
             elif reply.replycode == CR_EXCEPTION:
                 raise Exception(reply.reply)
