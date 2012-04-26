@@ -58,6 +58,18 @@ class Replica(Node):
         # number for metacommands initiated from this replica
         self.metacommandnumber = 0
         self.clientpool = ConnectionPool()
+
+        # Measurement Variables
+        self.firststarttime = 0
+        self.firststoptime = 0
+        self.secondstarttime = 0
+        self.secondstoptime = 0
+        self.count = 0
+
+        #Throughput Variables
+        self.throughput_runs = 0
+        self.throughput_stop = 0
+        self.throughput_start = 0
         
     def __str__(self):
         rstr = "%s %s:%d\n" % ("LEADER" if self.isleader else node_names[self.type], self.addr, self.port)
@@ -240,11 +252,13 @@ class Replica(Node):
         self.logger.write("State", "Returning from PERFORM!")
             
     def initiate_command(self, givenproposal):
-         # Adding command pending commands
-         givencommandnumber = self.find_commandnumber()
-         self.add_to_pendingcommands(givencommandnumber, givenproposal)
-         # Try issuing command
-         self.issue_command(givencommandnumber)
+        # Throughput test start
+        #self.throughput_test()
+        # Adding command pending commands
+        givencommandnumber = self.find_commandnumber()
+        self.add_to_pendingcommands(givencommandnumber, givenproposal)
+        # Try issuing command
+        self.issue_command(givencommandnumber)
 
     def issue_command(self, candidatecommandno):
         """propose a command from the pending commands"""
@@ -779,6 +793,8 @@ class Replica(Node):
                 self.logger.write("Paxos State", "got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts" % \
                        (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
                 if len(prc.received) >= prc.nquorum:
+                    # Throughput test finalize
+                    self.throughput_test()
                     self.logger.write("Paxos State", "Agreed on %s" % prc.proposal) 
                     # take this response collector out of the outstanding propose set
                     self.add_to_proposals(prc.commandnumber, prc.proposal)
@@ -927,6 +943,44 @@ class Replica(Node):
         for cmdnum,command in self.pendingcommands.iteritems():
             print "%d: %s" % (cmdnum,str(command))
 
+## TIMING TEST
+    def handle_client_command_tput(self, givencommand, prepare=False):
+        """handle the received client request
+        - if it has been received before check if it has been executed
+        -- if it has been executed send the result
+        -- if it has not been executed yet send INPROGRESS
+        - if this request has not been received before initiate a paxos round for the command"""
+        self.receivedclientrequests[(givencommand.client,givencommand.clientcommandnumber)] = givencommand
+        if self.active and not prepare:
+            self.do_command_propose(givencommand)
+        else:
+            self.do_command_prepare(givencommand)
+            
+    def throughput_test(self):
+        self.throughput_runs += 1
+        if self.throughput_runs == 100:
+            self.throughput_start = time.time()
+        elif self.throughput_runs == 30101:
+            self.throughput_stop = time.time()
+            totaltime = self.throughput_stop - self.throughput_start
+            print "********************************************"
+            print "TOTAL: ", totaltime
+            print "TPUT: ", 30000/totaltime, "req/s"
+            print "********************************************"
+            self._graceexit(1)
+
+    def msg_output(self, conn, msg):
+        profile_off()
+        profilerdict = get_profile_stats()
+        for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
+            print "%s: %s" % (key, value)
+        time.sleep(10)
+        sys.stdout.flush()
+        self.send(msg, self.groups[NODE_ACCEPTOR].members[0])
+        dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
+        numclients = len(self.clientpool.poolbypeer.keys())
+        dumptimers(str(numclients), str(len(self.groups[NODE_ACCEPTOR])), self.type)
+        
 ## TERMINATION METHODS
     def terminate_handler(self, signal, frame):
         self._graceexit()
