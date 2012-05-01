@@ -793,7 +793,7 @@ class Replica(Node):
                 self.logger.write("Paxos State", "got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts" % \
                        (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
                 if len(prc.received) >= prc.nquorum:
-                    # Throughput test finalize
+                    # Throughput test
                     self.throughput_test()
                     self.logger.write("Paxos State", "Agreed on %s" % prc.proposal) 
                     # take this response collector out of the outstanding propose set
@@ -958,14 +958,14 @@ class Replica(Node):
             
     def throughput_test(self):
         self.throughput_runs += 1
-        if self.throughput_runs == 100:
+        if self.throughput_runs == 1000:
             self.throughput_start = time.time()
-        elif self.throughput_runs == 30101:
+        elif self.throughput_runs == 4001:
             self.throughput_stop = time.time()
             totaltime = self.throughput_stop - self.throughput_start
             print "********************************************"
             print "TOTAL: ", totaltime
-            print "TPUT: ", 30000/totaltime, "req/s"
+            print "TPUT: ", 3000/totaltime, "req/s"
             print "********************************************"
             self._graceexit(1)
 

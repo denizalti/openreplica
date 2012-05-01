@@ -156,7 +156,9 @@ class ClientProxy():
 
     def comm_loop(self, *args):
         try:
+            triedreplicas = set()
             while True:
+                triedreplicas.add(self.bootstrap)
                 socketset = [self.ctrlsocketr, self.conn.thesocket]
                 inputready,outputready,exceptready = select.select(socketset,[],socketset,0)
                 
