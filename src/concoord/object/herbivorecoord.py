@@ -6,7 +6,6 @@
 from threading import RLock
 from concoord.exception import *
 from concoord.threadingobject.drlock import DRLock
-from copy import copy
 
 class HerbivoreCoord():
     def __init__(self, **kwargs):
