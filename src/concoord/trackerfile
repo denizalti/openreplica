@@ -1,8 +1,24 @@
-Node1: main, p1, ac1, s1, r1, u18
-Node2: main, p1, ac1, s1, r1, u19
-Node3: main, p2, ac1, s1, r1, u20
-Node4: main, p1, ac1, s1, r2, u3
-Node5: second, p3, ac2, s1, r3, u28
-Node6: second, p3, ac2, s1, r3, u23
-Node7: third, p4, ac3, s2, r3, u30
-Node8: third, p3, ac3, s2, r4, u33
+Node1: main, p1, ac1, u1
+Node2: main, p1, ac1, u2
+Node3: main, p1, ac1, u3
+Node4: main, p2, ac1, u4
+Node5: main, p2, ac1, u5
+Node6: main, p2, ac1, u6
+Node7: main, p1, ac2, u7
+Node8: main, p1, ac2, u8
+Node9: main, p1, ac2, u9
+Node10: main, p2, ac2, u10
+Node11: main, p2, ac2, u11
+Node12: main, p2, ac2, u12
+Node13: main0, p10, ac10, u10
+Node20: main0, p10, ac10, u20
+Node30: main0, p10, ac10, u30
+Node40: main0, p20, ac10, u40
+Node50: main0, p20, ac10, u50
+Node60: main0, p20, ac10, u60
+Node70: main0, p10, ac20, u70
+Node80: main0, p10, ac20, u80
+Node90: main0, p10, ac20, u90
+Node100: main0, p20, ac20, u100
+Node110: main0, p20, ac20, u110
+Node120: main0, p20, ac20, u120
