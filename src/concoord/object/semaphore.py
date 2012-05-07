@@ -6,10 +6,6 @@
 from concoord.threadingobject.dsemaphore import DSemaphore
 
 class Semaphore():
-    """Semaphore object that supports following functions:
-    - acquire: locks the object
-    - release: unlocks the object
-    """
     def __init__(self, count=1, **kwargs):
         self.semaphore = DSemaphore(count)
 
