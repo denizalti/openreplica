@@ -1,6 +1,6 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
-@note: Example counter object
+@note: Example counter
 @copyright: See LICENSE
 """
 class Counter:
