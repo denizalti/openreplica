@@ -26,12 +26,12 @@ REPLY = 0
 CONDITION = 1
 
 class ReqDesc:
-    def __init__(self, clientproxy, args):
+    def __init__(self, clientproxy, args, token):
         with clientproxy.lock:
             # acquire a unique command number
             self.mynumber = clientproxy.commandnumber
             clientproxy.commandnumber += 1
-        self.cm = ClientMessage(MSG_CLIENTREQUEST, clientproxy.me, Command(clientproxy.me, self.mynumber, args))
+        self.cm = ClientMessage(MSG_CLIENTREQUEST, clientproxy.me, Command(clientproxy.me, self.mynumber, args), token=token)
         self.starttime = time.time()
         self.replyarrived = Condition(clientproxy.lock)
         self.lastreplycr = -1
@@ -42,11 +42,11 @@ class ReqDesc:
         return "Request Descriptor for cmd %d\nMessage %s\nReply %s" % (self.mynumber, self.cm, self.reply)
 
 class ClientProxy():
-    def __init__(self, bootstrap, timeout=60, debug=True):
+    def __init__(self, bootstrap, timeout=60, debug=True, token=None):
         self.debug = debug
         self.timeout = timeout 
         self.domainname = None
-
+        self.token = token
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
@@ -140,7 +140,7 @@ class ClientProxy():
         return self.connecttobootstrap()
 
     def invoke_command(self, *args):
-        reqdesc = ReqDesc(self, args)
+        reqdesc = ReqDesc(self, args, self.token)
         with self.lock:
             self.reqlist.append(reqdesc)
             self.ctrlsockets.send('a')
