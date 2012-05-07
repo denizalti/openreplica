@@ -1,6 +1,6 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
-@note: Example log object
+@note: Example log
 @copyright: See LICENSE
 """
 class Log():

@@ -1,6 +1,6 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
-@note: Example lock object
+@note: Example lock
 @copyright: See LICENSE
 """
 from concoord.threadingobject.dlock import DLock
