@@ -26,10 +26,11 @@ REPLY = 0
 CONDITION = 1
 
 class ClientProxy():
-    def __init__(self, bootstrap, timeout=30, debug=True):
+    def __init__(self, bootstrap, timeout=30, debug=True, token=None):
         self.debug = debug
         self.timeout = timeout 
         self.domainname = None
+        self.token = token
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
@@ -119,7 +120,7 @@ class ClientProxy():
             mynumber = self.commandnumber
             self.commandnumber += 1
             command = Command(self.me, mynumber, args)
-            cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command)
+            cm = ClientMessage(MSG_CLIENTREQUEST, self.me, command, token=self.token)
             replied = False
             starttime = time.time()
             triedreplicas = set()
