@@ -86,13 +86,14 @@ class PaxosMessage(Message):
         return temp
 
 class ClientMessage(Message):
-    def __init__(self, msgtype, myname, command=None, inresponseto=0):
+    def __init__(self, msgtype, myname, command=None, inresponseto=0, token=None):
         Message.__init__(self, msgtype, myname)
         self.command = command
         self.inresponseto = inresponseto
+        self.token = token
 
     def __str__(self):
-        return "%s inresponseto: %d  request: %s" % (Message.__str__(self), self.inresponseto, str(self.command))
+        return "%s inresponseto: %d  request: %s token: %s" % (Message.__str__(self), self.inresponseto, str(self.command), self.token)
 
 class ClientReplyMessage(Message):
     def __init__(self, msgtype, myname, reply=None, replycode=-1, inresponseto=0):
