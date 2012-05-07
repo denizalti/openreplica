@@ -54,7 +54,6 @@ class NetworkLogger():
             return
 
     def write(self, cls, str):
-        return
         try:
             print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix + '_' + threading.current_thread().name, cls, str)
             self.socket.send("[%s] %s: %s\n" % (self.prefix + '_' + threading.current_thread().name, cls, str))

@@ -5,17 +5,24 @@
 '''
 import re
 import random
+import sys, os
 
-pdus = ['main', 'main0']
-tors =  ['ac1', 'ac2', 'ac10', 'ac20']
-heats = ['p1','p2', 'p10','p20']
-machines = ['u1','u2','u3','u4','u5','u6','u7','u8','u9','u10','u11','u12','u13','u20','u30','u40','u50','u60','u70','u80','u90','u100','u110','u120']  
+pdus = set()
+tors = set()
+heats = set()
+machines = set()
 
 class Tracker():
-    def __init__(self, debug=True):
+    def __init__(self, numreplicas, debug=True):
         """Tracker chooses a set of nodes to be started by the openreplicainitializer"""
         self.debug = debug
+        self.numreplicas = numreplicas
         self.nodes = {}
+
+        self.heatingfailures = 0
+        self.pdufailures = 0
+        self.machinefailures = 0
+        self.torfailures = 0
 
     def parse_input_file(self, filename):
         inputfile = open(filename, 'r')
@@ -24,10 +31,13 @@ class Tracker():
             name, desc = line.split(":")
             # rack,switch,cooling,machine
             self.nodes[name] = desc.split(',')
+            pdu,tor,heat,machine = self.nodes[name]
+            pdus.add(pdu)
+            tors.add(tor)
+            heats.add(heat)
+            machines.add(machine)
 
-    def pick_set_rackaware(self, config):
-        numreplicas, numacceptors, numnameservers = config
-        totalcount = numreplicas + numacceptors + numnameservers
+    def pick_set_rackaware(self, totalcount):
         # pick the first node randomly
         randomname = random.choice(self.nodes.keys())
         randomdesc = self.nodes[randomname]
@@ -36,20 +46,20 @@ class Tracker():
         # pick rest of the nodes greedily
         while len(picked) < totalcount:
             maxtuple = (0,'')
-            for name,desc in self.nodes.iteritems():
-                if name in picked and len(self.nodes) >= totalcount:
-                    # a node should not be picked more than once
-                    continue
-                differences = alldesc.difference(self.nodes[name])
-                if maxtuple[0] == 0 or len(differences) > maxtuple[0]:
-                    maxtuple = (len(differences), name)
-            picked.append(maxtuple[1])
+            for i in range(1000):
+                for name,desc in self.nodes.iteritems():
+                    if name in picked and len(self.nodes) >= totalcount:
+                        # a node should not be picked more than once
+                        continue
+                    differences = alldesc.difference(self.nodes[name])
+                    if maxtuple[0] == 0 or len(differences) > maxtuple[0]:
+                        print name, maxtuple[0]
+                        maxtuple = (len(differences), name)
+                picked.append(maxtuple[1])
             alldesc = alldesc.union(self.nodes[maxtuple[1]])
         return picked
 
-    def pick_set_rackweighted(self, config):
-        numreplicas, numacceptors, numnameservers = config
-        totalcount = numreplicas + numacceptors + numnameservers
+    def pick_set_rackweighted(self, totalcount):
         # pick the first node randomly
         randomname = random.choice(self.nodes.keys())
         picked = [randomname]
@@ -68,13 +78,10 @@ class Tracker():
             alldesc = alldesc.union(self.nodes[maxtuple[1]])
         return picked
 
-    def pick_set_random(self, config):
-        numreplicas, numacceptors, numnameservers = config
-        totalcount = numreplicas + numacceptors + numnameservers
-        # pick the first node randomly
+    def pick_set_random(self, totalcount):
+        # pick all nodes randomly
         picked = []
-        # pick rest of the nodes greedily
-        while len(picked) < totalcount:
+        while len(picked) <= totalcount:
             picked.append(random.choice(self.nodes.keys()))
         return picked
 
@@ -87,40 +94,46 @@ class Tracker():
         rackawaredict = {}
         rackweighteddict = {}
         randomdict = {}
-        
-        pdu = 3
-        tor =  60
-        heat = 6
-        machine = 50
+
+        # Probability of failures in 1000
+        pdu = random.randint(1,3)
+        tor =  random.randint(1,60)
+        heat = random.randint(1,6)
+        machine = random.randint(1,50)
+        # Simulate it for a year
         for i in range(365):
             rackawaredict[i] = 0
             rackweighteddict[i] = 0
             randomdict[i] = 0
             failures = []
+
             # first decide on failures
-            for p in pdus:
-                randomnum = random.randint(1,1000)
-                if randomnum <= pdu:
-                    failures.append(p)
-            for t in tors:
-                randomnum = random.randint(1,1000)
-                if randomnum <= tor:
-                    failures.append(t)
-            for h in heats:
-                randomnum = random.randint(1,1000)
-                if randomnum <= heat:
-                    failures.append(h)
-            for m in machines:
-                randomnum = random.randint(1,1000)
-                if randomnum <= machine:
-                    failures.append(m)
+            if pdu > 0:
+                p = random.choice(list(pdus))
+                failures.append(p)
+                pdu -= 1
+
+            if tor > 0:
+                p = random.choice(list(tors))
+                failures.append(p)
+                tor -= 1
+
+            if heat > 0:
+                p = random.choice(list(heats))
+                failures.append(p)
+                heat -= 1
+
+            if machine > 0:
+                p = random.choice(list(machines))
+                failures.append(p)
+                machine -= 1
 
             allfailures = 0
             for f in failures:
                 for node in rackawarelist:
                     if f in self.nodes[node]:
                         allfailures += 1
-                if allfailures > 2:
+                if allfailures > self.numreplicas/2:
                     #print f, self.nodes[node], node
                     rackawaredict[i] += 1
 
@@ -129,7 +142,7 @@ class Tracker():
                 for node in rackweightedlist:
                     if f in self.nodes[node]:
                         allfailures += 1
-                if allfailures > 2:
+                if allfailures > self.numreplicas/2:
                     #print">> ", f, self.nodes[node], node
                     rackweighteddict[i] += 1
 
@@ -138,18 +151,19 @@ class Tracker():
                 for node in randomlist:
                     if f in self.nodes[node]:
                         allfailures += 1
-                if allfailures > 2:
+                if allfailures > self.numreplicas/2:
                     #print ">>>>", f, self.nodes[node], node
                     randomdict[i] += 1
 
         return rackawaredict, rackweighteddict, randomdict
+
 
     def results(self, rackawaredict, rackweighteddict, randomdict):
         racktotal = 0
         rackweightedtotal = 0
         randomtotal = 0
         for i,j in rackawaredict.iteritems():
-            racktotal += j
+            racktotal += 1
 
         for i,j in rackweighteddict.iteritems():
             rackweightedtotal += j
@@ -161,31 +175,38 @@ class Tracker():
     
 def main():
     filename = 'trackerfile'
-    config = (1,1,0)
-    t = Tracker()
+    numreplicas = int(sys.argv[1])
+    t = Tracker(numreplicas)
     t.parse_input_file(filename)
-    for i in range(10):
+    racktotal = 0
+    rackweightedtotal = 0
+    randomtotal = 0
+
+    picked_nodes_rackaware = t.pick_set_rackaware(numreplicas)
+    os._exit(0)
+
+    for i in range(1):
         # pick nodes in a rack-aware manner
-        picked_nodes_rackaware = t.pick_set_rackaware(config)
+        picked_nodes_rackaware = t.pick_set_rackaware(numreplicas)
         # pick nodes in a rack-aware manner
-        picked_nodes_rackweighted = t.pick_set_rackweighted(config)
+        picked_nodes_rackweighted = t.pick_set_rackweighted(numreplicas)
         # pick nodes randomly
-        picked_nodes_random = t.pick_set_random(config)
-        #print "Rack Aware: ", picked_nodes_rackaware
+        picked_nodes_random = t.pick_set_random(numreplicas)
+        print "Rack Aware: ", picked_nodes_rackaware
         #print "Rack Weighted: ", picked_nodes_rackweighted
         #print "Random: ", picked_nodes_random
         
-        racktotal = 0
-        rackweightedtotal = 0
-        randomtotal = 0
-        for i in range(10):
+        for i in range(1):
             rackawaredict, rackweighteddict, randomdict = t.simulatefailures(picked_nodes_rackaware, picked_nodes_rackweighted, picked_nodes_random)
+            print rackawaredict
             results = t.results(rackawaredict, rackweighteddict, randomdict)
             racktotal += results[0]
             rackweightedtotal += results[1]
             randomtotal += results[2]
         
-    print racktotal/100.0, rackweightedtotal/100.0, randomtotal/100.0
+    print racktotal, randomtotal
+
+    #print t.heatingfailures, t.pdufailures, t.machinefailures, t.torfailures
     
 if __name__=='__main__':
     main()

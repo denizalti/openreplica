@@ -36,7 +36,6 @@ parser.add_option("-n", "--name", action="store", dest="domain", default='', hel
 parser.add_option("-t", "--type", action="store", dest="type", default='', help="1: Master Nameserver 2: Slave Nameserver (requires a Master) 3:Route53 (requires a Route53 zone)")
 parser.add_option("-m", "--master", action="store", dest="master", default='', help="ipaddr:port for the master nameserver")
 parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
-
 (options, args) = parser.parse_args()
 
 DO_PERIODIC_PINGS = False
@@ -71,7 +70,6 @@ class Node():
                 self._graceexit(1)
             self.objectfilename = objectfilename
             self.objectname = objectname
-
         ## messaging layer information
         self.receivedmessages_semaphore = Semaphore(0)
         self.receivedmessages = []
