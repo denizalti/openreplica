@@ -48,10 +48,11 @@ class Nameserver(Replica):
             self._graceexit(1)
         self.ipconverter = '.ipaddr.'+domain+'.'
         try:
-            if domain.find('.'):
+            if domain.find('.') > 0:
                 self.mydomain = dns.name.Name((domain+'.').split('.'))
             else:
                 self.mydomain = domain
+            print self.mydomain
             self.mysrvdomain = dns.name.Name((SRVNAME+domain+'.').split('.'))
         except dns.name.EmptyLabel:
             self.logger.write("Initialization Error", "A DNS name is required. Use -n option.")
