@@ -4,7 +4,7 @@
 @copyright: See LICENSE
 '''
 import inspect, types, string
-import os, shutil
+import os, shutil, sys
 import ast, _ast
 
 class ServerVisitor(ast.NodeVisitor):
@@ -26,6 +26,8 @@ class ServerVisitor(ast.NodeVisitor):
 
     def getfunctionsofclass(self, node):
         for functiondef in node.body:
+            if functiondef.name == "__init__":
+                self.initline = functiondef.lineno
             self.functionstofix[functiondef.lineno] = functiondef
             
     def editfunctiondef(self, node):
@@ -38,7 +40,7 @@ class ServerVisitor(ast.NodeVisitor):
         if node.lineno in self.functionstofix.keys():
             print "%d | Fixing function definition." % (node.lineno)
 
-def editproxyfile(filepath, objectname):
+def editproxyfile(filepath, objectname, securitytoken):
     # Get the AST tree, find lines to fix
     astnode = compile(open(filepath, 'rU').read(),"<string>","exec",_ast.PyCF_ONLY_AST)
     v = ServerVisitor(objectname)
@@ -57,12 +59,16 @@ def editproxyfile(filepath, objectname):
         filecontent[line] = string.replace(filecontent[line], "):", ", **kwargs):", 1)
     objectfile = open(filepath+"fixed", 'w')
     for line, content in filecontent.iteritems():
-        objectfile.write(content)
+        if line == v.initline:
+            objectfile.write(content)
+            objectfile.write("\tself.__concoord_token = \"%s\"\n" % securitytoken)
+        else:    
+            objectfile.write(content)
     objectfile.close()
     return objectfile
 
-
-        
-        
-
+def main():
+    editproxyfile(sys.argv[1], sys.argv[2], sys.argv[3])
     
+if __name__=='__main__':
+    main()

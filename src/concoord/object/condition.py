@@ -1,6 +1,6 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
-@note: Example condition object
+@note: Example condition
 @copyright: See LICENSE
 """
 from concoord.threadingobject.dcondition import DCondition
