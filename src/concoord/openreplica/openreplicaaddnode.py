@@ -66,7 +66,7 @@ def check_planetlab_pythonversion(plconn, node):
         plconn.executecommandone(node, "rm testpythonversion.py")
     return rtv,output
 
-def get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, classname, bootstrapname):
+def get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, classname, bootstrapname, servicetype, master):
     startupcmd = ''
     if nodetype == NODE_REPLICA:
         startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -b %s -l %s" % (node, port, clientobjectfilename, classname, bootstrapname, LOGGERNODE)
