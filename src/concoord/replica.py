@@ -38,6 +38,11 @@ class Replica(Node):
             if self.object == None:
                 self.logger.write("Object Error", "Object cannot be found.")
                 self._graceexit(1)
+            else:
+                try:
+                    self.token = getattr(self.object, '_%s__concoord_token' % self.objectname)
+                except:
+                    self.token = None
         # leadership
         self.leader_initializing = False
         self.isleader = False
@@ -547,6 +552,10 @@ class Replica(Node):
         """handles clientrequest message received according to replica's state
         - if not leader: reject
         - if leader: add connection to client connections and handle request"""
+        if self.token and msg.token != self.token:
+            self.logger.write("Error", "Security Token mismatch.")
+            clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_REJECTED, inresponseto=msg.command.clientcommandnumber)
+            conn.send(clientreply)
         if self.type == NODE_NAMESERVER:
             self.logger.write("Error", "NAMESERVER got a CLIENTREQUEST")
             return

@@ -1,10 +1,12 @@
+"""
+@author: Deniz Altinbuken, Emin Gun Sirer
+@note: Example barrier object
+@copyright: See LICENSE
+"""
 from threading import Lock
 from concoord.threadingobject.dcondition import DCondition
 
 class Barrier():
-    """Barrier object that supports following functions:
-    - wait: takes a thread who wants to wait on the barrier
-    """
     def __init__(self, count=1, **kwargs):
         self.count = int(count)
         self.current = 0

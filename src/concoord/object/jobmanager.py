@@ -1,6 +1,6 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
-@note: Example jobmanager object
+@note: Example jobmanager
 @copyright: See LICENSE
 """
 class JobManager():

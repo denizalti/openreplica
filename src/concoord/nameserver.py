@@ -48,7 +48,11 @@ class Nameserver(Replica):
             self._graceexit(1)
         self.ipconverter = '.ipaddr.'+domain+'.'
         try:
-            self.mydomain = dns.name.Name((domain+'.').split('.'))
+            if domain.find('.') > 0:
+                self.mydomain = dns.name.Name((domain+'.').split('.'))
+            else:
+                self.mydomain = domain
+            print self.mydomain
             self.mysrvdomain = dns.name.Name((SRVNAME+domain+'.').split('.'))
         except dns.name.EmptyLabel:
             self.logger.write("Initialization Error", "A DNS name is required. Use -n option.")
@@ -309,11 +313,10 @@ class Nameserver(Replica):
         print concoord.concoordroute53.change_record_bool(self.route53_conn, self.route53_zone_id, self.route53_name, rtype, newvalue)
 
     ########## MASTER ##########
-
     def master_srv(self):
         values = []
-        priority=0
-        weight=100
+        priority = 0
+        weight = 100
         for address,port in self.groups[NODE_REPLICA].get_addresses():
             values.append('%d %d %d %s' % (priority, weight, port, address+self.ipconverter))
         return values

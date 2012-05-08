@@ -16,7 +16,7 @@ from concoord.serversideproxyast import *
 from concoord.openreplica.plmanager import *
 from concoord.proxy.nameservercoord import *
 
-parser = OptionParser(usage="usage: %prog -s subdomain -f objectfilepath -c classname -r replicas -a acceptors -n nameservers -o configpath")
+parser = OptionParser(usage="usage: %prog -s subdomain -f objectfilepath -c classname -r replicas -a acceptors -n nameservers -o configpath -t token")
 parser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
 parser.add_option("-f", "--objectfilepath", action="store", dest="objectfilepath", help="client object file path")
 parser.add_option("-c", "--classname", action="store", dest="classname", help="main class name")
@@ -24,6 +24,7 @@ parser.add_option("-r", "--replicas", action="store", dest="replicanum", default
 parser.add_option("-a", "--acceptors", action="store", dest="acceptornum", default=1, help="number of acceptor")
 parser.add_option("-n", "--nameservers", action="store", dest="nameservernum", default=1, help="number of nameservers")
 parser.add_option("-o", "--configpath", action="store", dest="configpath", default='', help="config file path")
+parser.add_option("-t", "--token", action="store", dest="token", default='', help="unique security token")
 (options, args) = parser.parse_args()
 
 CONCOORDPATH = 'concoord/src/concoord/'
@@ -81,7 +82,7 @@ def kill_node(node, uniqueid):
     except:
         return CONFIGDICT
 
-def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
+def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token):
     # locate the right number of suitable PlanetLab nodes
     clientobjectfilename = os.path.basename(clientobjectfilepath)
     numreplicas, numacceptors, numnameservers = configuration
@@ -100,7 +101,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration):
     processnames = []
     ## Fix the server object
     print "Fixing object file for use on the server side.."
-    fixedfile = editproxyfile(clientobjectfilepath, classname)
+    fixedfile = editproxyfile(clientobjectfilepath, classname, token)
     print "Uploading object file to replicas.."
     allnodes.uploadall(fixedfile.name, CONCOORDPATH + clientobjectfilename)
     print "--> Setting up the environment..."
@@ -178,10 +179,10 @@ def main():
         # Start Nodes
     print "Connecting to Planet Lab"
     configuration = (int(options.replicanum), int(options.acceptornum), int(options.nameservernum))
-    start_nodes(options.subdomain, options.objectfilepath, options.classname, configuration)
+    start_nodes(options.subdomain, options.objectfilepath, options.classname, configuration, options.token)
         # Create Proxy
     print "Creating proxy..."
-    clientproxycode = createclientproxy(clientcode, options.classname, None)
+    clientproxycode = createclientproxy(clientcode, options.classname, options.token, None)
     clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
     print "Proxy Code:"
     print clientproxycode

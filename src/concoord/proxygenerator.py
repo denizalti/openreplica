@@ -9,9 +9,10 @@ import os, shutil
 import inspect, types, string
 
 class ProxyGen(ast.NodeTransformer):
-    def __init__(self, objectname):
+    def __init__(self, objectname, securitytoken=None):
         self.objectname = objectname
         self.inourobject = False
+        self.token = securitytoken
 
     def generic_visit(self, node):
         ast.NodeTransformer.generic_visit(self, node)
@@ -35,7 +36,7 @@ class ProxyGen(ast.NodeTransformer):
                 if type(item) == _ast.FunctionDef and item.name == "__init__":
                     item.name = "__concoordinit__"
             # Add the new init method
-            initfunc = compile("def __init__(self, bootstrap):\n\tself.proxy = ClientProxy(bootstrap)","<string>","exec",_ast.PyCF_ONLY_AST).body[0]
+            initfunc = compile("def __init__(self, bootstrap):\n\tself.proxy = ClientProxy(bootstrap, token=\"%s\")" % self.token,"<string>","exec",_ast.PyCF_ONLY_AST).body[0]
             node.body.insert(0, initfunc)
         return self.generic_visit(node)
 
@@ -53,9 +54,9 @@ class ProxyGen(ast.NodeTransformer):
         else:
             return self.generic_visit(node)
 
-def createclientproxy(clientcode, objectname, bootstrap=None):
+def createclientproxy(clientcode, objectname, securitytoken, bootstrap=None):
     # Get the AST tree, transform it, convert back to string
     originalast = compile(clientcode, "<string>", "exec", _ast.PyCF_ONLY_AST)
-    newast = ProxyGen(objectname).visit(originalast)
+    newast = ProxyGen(objectname, securitytoken).visit(originalast)
     return codegen.to_source(newast)
 
