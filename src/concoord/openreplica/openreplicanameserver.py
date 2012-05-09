@@ -89,13 +89,10 @@ class OpenReplicaNameserver(Nameserver):
     def txtresponse_subdomain(self, question):
         txtstr = ''
         for subdomain in self.object.getsubdomains():
-            print subdomain
             subdomain = subdomain.strip('.')
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
                 for nodetype,nodes in self.object.getnodes(subdomain).iteritems():
-                    print nodetype, nodes
                     for node in nodes:
-                        print node
                         txtstr += node_names[nodetype] + ' ' + node + ';'
         return txtstr
 
