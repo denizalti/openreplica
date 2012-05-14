@@ -6,7 +6,7 @@
 from time import strftime, gmtime
 from concoord.nameserver import *
 
-OPENREPLICANS = {'ns1.openreplica.org.':'128.84.154.110', 'ns2.openreplica.org.':'128.84.154.115', 'ns3.openreplica.org.':'128.84.154.126'} 
+OPENREPLICANS = {'ns1.openreplica.org.':'128.84.154.110', 'ns2.openreplica.org.':'128.84.154.115'} 
 
 VIEWCHANGEFUNCTIONS = ['addnodetosubdomain','delnodefromsubdomain','delsubdomain']
 
@@ -56,9 +56,10 @@ class OpenReplicaNameserver(Nameserver):
         yield question.name.split(4)[0].to_text()
 
     def aresponse_ns(self, question):
-        # Asking for ns1/ns2.openreplica.org
+        # Asking for ns1/ns2/ns3.openreplica.org
         # Respond with corresponding addr
         for nsdomain,nsaddr in OPENREPLICANS.iteritems():
+            print nsdomain, nsaddr
             if dns.name.Name(nsdomain.split(".")) == question.name:
                 yield nsaddr
 
