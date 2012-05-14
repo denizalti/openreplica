@@ -183,8 +183,8 @@ class OpenReplicaNameserver(Nameserver):
                 response = dns.message.from_text(responsestr)
             else:
                 # This Query is not something I know how to respond to
-                self.logger.write("DNS State", "Name Error, %s" %str(question))
-                response.flags = QR + AA + dns.rcode.NXDOMAIN
+                self.logger.write("DNS State", "UNSUPPORTED QUERY, %s" %str(question))
+                return
         self.logger.write("DNS State", "RESPONSE:\n%s\n---\n" % str(response))
         try:
             self.udpsocket.sendto(response.to_wire(), addr)

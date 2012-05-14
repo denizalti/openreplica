@@ -182,8 +182,8 @@ class Nameserver(Replica):
                                                    authority='',additional='')
                 response = dns.message.from_text(responsestr)
             else:
-                self.logger.write("DNS State", "Name Error, %s" %str(question))
-                response.flags = QR + AA + dns.rcode.NXDOMAIN
+                self.logger.write("DNS State", "UNSUPPORTED QUERY, %s" %str(question))
+                return
         self.logger.write("DNS State", "RESPONSE:\n%s\n---\n" % str(response))
         try:
             self.udpsocket.sendto(response.to_wire(), addr)
