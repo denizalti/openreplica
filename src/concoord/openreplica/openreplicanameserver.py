@@ -59,7 +59,6 @@ class OpenReplicaNameserver(Nameserver):
         # Asking for ns1/ns2/ns3.openreplica.org
         # Respond with corresponding addr
         for nsdomain,nsaddr in OPENREPLICANS.iteritems():
-            print nsdomain, nsaddr
             if dns.name.Name(nsdomain.split(".")) == question.name:
                 yield nsaddr
 
@@ -106,6 +105,11 @@ class OpenReplicaNameserver(Nameserver):
                     yield addr+self.ipconverter,int(port)
 
     def should_answer(self, question):
+        print question.name
+        print "ISMYDOMAINNAME: ", self.ismydomainname(question)
+        print "ISMYSUBDOMAINNAME: ", self.ismysubdomainname(question)
+        print "SPECIAL DOMAIN: ", question.name.is_subdomain(self.specialdomain)
+        print "NS NAME: ", self.ismynsname(question)
         formyname = (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV or question.rdtype == dns.rdatatype.MX or question.rdtype == dns.rdatatype.SOA) and self.ismydomainname(question)
         formysubdomainname = (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV or question.rdtype == dns.rdatatype.SOA) and self.ismysubdomainname(question)
         myresponsibility_a = question.rdtype == dns.rdatatype.A and (self.ismynsname(question) or question.name.is_subdomain(self.specialdomain))
@@ -113,13 +117,14 @@ class OpenReplicaNameserver(Nameserver):
         return formyname or formysubdomainname or myresponsibility_a or myresponsibility_ns
 
     def should_auth(self, question):
-        return (question.rdtype == dns.rdatatype.AAAA or question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.SRV) and self.ismysubdomainname(question)
+        return (question.rdtype == dns.rdatatype.AAAA or question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.SRV) and self.ismysubdomainname(question) or (question.rdtype == dns.rdatatype.AAAA and (self.ismydomainname(question) or self.ismysubdomainname(question) or question.name.is_subdomain(self.specialdomain)))
 
     def handle_query(self, data, addr):
         query = dns.message.from_wire(data)
         response = dns.message.make_response(query)
         for question in query.question:
             self.logger.write("DNS State", "Received Query for %s\n" % question.name)
+            self.logger.write("DNS State", "Received Query %s\n" % question)
             if self.should_answer(question):
                 flagstr = 'QR AA' # response, authoritative
                 answerstr = ''

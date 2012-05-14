@@ -142,7 +142,8 @@ class Nameserver(Replica):
         return question.name == self.mydomain or (question.rdtype == dns.rdatatype.SRV and question.name == self.mysrvdomain)
 
     def should_answer(self, question):
-        return (question.rdtype == dns.rdatatype.A or \
+        return (question.rdtype == dns.rdatatype.AAAA or \
+                    question.rdtype == dns.rdatatype.A or \
                     question.rdtype == dns.rdatatype.TXT or \
                     question.rdtype == dns.rdatatype.NS or \
                     question.rdtype == dns.rdatatype.SRV or \
@@ -158,7 +159,9 @@ class Nameserver(Replica):
                 self.logger.write("DNS State", "Query for my domain: %s" % str(question))
                 flagstr = 'QR AA' # response, authoritative
                 answerstr = ''
-                if question.rdtype == dns.rdatatype.A:
+                if question.rdtype == dns.rdatatype.AAAA:
+                    flagstr = 'QR' # response
+                elif question.rdtype == dns.rdatatype.A:
                     # A Queries --> List all Replicas starting with the Leader
                     for address in self.aresponse(question):
                         answerstr += self.create_answer_section(question, addr=address)
