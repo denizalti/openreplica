@@ -113,7 +113,7 @@ class OpenReplicaNameserver(Nameserver):
         return formyname or formysubdomainname or myresponsibility_a or myresponsibility_ns
 
     def should_auth(self, question):
-        return (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.SRV) and self.ismysubdomainname(question)
+        return (question.rdtype == dns.rdatatype.AAAA or question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.SRV) and self.ismysubdomainname(question)
 
     def handle_query(self, data, addr):
         query = dns.message.from_wire(data)
