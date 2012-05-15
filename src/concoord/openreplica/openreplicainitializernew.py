@@ -27,6 +27,7 @@ parser.add_option("-o", "--configpath", action="store", dest="configpath", defau
 parser.add_option("-t", "--token", action="store", dest="token", default='', help="unique security token")
 (options, args) = parser.parse_args()
 
+NODE_BOOTSTRAP = 5
 CONCOORDPATH = 'concoord/src/concoord/'
 
 try:
@@ -107,6 +108,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
         os._exit()
     processnames = []
 
+    success = False
     # locate the PlanetLab node for bootstrap, check the node, upload object and start the node
     while not success:
         bootstrap = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
@@ -116,11 +118,12 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             continue
         # Object upload is done.
         port = random.randint(14000, 15000)
-        p = bootstrap.executecommandone(bootstrap.getHosts()[0], get_startup_cmd(NODE_BOOTSTRAP, node, port, clientobjectfilename, classname), False)
+        node = bootstrap.getHosts()[0]
+        p = bootstrap.executecommandone(node, get_startup_cmd(NODE_BOOTSTRAP, node, port, clientobjectfilename, classname), False)
         numtries = 0
         while terminated(p) and numtries < 5:
             port = random.randint(14000, 15000)
-            p = bootstrap.executecommandone(bootstrap.getHosts()[0], get_startup_cmd(NODE_BOOTSTRAP, node, port, clientobjectfilename, classname), False)
+            p = bootstrap.executecommandone(node, get_startup_cmd(NODE_BOOTSTRAP, node, port, clientobjectfilename, classname), False)
             numtries += 1
         if numtries == 5:
             success = False
@@ -132,6 +135,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
 
     # locate the PlanetLab node for replicas, check the nodes, upload object and start the nodes
     for i in range(numreplicas-1):
+        success = False
         while not success:
             replica = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
             print "Uploading object file.."
@@ -140,6 +144,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
                 continue
             # Object upload is done.
             port = random.randint(14000, 15000)
+            node = replica.getHosts()[0]
             p = replica.executecommandone(replica.getHosts()[0], get_startup_cmd(NODE_REPLICA, node, port, clientobjectfilename, classname, bootstrapname), False)
             numtries = 0
             while terminated(p) and numtries < 5:
@@ -156,6 +161,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
     
     # locate the PlanetLab node for acceptors, check the nodes, upload object and start the nodes
     for i in range(numacceptors):
+        success = False
         while not success:
             acceptor = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
             print "Uploading object file.."
@@ -164,6 +170,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
                 continue
             # Object upload is done.
             port = random.randint(14000, 15000)
+            node = acceptor.getHosts()[0]
             p = acceptor.executecommandone(acceptor.getHosts()[0], get_startup_cmd(NODE_ACCEPTOR, node, port, clientobjectfilename, bootstrapname=bootstrapname), False)
             numtries = 0
             while terminated(p) and numtries < 5:
@@ -182,6 +189,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
     master = 'openreplica.org'
     # locate the PlanetLab node for nameservers, check the nodes, upload object and start the nodes
     for i in range(numnameservers):
+        success = False
         while not success:
             nameserver = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
             print "Uploading object file.."
@@ -190,6 +198,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
                 continue
             # Object upload is done.
             port = random.randint(14000, 15000)
+            node = nameserver.getHosts()[0]
             p = nameserver.executecommandone(nameserver.getHosts()[0], get_startup_cmd(NODE_NAMESERVER, node, port, clientobjectfilename, classname, bootstrapname, subdomain, servicetype, master), False)
             numtries = 0
             while terminated(p) and numtries < 5:
@@ -213,6 +222,15 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
         print "- ",  node_names[nodetype] , "| ", node
         nameservercoordobj.addnodetosubdomain(subdomain, nodetype, node)
     return bootstrapname
+
+def terminated(p):
+    i = 5
+    done = p.poll() is not None
+    while not done and i>0: # Not terminated yet                                                                                                                                  
+        sleep(1)
+        i -= 1
+        done = p.poll() is not None
+    return done
     
 def main():
     with open(options.objectfilepath, 'rU') as fd:
