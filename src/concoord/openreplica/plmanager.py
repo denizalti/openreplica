@@ -64,7 +64,6 @@ class PLConnection():
         return self._waitforall([p], timeout)
 
     def _issuecommand(self, cmd):
-        print cmd
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         return p
 
