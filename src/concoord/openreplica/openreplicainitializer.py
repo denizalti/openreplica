@@ -46,6 +46,7 @@ def check_object(clientcode):
     return v.safe
 
 # checks if a PL node is suitable for running a nameserver
+# this is only required for Nameserver nodes in MASTER mode
 def check_planetlab_dnsport(plconn, node):
     print "Uploading DNS tester to ", node
     pathtodnstester = CONCOORD_HELPERDIR+'testdnsport.py'
@@ -109,9 +110,11 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
     print "--- Bootstrap Replica ---"
     port = random.randint(14000, 15000)
     p = bootstrap.executecommandone(bootstrap.getHosts()[0], "nohup "+ NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -l %s" % (bootstrap.getHosts()[0], port, clientobjectfilename, classname, LOGGERNODE), False)
-    while terminated(p):
+    numtries = 0
+    while terminated(p) and numtries < 5:
         port = random.randint(14000, 15000)
         p = bootstrap.executecommandone(bootstrap.getHosts()[0], "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -l %s" % (bootstrap.getHosts()[0], port, clientobjectfilename, classname, LOGGERNODE), False)
+        numtries += 1
     bootstrapname = bootstrap.getHosts()[0]+':'+str(port)
     processnames.append((NODE_REPLICA, bootstrapname))
     print bootstrapname

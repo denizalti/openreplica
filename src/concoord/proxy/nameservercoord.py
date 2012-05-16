@@ -30,8 +30,8 @@ class NameserverCoord:
     def getsubdomains(self):
         return self.proxy.invoke_command('getsubdomains')
 
-    def _reinstantiatefromstr(self, state):
-        return self.proxy.invoke_command('_reinstantiatefromstr', state)
+    def _reinstantiate(self, state):
+        return self.proxy.invoke_command('_reinstantiate', state)
 
     def __str__(self):
         return self.proxy.invoke_command('__str__')
