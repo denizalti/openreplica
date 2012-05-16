@@ -52,7 +52,7 @@ class NameserverCoord():
     def getsubdomains(self, **kwargs):
         return self._nodes.keys()
 
-    def _reinstantiatefromstr(self, state, **kwargs):
+    def _reinstantiate(self, state, **kwargs):
         self._nodes = {}
         for subdomain,nodes in pairwise(state.split(';')):
             self._nodes[subdomain] = {}

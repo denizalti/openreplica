@@ -6,7 +6,7 @@
 from time import strftime, gmtime
 from concoord.nameserver import *
 
-OPENREPLICANS = {'ns1.openreplica.org.':'128.84.154.110', 'ns2.openreplica.org.':'128.232.103.201', 'ns3.openreplica.org.':'128.112.139.43', 'ns4.openreplica.org.':'128.208.4.197', 'ns5.openreplica.org.':'139.19.142.2'} 
+OPENREPLICANS = {'ns1.openreplica.org.':'128.84.154.110', 'ns2.openreplica.org.':'128.84.154.115'} 
 
 VIEWCHANGEFUNCTIONS = ['addnodetosubdomain','delnodefromsubdomain','delsubdomain']
 
@@ -56,7 +56,7 @@ class OpenReplicaNameserver(Nameserver):
         yield question.name.split(4)[0].to_text()
 
     def aresponse_ns(self, question):
-        # Asking for ns1/ns2.openreplica.org
+        # Asking for ns1/ns2/ns3.openreplica.org
         # Respond with corresponding addr
         for nsdomain,nsaddr in OPENREPLICANS.iteritems():
             if dns.name.Name(nsdomain.split(".")) == question.name:
@@ -89,13 +89,10 @@ class OpenReplicaNameserver(Nameserver):
     def txtresponse_subdomain(self, question):
         txtstr = ''
         for subdomain in self.object.getsubdomains():
-            print subdomain
             subdomain = subdomain.strip('.')
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
                 for nodetype,nodes in self.object.getnodes(subdomain).iteritems():
-                    print nodetype, nodes
                     for node in nodes:
-                        print node
                         txtstr += node_names[nodetype] + ' ' + node + ';'
         return txtstr
 
@@ -108,6 +105,11 @@ class OpenReplicaNameserver(Nameserver):
                     yield addr+self.ipconverter,int(port)
 
     def should_answer(self, question):
+        print question.name
+        print "ISMYDOMAINNAME: ", self.ismydomainname(question)
+        print "ISMYSUBDOMAINNAME: ", self.ismysubdomainname(question)
+        print "SPECIAL DOMAIN: ", question.name.is_subdomain(self.specialdomain)
+        print "NS NAME: ", self.ismynsname(question)
         formyname = (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV or question.rdtype == dns.rdatatype.MX or question.rdtype == dns.rdatatype.SOA) and self.ismydomainname(question)
         formysubdomainname = (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV or question.rdtype == dns.rdatatype.SOA) and self.ismysubdomainname(question)
         myresponsibility_a = question.rdtype == dns.rdatatype.A and (self.ismynsname(question) or question.name.is_subdomain(self.specialdomain))
@@ -115,13 +117,14 @@ class OpenReplicaNameserver(Nameserver):
         return formyname or formysubdomainname or myresponsibility_a or myresponsibility_ns
 
     def should_auth(self, question):
-        return (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.SRV) and self.ismysubdomainname(question)
+        return (question.rdtype == dns.rdatatype.AAAA or question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.SRV) and self.ismysubdomainname(question) or (question.rdtype == dns.rdatatype.AAAA and (self.ismydomainname(question) or self.ismysubdomainname(question) or question.name.is_subdomain(self.specialdomain)))
 
     def handle_query(self, data, addr):
         query = dns.message.from_wire(data)
         response = dns.message.make_response(query)
         for question in query.question:
             self.logger.write("DNS State", "Received Query for %s\n" % question.name)
+            self.logger.write("DNS State", "Received Query %s\n" % question)
             if self.should_answer(question):
                 flagstr = 'QR AA' # response, authoritative
                 answerstr = ''
@@ -185,8 +188,8 @@ class OpenReplicaNameserver(Nameserver):
                 response = dns.message.from_text(responsestr)
             else:
                 # This Query is not something I know how to respond to
-                self.logger.write("DNS State", "Name Error, %s" %str(question))
-                response.flags = QR + AA + dns.rcode.NXDOMAIN
+                self.logger.write("DNS State", "UNSUPPORTED QUERY, %s" %str(question))
+                return
         self.logger.write("DNS State", "RESPONSE:\n%s\n---\n" % str(response))
         try:
             self.udpsocket.sendto(response.to_wire(), addr)
