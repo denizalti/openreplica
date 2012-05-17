@@ -111,9 +111,12 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
     success = False
     # locate the PlanetLab node for bootstrap, check the node, upload object and start the node
     while not success:
-        bootstrap = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
-        print "Uploading object file.."
-        success = bootstrap.uploadall(fixedfile.name, CONCOORDPATH + clientobjectfilename)
+        try:
+            bootstrap = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
+            print "Uploading object file.."
+            success = bootstrap.uploadall(fixedfile.name, CONCOORDPATH + clientobjectfilename)
+        except:
+            success = False
         if not success:
             continue
         # Object upload is done.
@@ -137,9 +140,12 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
     for i in range(numreplicas-1):
         success = False
         while not success:
-            replica = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
-            print "Uploading object file.."
-            success = replica.uploadall(fixedfile.name, CONCOORDPATH + clientobjectfilename)
+            try:
+                replica = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
+                print "Uploading object file.."
+                success = replica.uploadall(fixedfile.name, CONCOORDPATH + clientobjectfilename)
+            except:
+                success = False
             if not success:
                 continue
             # Object upload is done.
@@ -163,9 +169,12 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
     for i in range(numacceptors):
         success = False
         while not success:
-            acceptor = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
-            print "Uploading object file.."
-            success = acceptor.uploadall(fixedfile.name, CONCOORDPATH + clientobjectfilename)
+            try:
+                acceptor = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
+                print "Uploading object file.."
+                success = acceptor.uploadall(fixedfile.name, CONCOORDPATH + clientobjectfilename)
+            except:
+                success = False
             if not success:
                 continue
             # Object upload is done.
@@ -191,9 +200,12 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
     for i in range(numnameservers):
         success = False
         while not success:
-            nameserver = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
-            print "Uploading object file.."
-            success = nameserver.uploadall(fixedfile.name, CONCOORDPATH + clientobjectfilename)
+            try:
+                nameserver = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
+                print "Uploading object file.."
+                success = nameserver.uploadall(fixedfile.name, CONCOORDPATH + clientobjectfilename)
+            except:
+                success = False
             if not success:
                 continue
             # Object upload is done.
