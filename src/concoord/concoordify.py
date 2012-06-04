@@ -15,6 +15,7 @@ parser = OptionParser(usage="usage: %prog -f objectfilepath -c classname -s safe
 parser.add_option("-f", "--objectfilepath", action="store", dest="objectfilepath", help="client object file path")
 parser.add_option("-c", "--classname", action="store", dest="classname", help="main class name")
 parser.add_option("-s", "--safe", action="store_true", dest="safe", default=False, help="safety checking on/off")
+parser.add_option("-t", "--token", action="store", dest="securitytoken", default=None, help="security token")
 (options, args) = parser.parse_args()
 
 def check_object(clientcode):
@@ -32,9 +33,11 @@ def main():
             if not check_object(clientcode):
                 print "Object is not safe to execute."
                 os._exit(1)
-        fixedfile = editproxyfile(options.objectfilepath, options.classname)
+        fixedfile = editproxyfile(options.objectfilepath, options.classname,
+                                  options.securitytoken)
         print "Fixed server-side object: ", fixedfile.name
-        clientproxycode = createclientproxy(clientcode, options.classname, None)
+        clientproxycode = createclientproxy(clientcode, options.classname,
+                                            options.securitytoken)
         clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
         proxyfile = open(options.objectfilepath+"proxy", 'w')
         proxyfile.write(clientproxycode)
