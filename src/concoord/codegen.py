@@ -297,10 +297,15 @@ class SourceGenerator(NodeVisitor):
     def visit_Delete(self, node):
         self.newline(node)
         self.write('del ')
-        for idx, target in enumerate(node):
-            if idx:
-                self.write(', ')
-            self.visit(target)
+        if hasattr(node, 'targets'):
+            for idx, target in enumerate(node.targets):
+                if idx:
+                    self.write(', ')
+        else:
+            for idx, target in enumerate(node):
+                if idx:
+                    self.write(', ')
+                self.visit(target)
 
     def visit_TryExcept(self, node):
         self.newline(node)
