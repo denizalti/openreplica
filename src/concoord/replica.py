@@ -28,8 +28,12 @@ class Replica(Node):
             self.object = None
             for objectloc in ['concoord.'+self.objectfilename[:-3], 'concoord.object.'+self.objectfilename[:-3], self.objectfilename[:-3]]:
                 try:
-                    if hasattr(__import__(objectloc, globals(), locals(), [self.objectfilename[:-3]], -1), self.objectname):
-                        self.object = getattr(__import__(objectloc, globals(), locals(), [self.objectfilename[:-3]], -1), self.objectname)()
+                    ip = objectloc.split('.')
+                    mod = __import__(objectloc, {}, {}, [])
+                    for module in ip[1:]:
+                        mod = getattr(mod, module, None)
+                    if hasattr(mod, self.objectname):
+                        self.object = getattr(mod, self.objectname)()
                         break
                 except ImportError as e:
                     continue
