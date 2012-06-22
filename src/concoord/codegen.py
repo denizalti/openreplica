@@ -328,7 +328,8 @@ class SourceGenerator(NodeVisitor):
     def visit_Return(self, node):
         self.newline(node)
         self.write('return ')
-        self.visit(node.value)
+        if node.value is not None:
+            self.visit(node.value)
 
     def visit_Break(self, node):
         self.newline(node)
