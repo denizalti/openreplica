@@ -153,7 +153,7 @@ class Replica(Node):
                 # Watch out for the lock release and acquire!
                 self.lock.release()
                 try:
-                    givenresult = method(*commandargs)
+                    givenresult = method(*commandargs, _concoord_command=command)
                     clientreplycode = CR_OK
                     send_result_to_client = True
                 except BlockingReturn as blockingretexp:
@@ -593,7 +593,7 @@ class Replica(Node):
         try:
             method = getattr(self.object, commandname)
             try:
-                givenresult = method(*commandargs)
+                givenresult = method(*commandargs, _concoord_command=command)
                 clientreplycode = CR_OK
                 send_result_to_client = True
             except BlockingReturn as blockingretexp:
