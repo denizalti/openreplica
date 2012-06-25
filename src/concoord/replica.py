@@ -3,6 +3,7 @@
 @note: The Replica keeps an object and responds to Perform messages received from the Leader.
 @copyright: See LICENSE
 '''
+import inspect
 import math, random, time
 import os, sys
 import signal
@@ -106,6 +107,16 @@ class Replica(Node):
         leaderping_thread.name = 'LeaderPingThread'
         leaderping_thread.start()
 
+    @staticmethod
+    def _apply_args_to_method(method, args, _concoord_command):
+        argspec = inspect.getargspec(method)
+        if argspec.args and argspec.args[-1] == '_concoord_command':
+            return method(*args, _concoord_command=_concoord_command)
+        elif argspec.keywords is not None:
+            return method(*args, _concoord_command=_concoord_command)
+        else:
+            return method(*args)
+
     def performcore(self, msg, slotnumber, dometaonly=False, designated=False):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
@@ -153,7 +164,7 @@ class Replica(Node):
                 # Watch out for the lock release and acquire!
                 self.lock.release()
                 try:
-                    givenresult = method(*commandargs, _concoord_command=command)
+                    givenresult = self._apply_args_to_method(method, commandargs, command)
                     clientreplycode = CR_OK
                     send_result_to_client = True
                 except BlockingReturn as blockingretexp:
@@ -593,7 +604,7 @@ class Replica(Node):
         try:
             method = getattr(self.object, commandname)
             try:
-                givenresult = method(*commandargs, _concoord_command=command)
+                givenresult = self._apply_args_to_method(method, commandargs, command)
                 clientreplycode = CR_OK
                 send_result_to_client = True
             except BlockingReturn as blockingretexp:
