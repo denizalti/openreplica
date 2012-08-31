@@ -11,7 +11,7 @@ import inspect, types, string
 class ProxyGen(ast.NodeTransformer):
     def __init__(self, objectname, securitytoken=None):
         self.objectname = objectname
-        self.inourobject = False
+        self.classdepth = 0
         self.token = securitytoken
 
     def generic_visit(self, node):
@@ -30,18 +30,23 @@ class ProxyGen(ast.NodeTransformer):
         return self.generic_visit(node)
 
     def visit_ClassDef(self, node):
-        self.inourobject = (node.name == self.objectname)
-        if self.inourobject:
+        selectedclass = node.name == self.objectname
+        if selectedclass or self.classdepth:
+            self.classdepth += 1
+        if self.classdepth == 1:
             for item in node.body:
                 if type(item) == _ast.FunctionDef and item.name == "__init__":
                     item.name = "__concoordinit__"
             # Add the new init method
             initfunc = compile("def __init__(self, bootstrap):\n\tself.proxy = ClientProxy(bootstrap, token=\"%s\")" % self.token,"<string>","exec",_ast.PyCF_ONLY_AST).body[0]
             node.body.insert(0, initfunc)
-        return self.generic_visit(node)
+        ret = self.generic_visit(node)
+        if selectedclass or self.classdepth:
+            self.classdepth -= 1
+        return ret
 
     def visit_FunctionDef(self, node):
-        if self.inourobject:
+        if self.classdepth == 1:
             if node.name == "__init__":
                 pass
             elif node.name == "__concoordinit__":
