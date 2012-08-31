@@ -309,7 +309,7 @@ class Replica(Node):
             self.groups[msg.source.type].add(msg.source)
             # Agree with other Replicas about adding this acceptor
             addcommand = self.create_add_command(msg.source)
-            self.check_leader_promotion()
+            self.update_leader()
             self.initiate_command(addcommand)
             for i in range(WINDOW):
                 noopcommand = self.create_noop_command()
@@ -318,7 +318,7 @@ class Replica(Node):
             if self.isleader:
                 self.logger.write("State", "Adding the new node")
                 addcommand = self.create_add_command(msg.source)
-                self.check_leader_promotion()
+                self.update_leader()
                 self.initiate_command(addcommand)
                 self.logger.write("State", "Add command created: %s" % str(addcommand))
                 for i in range(WINDOW+3):
@@ -448,7 +448,7 @@ class Replica(Node):
                 minpeer = self.groups[NODE_REPLICA].members[0]
         return minpeer
         
-    def check_leader_promotion(self):
+    def update_leader(self):
         """checks which node is the leader and changes the state of the caller if necessary"""
         chosenleader = self.find_leader()
         self.logger.write("State", "Chosen LEADER: %s" % str(chosenleader))
@@ -525,7 +525,7 @@ class Replica(Node):
         -- if it has not been executed yet send INPROGRESS
         - if this request has not been received before initiate a Paxos round for the command"""
         if not self.isleader:
-            self.logger.write("Error", "!!! Shouldn't have come here: Called to handle client command but not Leader.")
+            self.logger.write("Error", "Shouldn't have come here: Called to handle client command but not Leader.")
             clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_REJECTED, inresponseto=givencommand.clientcommandnumber)
             self.logger.write("State", "Rejecting clientrequest: %s" % str(clientreply))
             conn = self.clientpool.get_connection_by_peer(givencommand.client)
@@ -578,15 +578,16 @@ class Replica(Node):
             self.logger.write("Error", "NAMESERVER got a CLIENTREQUEST")
             return
         # Check to see if Leader
-        self.check_leader_promotion()
+        self.update_leader()
         if not self.isleader:
-            self.logger.write("State", "Not Leader: Rejecting CLIENTREQUEST")
-            clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_REJECTED, inresponseto=msg.command.clientcommandnumber)
-            self.logger.write("State", "Clientreply: %s\nAcceptors: %s" % (str(clientreply),str(self.groups[NODE_ACCEPTOR])))
-            conn.send(clientreply)
             # Check the Leader to see if the Client had a reason to think that we are the leader
-            self.ping_leader_once()
-            return
+            if self.leader_is_alive():
+                self.logger.write("State", "Not Leader: Rejecting CLIENTREQUEST")
+                clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_REJECTED, inresponseto=msg.command.clientcommandnumber)
+                self.logger.write("State", "Clientreply: %s\nAcceptors: %s" % (str(clientreply),str(self.groups[NODE_ACCEPTOR])))
+                conn.send(clientreply)
+                return
+            self.update_leader()
         # Leader should accept a request even if it's not ready as this way it will make itself ready during the prepare stage.
         if self.isleader:
             self.clientpool.add_connection_to_peer(msg.source, conn)
@@ -887,24 +888,23 @@ class Replica(Node):
             if currentleader != self.me:
                 self.logger.write("State", "Sending PING to %s" % currentleader)
                 pingmessage = HandshakeMessage(MSG_PING, self.me)
-                try:
-                    self.send(pingmessage, peer=currentleader)
-                except:
+                success = self.send(pingmessage, peer=currentleader)
+                if success < 0:
                     self.logger.write("State", "Leader not responding, removing current leader from the replicalist")
                     self.groups[NODE_REPLICA].remove(currentleader)
             time.sleep(LIVENESSTIMEOUT)
 
-    def ping_leader_once(self):
+    def leader_is_alive(self):
         currentleader = self.find_leader()
         if currentleader != self.me:
             self.logger.write("State", "Sending PING to %s" % currentleader)
             pingmessage = HandshakeMessage(MSG_PING, self.me)
-            try:
-                self.send(pingmessage, peer=currentleader)
-            except:
-                # XXX Isn't this too harsh?
+            success = self.send(pingmessage, peer=currentleader)
+            if success < 0:
                 self.logger.write("State", "Leader not reachable, removing current leader from the replicalist")
                 self.groups[NODE_REPLICA].remove(currentleader)
+                return False
+        return True
 
     def create_delete_command(self, node):
         mynumber = self.metacommandnumber
