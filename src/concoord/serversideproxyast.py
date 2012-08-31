@@ -26,7 +26,7 @@ class ServerVisitor(ast.NodeVisitor):
 
     def getfunctionsofclass(self, node):
         for functiondef in node.body:
-            if functiondef.name == "__init__":
+            if hasattr(functiondef, 'name') and functiondef.name == "__init__":
                 self.initline = functiondef.lineno
             self.functionstofix[functiondef.lineno] = functiondef
             
