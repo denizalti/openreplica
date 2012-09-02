@@ -3,6 +3,7 @@
 @note: A Group is a collection of peers that perform the same function
 @copyright: See LICENSE
 """
+from operator import attrgetter
 from threading import RLock
 from concoord.connection import *
 from concoord.enums import *
@@ -23,21 +24,25 @@ class Group():
         """Removes the given peer from the Group."""
         if peer in self.members:
             self.members.remove(peer)
-            self.members.sort()
+            self.sort()
 
     def add(self,peer):
         """Adds the given peer to the Group if it's not the owner itself."""
         if peer != self.owner:
             if peer not in self.members:
                 self.members.append(peer)
-                self.members.sort()
+                self.sort()
 
     def union(self,othergroup):
         """Adds the given Group to this one."""
         for peer in othergroup.members:
             if peer not in self.members:
                 self.members.append(peer)
-        self.members.sort()
+        self.sort()
+
+    def sort(self):
+        self.members = sorted(self.members, key=attrgetter('addr'))
+        self.members = sorted(self.members, key=attrgetter('port'))
 
     def haspeer(self,peer):
         return peer in self.members

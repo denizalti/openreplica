@@ -442,11 +442,9 @@ class Replica(Node):
             
     def find_leader(self):
         """returns the minimum peer as the leader"""
-        minpeer =  self.me
         if len(self.groups[NODE_REPLICA].members) > 0:
-            if self.groups[NODE_REPLICA].members[0] < minpeer:
-                minpeer = self.groups[NODE_REPLICA].members[0]
-        return minpeer
+            return self.groups[NODE_REPLICA].members[0]
+        return self.me
         
     def update_leader(self):
         """checks which node is the leader and changes the state of the caller if necessary"""
