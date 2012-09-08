@@ -134,8 +134,12 @@ class Nameserver(Replica):
         txtstr = ''
         for groupname,group in self.groups.iteritems():
             for peer in group:
-                txtstr += node_names[peer.type] +' '+ peer.addr + ':' + str(peer.port) + ';'
-        txtstr += node_names[self.type] +' '+ self.addr + ':' + str(self.port)
+                new = node_names[peer.type] +' '+ peer.addr + ':' + str(peer.port) + ';'
+                if (len(txtstr) + len(new)) < 255: 
+                    txtstr += new
+        new = node_names[self.type] +' '+ self.addr + ':' + str(self.port)
+        if (len(txtstr) + len(new)) < 255:
+            txtstr += new
         return txtstr
 
     def ismydomainname(self, question):
@@ -183,7 +187,12 @@ class Nameserver(Replica):
                                                    rcode=dns.rcode.NOERROR,flags=flagstr,
                                                    question=question.to_text(),answer=answerstr,
                                                    authority='',additional='')
-                response = dns.message.from_text(responsestr)
+                try:
+                    response = dns.message.from_text(responsestr)
+                except:
+                    self.logger.write("DNS Error", "MALFORMED RESPONSE, %s" %str(response))
+                    return
+                    
             else:
                 self.logger.write("DNS State", "UNSUPPORTED QUERY, %s" %str(question))
                 return
