@@ -659,17 +659,21 @@ class Replica(Node):
         self.add_to_proposals(givencommandnumber, givenproposal)
         recentballotnumber = self.ballotnumber
         self.logger.write("State", "Proposing command: %d:%s with ballotnumber %s" % (givencommandnumber,givenproposal,str(recentballotnumber)))
-        # Since we never propose a commandnumber that is beyond the window, we can simply use the current acceptor set here
-        prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber, givencommandnumber, givenproposal)
+        # Since we never propose a commandnumber that is beyond the window,
+        # we can simply use the current acceptor set here
+        prc = ResponseCollector(self.groups[NODE_ACCEPTOR], recentballotnumber,
+                                givencommandnumber, givenproposal)
         if len(prc.acceptors) == 0:
             self.logger.write("Error", "There are no Acceptors, returning!")
             self.remove_from_proposals(givencommandnumber)
             self.add_to_pendingcommands(givencommandnumber, givenproposal)
             return
         self.outstandingproposes[givencommandnumber] = prc
-        propose = PaxosMessage(MSG_PROPOSE,self.me,recentballotnumber,commandnumber=givencommandnumber,proposal=givenproposal)
+        propose = PaxosMessage(MSG_PROPOSE, self.me, recentballotnumber,
+                               commandnumber=givencommandnumber,
+                               proposal=givenproposal)
         # the msgs sent may be less than the number of prc.acceptors if a connection to an acceptor is lost
-        msgids = self.send(propose,group=prc.acceptors)
+        msgids = self.send(propose, group=prc.acceptors)
         # add sent messages to the sent proposes
         prc.sent.extend(msgids)
                     
@@ -754,7 +758,7 @@ class Replica(Node):
                     newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, chosencommandnumber, chosenproposal)
                     self.outstandingproposes[chosencommandnumber] = newprc
                     propose = PaxosMessage(MSG_PROPOSE,self.me,prc.ballotnumber,commandnumber=chosencommandnumber,proposal=chosenproposal)
-                    self.send(propose,group=newprc.acceptors)
+                    self.send(propose, group=newprc.acceptors)
                 # As leader collected all proposals from acceptors its state is up-to-date and it is done initializing
                 self.leader_initializing = False
                 self.stateuptodate = True
@@ -830,11 +834,15 @@ class Replica(Node):
                             del self.outstandingmessages[msgid]
                     del self.outstandingproposes[msg.commandnumber]
                     # now we can perform this action on the replicas
-                    performmessage = PaxosMessage(MSG_PERFORM,self.me,commandnumber=prc.commandnumber,proposal=prc.proposal)
+                    performmessage = PaxosMessage(MSG_PERFORM, self.me,
+                                                  commandnumber=prc.commandnumber,
+                                                  proposal=prc.proposal)
                     try:
                         self.logger.write("Paxos State", "Sending PERFORM!")
-                        self.send(performmessage, group=self.groups[NODE_REPLICA])
-                        self.send(performmessage, group=self.groups[NODE_NAMESERVER])
+                        if len(self.groups[NODE_REPLICA]) > 0:
+                            self.send(performmessage, group=self.groups[NODE_REPLICA])
+                        if len(self.groups[NODE_NAMESERVER]) > 0:
+                            self.send(performmessage, group=self.groups[NODE_NAMESERVER])
                     except:
                         self.logger.write("Connection Error", "Couldn't send perform messages!")
                     self.perform(performmessage, designated=True)

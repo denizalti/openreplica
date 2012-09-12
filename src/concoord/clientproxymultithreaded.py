@@ -12,7 +12,7 @@ from concoord.exception import *
 from concoord.connection import ConnectionPool, Connection
 from concoord.group import Group
 from concoord.peer import Peer
-from concoord.message import ClientMessage, Message, PaxosMessage, HandshakeMessage, AckMessage
+from concoord.message import ClientMessage, Message, PaxosMessage, HandshakeMessage
 from concoord.command import Command
 from concoord.pvalue import PValue, PValueSet
 try:

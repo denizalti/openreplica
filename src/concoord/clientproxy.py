@@ -12,7 +12,7 @@ from concoord.exception import *
 from concoord.connection import ConnectionPool, Connection
 from concoord.group import Group
 from concoord.peer import Peer
-from concoord.message import ClientMessage, Message, PaxosMessage, HandshakeMessage, AckMessage
+from concoord.message import ClientMessage, Message, PaxosMessage, HandshakeMessage
 from concoord.command import Command
 from concoord.pvalue import PValue, PValueSet
 try:
@@ -41,7 +41,7 @@ class ClientProxy():
             raise ConnectionError("Cannot connect to any bootstrap")
         myaddr = findOwnIP()
         myport = self.socket.getsockname()[1]
-        self.me = Peer(myaddr,myport,NODE_CLIENT)
+        self.me = Peer(myaddr, myport, NODE_CLIENT)
         self.commandnumber = random.randint(1, sys.maxint)
 
         # synchronization

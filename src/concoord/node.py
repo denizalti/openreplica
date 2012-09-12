@@ -197,8 +197,8 @@ class Node():
         main_thread = Thread(target=self.handle_messages, name='MainThread')
         main_thread.start()
         # Start a thread that waits for inputs
-        #input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
-        #input_thread.start()
+        input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
+        input_thread.start()
         # Start a thread that pings neighbors
         timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
         timer_thread.name = 'PeriodicThread'
@@ -214,13 +214,6 @@ class Node():
             pending =  "".join("%d: %s" % (cno, proposal) for cno,proposal in self.pendingcommands.iteritems())
             groups = "%s\nPending:\n%s" % (groups, pending)
         return groups
-
-    def outstandingmsgstr(self):
-        returnstr = "outstandingmessages: time now is %s\n" % str(time.time())
-        with self.outstandingmessages_lock:
-            for messageid,messageinfo in self.outstandingmessages.iteritems():
-                returnstr += "[%s] %s\n" % (str(messageid),str(messageinfo))
-        return returnstr
     
     def server_loop(self):
         """Serverloop that listens to multiple connections and accepts new ones.
@@ -333,17 +326,6 @@ class Node():
         """Process message loop that takes messages out of the receivedmessages
         list and handles them.
         """
-        # check to see if it's an ack
-        if message.type == MSG_ACK:
-            #take it out of outstanding messages, but do not ack an ack
-            ackid = "%s+%d" % (self.id, message.ackid)
-            with self.outstandingmessages_lock:
-                if self.outstandingmessages.has_key(ackid):
-                    del self.outstandingmessages[ackid]
-            return True
-        elif message.type != MSG_CLIENTREQUEST and message.type != MSG_INCCLIENTREQUEST:
-            # Send ACK
-            connection.send(AckMessage(MSG_ACK,self.me,message.id))
         # find method and invoke it holding a lock
         mname = "msg_%s" % msg_names[message.type].lower()
         try:
@@ -396,11 +378,10 @@ class Node():
                     
     def cmd_state(self, args):
         """prints connectivity state of the corresponding Node."""
-        self.logger.write("State", "\n%s\n%s\n" % (self.statestr(), self.outstandingmsgstr()))
+        self.logger.write("State", "\n%s\n" % (self.statestr()))
 
     def periodic(self):
         """timer function that is responsible for periodic state maintenance
-        - resends messages that are in outstandingmessages and are older than ACKTIMEOUT.
         - sends MSG_HELO message to peers that it has not heard within LIVENESSTIMEOUT
         """
         while True:
@@ -408,23 +389,7 @@ class Node():
                 checkliveness = set()
                 for type,group in self.groups.iteritems():
                     checkliveness = checkliveness.union(group.members)
-            if RESEND:
-                try:
-                    with self.outstandingmessages_lock:
-                        msgs = self.outstandingmessages.values()
-                    for messageinfo in msgs:
-                        now = time.time()
-                        if messageinfo.timestamp + ACKTIMEOUT < now:
-                            if messageinfo.message.type != MSG_PING:
-                                self.logger.write("State", "re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
-                                self.send(messageinfo.message, peer=messageinfo.destination, isresend=True)
-                                self.add_retry(messageinfo.destination)
-                                messageinfo.timestamp = time.time()
-                        elif DO_PERIODIC_PINGS and (messageinfo.timestamp + LIVENESSTIMEOUT) < now and messageinfo.destination in checkliveness:
-                            checkliveness.remove(messageinfo.destination)
-                except Exception as e:
-                    self.logger.write("Connection Error", "exception in resend: %s" % e)
-            if DO_PERIODIC_PINGS:
+
                 for pingpeer in checkliveness:
                     # don't ping the peer if it has sent a message recently
                     if self.lastmessages[pingpeer] + LIVENESSTIMEOUT >= now:
@@ -442,8 +407,7 @@ class Node():
 
     def get_user_input_from_shell(self):
         """Shell loop that accepts inputs from the command prompt and 
-        calls corresponding command handlers.
-        """
+        calls corresponding command handlers."""
         while self.alive:
             try:
                 input = raw_input(">")
@@ -471,10 +435,6 @@ class Node():
             if connection == None:
                 self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
                 return -1
-            if not isresend:
-                msginfo = MessageInfo(message,peer,time.time())
-                with self.outstandingmessages_lock:
-                    self.outstandingmessages[message.fullid()] = msginfo
             connection.send(message)
             return message.id
         elif group:
@@ -485,9 +445,6 @@ class Node():
                 if connection == None:
                     self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
                     continue
-                msginfo = MessageInfo(message,peer,time.time())
-                with self.outstandingmessages_lock:
-                    self.outstandingmessages[message.fullid()] = msginfo
                 connection.send(message)
                 ids.append(message.id)
                 message = copy.copy(message)
