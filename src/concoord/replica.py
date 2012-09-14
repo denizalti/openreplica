@@ -274,7 +274,7 @@ class Replica(Node):
     def initiate_command(self, givenproposal):
         # Throughput test start
         self.throughput_test()
-        # Adding command pending commands
+        # Add command to pending commands
         givencommandnumber = self.find_commandnumber()
         self.add_to_pendingcommands(givencommandnumber, givenproposal)
         # Try issuing command
@@ -282,6 +282,8 @@ class Replica(Node):
 
     def issue_command(self, candidatecommandno):
         """propose a command from the pending commands"""
+        # batch all existing pending commands together
+        print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", len(self.pendingcommands)
         self.logger.write("State:", "issuing pending command")
         if self.pendingcommands.has_key(candidatecommandno):
             if self.active:
@@ -562,7 +564,8 @@ class Replica(Node):
             self.initiate_command(givencommand)
 
     def msg_clientrequest(self, conn, msg):
-        """handles clientrequest message received according to replica's state
+        """called holding self.lock
+        handles clientrequest message received according to replica's state
         - if not leader: reject
         - if leader: add connection to client connections and handle request"""
         try:
@@ -581,8 +584,12 @@ class Replica(Node):
             # Check the Leader to see if the Client had a reason to think that we are the leader
             if self.leader_is_alive():
                 self.logger.write("State", "Not Leader: Rejecting CLIENTREQUEST")
-                clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, replycode=CR_REJECTED, inresponseto=msg.command.clientcommandnumber)
-                self.logger.write("State", "Clientreply: %s\nAcceptors: %s" % (str(clientreply),str(self.groups[NODE_ACCEPTOR])))
+                clientreply = ClientReplyMessage(MSG_CLIENTREPLY,
+                                                 self.me,
+                                                 replycode=CR_REJECTED,
+                                                 inresponseto=msg.command.clientcommandnumber)
+                self.logger.write("State", "Clientreply: %s\nAcceptors: %s" % (str(clientreply),
+                                                                               str(self.groups[NODE_ACCEPTOR])))
                 conn.send(clientreply)
                 return
             self.update_leader()
