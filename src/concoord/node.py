@@ -86,9 +86,8 @@ class Node():
         self.retries_lock =RLock()
         self.retries = {}
         
+        # lock to synchronize message handling
         self.lock = Lock()
-        self.done = False
-        self.donecond = Condition()
 
         # create server socket and bind to a port
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
