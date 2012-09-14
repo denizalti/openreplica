@@ -49,7 +49,6 @@ class ClientProxy():
         self.token = token
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
 
         self.bootstraplist = self.discoverbootstrap(bootstrap)
         if len(self.bootstraplist) == 0:
@@ -140,8 +139,10 @@ class ClientProxy():
         return self.connecttobootstrap()
 
     def invoke_command(self, *args):
+        # create a request descriptor
         reqdesc = ReqDesc(self, args, self.token)
         with self.lock:
+            # append the request descriptor to the list of requests
             self.reqlist.append(reqdesc)
             self.ctrlsockets.send('a')
             while not reqdesc.replyvalid:
