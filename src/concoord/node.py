@@ -381,21 +381,19 @@ class Node():
         self.logger.write("State", "\n%s\n" % (self.statestr()))
 
     def periodic(self):
-        """timer function that is responsible for periodic state maintenance
-        - sends MSG_HELO message to peers that it has not heard within LIVENESSTIMEOUT
+        """timer function that is responsible for periodic state maintenance.
+        sends MSG_HELO to peers that it has not heard within LIVENESSTIMEOUT.
         """
         while True:
             if DO_PERIODIC_PINGS:
                 checkliveness = set()
                 for type,group in self.groups.iteritems():
-                    checkliveness = checkliveness.union(group.members)
-
-                for pingpeer in checkliveness:
-                    # don't ping the peer if it has sent a message recently
-                    if self.lastmessages[pingpeer] + LIVENESSTIMEOUT >= now:
-                        self.logger.write("State", "sending PING to %s" % pingpeer)
-                        pingmessage = HandshakeMessage(MSG_PING, self.me)
-                        self.send(pingmessage, peer=pingpeer)
+                    for pingpeer in group.members:
+                        # don't ping the peer if it has sent a message recently
+                        if self.lastmessages[pingpeer] + LIVENESSTIMEOUT >= now:
+                            self.logger.write("State", "sending PING to %s" % pingpeer)
+                            pingmessage = HandshakeMessage(MSG_PING, self.me)
+                            self.send(pingmessage, peer=pingpeer)
             time.sleep(ACKTIMEOUT)
 
     def add_retry(self, peer):

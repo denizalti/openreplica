@@ -273,7 +273,7 @@ class Replica(Node):
             
     def initiate_command(self, givenproposal):
         # Throughput test start
-        #self.throughput_test()
+        self.throughput_test()
         # Adding command pending commands
         givencommandnumber = self.find_commandnumber()
         self.add_to_pendingcommands(givencommandnumber, givenproposal)
