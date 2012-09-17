@@ -7,4 +7,6 @@ parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="addres
 # Test client
 t = Test(options.bootstrap)
 for i in range(10300):
-  t.getvalue()
+  if t.getvalue() != 10:
+    print "not the expected value!"
+
