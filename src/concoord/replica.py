@@ -165,6 +165,7 @@ class Replica(Node):
                 method = getattr(self.object, commandname)
                 # Watch out for the lock release and acquire!
                 self.lock.release()
+                self.throughput_test()
                 try:
                     givenresult = self._apply_args_to_method(method, commandargs, command)
                     clientreplycode = CR_OK
@@ -274,8 +275,6 @@ class Replica(Node):
         self.logger.write("State", "Returning from PERFORM!")
             
     def initiate_command(self, givenproposal):
-        # Throughput test start
-        self.throughput_test()
         # Add command to pending commands
         givencommandnumber = self.find_commandnumber()
         self.add_to_pendingcommands(givencommandnumber, givenproposal)
@@ -841,8 +840,6 @@ class Replica(Node):
                 self.logger.write("Paxos State", "got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts" % \
                        (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
                 if len(prc.received) >= prc.nquorum:
-                    # Throughput test
-                    self.throughput_test()
                     self.logger.write("Paxos State", "Agreed on %s" % prc.proposal) 
                     # take this response collector out of the outstanding propose set
                     self.add_to_proposals(prc.commandnumber, prc.proposal)
@@ -1004,7 +1001,7 @@ class Replica(Node):
         if self.throughput_runs == 1000:
             profile_on()
             self.throughput_start = time.time()
-        elif self.throughput_runs == 10101:
+        elif self.throughput_runs == 11000:
             profile_off()
             self.throughput_stop = time.time()
             totaltime = self.throughput_stop - self.throughput_start
