@@ -58,10 +58,7 @@ class ConnectionPool():
                 print "trying to delete a non-existent socket from the conn pool"
 
     def get_connection_by_peer(self, peer):
-        """Returns a Connection given corresponding Peer.
-        A new Connection is created and added to the
-        ConnectionPool if it doesn't exist.
-        """
+        """Returns a Connection given corresponding Peer."""
         with self.pool_lock:
             connectionkey = peer.getid()
             if self.poolbypeer.has_key(connectionkey):

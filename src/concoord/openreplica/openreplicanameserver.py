@@ -6,8 +6,8 @@
 from time import strftime, gmtime
 from concoord.nameserver import *
 
-OPENREPLICANS = {'ns1.openreplica.org.':'128.84.154.110', 'ns2.openreplica.org.':'128.84.154.115'} 
-
+OPENREPLICANS = {'ns1.openreplica.org.':'128.84.154.110', 'ns2.openreplica.org.':'128.84.154.40'} 
+OPENREPLICAWEBHOST = '128.84.154.110'
 VIEWCHANGEFUNCTIONS = ['addnodetosubdomain','delnodefromsubdomain','delsubdomain']
 
 class OpenReplicaNameserver(Nameserver):
@@ -49,6 +49,9 @@ class OpenReplicaNameserver(Nameserver):
             if question.name == dns.name.Name(nsdomain.split(".")):
                 return True
         return False
+
+    def aresponse(self, question=''):
+        yield OPENREPLICAWEBHOST
     
     def aresponse_ipaddr(self, question):
         # Asking for IPADDR.ipaddr.openreplica.org
