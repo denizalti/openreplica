@@ -998,33 +998,21 @@ class Replica(Node):
             
     def throughput_test(self):
         self.throughput_runs += 1
-        if self.throughput_runs == 1000:
+        if self.throughput_runs == 100:
             profile_on()
             self.throughput_start = time.time()
-        elif self.throughput_runs == 11000:
+        elif self.throughput_runs == 1100:
             profile_off()
             self.throughput_stop = time.time()
             totaltime = self.throughput_stop - self.throughput_start
             print "********************************************"
             print "TOTAL: ", totaltime
-            print "TPUT: ", 10000/totaltime, "req/s"
+            print "TPUT: ", 1000/totaltime, "req/s"
             print "********************************************"
             profilerdict = get_profile_stats()
             for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): v[1]):
                 print "%s: %s" % (key, value[1])
             self._graceexit(1)
-
-    def msg_output(self, conn, msg):
-#        profile_off()
-#        profilerdict = get_profile_stats()
-#        for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): v[1]):
-#            print "%s: %s" % (key, value)
-        time.sleep(10)
-        sys.stdout.flush()
-        self.send(msg, self.groups[NODE_ACCEPTOR].members[0])
-        dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
-        numclients = len(self.clientpool.poolbypeer.keys())
-        dumptimers(str(numclients), str(len(self.groups[NODE_ACCEPTOR])), self.type)
         
 ## TERMINATION METHODS
     def terminate_handler(self, signal, frame):
