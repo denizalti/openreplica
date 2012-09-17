@@ -52,7 +52,6 @@ class Node():
         - connectionpool: ConnectionPool that keeps all Connections Node knows about
         - type: type of the corresponding Node: NODE_ACCEPTOR | NODE_REPLICA | NODE_NAMESERVER
         - alive: liveness of Node
-        - outstandingmessages: collection of sent but not-yet-acked messages
         - socket: server socket for Node
         - me: Peer object that represents Node
         - id: id for Node (addr:port)
@@ -72,18 +71,6 @@ class Node():
         ## messaging layer information
         self.receivedmessages_semaphore = Semaphore(0)
         self.receivedmessages = []
-        # msgs not acked yet
-        # {msgid: msginfo}
-        self.outstandingmessages_lock =RLock()
-        self.outstandingmessages = {}
-        # last msg timestamp for all peers
-        # {peer: timestamp}
-#        self.lastmessages_lock =RLock()
-#        self.lastmessages = {}
-        # number of retries for all peers
-        # {peer: retries}
-        self.retries_lock =RLock()
-        self.retries = {}
         
         # lock to synchronize message handling
         self.lock = Lock()
