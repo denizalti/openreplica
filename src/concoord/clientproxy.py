@@ -132,7 +132,7 @@ class ClientProxy():
                     if lastcr != CR_BLOCK:
                         needreconfig = not self.conn.send(cm)
 
-                    timestamp, reply = self.conn.receive()
+                    reply = self.conn.receive()
                     if self.debug:
                         print "Received: %s" % str(reply)
 
