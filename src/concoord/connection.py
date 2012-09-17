@@ -118,9 +118,10 @@ class Connection():
                 lstr = self.receive_n_bytes(4)
                 msg_length = struct.unpack("I", lstr[0:4])[0]
                 msgstr = self.receive_n_bytes(msg_length)
-                pickle_obj = cPickle.Unpickler(StringIO.StringIO(msgstr))
+                return (time.time(), cPickle.loads(msgstr))
+#                pickle_obj = cPickle.Unpickler(StringIO.StringIO(msgstr))
 #                pickle_obj.find_global = self._picklefixer
-                return (time.time(), pickle_obj.load())
+#                return (time.time(), pickle_obj.load())
             except IOError as inst:           
                 return (0,None)
 
