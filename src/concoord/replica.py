@@ -998,7 +998,7 @@ class Replica(Node):
             
     def throughput_test(self):
         XPUTITERS=5000
-        if not self.isleader():
+        if not self.isleader:
             return
         self.throughput_runs += 1
         if self.throughput_runs == 100:
