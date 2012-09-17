@@ -998,21 +998,23 @@ class Replica(Node):
             
     def throughput_test(self):
         XPUTITERS=5000
+        if not self.isleader():
+            return
         self.throughput_runs += 1
         if self.throughput_runs == 100:
-#            profile_on()
+            profile_on()
             self.throughput_start = time.time()
         elif self.throughput_runs == XPUTITERS + 100:
-#            profile_off()
+            profile_off()
             self.throughput_stop = time.time()
             totaltime = self.throughput_stop - self.throughput_start
             print "********************************************"
             print "TOTAL: ", totaltime
             print "TPUT: ", XPUTITERS/totaltime, "req/s"
             print "********************************************"
-#            profilerdict = get_profile_stats()
-#            for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): v[1]):
-#                print "%s: %s" % (key, value[1])
+            profilerdict = get_profile_stats()
+            for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): v[1]):
+                print "%s: %s" % (key, value[1])
             self._graceexit(1)
         
 ## TERMINATION METHODS
