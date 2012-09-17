@@ -26,7 +26,8 @@ BINOP_SYMBOLS = {
     RShift:     '>>',
     BitOr:      '|',
     BitAnd:     '&',
-    BitXor:     '^'
+    BitXor:     '^',
+    Pow:        '**'
 }
 
 CMPOP_SYMBOLS = {
@@ -296,10 +297,15 @@ class SourceGenerator(NodeVisitor):
     def visit_Delete(self, node):
         self.newline(node)
         self.write('del ')
-        for idx, target in enumerate(node):
-            if idx:
-                self.write(', ')
-            self.visit(target)
+        if hasattr(node, 'targets'):
+            for idx, target in enumerate(node.targets):
+                if idx:
+                    self.write(', ')
+        else:
+            for idx, target in enumerate(node):
+                if idx:
+                    self.write(', ')
+                self.visit(target)
 
     def visit_TryExcept(self, node):
         self.newline(node)
@@ -327,7 +333,8 @@ class SourceGenerator(NodeVisitor):
     def visit_Return(self, node):
         self.newline(node)
         self.write('return ')
-        self.visit(node.value)
+        if node.value is not None:
+            self.visit(node.value)
 
     def visit_Break(self, node):
         self.newline(node)

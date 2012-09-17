@@ -26,7 +26,7 @@ class ServerVisitor(ast.NodeVisitor):
 
     def getfunctionsofclass(self, node):
         for functiondef in node.body:
-            if functiondef.name == "__init__":
+            if hasattr(functiondef, 'name') and functiondef.name == "__init__":
                 self.initline = functiondef.lineno
             self.functionstofix[functiondef.lineno] = functiondef
             
@@ -61,7 +61,7 @@ def editproxyfile(filepath, objectname, securitytoken):
     for line, content in filecontent.iteritems():
         if line == v.initline:
             objectfile.write(content)
-            objectfile.write("\tself.__concoord_token = \"%s\"\n" % securitytoken)
+            objectfile.write("    self.__concoord_token = \"%s\"\n" % securitytoken)
         else:    
             objectfile.write(content)
     objectfile.close()

@@ -31,22 +31,20 @@ class Message():
         global msgidpool_lock
 
         with msgidpool_lock:
-            if self.type != MSG_ACK:
-                self.id = msgidpool
-                msgidpool += 1
+            self.id = msgidpool
+            msgidpool += 1
         return self
 
     def fullid(self):
         return "%s+%d" % (self.source.getid(), self.id)
 
     def __str__(self):
-        if self.type != MSG_ACK:
-            return 'Message#%d: %s src %s' % (self.id,msg_names[self.type],self.source)
-        else:
-            return 'AckMessage#%d: %s src %s' % (self.ackid,msg_names[self.type],self.source)
+        return 'Message#%d: %s src %s' % (self.id,
+                                          msg_names[self.type],
+                                          self.source)
 
 class HandshakeMessage(Message):
-    def __init__(self,msgtype,myname,reject=False):
+    def __init__(self, msgtype, myname, reject=False):
         Message.__init__(self, msgtype, myname)
         self.reject = reject
 
@@ -57,7 +55,7 @@ class HandshakeMessage(Message):
         return temp
 
 class UpdateMessage(Message):
-    def __init__(self,msgtype,myname,decisions=None):
+    def __init__(self, msgtype, myname, decisions=None):
         Message.__init__(self, msgtype, myname)
         self.decisions = decisions
 
@@ -68,7 +66,15 @@ class UpdateMessage(Message):
         return temp
 
 class PaxosMessage(Message):
-    def __init__(self,msgtype, myname, ballotnumber=0,inresponsetoballotnumber=0,commandnumber=0,proposal=None,givenpvalueset=None,result=None):
+    def __init__(self,
+                 msgtype,
+                 myname,
+                 ballotnumber=0,
+                 inresponsetoballotnumber=0,
+                 commandnumber=0,
+                 proposal=None,
+                 givenpvalueset=None,
+                 result=None):
         Message.__init__(self, msgtype, myname)
         self.ballotnumber = ballotnumber
         self.inresponseto = inresponsetoballotnumber
@@ -79,36 +85,43 @@ class PaxosMessage(Message):
 
     def __str__(self):
         temp = '%sballotnumber: %s commandnumber: %d proposal: %s result: %s pvalues: ' \
-            % (Message.__str__(self),str(self.ballotnumber),self.commandnumber,self.proposal,self.result)
+            % (Message.__str__(self),
+               str(self.ballotnumber),
+               self.commandnumber,
+               self.proposal,
+               self.result)
         if self.pvalueset is not None:
             ps = "\n".join(str(pvalue) for pvalue in self.pvalueset.pvalues)
             temp = "%s\n%s" % (temp, ps)
         return temp
 
 class ClientMessage(Message):
-    def __init__(self, msgtype, myname, command=None, inresponseto=0, token=None):
+    def __init__(self, msgtype, myname,
+                 command=None, inresponseto=0, token=None):
         Message.__init__(self, msgtype, myname)
         self.command = command
         self.inresponseto = inresponseto
         self.token = token
 
     def __str__(self):
-        return "%s inresponseto: %d  request: %s token: %s" % (Message.__str__(self), self.inresponseto, str(self.command), self.token)
+        return "%s inresponseto: %d  request: %s token: %s" \
+            % (Message.__str__(self),
+               self.inresponseto,
+               str(self.command),
+               self.token)
 
 class ClientReplyMessage(Message):
-    def __init__(self, msgtype, myname, reply=None, replycode=-1, inresponseto=0):
+    def __init__(self, msgtype, myname,
+                 reply=None, replycode=-1, inresponseto=0):
         Message.__init__(self, msgtype, myname)
         self.reply = reply
         self.replycode = replycode
         self.inresponseto = inresponseto
 
     def __str__(self):
-        return "%s inresponseto: %d  reply: %s replycode: %s" % (Message.__str__(self), self.inresponseto, str(self.reply), cr_codes[self.replycode])
-
-class AckMessage(Message):
-    def __init__(self,msgtype, myname, ackid):
-        Message.__init__(self, msgtype, myname)
-        self.ackid = ackid
+        return "%s inresponseto: %d  reply: %s replycode: %s" \
+            % (Message.__str__(self), self.inresponseto,
+               str(self.reply), cr_codes[self.replycode])
 
 class GarbageCollectMessage(Message):
     def __init__(self, msgtype, myname, commandnumber=0, snapshot=None):
@@ -117,7 +130,8 @@ class GarbageCollectMessage(Message):
         self.snapshot = snapshot
 
     def __str__(self):
-        return "%s commandnumber: %d snapshot: %s" % (Message.__str__(self), self.commandnumber, str(self.snapshot))
+        return "%s commandnumber: %d snapshot: %s" \
+            % (Message.__str__(self), self.commandnumber, str(self.snapshot))
 
 class StatusMessage():
     def __init__(self):
@@ -127,11 +141,14 @@ class StatusMessage():
         return 'Status Message'
 
 class MessageInfo():
-    """This class is used to ensure that all messages are ultimately delivered to their destinations"""
+    """This class is used to ensure that all messages are
+    ultimately delivered to their destinations"""
     def __init__(self, message, destination, timestamp=0):
         self.message = message
         self.destination = destination
         self.timestamp = timestamp
 
     def __str__(self):
-        return "%d: [%s] %.2f" % (self.message.id, self.destination, self.timestamp)
+        return "%d: [%s] %.2f" % (self.message.id,
+                                  self.destination,
+                                  self.timestamp)
