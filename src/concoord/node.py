@@ -38,7 +38,6 @@ parser.add_option("-m", "--master", action="store", dest="master", default='', h
 parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
 (options, args) = parser.parse_args()
 
-DO_PERIODIC_PINGS = False
 RESEND = False
 
 class Node():
@@ -53,7 +52,6 @@ class Node():
         - connectionpool: ConnectionPool that keeps all Connections Node knows about
         - type: type of the corresponding Node: NODE_ACCEPTOR | NODE_REPLICA | NODE_NAMESERVER
         - alive: liveness of Node
-        - outstandingmessages: collection of sent but not-yet-acked messages
         - socket: server socket for Node
         - me: Peer object that represents Node
         - id: id for Node (addr:port)
@@ -73,22 +71,9 @@ class Node():
         ## messaging layer information
         self.receivedmessages_semaphore = Semaphore(0)
         self.receivedmessages = []
-        # msgs not acked yet
-        # {msgid: msginfo}
-        self.outstandingmessages_lock =RLock()
-        self.outstandingmessages = {}
-        # last msg timestamp for all peers
-        # {peer: timestamp}
-        self.lastmessages_lock =RLock()
-        self.lastmessages = {}
-        # number of retries for all peers
-        # {peer: retries}
-        self.retries_lock =RLock()
-        self.retries = {}
         
+        # lock to synchronize message handling
         self.lock = Lock()
-        self.done = False
-        self.donecond = Condition()
 
         # create server socket and bind to a port
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -190,19 +175,19 @@ class Node():
             time.sleep(1)
 
     def startservice(self):
-        # Start a thread that waits for inputs
+        # Start a thread that waits for network input
         receiver_thread = Thread(target=self.server_loop, name='ReceiverThread')
         receiver_thread.start()
-        # Start a thread with the server which will start a thread for each request
-        main_thread = Thread(target=self.handle_messages, name='MainThread')
-        main_thread.start()
         # Start a thread that waits for inputs
         input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
         input_thread.start()
+<<<<<<< HEAD
         # Start a thread that pings neighbors
         timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
         timer_thread.name = 'PeriodicThread'
         timer_thread.start()
+=======
+>>>>>>> c408fe7dd228d7f946f385128ed543bde4614838
         return self
 
     def __str__(self):
@@ -214,13 +199,6 @@ class Node():
             pending =  "".join("%d: %s" % (cno, proposal) for cno,proposal in self.pendingcommands.iteritems())
             groups = "%s\nPending:\n%s" % (groups, pending)
         return groups
-
-    def outstandingmsgstr(self):
-        returnstr = "outstandingmessages: time now is %s\n" % str(time.time())
-        with self.outstandingmessages_lock:
-            for messageid,messageinfo in self.outstandingmessages.iteritems():
-                returnstr += "[%s] %s\n" % (str(messageid),str(messageinfo))
-        return returnstr
     
     def server_loop(self):
         """Serverloop that listens to multiple connections and accepts new ones.
@@ -269,6 +247,10 @@ class Node():
   
                 for s in exceptready:
                     print "EXCEPTION ", s
+                    # XXX the remote side is dead, we need to do something
+
+
+                # we got some input, time to process it
                 for s in inputready:
                     if s == self.socket:
                         clientsock,clientaddr = self.socket.accept()
@@ -276,6 +258,7 @@ class Node():
                         nascentset.append((clientsock,time.time()))
                         success = True
                     else:
+                        # this is where we do the work
                         success = self.handle_connection(s)
                     if not success:
                         # s is closed, take it out of nascentset and connection pool
@@ -292,58 +275,28 @@ class Node():
     def handle_connection(self, clientsock):
         """Receives a message and calls the corresponding message handler"""
         connection = self.connectionpool.get_connection_by_socket(clientsock)
-        timestamp,message = connection.receive()
+        message = connection.receive()
         if message == None:
             return False
         else:
             self.logger.write("State", "received %s" % message)
-            if message.type == MSG_STATUS:
-                if self.type == NODE_REPLICA:
-                    self.logger.write("State", "Answering status message %s" % self.__str__())
-                    messagestr = pickle.dumps(self.__str__())
-                    message = struct.pack("I", len(messagestr)) + messagestr
-                    clientsock.send(message)
-                return
-            # add to lastmessages
-            with self.lastmessages_lock:
-                if not self.lastmessages.has_key(message.source):
-                    self.lastmessages[message.source] = timestamp
-                elif self.lastmessages[message.source] < timestamp:
-                    self.lastmessages[message.source] = timestamp
-            # add to receivedmessages
-            self.receivedmessages.append((timestamp,message,connection))
-            self.receivedmessages_semaphore.release()
+            self.process_message(message, connection)
+
+            # XXX not clear what is happening here
             if message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
                 try:
                     self.clientpool.add_connection_to_peer(message.source, connection)
                 except AttributeError:
                     pass
             else:
+                # XXX must be deleted
                 self.connectionpool.add_connection_to_peer(message.source, connection)
         return True
-
-    def handle_messages(self):
-        while True:
-            self.receivedmessages_semaphore.acquire()
-            (timestamp, message_to_process, connection) = self.receivedmessages.pop(0)
-            self.process_message(message_to_process, connection)
-        return
 
     def process_message(self, message, connection):
         """Process message loop that takes messages out of the receivedmessages
         list and handles them.
         """
-        # check to see if it's an ack
-        if message.type == MSG_ACK:
-            #take it out of outstanding messages, but do not ack an ack
-            ackid = "%s+%d" % (self.id, message.ackid)
-            with self.outstandingmessages_lock:
-                if self.outstandingmessages.has_key(ackid):
-                    del self.outstandingmessages[ackid]
-            return True
-        elif message.type != MSG_CLIENTREQUEST and message.type != MSG_INCCLIENTREQUEST:
-            # Send ACK
-            connection.send(AckMessage(MSG_ACK,self.me,message.id))
         # find method and invoke it holding a lock
         mname = "msg_%s" % msg_names[message.type].lower()
         try:
@@ -396,42 +349,7 @@ class Node():
                     
     def cmd_state(self, args):
         """prints connectivity state of the corresponding Node."""
-        self.logger.write("State", "\n%s\n%s\n" % (self.statestr(), self.outstandingmsgstr()))
-
-    def periodic(self):
-        """timer function that is responsible for periodic state maintenance
-        - resends messages that are in outstandingmessages and are older than ACKTIMEOUT.
-        - sends MSG_HELO message to peers that it has not heard within LIVENESSTIMEOUT
-        """
-        while True:
-            if DO_PERIODIC_PINGS:
-                checkliveness = set()
-                for type,group in self.groups.iteritems():
-                    checkliveness = checkliveness.union(group.members)
-            if RESEND:
-                try:
-                    with self.outstandingmessages_lock:
-                        msgs = self.outstandingmessages.values()
-                    for messageinfo in msgs:
-                        now = time.time()
-                        if messageinfo.timestamp + ACKTIMEOUT < now:
-                            if messageinfo.message.type != MSG_PING:
-                                self.logger.write("State", "re-sending to %s, message %s" % (messageinfo.destination, messageinfo.message))
-                                self.send(messageinfo.message, peer=messageinfo.destination, isresend=True)
-                                self.add_retry(messageinfo.destination)
-                                messageinfo.timestamp = time.time()
-                        elif DO_PERIODIC_PINGS and (messageinfo.timestamp + LIVENESSTIMEOUT) < now and messageinfo.destination in checkliveness:
-                            checkliveness.remove(messageinfo.destination)
-                except Exception as e:
-                    self.logger.write("Connection Error", "exception in resend: %s" % e)
-            if DO_PERIODIC_PINGS:
-                for pingpeer in checkliveness:
-                    # don't ping the peer if it has sent a message recently
-                    if self.lastmessages[pingpeer] + LIVENESSTIMEOUT >= now:
-                        self.logger.write("State", "sending PING to %s" % pingpeer)
-                        pingmessage = HandshakeMessage(MSG_PING, self.me)
-                        self.send(pingmessage, peer=pingpeer)
-            time.sleep(ACKTIMEOUT)
+        self.logger.write("State", "\n%s\n" % (self.statestr()))
 
     def add_retry(self, peer):
         with self.retries_lock:
@@ -442,8 +360,7 @@ class Node():
 
     def get_user_input_from_shell(self):
         """Shell loop that accepts inputs from the command prompt and 
-        calls corresponding command handlers.
-        """
+        calls corresponding command handlers."""
         while self.alive:
             try:
                 input = raw_input(">")
@@ -471,10 +388,6 @@ class Node():
             if connection == None:
                 self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
                 return -1
-            if not isresend:
-                msginfo = MessageInfo(message,peer,time.time())
-                with self.outstandingmessages_lock:
-                    self.outstandingmessages[message.fullid()] = msginfo
             connection.send(message)
             return message.id
         elif group:
@@ -485,9 +398,6 @@ class Node():
                 if connection == None:
                     self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
                     continue
-                msginfo = MessageInfo(message,peer,time.time())
-                with self.outstandingmessages_lock:
-                    self.outstandingmessages[message.fullid()] = msginfo
                 connection.send(message)
                 ids.append(message.id)
                 message = copy.copy(message)

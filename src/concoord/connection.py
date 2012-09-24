@@ -9,12 +9,13 @@ import socket, errno
 import struct
 import StringIO
 import time
-import cPickle
+import cPickle as pickle
 import random
 from threading import Lock
 
 DEBUG=False
 DROPRATE=0.3
+DO_CONCOORD_PATH_FIXUP=False
 
 class ConnectionPool():
     """ConnectionPool keeps the connections that a certain Node knows of.
@@ -58,10 +59,7 @@ class ConnectionPool():
                 print "trying to delete a non-existent socket from the conn pool"
 
     def get_connection_by_peer(self, peer):
-        """Returns a Connection given corresponding Peer.
-        A new Connection is created and added to the
-        ConnectionPool if it doesn't exist.
-        """
+        """Returns a Connection given corresponding Peer."""
         with self.pool_lock:
             connectionkey = peer.getid()
             if self.poolbypeer.has_key(connectionkey):
@@ -121,11 +119,14 @@ class Connection():
                 lstr = self.receive_n_bytes(4)
                 msg_length = struct.unpack("I", lstr[0:4])[0]
                 msgstr = self.receive_n_bytes(msg_length)
-                pickle_obj = cPickle.Unpickler(StringIO.StringIO(msgstr))
-                pickle_obj.find_global = self._picklefixer
-                return (time.time(), pickle_obj.load())
+                if DO_CONCOORD_PATH_FIXUP:
+                    pickle_obj = pickle.Unpickler(StringIO.StringIO(msgstr))
+                    pickle_obj.find_global = self._picklefixer
+                    return pickle_obj.load()
+                else:
+                    return pickle.loads(msgstr)
             except IOError as inst:           
-                return (0,None)
+                return None
 
     def receive_n_bytes(self, msg_length):
         msgstr = ''
@@ -149,7 +150,7 @@ class Connection():
             if DEBUG and random.random() <= DROPRATE:
                 print "dropping message..."
                 return
-            messagestr = cPickle.dumps(msg)
+            messagestr = pickle.dumps(msg)
             message = struct.pack("I", len(messagestr)) + messagestr
             try:
                 while len(message) > 0:
