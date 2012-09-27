@@ -24,11 +24,10 @@ try:
 except:
     print("Install dnspython: http://www.dnspython.org/")
 
-parser = OptionParser(usage="usage: %prog -a addr -p port -b bootstrap -f objectfilename -c objectname -n subdomainname -d debug")
+parser = OptionParser()
 parser.add_option("-a", "--addr", action="store", dest="addr", help="addr for the node")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", help="port for the node")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
-parser.add_option("-f", "--objectfilename", action="store", dest="objectfilename", default='', help="client object file name")
 parser.add_option("-c", "--objectname", action="store", dest="objectname", help="object name")
 parser.add_option("-l", "--logger", action="store", dest="logger", default='', help="logger address")
 parser.add_option("-o", "--configpath", action="store", dest="configpath", default='', help="config file path")
@@ -44,7 +43,14 @@ class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
     """ 
-    def __init__(self, nodetype, addr=options.addr, port=options.port, givenbootstraplist=options.bootstrap, debugoption=options.debug, objectfilename=options.objectfilename, objectname=options.objectname, instantiateobj=False, configpath=options.configpath, logger=options.logger):
+    def __init__(self, nodetype,
+                 addr=options.addr, port=options.port,
+                 givenbootstraplist=options.bootstrap,
+                 debugoption=options.debug,
+                 objectname=options.objectname,
+                 instantiateobj=False,
+                 configpath=options.configpath,
+                 logger=options.logger):
         """Node State
         - addr: hostname for Node, detected automatically
         - port: port for Node, can be taken from the commandline (-p [port]) or
@@ -63,10 +69,9 @@ class Node():
         self.connectionpool = ConnectionPool()
         self.type = nodetype
         if instantiateobj:
-            if objectfilename == '':
+            if objectname == '':
                 parser.print_help()
                 self._graceexit(1)
-            self.objectfilename = objectfilename
             self.objectname = objectname
         ## messaging layer information
         self.receivedmessages_semaphore = Semaphore(0)
