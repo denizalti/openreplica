@@ -3,6 +3,8 @@
 @note: Example membership object
 @copyright: See LICENSE
 """
+from threading import RLock
+
 class Membership():
     def __init__(self, **kwargs):
         # all members
@@ -26,7 +28,7 @@ class Membership():
 
     def subscribe(self, **kwargs):
         # subscribe to updates about the membership
-        command = **kwargs['_concoord_command']
+        command = kwargs['_concoord_command']
         # put the caller on waitinglist and take the lock away
         with self.__atomic:
             self.__waiters.append(command)
@@ -34,7 +36,7 @@ class Membership():
 
     def unsubscribe(self, **kwargs):
         # subscribe to updates about the membership
-        command = **kwargs['_concoord_command']
+        command = kwargs['_concoord_command']
         # put the caller on waitinglist and take the lock away
         with self.__atomic:
             self.__waiters.remove(command)
