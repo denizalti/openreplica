@@ -189,19 +189,19 @@ class Node():
             time.sleep(1)
 
     def startservice(self):
-        # Start a thread that waits for network input
+        # Start a thread that waits for inputs
         receiver_thread = Thread(target=self.server_loop, name='ReceiverThread')
         receiver_thread.start()
-#        # Start a thread which will start a thread for each request
-#        main_thread = Thread(target=self.handle_messages, name='MainThread')
-#        main_thread.start()
+        # Start a thread with the server which will start a thread for each request
+        main_thread = Thread(target=self.handle_messages, name='MainThread')
+        main_thread.start()
         # Start a thread that waits for inputs
         input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
         input_thread.start()
         # Start a thread that pings neighbors
-#        timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
-#        timer_thread.name = 'PeriodicThread'
-#        timer_thread.start()
+        timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
+        timer_thread.name = 'PeriodicThread'
+        timer_thread.start()
         return self
 
     def __str__(self):
@@ -261,10 +261,6 @@ class Node():
   
                 for s in exceptready:
                     print "EXCEPTION ", s
-                    # XXX the remote side is dead, we need to do something
-
-
-                # we got some input, time to process it
                 for s in inputready:
                     if s == self.socket:
                         clientsock,clientaddr = self.socket.accept()
@@ -272,7 +268,6 @@ class Node():
                         nascentset.append((clientsock,time.time()))
                         success = True
                     else:
-                        # this is where we do the work
                         success = self.handle_connection(s)
                     if not success:
                         # s is closed, take it out of nascentset and connection pool
@@ -294,18 +289,37 @@ class Node():
             return False
         else:
             self.logger.write("State", "received %s" % message)
-            self.process_message(message, connection)
-
-            # XXX not clear what is happening here
+            if message.type == MSG_STATUS:
+                if self.type == NODE_REPLICA:
+                    self.logger.write("State", "Answering status message %s" % self.__str__())
+                    messagestr = pickle.dumps(self.__str__())
+                    message = struct.pack("I", len(messagestr)) + messagestr
+                    clientsock.send(message)
+                return
+            # add to lastmessages
+            with self.lastmessages_lock:
+                if not self.lastmessages.has_key(message.source):
+                    self.lastmessages[message.source] = timestamp
+                elif self.lastmessages[message.source] < timestamp:
+                    self.lastmessages[message.source] = timestamp
+            # add to receivedmessages
+            self.receivedmessages.append((timestamp,message,connection))
+            self.receivedmessages_semaphore.release()
             if message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
                 try:
                     self.clientpool.add_connection_to_peer(message.source, connection)
                 except AttributeError:
                     pass
             else:
-                # XXX must be deleted
                 self.connectionpool.add_connection_to_peer(message.source, connection)
         return True
+
+    def handle_messages(self):
+        while True:
+            self.receivedmessages_semaphore.acquire()
+            (timestamp, message_to_process, connection) = self.receivedmessages.pop(0)
+            self.process_message(message_to_process, connection)
+        return
 
     def process_message(self, message, connection):
         """Process message loop that takes messages out of the receivedmessages
