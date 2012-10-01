@@ -28,15 +28,14 @@ class Replica(Node):
         Node.__init__(self, nodetype, instantiateobj=instantiateobj)
         if instantiateobj:
             self.object = None
-            module, object = self.objectname.split('.')
-            for objectloc in ['concoord.'+module, 'concoord.object.'+module, module]:
+            for objectloc in ['concoord.'+self.objectfilename[:-3], 'concoord.object.'+self.objectfilename[:-3], self.objectfilename[:-3]]:
                 try:
                     ip = objectloc.split('.')
                     mod = __import__(objectloc, {}, {}, [])
                     for module in ip[1:]:
                         mod = getattr(mod, module, None)
-                    if hasattr(mod, object):
-                        self.object = getattr(mod, object)()
+                    if hasattr(mod, self.objectname):
+                        self.object = getattr(mod, self.objectname)()
                         break
                 except ImportError as e:
                     continue
@@ -47,7 +46,7 @@ class Replica(Node):
                 self._graceexit(1)
             else:
                 try:
-                    self.token = getattr(self.object, '_%s__concoord_token' % object)
+                    self.token = getattr(self.object, '_%s__concoord_token' % self.objectname)
                 except:
                     self.token = None
         # leadership
@@ -110,6 +109,7 @@ class Replica(Node):
         leaderping_thread.start()
 
     @staticmethod
+    #XXX: WTF is this really doing?
     def _apply_args_to_method(method, args, _concoord_command):
         argspec = inspect.getargspec(method)
         if argspec.args and argspec.args[-1] == '_concoord_command':
