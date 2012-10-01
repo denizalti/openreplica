@@ -38,6 +38,7 @@ parser.add_option("-m", "--master", action="store", dest="master", default='', h
 parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
 (options, args) = parser.parse_args()
 
+DO_PERIODIC_PINGS = False
 RESEND = False
 
 class Node():
@@ -78,8 +79,8 @@ class Node():
         self.outstandingmessages = {}
         # last msg timestamp for all peers
         # {peer: timestamp}
-#        self.lastmessages_lock =RLock()
-#        self.lastmessages = {}
+        self.lastmessages_lock =RLock()
+        self.lastmessages = {}
         # number of retries for all peers
         # {peer: retries}
         self.retries_lock =RLock()
@@ -191,9 +192,16 @@ class Node():
         # Start a thread that waits for network input
         receiver_thread = Thread(target=self.server_loop, name='ReceiverThread')
         receiver_thread.start()
+#        # Start a thread which will start a thread for each request
+#        main_thread = Thread(target=self.handle_messages, name='MainThread')
+#        main_thread.start()
         # Start a thread that waits for inputs
         input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
         input_thread.start()
+        # Start a thread that pings neighbors
+#        timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
+#        timer_thread.name = 'PeriodicThread'
+#        timer_thread.start()
         return self
 
     def __str__(self):
@@ -356,6 +364,22 @@ class Node():
     def cmd_state(self, args):
         """prints connectivity state of the corresponding Node."""
         self.logger.write("State", "\n%s\n" % (self.statestr()))
+
+    def periodic(self):
+        """timer function that is responsible for periodic state maintenance.
+        sends MSG_HELO to peers that it has not heard within LIVENESSTIMEOUT.
+        """
+        while True:
+            if DO_PERIODIC_PINGS:
+                checkliveness = set()
+                for type,group in self.groups.iteritems():
+                    for pingpeer in group.members:
+                        # don't ping the peer if it has sent a message recently
+                        if self.lastmessages[pingpeer] + LIVENESSTIMEOUT >= now:
+                            self.logger.write("State", "sending PING to %s" % pingpeer)
+                            pingmessage = HandshakeMessage(MSG_PING, self.me)
+                            self.send(pingmessage, peer=pingpeer)
+            time.sleep(ACKTIMEOUT)
 
     def add_retry(self, peer):
         with self.retries_lock:
