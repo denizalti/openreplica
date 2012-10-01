@@ -9,13 +9,12 @@ import socket, errno
 import struct
 import StringIO
 import time
-import cPickle as pickle
+import cPickle
 import random
 from threading import Lock
 
 DEBUG=False
 DROPRATE=0.3
-DO_CONCOORD_PATH_FIXUP=False
 
 class ConnectionPool():
     """ConnectionPool keeps the connections that a certain Node knows of.
@@ -119,12 +118,10 @@ class Connection():
                 lstr = self.receive_n_bytes(4)
                 msg_length = struct.unpack("I", lstr[0:4])[0]
                 msgstr = self.receive_n_bytes(msg_length)
-                if DO_CONCOORD_PATH_FIXUP:
-                    pickle_obj = pickle.Unpickler(StringIO.StringIO(msgstr))
-                    pickle_obj.find_global = self._picklefixer
-                    return (time.time(), pickle_obj.load())
-                else:
-                    return (time.time(), pickle.loads(msgstr))
+                return (time.time(), cPickle.loads(msgstr))
+#                pickle_obj = cPickle.Unpickler(StringIO.StringIO(msgstr))
+#                pickle_obj.find_global = self._picklefixer
+#                return (time.time(), pickle_obj.load())
             except IOError as inst:           
                 return (0,None)
 
@@ -150,7 +147,7 @@ class Connection():
             if DEBUG and random.random() <= DROPRATE:
                 print "dropping message..."
                 return
-            messagestr = pickle.dumps(msg)
+            messagestr = cPickle.dumps(msg)
             message = struct.pack("I", len(messagestr)) + messagestr
             try:
                 while len(message) > 0:
