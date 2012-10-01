@@ -177,7 +177,7 @@ class ClientProxy():
                                 needreconfig = not self.conn.send(reqdesc.cm)
                     else:
                         # server has sent us something and we need to process it
-                        reply = self.conn.receive()
+                        timestamp, reply = self.conn.receive()
                         if reply and reply.type == MSG_CLIENTREPLY:
                             reqdesc = self.pendingops[reply.inresponseto]
                             with self.lock:
