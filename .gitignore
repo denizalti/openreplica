@@ -13,3 +13,4 @@ credentials.py
 *.tar.bz2
 concoord_log_*
 .DS_Store
+nohup.out
