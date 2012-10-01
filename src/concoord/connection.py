@@ -122,11 +122,11 @@ class Connection():
                 if DO_CONCOORD_PATH_FIXUP:
                     pickle_obj = pickle.Unpickler(StringIO.StringIO(msgstr))
                     pickle_obj.find_global = self._picklefixer
-                    return pickle_obj.load()
+                    return (time.time(), pickle_obj.load())
                 else:
-                    return pickle.loads(msgstr)
+                    return (time.time(), pickle.loads(msgstr))
             except IOError as inst:           
-                return None
+                return (0,None)
 
     def receive_n_bytes(self, msg_length):
         msgstr = ''
