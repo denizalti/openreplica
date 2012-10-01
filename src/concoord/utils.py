@@ -33,6 +33,7 @@ class ConsoleLogger():
         self.logfile = open("concoord_log_"+name, 'w')
 
     def write(self, cls, str):
+        return
         print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix + '_' + threading.current_thread().name, cls, str)
         self.logfile.write("%s [%s] %s: %s\n" % ((time.asctime(time.localtime(time.time())), self.prefix, cls, str)))
         self.logfile.flush()
@@ -55,8 +56,8 @@ class NetworkLogger():
 
     def write(self, cls, str):
         try:
-            print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix + '_' + threading.current_thread().name, cls, str)
-            self.socket.send("[%s] %s: %s\n" % (self.prefix + '_' + threading.current_thread().name, cls, str))
+            pass
+# XXX       self.socket.send("[%s] %s: %s\n" % (self.prefix + '_' + threading.current_thread().name, cls, str))
         except:
             return
 
