@@ -1030,7 +1030,7 @@ class Replica(Node):
             print "********************************************"
             profilerdict = get_profile_stats()
             for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): v[1]):
-                print "%s: %s" % (key, value[1])
+                print "%s: %s" % (key[0], value[1])
             self._graceexit(1)
 
     def msg_output(self, conn, msg):
