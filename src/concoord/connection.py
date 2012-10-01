@@ -15,6 +15,7 @@ from threading import Lock
 
 DEBUG=False
 DROPRATE=0.3
+PICKLESAFE=False
 
 class ConnectionPool():
     """ConnectionPool keeps the connections that a certain Node knows of.
@@ -118,9 +119,12 @@ class Connection():
                 lstr = self.receive_n_bytes(4)
                 msg_length = struct.unpack("I", lstr[0:4])[0]
                 msgstr = self.receive_n_bytes(msg_length)
-                pickle_obj = cPickle.Unpickler(StringIO.StringIO(msgstr))
-                pickle_obj.find_global = self._picklefixer
-                return (time.time(), pickle_obj.load())
+                if PICKLESAFE:
+                    pickle_obj = cPickle.Unpickler(StringIO.StringIO(msgstr))
+                    pickle_obj.find_global = self._picklefixer
+                    return (time.time(), pickle_obj.load())
+                else:
+                    return (time.time(), cPickle.loads(msgstr))
             except IOError as inst:           
                 return (0,None)
 

@@ -1,0 +1,3226 @@
+Sun Sep 30 22:15:25 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Connected.
+
+>Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: accepted a connection from address ('128.84.154.110', 38259)
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#3: HELO src ACCEPTOR PEER(128.84.154.110:14898)
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_helo
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Received HELO from ACCEPTOR PEER(128.84.154.110:14898)
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Adding the first acceptor
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Chosen LEADER: REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Becoming LEADER!
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 1
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 1:Command(REPLICA PEER(128.84.154.110:14000),0,('_add_node', 1, '128.84.154.110:14898')) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 2
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 2:Command(REPLICA PEER(128.84.154.110:14000),1,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 3
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 3:Command(REPLICA PEER(128.84.154.110:14000),2,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 4
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 4:Command(REPLICA PEER(128.84.154.110:14000),3,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 5
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 5:Command(REPLICA PEER(128.84.154.110:14000),4,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 6
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 6:Command(REPLICA PEER(128.84.154.110:14000),5,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 7
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 7:Command(REPLICA PEER(128.84.154.110:14000),6,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 8
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 8:Command(REPLICA PEER(128.84.154.110:14000),7,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 9
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 9:Command(REPLICA PEER(128.84.154.110:14000),8,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 10
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 10:Command(REPLICA PEER(128.84.154.110:14000),9,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 11
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 11:Command(REPLICA PEER(128.84.154.110:14000),10,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: accepted a connection from address ('128.84.154.110', 38260)
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#3: HELO src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_helo
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Received HELO from NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Adding the new node
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Chosen LEADER: REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 12
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 12:Command(REPLICA PEER(128.84.154.110:14000),11,('_add_node', 3, '128.84.154.110:14985')) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Add command created: Command(REPLICA PEER(128.84.154.110:14000),11,('_add_node', 3, '128.84.154.110:14985'))
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 13
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 13:Command(REPLICA PEER(128.84.154.110:14000),12,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 14
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 14:Command(REPLICA PEER(128.84.154.110:14000),13,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 15
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 15:Command(REPLICA PEER(128.84.154.110:14000),14,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 16
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 16:Command(REPLICA PEER(128.84.154.110:14000),15,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 17
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 17:Command(REPLICA PEER(128.84.154.110:14000),16,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 18
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 18:Command(REPLICA PEER(128.84.154.110:14000),17,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 19
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 19:Command(REPLICA PEER(128.84.154.110:14000),18,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 20
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 20:Command(REPLICA PEER(128.84.154.110:14000),19,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 21
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 21:Command(REPLICA PEER(128.84.154.110:14000),20,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 22
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 22:Command(REPLICA PEER(128.84.154.110:14000),21,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 23
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 23:Command(REPLICA PEER(128.84.154.110:14000),22,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 24
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 24:Command(REPLICA PEER(128.84.154.110:14000),23,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Picked command number: 25
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:26 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Preparing command: 25:Command(REPLICA PEER(128.84.154.110:14000),24,noop) with ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#4: PREPARE_ADOPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_adopted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for ballotno (0, '128.84.154.110:14000') coSun Sep 30 22:15:25 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: Connected.
+
+Sun Sep 30 22:15:25 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: trying to connect to bootstrap: REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:15:25 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Connection Error: Connection for REPLICA PEER(128.84.154.110:14000) cannot be found.
+
+Sun Sep 30 22:15:25 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: trying to connect to bootstrap: REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:15:25 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Connection Error: Connection for REPLICA PEER(128.84.154.110:14000) cannot be found.
+
+Sun Sep 30 22:15:25 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: trying to connect to bootstrap: REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:15:25 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Connection Error: Connection for REPLICA PEER(128.84.154.110:14000) cannot be found.
+
+Sun Sep 30 22:15:26 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: trying to connect to bootstrap: REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:15:26 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: connected to bootstrap: 128.84.154.110:14000
+
+>Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#0: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with acceptable ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#2: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#4: PREPARE_ADOPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#4: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#6: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#5: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#6: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#8: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalmmandno 25 proposal Command(REPLICA PEER(128.84.154.110:14000),24,noop) with 1 out of 1
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: suffiently many accepts on prepare!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 1, Command(REPLICA PEER(128.84.154.110:14000),0,('_add_node', 1, '128.84.154.110:14898'))
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 2, Command(REPLICA PEER(128.84.154.110:14000),1,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 3, Command(REPLICA PEER(128.84.154.110:14000),2,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 4, Command(REPLICA PEER(128.84.154.110:14000),3,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 5, Command(REPLICA PEER(128.84.154.110:14000),4,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 6, Command(REPLICA PEER(128.84.154.110:14000),5,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 7, Command(REPLICA PEER(128.84.154.110:14000),6,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#5: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 8, Command(REPLICA PEER(128.84.154.110:14000),7,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 9, Command(REPLICA PEER(128.84.154.110:14000),8,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 10, Command(REPLICA PEER(128.84.154.110:14000),9,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 11, Command(REPLICA PEER(128.84.154.110:14000),10,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 12, Command(REPLICA PEER(128.84.154.110:14000),11,('_add_node', 3, '128.84.154.110:14985'))
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#6: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#7: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 13, Command(REPLICA PEER(128.84.154.110:14000),12,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#8: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 14, Command(REPLICA PEER(128.84.154.110:14000),13,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#9: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 15, Command(REPLICA PEER(128.84.154.110:14000),14,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 16, Command(REPLICA PEER(128.84.154.110:14000),15,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#10: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#7: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#12: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#8: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#9: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#14: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#16: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#10: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#18: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#20: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#11: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#12: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#22: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#13: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#14: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#24: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#15: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#26: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#16: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#28: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#30: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128ReceiverThread] State: received Message#10: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 17, Command(REPLICA PEER(128.84.154.110:14000),16,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 18, Command(REPLICA PEER(128.84.154.110:14000),17,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 19, Command(REPLICA PEER(128.84.154.110:14000),18,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 20, Command(REPLICA PEER(128.84.154.110:14000),19,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 21, Command(REPLICA PEER(128.84.154.110:14000),20,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 22, Command(REPLICA PEER(128.84.154.110:14000),21,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 23, Command(REPLICA PEER(128.84.154.110:14000),22,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#11: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#12: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#13: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 24, Command(REPLICA PEER(128.84.154.110:14000),23,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#14: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PROPOSE for 25, Command(REPLICA PEER(128.84.154.110:14000),24,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#15: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#16: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84..84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#17: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#32: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#18: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#34: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#19: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#20: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#36: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#21: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#22: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#17: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#18: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#19: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#20: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#21: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#22: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#23: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#24: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#25: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#26: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_pr') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#38: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#23: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#40: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#24: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#42: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#44: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#25: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#46: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#26: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#48: PREPARE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898eempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#27: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#28: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_prepare_preempted
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#29: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 1 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 1 proposal Command(REPLICA PEER(128.84.154.110:14000),0,('_add_node', 1, '128.84.154.110:14898')) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),0,('_add_node', 1, '128.84.154.110:14898'))
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#100: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 1 proposal: Command(REPLICA PEER(128.84.154.110:14000),0,('_add_node', 1, '128.84.154.110:14898')) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 1.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 1
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 1 Command: Command(REPLICA PEER(128.84.154.110:14000),0,('_add_node', 1, '128.84.154.110:14898')) DoMetaOnly: False IsMeta: True
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#30: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 2 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 2 proposal Command(REPLICA PEER(128.84.154.110:14000),1,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),1,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#101: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 2 proposal: Command(REPLICA PEER(128.84.154.110:14000),1,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 2.
+
+Sun Sep 30_MainThread] Paxos State: prepare responding with Message#27: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_prepare
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare received with non-acceptable ballotnumber (0, '128.84.154.110:14000') for commandnumber 0
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: prepare responding with Message#28: PREPARE_PREEMPTED src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 0 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#50: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 1 proposal: Command(REPLICA PEER(128.84.154.110:14000),0,('_add_node', 1, '128.84.154.110:14898')) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#52: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 2 proposal: Command(REPLICA PEER(128.84.154.110:14000),1,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#54: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 3 proposal: Command(REPLICA PEER(128.84.154.110:14000),2,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#56: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 4 proposal: Command(REPLICA PEER(128.84.154.110:14000),3,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#58: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 5 proposal: Command(REPLICA PEER(128.84.154.110:14000),4,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#60: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 6 proposal: Command(REPLICA PEER(128.84.154.110:14000),5,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '12 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 2
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 2 Command: Command(REPLICA PEER(128.84.154.110:14000),1,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#31: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 3 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 3 proposal Command(REPLICA PEER(128.84.154.110:14000),2,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),2,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#102: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 3 proposal: Command(REPLICA PEER(128.84.154.110:14000),2,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 3.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 3
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 3 Command: Command(REPLICA PEER(128.84.154.110:14000),2,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#32: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 4 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 4 proposal Command(REPLICA PEER(128.84.154.110:14000),3,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),3,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#103: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 4 proposal: Command(REPLICA PEER(128.84.154.110:14000),3,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 4.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 4
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#33: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 5 proposal: None result: None pvalues: 
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 4 Command: Command(REPLICA PEER(128.84.154.110:14000),3,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 5 proposal Command(REPLICA PEER(128.84.154.110:14000),4,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),4,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#104: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 5 proposal: Command(REPLICA PEER(128.84.154.110:14000),4,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 5.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 5
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 5 Command: Command(REPLICA PEER(128.84.154.110:14000),4,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#34: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 6 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 6 proposal Command(REPLICA PEER(128.84.154.110:14000),5,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),5,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#105: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 6 proposal: Command(REPLICA PEER(128.84.154.110:14000),5,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 6.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 6
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 6 Command: Command(REPLICA PEER(128.84.154.110:14000),5,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#35: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 7 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 7 proposal Command(REPLICA PEER(128.84.154.110:14000),6,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),6,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#106: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 7 proposal: Command(REPLICA PEER(128.84.154.110:14000),6,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 7.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 7
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 7 Command: Command(REPLICA PEER(128.84.154.110:14000),6,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#36: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 8 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 8 proposal Command(REPLICA PEER(128.84.154.110:14000),7,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),7,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#107: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 8 proposal: Command(REPLICA PEER(128.84.154.110:14000),7,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 8.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 8
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 8 Command: Command(REPLICA PEER(128.84.154.110:14000),7,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#37: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 9 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 9 proposal Command(REPLICA PEER(128.84.154.110:14000),8,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),8,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#108: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 9 proposal: Command(REPLICA PEER(128.84.154.110:14000),8,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 9.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 9
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 9 Command: Command(REPLICA PEER(128.84.154.110:14000),8,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#38: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 10 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 10 proposal Command(REPLICA PEER(128.84.154.110:14000),9,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),9,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#109: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 10 proposal: Command(REPLICA PEER(128.84.154.110:14000),9,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 10.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 10
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 10 Command: Command(REPLICA PEER(128.84.154.110:14000),9,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.118.84.154.110:14000')
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#62: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 7 proposal: Command(REPLICA PEER(128.84.154.110:14000),6,noop) result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#64: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 8 proposal: Command(REPLICA PEER(128.84.154.110:14000),7,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#66: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 9 proposal: Command(REPLICA PEER(128.84.154.110:14000),8,noop) result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#68: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 10 proposal: Command(REPLICA PEER(128.84.154.110:14000),9,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#70: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 11 proposal: Command(REPLICA PEER(128.84.154.110:14000),10,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#72: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 12 proposal: Command(REPLICA PEER(128.84.154.110:14000),11,('_add_node', 3, '128.84.154.110:14985')) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#74: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 13 proposal: Command(REPLICA PEER(128.84.154.110:14000),12,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#76: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 14 proposal: Command(REPLICA PEER(128.84.154.110:14000),13,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-1280:14000_MainThread] State:: issuing pending command
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#39: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 11 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 11 proposal Command(REPLICA PEER(128.84.154.110:14000),10,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),10,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#110: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 11 proposal: Command(REPLICA PEER(128.84.154.110:14000),10,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 11.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 1
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 1 Command: Command(REPLICA PEER(128.84.154.110:14000),0,('_add_node', 1, '128.84.154.110:14898')) DoMetaOnly: True IsMeta: True
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: commandname: _add_node args: (1, '128.84.154.110:14898')
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Adding node: ACCEPTOR 128.84.154.110:14898
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 11
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 11 Command: Command(REPLICA PEER(128.84.154.110:14000),10,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#40: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 12 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 12 proposal Command(REPLICA PEER(128.84.154.110:14000),11,('_add_node', 3, '128.84.154.110:14985')) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),11,('_add_node', 3, '128.84.154.110:14985'))
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#111: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 12 proposal: Command(REPLICA PEER(128.84.154.110:14000),11,('_add_node', 3, '128.84.154.110:14985')) result: None pvalues: 
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#41: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 13 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#42: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 14 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 12.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 2
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 2 Command: Command(REPLICA PEER(128.84.154.110:14000),1,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 12
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 12 Command: Command(REPLICA PEER(128.84.154.110:14000),11,('_add_node', 3, '128.84.154.110:14985')) DoMetaOnly: False IsMeta: True
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#43: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 15 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#44: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 16 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 13 proposal Command(REPLICA PEER(128.84.154.110:14000),12,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),12,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#112: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 13 proposal: Command(REPLICA PEER(128.84.154.110:14000),12,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 13.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 3
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 3 Command: Command(REPLICA PEER(128.84.154.110:14000),2,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 13
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 13 Command: Command(REPLICA PEER(128.84.154.110:14000),12,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 14 proposal Command(REPLICA PEER(128.84.154.110:14000),13,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),13,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#113: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 14 proposal: Command(REPLICA PEER(128.84.154.110:14000),13,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 14.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 4
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 4 Command: Command(REPLICA PEER(128.84.154.110:14000),3,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 14
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 14 Command: Command(REPLICA PEER(128.84.154.110:14000),13,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 15 proposal Command(REPLICA PEER(128.84.154.110:14000),14,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),14,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#114: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 15 proposal: Command(REPLICA PEER(128.84.154.110:14000),14,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 15.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 5
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 5 Command: Command(REPLICA PEER(128.84.154.110:14000),4,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 15
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 15 Command: Command(REPLICA PEER(128.84.154.110:14000),14,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_M.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#78: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 15 proposal: Command(REPLICA PEER(128.84.154.110:14000),14,noop) result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#80: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 16 proposal: Command(REPLICA PEER(128.84.154.110:14000),15,noop) result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#82: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 17 proposal: Command(REPLICA PEER(128.84.154.110:14000),16,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#84: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 18 proposal: Command(REPLICA PEER(128.84.154.110:14000),17,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#86: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 19 proposal: Command(REPLICA PEER(128.84.154.110:14000),18,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#88: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 20 proposal: Command(REPLICA PEER(128.84.154.110:14000),19,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] Paxos State: propose received with acceptable ballotnumber (0, '128.84.154.110:14000')
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_ReceiverThread] State: received Message#90: PROPOSE src REPLICA PEER(128.84.154.110:14000)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 21 proposal: Command(REPLICA PEER(128.84.154.110:14000),20,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [ACCEPTOR-128.84.154.110:14898_MainThread] State: invoking method: msg_propose
+
+SuainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 16 proposal Command(REPLICA PEER(128.84.154.110:14000),15,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),15,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#115: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 16 proposal: Command(REPLICA PEER(128.84.154.110:14000),15,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 16.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 6
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#45: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 17 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 6 Command: Command(REPLICA PEER(128.84.154.110:14000),5,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 16
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 16 Command: Command(REPLICA PEER(128.84.154.110:14000),15,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 17 proposal Command(REPLICA PEER(128.84.154.110:14000),16,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),16,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#116: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 17 proposal: Command(REPLICA PEER(128.84.154.110:14000),16,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 17.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 7
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 7 Command: Command(REPLICA PEER(128.84.154.110:14000),6,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 17
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 17 Command: Command(REPLICA PEER(128.84.154.110:14000),16,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#46: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 18 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 18 proposal Command(REPLICA PEER(128.84.154.110:14000),17,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),17,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#117: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 18 proposal: Command(REPLICA PEER(128.84.154.110:14000),17,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 18.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 8
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 8 Command: Command(REPLICA PEER(128.84.154.110:14000),7,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 18
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 18 Command: Command(REPLICA PEER(128.84.154.110:14000),17,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#47: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 19 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#48: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 20 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#49: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 21 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 19 proposal Command(REPLICA PEER(128.84.154.110:14000),18,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#50: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 22 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),18,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#118: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 19 proposal: Command(REPLICA PEER(128.84.154.110:14000),18,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 19.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 9
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 9 Command: Command(REPLICA PEER(128.84.154.110:14000),8,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 19
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 19 Command: Command(REPLICA PEER(128.84.154.110:14000),18,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 20 proposal Command(REPLICA PEER(128.84.154.110:14000),19,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),19,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#119: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 20 proposal: Command(REPLICA PEER(128.84.154.110:14000),19,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 20.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 10
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 10 Command: Command(REPLICA PEER(128.84.154.110:14000),9,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 20
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 20 Command: Command(REPLICA PEER(128.84.154.110:14000),19,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 21 proposal Command(REPLICA PEER(128.84.154.110:14000),20,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),20,noop)
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#51: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 23 proposal: None result: None pvalues: 
+
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#120: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 21 proposal: Command(REPLICA PEER(128.84.154.110:14000),20,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 21.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 11
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 11 Command: Command(REPLICA PEER(128.84.154.110:14000),10,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 21
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 21 Command: Command(REPLICA PEER(128.84.154.110:14000),20,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 22 proposal Command(REPLICA PEER(128.84.154.110:14000),21,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),21,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#52: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 24 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#121: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 22 proposal: Command(REPLICA PEER(128.84.154.110:14000),21,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 22.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 12
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#53: PROPOSE_ACCEPT src ACCEPTOR PEER(128.84.154.110:14898)ballotnumber: (0, '128.84.154.110:14000') commandnumber: 25 proposal: None result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 12 Command: Command(REPLICA PEER(128.84.154.110:14000),11,('_add_node', 3, '128.84.154.110:14985')) DoMetaOnly: True IsMeta: True
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: commandname: _add_node args: (3, '128.84.154.110:14985')
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Adding node: NAMESERVER 128.84.154.110:14985
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 22
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 22 Command: Command(REPLICA PEER(128.84.154.110:14000),21,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 23 proposal Command(REPLICA PEER(128.84.154.110:14000),22,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),22,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#122: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 23 proposal: Command(REPLICA PEER(128.84.154.110:14000),22,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 23.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 13
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 13 Command: Command(REPLICA PEER(128.84.154.110:14000),12,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 23
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 23 Command: Command(REPLICA PEER(128.84.154.110:14000),22,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 24 proposal Command(REPLICA PEER(128.84.154.110:14000),23,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),23,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#124: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 24 proposal: Command(REPLICA PEER(128.84.154.110:14000),23,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 24.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 14
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 14 Command: Command(REPLICA PEER(128.84.154.110:14000),13,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 24
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 24 Command:Install boto: http://github.com/boto/boto
+To use Amazon Route 53, install boto: http://github.com/boto/boto/
+Sun Sep 30 22:15:25 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: Connected.
+
+Sun Sep 30 22:15:25 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: trying to connect to bootstrap: REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:15:25 2012 [NAMESERVER-128.84.154.110:14985_MainThread] Connection Error: Connection for REPLICA PEER(128.84.154.110:14000) cannot be found.
+
+Sun Sep 30 22:15:25 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: trying to connect to bootstrap: REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:15:25 2012 [NAMESERVER-128.84.154.110:14985_MainThread] Connection Error: Connection for REPLICA PEER(128.84.154.110:14000) cannot be found.
+
+Sun Sep 30 22:15:25 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: trying to connect to bootstrap: REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:15:25 2012 [NAMESERVER-128.84.154.110:14985_MainThread] Connection Error: Connection for REPLICA PEER(128.84.154.110:14000) cannot be found.
+
+Sun Sep 30 22:15:26 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: trying to connect to bootstrap: REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:15:26 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: connected to bootstrap: 128.84.154.110:14000
+
+openreplica.org.
+>Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_ReceiverThread] State: received Message#122: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 23 proposal: Command(REPLICA PEER(128.84.154.110:14000),22,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: invoking method: msg_perform
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_ReceiverThread] State: received Message#124: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 24 proposal: Command(REPLICA PEER(128.84.154.110:14000),23,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: Performing msg Message#122: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 23 proposal: Command(REPLICA PEER(128.84.154.110:14000),22,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_ReceiverThread] State: received Message#126: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 25 proposal: Command(REPLICA PEER(128.84.154.110:14000),24,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: Updating..
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: invoking method: msg_perform
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: Performing msg Message#124: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 24 proposal: Command(REPLICA PEER(128.84.154.110:14000),23,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: Updating..
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: invoking method: msg_perform
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: Performing msg Message#126: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 25 proposal: Command(REPLICA PEER(128.84.154.110:14000),24,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: Updating..
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_ReceiverThread] State: received Message#128: UPDATEREPLY src REPLICA PEER(128.84.154.110:14000) decisions {1: <concoord.command.Command instance at 0x1c6f7e8>, 2: <concoord.command.Command instance at 0x1c74758>, 3: <concoord.command.Command instance at 0x1c747a0>, 4: <concoord.command.Command instance at 0x1c747e8>, 5: <concoord.command.Command instance at 0x1c74830>, 6: <concoord.command.Command instance at 0x1c74878>, 7: <concoord.command.Command instance at 0x1c748c0>, 8: <concoord.command.Command instance at 0x1c74908>, 9: <concoord.command.Command instance at 0x1c74950>, 10: <concoord.command.Command instance at 0x1c74998>, 11: <concoord.command.Command instance at 0x1c749e0>, 12: <concoord.command.Command instance at 0x1c74a28>, 13: <concoord.command.Command instance at 0x1c74a70>, 14: <concoord.command.Command instance at 0x1c74ab8>, 15: <concoord.command.Command instance at 0x1c74b00>, 16: <concoord.command.Command instance at 0x1c74b48>, 17: <concoord.command.Command instance at 0x1c74b90>, 18: <concoord.command.Command instance at 0x1c74bd8>, 19: <concoord.command.Command instance at 0x1c74c20>, 20: <concoord.command.Command instance at 0x1c74c68>, 21: <concoord.command.Command instance at 0x1c74cb0>, 22: <concoord.command.Command instance at 0x1c74cf8>, 23: <concoord.command.Command instance at 0x1c74d40>, 24: <concoord.command.Command instance at 0x1c74d88>, 25: <concoord.command.Command instance at 0x1c74dd0>}
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: invoking method: msg_updatereply
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 1.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 1
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 1 Command: Command(REPLICA PEER(128.84.154.110:14000),0,('_add_node', 1, '128.84.154.110:14898')) DoMetaOnly: False IsMeta: True
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 2.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 2
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 2 Command: Command(REPLICA PEER(128.84.154.110:14000),1,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 3.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 3
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 3 Command: Command(REPLICA PEER(128.84.154.110:14000),2,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 4.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 4
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 4 Command: Command(REPLICA PEER(128.84.154.110:14000),3,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 5.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 5
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 5 Command: Command(REPLICA PEER(128.84.154.110:14000),4,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 6.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 6
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_ReceiverThread] State: received Message#129: UPDATEREPLY src REPLICA PEER(128.84.154.110:14000) decisions {1: <concoord.command.Command instance at 0x1c6f560>, 2: <concoord.command.Command instance at 0x1c6f368>, 3: <concoord.command.Command instance at 0x1c6f5a8>, 4: <concoord.command.Command instance at 0x1c74e18>, 5: <concoord.command.Command instance at 0x1c74e60>, 6: <concoord.command.Command instance at 0x1c74ea8>, 7: <concoord.command.Command instance at 0x1c74ef0>, 8: <concoord.command.Command instance at 0x1c74f38>, 9: <concoord.command.Command instance at 0x1c74f80>, 10: <concoord.command.Command instance at 0x1c74fc8>, 11: <concoord.command.Command instance at 0x1cd1050>, 12: <concoord.command.Command instance at 0x1cd1098>, 13: <concoord.command.Command instance at 0x1cd10e0>, 14: <concoord.command.Command instance at 0x1cd1128>, 15: <concoord.command.Command instance at 0x1cd1170>, 16: <concoord.command.Command instance at 0x1cd11b8>, 17: <concoord.command.Command instance at 0x1cd1200>, 18: <concoord.command.Command instance at 0x1cd1248>, 19: <concoord.command.Command instance at 0x1cd1290>, 20: <concoord.command.Command instance at 0x1cd12d8>, 21: <concoord.command.Command instance at 0x1cd1320>, 22: <concoord.command.Command instance at 0x1cd1368>, 23: <concoord.command.Command instance at 0x1cd13b0>, 24: <concoord.command.Command instance at 0x1cd13f8>, 25: <concoord.command.Command instance at 0x1cd1440>}
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 6 Command: Command(REPLICA PEER(128.84.154.110:14000),5,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 7.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 7
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 7 Command: Command(REPLICA PEER(128.84.154.110:14000),6,noop) DoMetaOnly: False IsMeta: False
+
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 8.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 8
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 8 Command: Command(REPLICA PEER(128.84.154.110:14000),7,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 9.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 9
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 9 Command: Command(REPLICA PEER(128.84.154.110:14000),8,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_ReceiverThread] State: received Message#130: UPDATEREPLY src REPLICA PEER(128.84.154.110:14000) decisions {1: <concoord.command.Command instance at 0x1cd1518>, 2: <concoord.command.Command instance at 0x1cd1560>, 3: <concoord.command.Command instance at 0x1cd15a8>, 4: <concoord.command.Command instance at 0x1cd15f0>, 5: <concoord.command.Command instance at 0x1cd1638>, 6: <concoord.command.Command instance at 0x1cd1680>, 7: <concoord.command.Command instance at 0x1cd16c8>, 8: <concoord.command.Command instance at 0x1cd1710>, 9: <concoord.command.Command instance at 0x1cd1758>, 10: <concoord.command.Command instance at 0x1cd17a0>, 11: <concoord.command.Command instance at 0x1cd17e8>, 12: <concoord.command.Command instance at 0x1cd1830>, 13: <concoord.command.Command instance at 0x1cd1878>, 14: <concoord.command.Command instance at 0x1cd18c0>, 15: <concoord.command.Command instance at 0x1cd1908>, 16: <concoord.command.Command instance at 0x1cd1950>, 17: <concoord.command.Command instance at 0x1cd1998>, 18: <concoord.command.Command instance at 0x1cd19e0>, 19: <concoord.command.Command instance at 0x1cd1a28>, 20: <concoord.command.Command instance at 0x1cd1a70>, 21: <concoord.command.Command instance at 0x1cd1ab8>, 22: <concoord.command.Command instance at 0x1cd1b00>, 23: <concoord.command.Command instance at 0x1cd1b48>, 24: <concoord.command.Command instance at 0x1cd1b90>, 25: <concoord.command.Command instance at 0x1cd1bd8>}
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 10.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 10
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 10 Command: Command(REPLICA PEER(128.84.154.110:14000),9,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 11.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 1
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 1 Command: Command(REPLICA PEER(128.84.154.110:14000),0,('_add_node', 1, '128.84.154.110:14898')) DoMetaOnly: True IsMeta: True
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: commandname: _add_node args: (1, '128.84.154.110:14898')
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: Adding node: ACCEPTOR 128.84.154.110:14898
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: Updating Revision -- from: 2012100100
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: Updating Revision -- to: 2012100101
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 11
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 11 Command: Command(REPLICA PEER(128.84.154.110:14000),10,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 12.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 2
+
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 2 Command: Command(REPLICA PEER(128.84.154.110:14000),1,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 12
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 12 Command: Command(REPLICA PEER(128.84.154.110:14000),11,('_add_node', 3, '128.84.154.110:14985')) DoMetaOnly: False IsMeta: True
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 13.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 3
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 3 Command: Command(REPLICA PEER(128.84.154.110:14000),2,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 13
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 13 Command: Command(REPLICA PEER(128.84.154.110:14000),12,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 14.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 4
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 4 Command: Command(REPLICA PEER(128.84.154.110:14000),3,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 14
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 14 Command: Command(REPLICA PEER(128.84.154.110:14000),13,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 15.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 5
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 5 Command: Command(REPLICA PEER(128.84.154.110:14000),4,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 15
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 15 Command: Command(REPLICA PEER(128.84.154.110:14000),14,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 16.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 6
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 6 Command: Command(REPLICA PEER(128.84.154.110:14000),5,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 16
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 16 Command: Command(REPLICA PEER(128.84.154.110:14000),15,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 17.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 7
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 7 Command: Command(REPLICA PEER(128.84.154.110:14000),6,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 17
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 17 Command: Command(REPLICA PEER(128.84.154.110:14000),16,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 18.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 8
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 8 Command: Command(REPLICA PEER(128.84.154.110:14000),7,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 18
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 18 Command: Command(REPLICA PEER(128.84.154.110:14000),17,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 19.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 9
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 9 Command: Command(REPLICA PEER(128.84.154.110:14000),8,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 19
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 19 Command: Command(REPLICA PEER(128.84.154.110:14000),18,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 20.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 10
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 10 Command: Command(REPLICA PEER(128.84.154.110:14000),9,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 20
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 20 Command: Command(REPLICA PEER(128.84.154.110:14000),19,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 21.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 11
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 11 Command: Command(REPLICA PEER(128.84.154.110:14000),10,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 21
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 21 Command: Command(REPLICA PEER(128.84.154.110:14000),20,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 22.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 12
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 12 Command: Command(REPLICA PEER(128.84.154.110:14000),11,('_add_node', 3, '128.84.154.110:14985')) DoMetaOnly: True IsMeta: True
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: commandname: _add_node args: (3, '128.84.154.110:14985')
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: Adding node: NAMESERVER 128.84.154.110:14985
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: Updating Revision -- from: 2012100101
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: Updating Revision -- to: 2012100102
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 22
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 22 Command: Command(REPLICA PEER(128.84.154.110:14000),21,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 23.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 13
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 13 Command: Command(REPLICA PEER(128.84.154.110:14000),12,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 23
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 23 Command: Command(REPLICA PEER(128.84.154.110:14000),22,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 24.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 14
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 14 Command: Command(REPLICA PEER(128.84.154.110:14000),13,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 24
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 24 Command: Command(REPLICA PEER(128.84.154.110:14000),23,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: executing command 25.
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 15
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 15 Command: Command(REPLICA PEER(128.84.154.110:14000),14,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: performcore 25
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: ---> SlotNumber: 25 Command: Command(REPLICA PEER(128.84.154.110:14000),24,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: Update is done!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: invoking method: msg_updatereply
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: Update is done!
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: invoking method: msg_updatereply
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [NAMESERVER-128.84.154.110:14985_MainThread] State: Update is done!
+
+Sun Sep 30 22:15:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 22230)
+
+Sun Sep 30 22:15:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:15:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:15:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:15:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 42301
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:15:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 39017)
+
+Sun Sep 30 22:15:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:15:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:15:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 22639
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:15:57 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: rece Command(REPLICA PEER(128.84.154.110:14000),23,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: entered propose accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: got an accept for proposal ballotno (0, '128.84.154.110:14000') commandno 25 proposal Command(REPLICA PEER(128.84.154.110:14000),24,noop) making 1 out of 1 accepts
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Agreed on Command(REPLICA PEER(128.84.154.110:14000),24,noop)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] Paxos State: Sending PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: Performing msg Message#126: PERFORM src REPLICA PEER(128.84.154.110:14000)ballotnumber: 0 commandnumber: 25 proposal: Command(REPLICA PEER(128.84.154.110:14000),24,noop) result: None pvalues: 
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: executing command 25.
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 15
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 15 Command: Command(REPLICA PEER(128.84.154.110:14000),14,noop) DoMetaOnly: True IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: performcore 25
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: ---> SlotNumber: 25 Command: Command(REPLICA PEER(128.84.154.110:14000),24,noop) DoMetaOnly: False IsMeta: False
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: returning from performcore!!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State:: issuing pending command
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: Returning from PERFORM!
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: returning from msg_propose_accept
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#4: UPDATE src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_update
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#5: UPDATE src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_update
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#6: UPDATE src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:15:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_update
+
+Sun Sep 30 22:15:57 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#7: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:15:57 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:16:27 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#8: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:16:27 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:16:57 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#9: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:16:57 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:17:28 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] Sived a message from address ('128.84.96.10', 49501)
+
+Sun Sep 30 22:15:57 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:15:57 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:15:57 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 37761
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:15:57 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:16:27 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:16:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 65450)
+
+Sun Sep 30 22:16:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:16:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:16:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:16:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 56097
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:16:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 22053)
+
+Sun Sep 30 22:16:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:16:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:16:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 52399
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:16:57 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:17:28 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:17:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 12973)
+
+Sun Sep 30 22:17:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:17:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:17:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:17:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 61260
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:17:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 8326)
+
+Sun Sep 30 22:17:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:17:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:17:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 1905
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:17:58 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:18:28 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:18:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 27615)
+
+Sun Sep 30 22:18:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:18:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:18:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:18:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 25253
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:18:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 33452)
+
+Sun Sep 30 22:18:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:18:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:18:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 50673
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:18:58 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:19:28 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:19:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 7433)
+
+Sun Sep 30 22:19:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:19:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:19:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:19:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 34829
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:19:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 4777)
+
+Sun Sep 30 22:19:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:19:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:19:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 56377
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:19:58 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:20:28 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:20:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 44834)
+
+Sun Sep 30 22:20:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:20:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:20:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:20:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 60954
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:20:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 6802)
+
+Sun Sep 30 22:20:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:20:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:20:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 61084
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:20:58 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:21:28 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:21:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 48076)
+
+Sun Sep 30 22:21:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:21:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:21:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:21:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 60935
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:21:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 16762)
+
+Sun Sep 30 22:21:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:21:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:21:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 953
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:21:58 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:22:28 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:22:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 46479)
+
+Sun Sep 30 22:22:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:22:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:22:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:22:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 28034
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:22:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 4765)
+
+Sun Sep 30 22:22:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:22:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:22:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 45502
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:22:58 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:23:28 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:23:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 48469)
+
+Sun Sep 30 22:23:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:23:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:23:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:23:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 30673
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:23:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 33427)
+
+Sun Sep 30 22:23:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:23:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:23:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 12767
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:23:58 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:24:28 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:24:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 37993)
+
+Sun Sep 30 22:24:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:24:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 tate: received Message#10: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:17:28 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:17:58 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#11: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:17:58 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:18:28 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#12: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:18:28 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:18:58 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#13: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:18:58 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:19:28 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#14: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:19:28 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:19:58 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#15: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:19:58 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:20:28 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#16: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:20:28 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:20:58 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#17: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:20:58 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:21:28 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#18: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:21:28 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:21:58 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#19: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:21:58 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:22:28 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#20: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:22:28 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:22:58 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#21: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:22:58 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:23:28 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#22: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:23:28 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:23:58 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#23: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:23:58 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:24:28 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#24: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:24:28 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:24:58 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#25: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:24:58 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:25:28 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#26: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:25:28 2012 [REPLICA-128.84.154.110:140022:24:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:24:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 27102
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:24:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 18992)
+
+Sun Sep 30 22:24:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:24:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:24:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 32403
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:24:58 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:25:28 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:25:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 6031)
+
+Sun Sep 30 22:25:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:25:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:25:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:25:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 50949
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:25:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 54466)
+
+Sun Sep 30 22:25:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:25:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:25:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 34121
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:25:58 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:26:28 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:26:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 6706)
+
+Sun Sep 30 22:26:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:26:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:26:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:26:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 61189
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:26:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 60593)
+
+Sun Sep 30 22:26:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:26:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:26:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 16923
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:26:58 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:27:28 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:27:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 2727)
+
+Sun Sep 30 22:27:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:27:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:27:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:27:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 57394
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:27:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 57258)
+
+Sun Sep 30 22:27:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:27:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:27:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 7338
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:27:58 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:28:09 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('203.246.162.101', 33504)
+
+Sun Sep 30 22:28:09 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:28:09 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:28:09 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 47778
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:28:28 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:28:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 29974)
+
+Sun Sep 30 22:28:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:28:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:28:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:28:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 37522
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:28:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 60298)
+
+Sun Sep 30 22:28:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:28:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:28:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 63769
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:28:58 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:29:28 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:29:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 21166)
+
+Sun Sep 30 22:29:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:29:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:29:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:29:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 27380
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:29:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 29433)
+
+Sun Sep 30 22:29:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:29:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:29:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 1978
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:29:58 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:30:28 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:30:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 58248)
+
+Sun Sep 30 22:30:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:30:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:30:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:30:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 44628
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:30:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 51301)
+
+Sun Sep 30 22:30:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:30:44 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:30:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 1218
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:30:58 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:31:28 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:31:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 27158)
+
+Sun Sep 30 22:31:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:31:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:31:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:31:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 32594
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:31:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 51465)
+
+Sun Sep 30 22:31:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:31:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:31:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 53785
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:31:58 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:32:28 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:32:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 30485)
+
+Sun Sep 30 22:32:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:32:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:32:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:32:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 41412
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:32:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 26938)
+
+Sun Sep 30 22:32:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:32:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS S0_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:25:58 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#27: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:25:58 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:26:28 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#28: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:26:28 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:26:58 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#29: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:26:58 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:27:28 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#30: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:27:28 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:27:58 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#31: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:27:58 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:28:28 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#32: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:28:28 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:28:58 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#33: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:28:58 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:29:28 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#34: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:29:28 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:29:58 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#35: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:29:58 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:30:28 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#36: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:30:28 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:30:58 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#37: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:30:58 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:31:28 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#38: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:31:28 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:31:58 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#39: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:31:58 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:32:28 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#40: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:32:28 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:32:58 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#41: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:32:58 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:33:28 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: received Message#42: PING src NAMESERVER PEER(128.84.154.110:14985)
+
+Sun Sep 30 22:33:28 2012 [REPLICA-128.84.154.110:14000_MainThread] State: invoking method: msg_ping
+
+Sun Sep 30 22:33:59 2012 [REPLICA-128.84.154.110:14000_ReceiverThread] State: retate: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:32:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 60706
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:32:58 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:33:28 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:33:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 59320)
+
+Sun Sep 30 22:33:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:33:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:33:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:33:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 20292
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:33:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 5028)
+
+Sun Sep 30 22:33:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:33:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:33:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 7133
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128.84.154.110
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:33:59 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:34:29 2012 [NAMESERVER-128.84.154.110:14985_LeaderPingThread] State: Sending PING to REPLICA PEER(128.84.154.110:14000)
+
+Sun Sep 30 22:34:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 7607)
+
+Sun Sep 30 22:34:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:34:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN AAAA
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:34:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Query for my subdomain: openreplica.org. IN AAAA
+
+Sun Sep 30 22:34:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 16012
+opcode QUERY
+rcode NOERROR
+flags QR
+;QUESTION
+openreplica.org. IN AAAA
+;ANSWER
+;AUTHORITY
+;ADDITIONAL
+---
+
+
+Sun Sep 30 22:34:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: received a message from address ('128.253.180.2', 58300)
+
+Sun Sep 30 22:34:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query for openreplica.org.
+
+
+Sun Sep 30 22:34:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: Received Query openreplica.org. IN A
+
+
+openreplica.org.
+ISMYDOMAINNAME:  True
+ISMYSUBDOMAINNAME:  False
+SPECIAL DOMAIN:  False
+NS NAME:  False
+Sun Sep 30 22:34:45 2012 [NAMESERVER-128.84.154.110:14985_UDPServerThread] DNS State: RESPONSE:
+id 43330
+opcode QUERY
+rcode NOERROR
+flags QR AA
+;QUESTION
+openreplica.org. IN A
+;ANSWER
+openreplica.org. 30 IN A 128
