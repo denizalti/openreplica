@@ -28,7 +28,7 @@ parser.add_option("-t", "--token", action="store", dest="token", default='', hel
 (options, args) = parser.parse_args()
 
 NODE_BOOTSTRAP = 5
-CONCOORDPATH = 'concoord/src/concoord/'
+CONCOORDPATH = 'concoord-0.2.0/concoord/'
 
 try:
     CONFIGDICT = load_configdict(options.configpath)
@@ -47,10 +47,8 @@ def check_object(clientcode):
     return v.safe
 
 def check_planetlab_pythonversion(plconn, node):
-#    print "Uploading Python version tester to ", node
     pathtopvtester = CONCOORD_HELPERDIR+'testpythonversion.py' 
     plconn.uploadone(node, pathtopvtester)
-#    print "Checking Python version"
     rtv, output = plconn.executecommandone(node, NPYTHONPATH + " testpythonversion.py")
     if not rtv:
         plconn.executecommandone(node, "rm testpythonversion.py")

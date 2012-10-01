@@ -27,8 +27,7 @@ parser.add_option("-o", "--configpath", action="store", dest="configpath", defau
 parser.add_option("-t", "--token", action="store", dest="token", default='', help="unique security token")
 (options, args) = parser.parse_args()
 
-CONCOORDPATH = 'concoord/src/concoord/'
-
+CONCOORDPATH = 'concoord-0.2.0/concoord/'
 try:
     CONFIGDICT = load_configdict(options.configpath)
     NPYTHONPATH = CONFIGDICT['NPYTHONPATH']
