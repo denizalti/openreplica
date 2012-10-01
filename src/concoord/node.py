@@ -268,7 +268,7 @@ class Node():
     def handle_connection(self, clientsock):
         """Receives a message and calls the corresponding message handler"""
         connection = self.connectionpool.get_connection_by_socket(clientsock)
-        message = connection.receive()
+        timestamp,message = connection.receive()
         if message == None:
             return False
         else:
