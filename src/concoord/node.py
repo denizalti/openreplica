@@ -181,6 +181,13 @@ class Node():
         # Start a thread that waits for inputs
         input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
         input_thread.start()
+<<<<<<< HEAD
+        # Start a thread that pings neighbors
+        timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
+        timer_thread.name = 'PeriodicThread'
+        timer_thread.start()
+=======
+>>>>>>> c408fe7dd228d7f946f385128ed543bde4614838
         return self
 
     def __str__(self):
@@ -241,6 +248,7 @@ class Node():
                 for s in exceptready:
                     print "EXCEPTION ", s
                     # XXX the remote side is dead, we need to do something
+
 
                 # we got some input, time to process it
                 for s in inputready:
