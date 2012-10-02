@@ -7,7 +7,6 @@ import inspect
 import math, random, time
 import os, sys
 import signal
-from concoordprofiler import *
 from threading import Thread, Lock, Condition, Timer, Event
 from concoord.peer import Peer
 from concoord.group import Group
@@ -274,8 +273,6 @@ class Replica(Node):
         self.logger.write("State", "Returning from PERFORM!")
             
     def initiate_command(self, givenproposal):
-        # Throughput test start
-        self.throughput_test()
         # Add command to pending commands
         givencommandnumber = self.find_commandnumber()
         self.add_to_pendingcommands(givencommandnumber, givenproposal)
@@ -846,11 +843,10 @@ class Replica(Node):
             prc = self.outstandingproposes[msg.commandnumber]
             if msg.inresponseto == prc.ballotnumber:
                 prc.received[msg.source] = msg
-                self.logger.write("Paxos State", "got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts" % \
-                       (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
+                self.logger.write("Paxos State",
+                                  "got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts"
+                                  % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
                 if len(prc.received) >= prc.nquorum:
-                    # Throughput test
-                    self.throughput_test()
                     self.logger.write("Paxos State", "Agreed on %s" % prc.proposal) 
                     # take this response collector out of the outstanding propose set
                     self.add_to_proposals(prc.commandnumber, prc.proposal)
@@ -1018,26 +1014,17 @@ class Replica(Node):
     def throughput_test(self):
         self.throughput_runs += 1
         if self.throughput_runs == 1000:
-            profile_on()
             self.throughput_start = time.time()
         elif self.throughput_runs == 10101:
-            profile_off()
             self.throughput_stop = time.time()
             totaltime = self.throughput_stop - self.throughput_start
             print "********************************************"
             print "TOTAL: ", totaltime
             print "TPUT: ", 10000/totaltime, "req/s"
             print "********************************************"
-            profilerdict = get_profile_stats()
-            for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): v[1]):
-                print "%s: %s" % (key[0], value[1])
             self._graceexit(1)
 
     def msg_output(self, conn, msg):
-#        profile_off()
-#        profilerdict = get_profile_stats()
-#        for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): v[1]):
-#            print "%s: %s" % (key, value)
         time.sleep(10)
         sys.stdout.flush()
         self.send(msg, self.groups[NODE_ACCEPTOR].members[0])
