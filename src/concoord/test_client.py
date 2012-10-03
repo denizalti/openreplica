@@ -71,6 +71,7 @@ def test_loop():
         os._exit(0)
 
 def main():
+  print "STARTING.."
   start_test()
     
 if __name__=='__main__':

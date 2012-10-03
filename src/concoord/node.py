@@ -38,9 +38,6 @@ parser.add_option("-m", "--master", action="store", dest="master", default='', h
 parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
 (options, args) = parser.parse_args()
 
-DO_PERIODIC_PINGS = False
-RESEND = False
-
 class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
@@ -77,10 +74,6 @@ class Node():
         # {msgid: msginfo}
         self.outstandingmessages_lock =RLock()
         self.outstandingmessages = {}
-        # last msg timestamp for all peers
-        # {peer: timestamp}
-        self.lastmessages_lock =RLock()
-        self.lastmessages = {}
         # number of retries for all peers
         # {peer: retries}
         self.retries_lock =RLock()
@@ -198,10 +191,6 @@ class Node():
         # Start a thread that waits for inputs
         input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
         input_thread.start()
-        # Start a thread that pings neighbors
-        timer_thread = Timer(ACKTIMEOUT/5, self.periodic)
-        timer_thread.name = 'PeriodicThread'
-        timer_thread.start()
         return self
 
     def __str__(self):
@@ -296,14 +285,8 @@ class Node():
                     message = struct.pack("I", len(messagestr)) + messagestr
                     clientsock.send(message)
                 return
-            # add to lastmessages
-            with self.lastmessages_lock:
-                if not self.lastmessages.has_key(message.source):
-                    self.lastmessages[message.source] = timestamp
-                elif self.lastmessages[message.source] < timestamp:
-                    self.lastmessages[message.source] = timestamp
             # add to receivedmessages
-            self.receivedmessages.append((timestamp,message,connection))
+            self.receivedmessages.append((message,connection))
             self.receivedmessages_semaphore.release()
             if message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
                 try:
@@ -317,7 +300,7 @@ class Node():
     def handle_messages(self):
         while True:
             self.receivedmessages_semaphore.acquire()
-            (timestamp, message_to_process, connection) = self.receivedmessages.pop(0)
+            (message_to_process, connection) = self.receivedmessages.pop(0)
             self.process_message(message_to_process, connection)
         return
 
@@ -350,9 +333,6 @@ class Node():
     def msg_ping(self, conn, msg):
         return
 
-    def msg_refer(self, conn, msg):
-        self.logger.write("Message Error", "Received a REFER message, not a coordinator.")
-
     def msg_bye(self, conn, msg):
         """Deletes the source of MSG_BYE from groups"""
         self.groups[msg.source.type].remove(msg.source)
@@ -378,29 +358,6 @@ class Node():
     def cmd_state(self, args):
         """prints connectivity state of the corresponding Node."""
         self.logger.write("State", "\n%s\n" % (self.statestr()))
-
-    def periodic(self):
-        """timer function that is responsible for periodic state maintenance.
-        sends MSG_HELO to peers that it has not heard within LIVENESSTIMEOUT.
-        """
-        while True:
-            if DO_PERIODIC_PINGS:
-                checkliveness = set()
-                for type,group in self.groups.iteritems():
-                    for pingpeer in group.members:
-                        # don't ping the peer if it has sent a message recently
-                        if self.lastmessages[pingpeer] + LIVENESSTIMEOUT >= now:
-                            self.logger.write("State", "sending PING to %s" % pingpeer)
-                            pingmessage = HandshakeMessage(MSG_PING, self.me)
-                            self.send(pingmessage, peer=pingpeer)
-            time.sleep(ACKTIMEOUT)
-
-    def add_retry(self, peer):
-        with self.retries_lock:
-            if self.retries.has_key(peer):
-                self.retries[peer] += 1
-            else:
-                self.retries[peer] = 1
 
     def get_user_input_from_shell(self):
         """Shell loop that accepts inputs from the command prompt and 
