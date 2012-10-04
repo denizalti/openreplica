@@ -42,20 +42,17 @@ class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
     """ 
-    def __init__(self, nodetype, addr=options.addr, port=options.port, givenbootstraplist=options.bootstrap, debugoption=options.debug, objectfilename=options.objectfilename, objectname=options.objectname, instantiateobj=False, configpath=options.configpath, logger=options.logger):
-        """Node State
-        - addr: hostname for Node, detected automatically
-        - port: port for Node, can be taken from the commandline (-p [port]) or
-        detected automatically by binding.
-        - connectionpool: ConnectionPool that keeps all Connections Node knows about
-        - type: type of the corresponding Node: NODE_ACCEPTOR | NODE_REPLICA | NODE_NAMESERVER
-        - alive: liveness of Node
-        - socket: server socket for Node
-        - me: Peer object that represents Node
-        - id: id for Node (addr:port)
-        - groups: other Peers in the system that Node knows about. Node.groups is indexed by the
-        corresponding node_name (NODE_ACCEPTOR | NODE_REPLICA | NODE_NAMESERVER), which returns a Group
-        """
+    def __init__(self,
+                 nodetype,
+                 addr=options.addr,
+                 port=options.port,
+                 givenbootstraplist=options.bootstrap,
+                 debugoption=options.debug,
+                 objectfilename=options.objectfilename,
+                 objectname=options.objectname,
+                 instantiateobj=False,
+                 configpath=options.configpath,
+                 logger=options.logger):
         self.addr = addr if addr else findOwnIP()
         self.port = port
         self.connectionpool = ConnectionPool()
@@ -66,13 +63,11 @@ class Node():
                 self._graceexit(1)
             self.objectfilename = objectfilename
             self.objectname = objectname
-        ## messaging layer information
+        ## initialize receive queue
         self.receivedmessages_semaphore = Semaphore(0)
-        self.receivedmessages = []
-        
+        self.receivedmessages = []        
         # lock to synchronize message handling
         self.lock = Lock()
-
         # create server socket and bind to a port
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
@@ -94,11 +89,13 @@ class Node():
                     pass
         self.socket.listen(10)
         self.alive = True
-        
         # initialize empty groups
         self.me = Peer(self.addr,self.port,self.type)
+        # set id
         self.id = self.me.getid()
+        # set path for additional configuration data
         self.configpath = configpath
+        # set the logger
         try:
             LOGGERNODE = load_configdict(self.configpath)['LOGGERNODE']
         except:
@@ -108,7 +105,9 @@ class Node():
                 LOGGERNODE = None
         self.logger = NetworkLogger("%s-%s" % (node_names[self.type],self.id), LOGGERNODE)
         self.logger.write("State", "Connected.")
-        self.groups = {NODE_ACCEPTOR:Group(self.me), NODE_REPLICA: Group(self.me), NODE_NAMESERVER:Group(self.me)}
+        self.groups = {NODE_ACCEPTOR:Group(self.me),
+                       NODE_REPLICA: Group(self.me),
+                       NODE_NAMESERVER:Group(self.me)}
         # connect to the bootstrap node
         if givenbootstraplist:
             self.bootstraplist = []
@@ -296,9 +295,8 @@ class Node():
         return
 
     def process_message(self, message, connection):
-        """Process message loop that takes messages out of the receivedmessages
-        list and handles them.
-        """
+        """Process message loop that takes messages out of
+        the receivedmessages list and handles them."""
         # find method and invoke it holding a lock
         mname = "msg_%s" % msg_names[message.type].lower()
         try:
@@ -311,9 +309,7 @@ class Node():
             method(connection, message)
         return True
 
-    #
     # message handlers
-    #
     def msg_helo(self, conn, msg):
         return
 

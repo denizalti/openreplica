@@ -22,12 +22,18 @@ from concoord.message import *
 
 backoff_event = Event()
 class Replica(Node):
-    """Replica receives MSG_PERFORM from Leaders and execute corresponding commands."""
-    def __init__(self, nodetype=NODE_REPLICA, instantiateobj=True, port=None,  bootstrap=None):
+    def __init__(self,
+                 nodetype=NODE_REPLICA,
+                 instantiateobj=True,
+                 port=None,
+                 bootstrap=None):
         Node.__init__(self, nodetype, instantiateobj=instantiateobj)
+        # load and initialize the object to be replicated
         if instantiateobj:
             self.object = None
-            for objectloc in ['concoord.'+self.objectfilename[:-3], 'concoord.object.'+self.objectfilename[:-3], self.objectfilename[:-3]]:
+            for objectloc in ['concoord.'+self.objectfilename[:-3],
+                              'concoord.object.'+self.objectfilename[:-3],
+                              self.objectfilename[:-3]]:
                 try:
                     ip = objectloc.split('.')
                     mod = __import__(objectloc, {}, {}, [])
@@ -69,14 +75,13 @@ class Replica(Node):
         self.metacommandnumber = 0
         self.clientpool = ConnectionPool()
 
-        # Measurement Variables
+        # PERFORMANCE MEASUREMENT VARS
         self.firststarttime = 0
         self.firststoptime = 0
         self.secondstarttime = 0
         self.secondstoptime = 0
         self.count = 0
 
-        # Throughput Variables
         self.throughput_runs = 0
         self.throughput_stop = 0
         self.throughput_start = 0
@@ -108,7 +113,6 @@ class Replica(Node):
         leaderping_thread.start()
 
     @staticmethod
-    #XXX: WTF is this really doing?
     def _apply_args_to_method(method, args, _concoord_command):
         argspec = inspect.getargspec(method)
         if argspec.args and argspec.args[-1] == '_concoord_command':
@@ -133,7 +137,8 @@ class Replica(Node):
         ismeta = (commandname in METACOMMANDS)
         noop = (commandname == "noop")
         send_result_to_client = True
-        self.logger.write("State:", "---> SlotNumber: %d Command: %s DoMetaOnly: %s IsMeta: %s" % (slotnumber, self.decisions[slotnumber], dometaonly, ismeta))
+        self.logger.write("State:", "---> SlotNumber: %d Command: %s DoMetaOnly: %s IsMeta: %s"
+                          % (slotnumber, self.decisions[slotnumber], dometaonly, ismeta))
         # Result triple
         clientreplycode, givenresult, unblocked = (-1, None, {})
         try:
@@ -215,7 +220,7 @@ class Replica(Node):
                 self.handle_client_command(garbagecommand, prepare=True)
             else:
                 self.handle_client_command(garbagecommand)
-        self.logger.write("State:", "returning from performcore!!")
+        self.logger.write("State:", "returning from performcore!")
 
     def send_reply_to_client(self, clientreplycode, givenresult, command):
         self.logger.write("State", "Sending REPLY to CLIENT")
@@ -281,7 +286,6 @@ class Replica(Node):
 
     def issue_command(self, candidatecommandno):
         """propose a command from the pending commands"""
-        # batch all existing pending commands together
         self.logger.write("State:", "issuing pending command")
         if self.pendingcommands.has_key(candidatecommandno):
             if self.active:
@@ -405,7 +409,7 @@ class Replica(Node):
         """
         if not self.isleader:
             self.isleader = True
-            self.active = False # XXX Maybe should initiate a metacommand to become an active leader and let others know that he is the leader
+            self.active = False
             self.ballotnumber = (0,self.id)
             self.outstandingprepares = {}
             self.outstandingproposes = {}
@@ -536,7 +540,6 @@ class Replica(Node):
             return
         
         if self.receivedclientrequests.has_key((givencommand.client, givencommand.clientcommandnumber)):
-            # XXX What if another REPLICA received this request and handled it?
             self.logger.write("State", "Client request received previously:")
             self.logger.write("State", "Client: %s Commandnumber: %s\nAcceptors: %s"
                               % (str(givencommand.client),
@@ -896,7 +899,7 @@ class Replica(Node):
                 self.initiate_command(prc.proposal)
 
     def ping_leader(self):
-        """used by the ping_thread to ping the current leader periodically"""
+        """used to ping the current leader periodically"""
         while True:
             currentleader = self.find_leader()
             if currentleader != self.me:
@@ -984,32 +987,7 @@ class Replica(Node):
         for cmdnum,command in self.pendingcommands.iteritems():
             print "%d: %s" % (cmdnum,str(command))
 
-## TIMING TEST
-    def handle_client_command_tput(self, givencommand, prepare=False):
-        """handle the received client request
-        - if it has been received before check if it has been executed
-        -- if it has been executed send the result
-        -- if it has not been executed yet send INPROGRESS
-        - if this request has not been received before initiate a paxos round for the command"""
-        self.receivedclientrequests[(givencommand.client,givencommand.clientcommandnumber)] = givencommand
-        if self.active and not prepare:
-            self.do_command_propose(givencommand)
-        else:
-            self.do_command_prepare(givencommand)
-            
-    def throughput_test(self):
-        self.throughput_runs += 1
-        if self.throughput_runs == 1000:
-            self.throughput_start = time.time()
-        elif self.throughput_runs == 10101:
-            self.throughput_stop = time.time()
-            totaltime = self.throughput_stop - self.throughput_start
-            print "********************************************"
-            print "TOTAL: ", totaltime
-            print "TPUT: ", 10000/totaltime, "req/s"
-            print "********************************************"
-            self._graceexit(1)
-
+## MESUREMENT OUTPUT
     def msg_output(self, conn, msg):
         time.sleep(10)
         sys.stdout.flush()
