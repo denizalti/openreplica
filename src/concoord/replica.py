@@ -763,10 +763,7 @@ class Replica(Node):
 
             if len(prc.received) >= prc.nquorum:
                 self.logger.write("Paxos State", "suffiently many accepts on prepare!")
-                # delete outstanding messages that caller doesn't need to check for anymore
-                for msgid in prc.sent:
-                    if self.outstandingmessages.has_key(msgid):
-                        del self.outstandingmessages[msgid]
+                # take this response collector out of the outstanding prepare set
                 del self.outstandingprepares[msg.inresponseto]
                 # choose pvalues with distinctive commandnumbers and highest ballotnumbers
                 pmaxset = prc.possiblepvalueset.pmax()
@@ -804,10 +801,6 @@ class Replica(Node):
         if self.outstandingprepares.has_key(msg.inresponseto):
             prc = self.outstandingprepares[msg.inresponseto]
             self.logger.write("Paxos State", "got a reject for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
-            # delete outstanding messages that caller doesn't need to check for anymore
-            for msgid in prc.sent:
-                if self.outstandingmessages.has_key(msgid):
-                    del self.outstandingmessages[msgid]
             # take this response collector out of the outstanding prepare set
             del self.outstandingprepares[msg.inresponseto]
             # become inactive
@@ -851,9 +844,6 @@ class Replica(Node):
                     # take this response collector out of the outstanding propose set
                     self.add_to_proposals(prc.commandnumber, prc.proposal)
                     # delete outstanding messages that caller doesn't need to check for anymore
-                    for msgid in prc.sent:
-                        if self.outstandingmessages.has_key(msgid):
-                            del self.outstandingmessages[msgid]
                     del self.outstandingproposes[msg.commandnumber]
                     # now we can perform this action on the replicas
                     performmessage = PaxosMessage(MSG_PERFORM, self.me,
@@ -888,10 +878,6 @@ class Replica(Node):
             if msg.inresponseto == prc.ballotnumber:
                 self.logger.write("Paxos State", "got a reject for proposal ballotno %s commandno %s proposal %s still %d out of %d accepts" % \
                        (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
-                # delete outstanding messages that caller doesn't need to check for anymore
-                for msgid in prc.sent:
-                    if self.outstandingmessages.has_key(msgid):
-                        del self.outstandingmessages[msgid]
                 # take this response collector out of the outstanding propose set
                 del self.outstandingproposes[msg.commandnumber]
                 # become inactive
