@@ -69,10 +69,6 @@ class Node():
         ## messaging layer information
         self.receivedmessages_semaphore = Semaphore(0)
         self.receivedmessages = []
-        # number of retries for all peers
-        # {peer: retries}
-        self.retries_lock =RLock()
-        self.retries = {}
         
         # lock to synchronize message handling
         self.lock = Lock()
