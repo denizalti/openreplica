@@ -9,7 +9,7 @@ import socket, errno
 import struct
 import StringIO
 import time
-import cPickle
+import cPickle as pickle
 import random
 from threading import Lock
 
@@ -120,11 +120,11 @@ class Connection():
                 msg_length = struct.unpack("I", lstr[0:4])[0]
                 msgstr = self.receive_n_bytes(msg_length)
                 if PICKLESAFE:
-                    pickle_obj = cPickle.Unpickler(StringIO.StringIO(msgstr))
+                    pickle_obj = pickle.Unpickler(StringIO.StringIO(msgstr))
                     pickle_obj.find_global = self._picklefixer
                     return pickle_obj.load()
                 else:
-                    return cPickle.loads(msgstr)
+                    return pickle.loads(msgstr)
             except IOError as inst:           
                 return None
 
@@ -150,7 +150,7 @@ class Connection():
             if DEBUG and random.random() <= DROPRATE:
                 print "dropping message..."
                 return
-            messagestr = cPickle.dumps(msg)
+            messagestr = pickle.dumps(msg)
             message = struct.pack("I", len(messagestr)) + messagestr
             try:
                 while len(message) > 0:
