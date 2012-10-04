@@ -62,7 +62,8 @@ class NetworkLogger():
 
     def close(self):
         self.socket.close()
-        
+
+# PERFORMANCE MEASUREMENT UTILS
 timers = {}
 def starttimer(timerkey, timerno):
     global timers
@@ -138,3 +139,23 @@ def endtiming(fn):
             obj.count += 1
         return ret
     return new
+
+def throughput_test(fn):
+    """Decorator used to measure throughput."""
+    def new(*args, **kw):
+        ret = fn(*args, **kw)
+        obj = args[0]
+        obj.throughput_runs += 1
+        if obj.throughput_runs == 1000:
+            obj.throughput_start = time.time()
+        elif obj.throughput_runs == 10101:
+            obj.throughput_stop = time.time()
+            totaltime = obj.throughput_stop - obj.throughput_start
+            print "********************************************"
+            print "TOTAL: ", totaltime
+            print "TPUT: ", 10000/totaltime, "req/s"
+            print "********************************************"
+            obj._graceexit(1)
+        return ret
+    return new
+
