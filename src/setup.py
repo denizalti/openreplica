@@ -1,7 +1,7 @@
 import sys
 from distutils.core import setup
 
-concoordversion = '0.2.0'
+concoordversion = '0.3.0'
 
 classifiers = [ 'Development Status :: 3 - Alpha'
               , 'Intended Audience :: Developers'

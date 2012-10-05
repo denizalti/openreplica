@@ -28,7 +28,7 @@ parser.add_option("-t", "--token", action="store", dest="token", default='', hel
 (options, args) = parser.parse_args()
 
 NODE_BOOTSTRAP = 5
-CONCOORDPATH = 'concoord-0.2.0/concoord/'
+CONCOORDPATH = 'concoord-0.3.0/concoord/'
 
 try:
     CONFIGDICT = load_configdict(options.configpath)
