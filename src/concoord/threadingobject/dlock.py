@@ -17,20 +17,18 @@ class DLock():
     def __repr__(self):
         return "<%s owner=%s>" % (self.__class__.__name__, str(self.__owner))
 
-    def acquire(self, kwargs):
-        command = kwargs['_concoord_command']
+    def acquire(self, _concoord_command):
         with self.__atomic:
             if self.__locked:
-                self.__queue.append(command)
+                self.__queue.append(_concoord_command)
                 raise BlockingReturn()
             else:
                 self.__locked = True          
-                self.__owner = command.client
+                self.__owner = _concoord_command.client
 
-    def release(self, kwargs):
-        command = kwargs['_concoord_command']
+    def release(self, _concoord_command):
         with self.__atomic:
-            if self.__owner != command.client:
+            if self.__owner != _concoord_command.client:
                 raise RuntimeError("cannot release un-acquired lock")
             if len(self.__queue) > 0:
                 unblockcommand = self.__queue.pop(0)

@@ -21,21 +21,19 @@ class DCondition():
     def __repr__(self):
         return "<Condition(%s, %d)>" % (self.__lock, len(self.__waiters))
 
-    def wait(self, kwargs):
-        command = kwargs['_concoord_command']
+    def wait(self, _concoord_command):
         # put the caller on waitinglist and take the lock away
         with self.__atomic:
-            if not self.__lock._is_owned(command.client):
+            if not self.__lock._is_owned(_concoord_command.client):
                 raise RuntimeError("cannot wait on un-acquired lock")
-            self.__waiters.append(command)
-            self.__lock.release(kwargs)
+            self.__waiters.append(_concoord_command)
+            self.__lock.release(_concoord_command)
             raise BlockingReturn()
-            
-    def notify(self, kwargs):
-        command = kwargs['_concoord_command']
+        
+    def notify(self, _concoord_command):
         # Notify the next client on the wait list
         with self.__atomic:
-            if not self.__lock._is_owned(command.client):
+            if not self.__lock._is_owned(_concoord_command.client):
                 raise RuntimeError("cannot wait on un-acquired lock")
             if not self.__waiters:
                 return
@@ -43,11 +41,10 @@ class DCondition():
             # notified client should be added to the lock queue
             self.__lock._add_to_queue(waitcommand)
         
-    def notifyAll(self, kwargs):
-        command = kwargs['_concoord_command']
+    def notifyAll(self, _concoord_command):
         # Notify every client on the wait list
         with self.__atomic:
-            if not self.__lock._is_owned(command.client):
+            if not self.__lock._is_owned(_concoord_command.client):
                 raise RuntimeError("cannot wait on un-acquired lock")
             if not self.__waiters:
                 return

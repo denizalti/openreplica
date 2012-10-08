@@ -3,7 +3,7 @@
 @note: Test proxy
 @copyright: See LICENSE
 '''
-from concoord.clientproxymultithreaded import ClientProxy
+from concoord.clientproxy import ClientProxy
 
 class Test:
     def __init__(self, bootstrap):
