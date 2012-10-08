@@ -3,13 +3,9 @@
 @note: Bank proxy
 @copyright: See LICENSE
 '''
-
+from concoord.clientproxy import ClientProxy
 class Bank:
-    def __init__(self, bootstrap, multi=False):
-        if multi:
-            from concoord.clientproxymultithreaded import ClientProxy
-        else:
-            from concoord.clientproxy import ClientProxy
+    def __init__(self, bootstrap):
         self.proxy = ClientProxy(bootstrap)
         
     def __concoordinit__(self):

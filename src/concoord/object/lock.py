@@ -10,23 +10,23 @@ class Lock():
     - acquire: locks the object
     - release: unlocks the object
     """
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.lock = DLock()
 
-    def __repr__(self, **kwargs):
+    def __repr__(self):
         return repr(self.lock)
 
-    def acquire(self, **kwargs):
+    def acquire(self):
         try:
-            return self.lock.acquire(kwargs)
+            return self.lock.acquire(_concoord_command)
         except Exception as e:
             raise e
         
-    def release(self, **kwargs):
+    def release(self):
         try:
-            self.lock.release(kwargs)
+            self.lock.release(_concoord_command)
         except Exception as e:
             raise e
     
-    def __str__(self, **kwargs):
+    def __str__(self):
         return str(self.lock)

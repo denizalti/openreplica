@@ -6,23 +6,23 @@
 from concoord.threadingobject.drlock import DRLock
 
 class RLock():
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.rlock = DRLock()
 
-    def __repr__(self, **kwargs):
+    def __repr__(self):
         return repr(self.rlock)
 
-    def acquire(self, **kwargs):
+    def acquire(self):
         try:
-            return self.rlock.acquire(kwargs)
+            return self.rlock.acquire(_concoord_command)
         except Exception as e:
             raise e
         
-    def release(self, **kwargs):
+    def release(self):
         try:
-            self.rlock.release(kwargs)
+            self.rlock.release(_concoord_command)
         except Exception as e:
             raise e
     
-    def __str__(self, **kwargs):
+    def __str__(self):
         return str(self.rlock)

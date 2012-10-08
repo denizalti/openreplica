@@ -4,14 +4,14 @@
 @copyright: See LICENSE
 """
 class Test():
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.value = 10
 
-    def getvalue(self, **kwargs):
+    def getvalue(self):
         return self.value
 
-    def setvalue(self, newvalue, **kwargs):
+    def setvalue(self, newvalue):
         self.value = newvalue
     
-    def __str__(self, **kwargs):
+    def __str__(self):
         return "The value is %d" % self.value

@@ -4,42 +4,42 @@
 @copyright: See LICENSE
 """
 class Bank():
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.accounts = {}
 
-    def open(self, accntno, **kwargs):
+    def open(self, accntno):
         if self.accounts.has_key(accntno):
             return False
         else:
             self.accounts[accntno] = Account(accntno)
             return True
         
-    def close(self, accntno, **kwargs):
+    def close(self, accntno):
         if self.accounts.has_key(accntno):
             del self.accounts[accntno]
             return True
         else:
             raise KeyError
         
-    def debit(self, accntno, amount, **kwargs):
+    def debit(self, accntno, amount):
         if self.accounts.has_key(accntno):
             return self.accounts[accntno].debit(amount)
         else:
             raise KeyError
         
-    def deposit(self, accntno, amount, **kwargs):
+    def deposit(self, accntno, amount):
         if self.accounts.has_key(accntno):
             return self.accounts[accntno].deposit(amount)
         else:
             raise KeyError
         
-    def balance(self, accntno, **kwargs):
+    def balance(self, accntno):
         if self.accounts.has_key(accntno):
             return self.accounts[accntno].balance
         else:
             raise KeyError
     
-    def __str__(self, **kwargs):
+    def __str__(self):
         return "\n".join(["%s" % (str(account)) for account in self.accounts.values()])
 
 class Account():

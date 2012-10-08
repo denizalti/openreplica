@@ -4,26 +4,20 @@
 @copyright: See LICENSE
 """
 class Queue:
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.queue = []
         
-    def append(self, item, **kwargs):
+    def append(self, item):
         self.queue.append(item)
         
-    def remove(self, **kwargs):
+    def remove(self):
         self.queue.pop(0)
 
-    def get_size(self, **kwargs):
+    def get_size(self):
         return len(self.queue)
 
-    def get_queue(self, **kwargs):
+    def get_queue(self):
         return self.queue
 
-    def __str__(self, **kwargs):
+    def __str__(self):
         return self.queue
-
-    
-        
-    
-        
-        

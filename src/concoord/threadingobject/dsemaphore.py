@@ -18,16 +18,16 @@ class DSemaphore():
     def __repr__(self):
         return "<%s count=%d>" % (self.__class__.__name__, self.__count)
 
-    def acquire(self, kwargs):
+    def acquire(self, _concoord_command):
         with self.__atomic:
             self.__count -= 1
             if self.__count < 0:
-                self.__queue.append(kwargs['_concoord_command'])
+                self.__queue.append(_concoord_command)
                 raise BlockingReturn()
             else:
                 return True
 
-    def release(self, kwargs):
+    def release(self, _concoord_command):
         with self.__atomic:
             self.__count += 1
             if len(self.__queue) > 0:

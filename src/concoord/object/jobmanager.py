@@ -4,22 +4,22 @@
 @copyright: See LICENSE
 """
 class JobManager():
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.jobs = []
         
-    def schedule(self, job, **kwargs):
+    def schedule(self, job):
         self.jobs.append(job)
         
-    def deschedule(self, job, **kwargs):
+    def deschedule(self, job):
         self.jobs.remove(job)
 
-    def update(self, job, key, value, **kwargs):
+    def update(self, job, key, value):
         self.jobe[job].setattr(value)
 
-    def list_jobs(self, **kwargs):
+    def list_jobs(self):
         return self.jobs
         
-    def __str__(self, **kwargs):
+    def __str__(self):
         return " ".join([str(j) for j in self.jobs])
 
 class Job():
