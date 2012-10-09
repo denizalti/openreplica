@@ -24,7 +24,7 @@ try:
 except:
     print("Install dnspython: http://www.dnspython.org/")
 
-parser = OptionParser(usage="usage: %prog -a addr -p port -b bootstrap -f objectfilename -c objectname -n subdomainname -d debug")
+parser = OptionParser()
 parser.add_option("-a", "--addr", action="store", dest="addr", help="addr for the node")
 parser.add_option("-p", "--port", action="store", dest="port", type="int", help="port for the node")
 parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
