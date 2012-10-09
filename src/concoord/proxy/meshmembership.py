@@ -1,11 +1,11 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
-@note: Herbivore coordination object
+@note: MeshMembership proxy
 @copyright: See LICENSE
 """
 from concoord.clientproxy import ClientProxy
 
-class HerbivoreCoord():
+class MeshMembership():
     def __init__(self, bootstrap):
         self.proxy = ClientProxy(bootstrap)
 

@@ -16,13 +16,13 @@ class BoundedSemaphore():
     def __repr__(self):
         return repr(self.semaphore)        
             
-    def acquire(self):
+    def acquire(self, _concoord_command):
         try:
             return self.semaphore.acquire(_concoord_command)
         except Exception as e:
             raise e
         
-    def release(self):
+    def release(self, _concoord_command):
         try:
             return self.semaphore.release(_concoord_command)
         except Exception as e:

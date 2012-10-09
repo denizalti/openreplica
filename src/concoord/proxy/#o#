@@ -1,4 +1,0 @@
-from concoord.proxy.barrier import *
-b = Barrier('127.0.0.1:14000')
-b.__concoordinit__(1)
-b.wait()
