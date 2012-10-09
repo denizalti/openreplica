@@ -12,13 +12,13 @@ class RLock():
     def __repr__(self):
         return repr(self.rlock)
 
-    def acquire(self):
+    def acquire(self, _concoord_command):
         try:
             return self.rlock.acquire(_concoord_command)
         except Exception as e:
             raise e
         
-    def release(self):
+    def release(self, _concoord_command):
         try:
             self.rlock.release(_concoord_command)
         except Exception as e:

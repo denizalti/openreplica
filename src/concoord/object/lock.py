@@ -16,13 +16,13 @@ class Lock():
     def __repr__(self):
         return repr(self.lock)
 
-    def acquire(self):
+    def acquire(self, _concoord_command):
         try:
             return self.lock.acquire(_concoord_command)
         except Exception as e:
             raise e
         
-    def release(self):
+    def release(self, _concoord_command):
         try:
             self.lock.release(_concoord_command)
         except Exception as e:
