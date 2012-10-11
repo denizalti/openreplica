@@ -12,7 +12,6 @@ from concoord.enums import *
 from concoord.utils import *
 from concoord.safetychecker import *
 from concoord.proxygenerator import *
-from concoord.serversideproxyast import *
 from concoord.openreplica.plmanager import *
 from concoord.proxy.nameservercoord import *
 
@@ -79,8 +78,6 @@ def get_startup_cmd(nodetype, node, port, clientobjectfilename, classname='', bo
 def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token):
     # Prepare data necessary for starting nodes
     clientobjectfilename = os.path.basename(clientobjectfilepath)
-    print "Fixing object file for use on the server side.."
-    fixedfile = editproxyfile(clientobjectfilepath, classname, token)
     numreplicas, numacceptors, numnameservers = configuration
     if numreplicas < 1 or numacceptors < 1 or numnameservers < 1:
         print "Invalid configuration:"
@@ -94,7 +91,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
 #        try:
         bootstrap = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
         print "Trying node: %s" % bootstrap.getHosts()[0]
-        success = bootstrap.uploadall(fixedfile.name, CONCOORDPATH + clientobjectfilename)
+        success = bootstrap.uploadall(clientobjectfilename, CONCOORDPATH + clientobjectfilename)
 #        except:
 #            success = False
         if not success:
@@ -123,7 +120,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             try:
                 replica = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
                 print "Trying node: %s"% replica.getHosts()[0]
-                success = replica.uploadall(fixedfile.name, CONCOORDPATH + clientobjectfilename)
+                success = replica.uploadall(clientobjectfilename, CONCOORDPATH + clientobjectfilename)
             except:
                 success = False
             if not success:
@@ -152,7 +149,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             try:
                 acceptor = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
                 print "Trying node: %s"% acceptor.getHosts()[0]
-                success = acceptor.uploadall(fixedfile.name, CONCOORDPATH + clientobjectfilename)
+                success = acceptor.uploadall(clientobjectfilename, CONCOORDPATH + clientobjectfilename)
             except:
                 success = False
             if not success:
@@ -183,7 +180,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             try:
                 nameserver = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
                 print "Trying node: %s"% nameserver.getHosts()[0]
-                success = nameserver.uploadall(fixedfile.name, CONCOORDPATH + clientobjectfilename)
+                success = nameserver.uploadall(clientobjectfilename, CONCOORDPATH + clientobjectfilename)
             except:
                 success = False
             if not success:
