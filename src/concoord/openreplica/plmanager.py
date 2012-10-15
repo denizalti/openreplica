@@ -102,6 +102,7 @@ class PLConnection():
         procdict = {}
         for node in self.nodes:
             cmd = ["ssh", "-i", USERKEYFILE, "-o", "StrictHostKeyChecking=no", USERNAME + "@" + node, command]
+            print cmd
             proc = self._issuecommand(cmd)
             self.procs.append(proc)
             if wait:
@@ -112,6 +113,7 @@ class PLConnection():
 
     def executecommandone(self, node, command, wait=True):
         cmd = ["ssh", "-i", USERKEYFILE, "-o", "StrictHostKeyChecking=no", USERNAME + "@" + node, command]
+        print cmd
         proc = self._issuecommand(cmd)
         self.procs.append(proc)
         if wait:
@@ -120,9 +122,11 @@ class PLConnection():
         return proc
 
     def uploadall(self, local, remote=""):
+        print "Uploading from ", local, " to ", remote
         proclist = []
         for node in self.nodes:
             cmd = ["scp", "-i", USERKEYFILE, "-o", "StrictHostKeyChecking=no", local, USERNAME + "@" + node + ":" + remote]
+            print cmd
             if os.path.isdir(local):
                 cmd.insert(1, "-r")
             proc = self._issuecommand(cmd)

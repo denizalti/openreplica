@@ -88,7 +88,7 @@ class Acceptor(Node):
         """Shell command [paxos]: Print the paxos state of the Acceptor."""
         keytuples = self.accepted.pvalues.keys()
         print sorted(keytuples, key=lambda keytuple: keytuple[0])
-        
+
 def main():
     acceptornode = Acceptor().startservice()
     signal.signal(signal.SIGINT, acceptornode.terminate_handler)

@@ -46,6 +46,7 @@ def check_object(clientcode):
     return v.safe
 
 def check_planetlab_pythonversion(plconn, node):
+    print "Checking python version on planetlab.."
     pathtopvtester = CONCOORD_HELPERDIR+'testpythonversion.py' 
     plconn.uploadone(node, pathtopvtester)
     rtv, output = plconn.executecommandone(node, NPYTHONPATH + " testpythonversion.py")
@@ -77,7 +78,9 @@ def get_startup_cmd(nodetype, node, port, clientobjectfilename, classname='', bo
 
 def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token):
     # Prepare data necessary for starting nodes
+    print "Give filepath: ", clientobjectfilepath
     clientobjectfilename = os.path.basename(clientobjectfilepath)
+    print "Edited filename: ", clientobjectfilename
     numreplicas, numacceptors, numnameservers = configuration
     if numreplicas < 1 or numacceptors < 1 or numnameservers < 1:
         print "Invalid configuration:"
@@ -88,12 +91,13 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
     success = False
     # locate the PlanetLab node for bootstrap, check the node, upload object and start the node
     while not success:
-#        try:
-        bootstrap = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
-        print "Trying node: %s" % bootstrap.getHosts()[0]
-        success = bootstrap.uploadall(clientobjectfilename, CONCOORDPATH + clientobjectfilename)
-#        except:
-#            success = False
+        try:
+            bootstrap = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
+            print "Trying node: %s" % bootstrap.getHosts()[0]
+            print "Uploading from ", clientobjectfilepath, " to ", CONCOORDPATH + clientobjectfilename
+            success = bootstrap.uploadall(clientobjectfilepath, CONCOORDPATH + clientobjectfilename)
+        except:
+            success = False
         if not success:
             continue
         # Object upload is done.
@@ -120,8 +124,8 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             try:
                 replica = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
                 print "Trying node: %s"% replica.getHosts()[0]
-                print "Uploading from ", clientobjectfilename, " to: ", CONCOORDPATH + clientobjectfilename
-                success = replica.uploadall(clientobjectfilename, CONCOORDPATH + clientobjectfilename)
+                print "Uploading from ", clientobjectfilepath, " to: ", CONCOORDPATH + clientobjectfilename
+                success = replica.uploadall(clientobjectfilepath, CONCOORDPATH + clientobjectfilename)
             except:
                 success = False
             if not success:
@@ -150,7 +154,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             try:
                 acceptor = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
                 print "Trying node: %s"% acceptor.getHosts()[0]
-                success = acceptor.uploadall(clientobjectfilename, CONCOORDPATH + clientobjectfilename)
+                success = acceptor.uploadall(clientobjectfilepath, CONCOORDPATH + clientobjectfilename)
             except:
                 success = False
             if not success:
@@ -181,7 +185,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             try:
                 nameserver = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
                 print "Trying node: %s"% nameserver.getHosts()[0]
-                success = nameserver.uploadall(clientobjectfilename, CONCOORDPATH + clientobjectfilename)
+                success = nameserver.uploadall(clientobjectfilepath, CONCOORDPATH + clientobjectfilename)
             except:
                 success = False
             if not success:
