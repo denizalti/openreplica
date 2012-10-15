@@ -16,25 +16,23 @@ class DRLock():
 
     def __repr__(self):
         return "<%s owner=%r count=%d>" % (self.__class__.__name__, self.__owner, self.__count)
-        
-    def acquire(self, kwargs):
-        command = kwargs['_concoord_command']
+
+    def acquire(self, _concoord_command):
         with self.__atomic:
-            if self.__count > 0 and self.__owner != command.client:
-                self.__queue.append(command)
+            if self.__count > 0 and self.__owner != _concoord_command.client:
+                self.__queue.append(_concoord_command)
                 raise BlockingReturn()
-            elif self.__count > 0 and self.__owner == command.client:
+            elif self.__count > 0 and self.__owner == _concoord_command.client:
                 self.__count += 1
                 return 1
             else:
                 self.__count = 1
-                self.__owner = command.client
+                self.__owner = _concoord_command.client
                 return True
 
-    def release(self, kwargs):
-        command = kwargs['_concoord_command']
+    def release(self, _concoord_command):
         with self.__atomic:
-            if self.__owner != command.client:
+            if self.__owner != _concoord_command.client:
                 raise RuntimeError("cannot release un-acquired lock")
             self.__count -= 1
                 

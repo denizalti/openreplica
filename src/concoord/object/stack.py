@@ -4,22 +4,22 @@
 @copyright: See LICENSE
 """
 class Stack:
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.stack = []
         
-    def append(self, item, **kwargs):
+    def append(self, item):
         self.stack.append(item)
         
-    def pop(self, **kwargs):
+    def pop(self):
         self.stack.pop()
 
-    def get_size(self, **kwargs):
+    def get_size(self):
         return len(self.stack)
 
-    def get_stack(self, **kwargs):
+    def get_stack(self):
         return self.stack
 
-    def __str__(self, **kwargs):
+    def __str__(self):
         return self.stack
         
     

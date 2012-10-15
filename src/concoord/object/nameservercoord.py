@@ -10,10 +10,10 @@ def pairwise(iterable):
     return izip(a, a)
 
 class NameserverCoord():
-    def __init__(self, **kwargs):
+    def __init__(self):
         self._nodes = {} 
 
-    def addnodetosubdomain(self, subdomain, nodetype, node, **kwargs):
+    def addnodetosubdomain(self, subdomain, nodetype, node):
         nodetype = int(nodetype)
         if subdomain in self._nodes:
             if nodetype in self._nodes[subdomain]:
@@ -26,33 +26,33 @@ class NameserverCoord():
             self._nodes[subdomain][nodetype] = set()
             self._nodes[subdomain][nodetype].add(node)
 
-    def delsubdomain(self, subdomain, **kwargs):
+    def delsubdomain(self, subdomain):
         exists = subdomain in self._nodes
         if exists:
             del self._nodes[subdomain]
         return exists
         
-    def delnodefromsubdomain(self, subdomain, nodetype, node, **kwargs):
+    def delnodefromsubdomain(self, subdomain, nodetype, node):
         nodetype = int(nodetype)
         exists = subdomain in self._nodes and nodetype in self._nodes[subdomain] and node in self._nodes[subdomain][nodetype]
         if exists:
             self._nodes[subdomain][nodetype].remove(node)
         return exists
 
-    def updatesubdomain(self, subdomain, nodes, **kwargs):
+    def updatesubdomain(self, subdomain, nodes):
         if subdomain in self._nodes:
             self._nodes[subdomain] = nodes
         else:
             self._nodes[subdomain] = {}
             self._nodes[subdomain] = nodes
 
-    def getnodes(self, subdomain, **kwargs):
+    def getnodes(self, subdomain):
         return self._nodes[subdomain]
 
-    def getsubdomains(self, **kwargs):
+    def getsubdomains(self):
         return self._nodes.keys()
 
-    def _reinstantiate(self, state, **kwargs):
+    def _reinstantiate(self, state):
         self._nodes = {}
         for subdomain,nodes in pairwise(state.split(';')):
             self._nodes[subdomain] = {}
@@ -65,7 +65,7 @@ class NameserverCoord():
                     for nodename in nodelist.split():
                         self._nodes[subdomain][typename].add(nodename)
 
-    def __str__(self, **kwargs):
+    def __str__(self):
         rstr = ''	
         for domain,nodes in self._nodes.iteritems():
             rstr += domain + ';('

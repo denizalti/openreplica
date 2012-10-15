@@ -1,45 +1,45 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
-@note: Herbivore coordination object
+@note: Membership object to coordinate a complete mesh
 @copyright: See LICENSE
 """
 from threading import RLock
 from concoord.exception import *
 from concoord.threadingobject.drlock import DRLock
 
-class HerbivoreCoord():
-    def __init__(self, **kwargs):
+class MeshMembership():
+    def __init__(self):
         self.groups = {}
 
-    def get_group_members(self, gname, **kwargs):
+    def get_group_members(self, gname):
         if gname in self.groups:
             return self.groups[gname].get_members().keys()
         else:
             raise KeyError(gname)
 
-    def get_group_epoch(self, gname, **kwargs):
+    def get_group_epoch(self, gname):
         if gname in self.groups:
             return self.groups[gname].get_epoch()
         else:
             raise KeyError(gname)
 
-    def get_group_state(self, gname, **kwargs):
+    def get_group_state(self, gname):
         if gname in self.groups:
             return (self.groups[gname].get_members().keys(), self.groups[gname].get_epoch())
         else:
             raise KeyError(gname)
 
-    def add_group(self, gname, minsize, **kwargs):
+    def add_group(self, gname, minsize):
         if gname not in self.groups:
             self.groups[gname] = Group(minsize)
 
-    def remove_group(self, gname, **kwargs):
+    def remove_group(self, gname):
         if gname in self.groups:
             del self.groups[gname]
         else:
             raise KeyError(gname)
 
-    def approve_join(self, gname, node, epochno, **kwargs):
+    def approve_join(self, gname, node, epochno):
         if gname in self.groups:
             group = self.groups[gname]
             # Check if the epoch the node wants to be
@@ -56,20 +56,20 @@ class HerbivoreCoord():
         else:
             raise KeyError(gname)
 
-    def wait(self, gname, **kwargs):
+    def wait(self, gname):
         if gname in self.groups:
-            return self.groups[gname].wait(kwargs)
+            return self.groups[gname].wait(_concoord_command)
         else:
             raise KeyError(gname)
 
-    def check_member(self, gname, node, **kwargs):
+    def check_member(self, gname, node):
         # returns True or False and the epoch number
         if gname in self.groups:
             return (node in self.groups[gname].get_members(), self.groups[gname].get_epoch())
         else:
             raise KeyError(gname)
 
-    def notify_failure(self, gname, epoch, failednode, **kwargs):
+    def notify_failure(self, gname, epoch, failednode):
         if gname in self.groups:
             # there is a failure in the group or at least
             # one node thinks so. take a record of it
@@ -87,7 +87,7 @@ class HerbivoreCoord():
         else:
             raise KeyError(gname)
         
-    def __str__(self, **kwargs):
+    def __str__(self):
         return "\n".join([str(n)+': '+str(s) for n,s in self.groups.iteritems()])
 
 class Group():
@@ -102,11 +102,10 @@ class Group():
         self.__waiters = [] # This will always include self.members.keys() wait commands
         self.__atomic = RLock()
         
-    def wait(self, kwargs):
-        command = kwargs['_concoord_command']
+    def wait(self, _concoord_command):
         # put the caller on waitinglist and take the lock away
         with self.__atomic:
-            self.__waiters.append(command)
+            self.__waiters.append(_concoord_command)
             raise BlockingReturn()
 
     # This function is used only by the Coordination Object
