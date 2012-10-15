@@ -120,6 +120,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             try:
                 replica = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
                 print "Trying node: %s"% replica.getHosts()[0]
+                print "Uploading from ", clientobjectfilename, " to: ", CONCOORDPATH + clientobjectfilename
                 success = replica.uploadall(clientobjectfilename, CONCOORDPATH + clientobjectfilename)
             except:
                 success = False
