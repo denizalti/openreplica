@@ -12,7 +12,6 @@ from concoord.enums import *
 from concoord.utils import *
 from concoord.safetychecker import *
 from concoord.proxygenerator import *
-from concoord.serversideproxyast import *
 from concoord.openreplica.plmanager import *
 from concoord.proxy.nameservercoord import *
 
@@ -27,7 +26,9 @@ parser.add_option("-o", "--configpath", action="store", dest="configpath", defau
 parser.add_option("-t", "--token", action="store", dest="token", default='', help="unique security token")
 (options, args) = parser.parse_args()
 
+NODE_BOOTSTRAP = 5
 CONCOORDPATH = 'concoord-0.3.0/concoord/'
+
 try:
     CONFIGDICT = load_configdict(options.configpath)
     NPYTHONPATH = CONFIGDICT['NPYTHONPATH']
@@ -44,31 +45,11 @@ def check_object(clientcode):
     v.visit(astnode)
     return v.safe
 
-# checks if a PL node is suitable for running a nameserver
-# this is only required for Nameserver nodes in MASTER mode
-def check_planetlab_dnsport(plconn, node):
-    print "Uploading DNS tester to ", node
-    pathtodnstester = CONCOORD_HELPERDIR+'testdnsport.py'
-    plconn.uploadone(node, pathtodnstester)
-    print "Trying to bind to DNS port"
-    rtv, output = plconn.executecommandone(node, "sudo " + NPYTHONPATH + " testdnsport.py")
-    if rtv:
-        print "DNS Port available on %s" % node
-    else:
-        print "DNS Port not available on %s" % node
-        plconn.executecommandone(node, "rm testdnsport.py")
-    return rtv,output
-
 def check_planetlab_pythonversion(plconn, node):
-    print "Uploading Python version tester to ", node
     pathtopvtester = CONCOORD_HELPERDIR+'testpythonversion.py' 
     plconn.uploadone(node, pathtopvtester)
-    print "Checking Python version"
     rtv, output = plconn.executecommandone(node, NPYTHONPATH + " testpythonversion.py")
-    if rtv:
-        print "Python version acceptable on %s" % node
-    else:
-        print "Python version not acceptable on %s" % node
+    if not rtv:
         plconn.executecommandone(node, "rm testpythonversion.py")
     return rtv,output
 
@@ -82,79 +63,148 @@ def kill_node(node, uniqueid):
     except:
         return CONFIGDICT
 
+def get_startup_cmd(nodetype, node, port, clientobjectfilename, classname='', bootstrapname='', subdomain='', servicetype=None, master=''):
+    startupcmd = ''
+    if nodetype == NODE_BOOTSTRAP:
+        startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -l %s" % (node, port, clientobjectfilename, classname, LOGGERNODE)
+    elif nodetype == NODE_REPLICA:
+        startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -b %s -l %s" % (node, port, clientobjectfilename, classname, bootstrapname, LOGGERNODE)
+    elif nodetype == NODE_ACCEPTOR:
+        startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "acceptor.py -a %s -p %d -f %s -b %s -l %s" % (node, port, clientobjectfilename, bootstrapname, LOGGERNODE)
+    elif nodetype == NODE_NAMESERVER:
+        startupcmd =  "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s -t %d -m %s -l %s" % (subdomain+'.openreplica.org', node, port, clientobjectfilename, classname, bootstrapname, servicetype, master, LOGGERNODE)
+    return startupcmd
+
 def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token):
-    # locate the right number of suitable PlanetLab nodes
+    # Prepare data necessary for starting nodes
     clientobjectfilename = os.path.basename(clientobjectfilepath)
     numreplicas, numacceptors, numnameservers = configuration
     if numreplicas < 1 or numacceptors < 1 or numnameservers < 1:
         print "Invalid configuration:"
         print "The configuration requires at least 1 Replica, 1 Acceptor and 1 Nameserver"
         os._exit()
-    bootstrap = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
-    nameservers = PLConnection(numnameservers, [check_planetlab_pythonversion], configdict=CONFIGDICT)
-    replicas = PLConnection(numreplicas-1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
-    acceptors = PLConnection(numacceptors, [check_planetlab_pythonversion], configdict=CONFIGDICT)
-    allnodes = PLConnection(nodes=nameservers.getHosts() + replicas.getHosts() + acceptors.getHosts() + bootstrap.getHosts(), configdict=CONFIGDICT)
-    print "=== Picked Nodes ==="
-    for node in allnodes.getHosts():
-        print node
     processnames = []
-    ## Fix the server object
-    print "Fixing object file for use on the server side.."
-    fixedfile = editproxyfile(clientobjectfilepath, classname, token)
-    print "Uploading object file to replicas.."
-    allnodes.uploadall(fixedfile.name, CONCOORDPATH + clientobjectfilename)
-    print "--> Setting up the environment..."
-    # BOOTSTRAP
-    print "--- Bootstrap Replica ---"
-    port = random.randint(14000, 15000)
-    p = bootstrap.executecommandone(bootstrap.getHosts()[0], "nohup "+ NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -l %s" % (bootstrap.getHosts()[0], port, clientobjectfilename, classname, LOGGERNODE), False)
-    numtries = 0
-    while terminated(p) and numtries < 5:
+
+    success = False
+    # locate the PlanetLab node for bootstrap, check the node, upload object and start the node
+    while not success:
+#        try:
+        bootstrap = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
+        print "Trying node: %s" % bootstrap.getHosts()[0]
+        success = bootstrap.uploadall(clientobjectfilename, CONCOORDPATH + clientobjectfilename)
+#        except:
+#            success = False
+        if not success:
+            continue
+        # Object upload is done.
         port = random.randint(14000, 15000)
-        p = bootstrap.executecommandone(bootstrap.getHosts()[0], "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -l %s" % (bootstrap.getHosts()[0], port, clientobjectfilename, classname, LOGGERNODE), False)
-        numtries += 1
-    bootstrapname = bootstrap.getHosts()[0]+':'+str(port)
-    processnames.append((NODE_REPLICA, bootstrapname))
-    print bootstrapname
-    # ACCEPTORS
-    print "--- Acceptors ---"
-    for acceptor in acceptors.getHosts():
-        port = random.randint(14000, 15000)
-        p = acceptors.executecommandone(acceptor, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "acceptor.py -a %s -p %d -f %s -b %s -l %s" % (acceptor, port, clientobjectfilename, bootstrapname, LOGGERNODE), False)
-        while terminated(p):
+        node = bootstrap.getHosts()[0]
+        p = bootstrap.executecommandone(node, get_startup_cmd(NODE_BOOTSTRAP, node, port, clientobjectfilename, classname), False)
+        numtries = 0
+        while terminated(p) and numtries < 5:
             port = random.randint(14000, 15000)
-            p = acceptors.executecommandone(acceptor, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "acceptor.py -a %s -p %d -f %s -b %s -l %s" % (acceptor, port, clientobjectfilename, bootstrapname, LOGGERNODE), False)
-        acceptorname = acceptor+':'+str(port)
-        processnames.append((NODE_ACCEPTOR, acceptorname))
-        print acceptorname
-    # REPLICAS
-    if numreplicas-1 > 0:
-        print "--- Replicas ---"
-    for replica in replicas.getHosts():
-        port = random.randint(14000, 15000)
-        p = replicas.executecommandone(replica, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -b %s -l %s" % (replica, port, clientobjectfilename, classname, bootstrapname, LOGGERNODE), False)
-        while terminated(p):
+            p = bootstrap.executecommandone(node, get_startup_cmd(NODE_BOOTSTRAP, node, port, clientobjectfilename, classname), False)
+            numtries += 1
+        if numtries == 5:
+            success = False
+            continue
+        # Bootstrap is started
+        bootstrapname = bootstrap.getHosts()[0]+':'+str(port)
+        processnames.append((NODE_REPLICA, bootstrapname))
+        print "Bootstrap is started: %s" % bootstrapname
+
+    # locate the PlanetLab node for replicas, check the nodes, upload object and start the nodes
+    for i in range(numreplicas-1):
+        success = False
+        while not success:
+            try:
+                replica = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
+                print "Trying node: %s"% replica.getHosts()[0]
+                success = replica.uploadall(clientobjectfilename, CONCOORDPATH + clientobjectfilename)
+            except:
+                success = False
+            if not success:
+                continue
+            # Object upload is done.
             port = random.randint(14000, 15000)
-            p = replicas.executecommandone(replica, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -b %s -l %s" % (replica, port, clientobjectfilename, classname, bootstrapname, LOGGERNODE), False)
-        replicaname = replica+':'+str(port)
-        processnames.append((NODE_REPLICA, replicaname))
-        print replicaname
-    # NAMESERVERS
-    print "--- Nameservers ---"
+            node = replica.getHosts()[0]
+            p = replica.executecommandone(replica.getHosts()[0], get_startup_cmd(NODE_REPLICA, node, port, clientobjectfilename, classname, bootstrapname), False)
+            numtries = 0
+            while terminated(p) and numtries < 5:
+                port = random.randint(14000, 15000)
+                p = replica.executecommandone(replica.getHosts()[0], get_startup_cmd(NODE_REPLICA, node, port, clientobjectfilename, classname, bootstrapname), False)
+                numtries += 1
+            if numtries == 5:
+                success = False
+                continue
+            # Replica is started
+            replicaname = replica.getHosts()[0]+':'+str(port)
+            processnames.append((NODE_REPLICA, replicaname))
+            print "Replica #%d is started: %s" % (i, replicaname)
+    
+    # locate the PlanetLab node for acceptors, check the nodes, upload object and start the nodes
+    for i in range(numacceptors):
+        success = False
+        while not success:
+            try:
+                acceptor = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
+                print "Trying node: %s"% acceptor.getHosts()[0]
+                success = acceptor.uploadall(clientobjectfilename, CONCOORDPATH + clientobjectfilename)
+            except:
+                success = False
+            if not success:
+                continue
+            # Object upload is done.
+            port = random.randint(14000, 15000)
+            node = acceptor.getHosts()[0]
+            p = acceptor.executecommandone(acceptor.getHosts()[0], get_startup_cmd(NODE_ACCEPTOR, node, port, clientobjectfilename, bootstrapname=bootstrapname), False)
+            numtries = 0
+            while terminated(p) and numtries < 5:
+                port = random.randint(14000, 15000)
+                p = acceptor.executecommandone(acceptor.getHosts()[0], get_startup_cmd(NODE_ACCEPTOR, node, port, clientobjectfilename, bootstrapname=bootstrapname), False)
+                numtries += 1
+            if numtries == 5:
+                success = False
+                continue
+            # Acceptor is started
+            acceptorname = acceptor.getHosts()[0]+':'+str(port)
+            processnames.append((NODE_ACCEPTOR, acceptorname))
+            print "Acceptor #%d is started: %s" % (i, acceptorname)
+
     servicetype = NS_SLAVE
     master = 'openreplica.org'
-    for nameserver in nameservers.getHosts():
-        port = random.randint(14000, 15000)
-        p = nameservers.executecommandone(nameserver, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s -t %d -m %s -l %s" % (subdomain, nameserver, port, clientobjectfilename, classname, bootstrapname, servicetype, master, LOGGERNODE), False)
-        while terminated(p):
+    # locate the PlanetLab node for nameservers, check the nodes, upload object and start the nodes
+    for i in range(numnameservers):
+        success = False
+        while not success:
+            try:
+                nameserver = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
+                print "Trying node: %s"% nameserver.getHosts()[0]
+                success = nameserver.uploadall(clientobjectfilename, CONCOORDPATH + clientobjectfilename)
+            except:
+                success = False
+            if not success:
+                continue
+            # Object upload is done.
             port = random.randint(14000, 15000)
-            p = nameservers.executecommandone(nameserver, "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s -t %d -m %s -l %s" % (subdomain, nameserver, port, clientobjectfilename, classname, bootstrapname, servicetype, master, LOGGERNODE), False)
-        nameservername = nameserver+':'+str(port)
-        processnames.append((NODE_NAMESERVER, nameservername))
-        print nameservername
+            node = nameserver.getHosts()[0]
+            p = nameserver.executecommandone(nameserver.getHosts()[0], get_startup_cmd(NODE_NAMESERVER, node, port, clientobjectfilename, classname, bootstrapname, subdomain, servicetype, master), False)
+            numtries = 0
+            while terminated(p) and numtries < 5:
+                port = random.randint(14000, 15000)
+                p = nameserver.executecommandone(nameserver.getHosts()[0], get_startup_cmd(NODE_NAMESERVER, node, port, clientobjectfilename, classname, bootstrapname, subdomain, servicetype, master), False)
+                numtries += 1
+            if numtries == 5:
+                success = False
+                continue
+            # Nameserver is started
+            nameservername = nameserver.getHosts()[0]+':'+str(port)
+            processnames.append((NODE_NAMESERVER, nameservername))
+            print "Name server #%d is started: %s" % (i, nameservername)
+
+    # All nodes are started
     print "All clear!"
-    ## add the nameserver nodes to open replica coordinator object
+    ## add nodes to OpenReplica coordinator object
     nameservercoordobj = NameserverCoord('openreplica.org')
     print "Adding nodes to OpenReplica Nameserver Coordination Object:"
     for nodetype,node in processnames:
@@ -165,12 +215,12 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
 def terminated(p):
     i = 5
     done = p.poll() is not None
-    while not done and i>0: # Not terminated yet
+    while not done and i>0: # Not terminated yet                                                                                                                                  
         sleep(1)
         i -= 1
         done = p.poll() is not None
     return done
-
+    
 def main():
     with open(options.objectfilepath, 'rU') as fd:
         clientcode = fd.read()

@@ -4,17 +4,17 @@
 @copyright: See LICENSE
 """
 class Counter:
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.value = 0
         
-    def decrement(self, **kwargs):
+    def decrement(self):
         self.value -= 1
 
-    def increment(self, **kwargs):
+    def increment(self):
         self.value += 1
 
-    def getvalue(self, **kwargs):
+    def getvalue(self):
         return self.value
     
-    def __str__(self, **kwargs):
+    def __str__(self):
         return "The counter value is %d" % self.value

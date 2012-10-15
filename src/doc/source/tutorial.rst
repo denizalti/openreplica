@@ -6,7 +6,7 @@ Getting Started
 To use ConCoord, first you need to create the local python object to
 represent the state you want to replicate. To walk you through the
 ConCoord approach, we will use one of the example coordination objects
-we have provided, namely Counter. In the source distribution wou can
+we have provided, namely Counter. In the source distribution you can
 locate the Counter object under ``concoord/object/counter.py``. Once you
 install ConCoord, you can create coordination objects and save them
 anywhere in your filesystem. To demonstrate this, we will save
@@ -31,32 +31,29 @@ anywhere in your filesystem. To demonstrate this, we will save
 
 Concoordifying Python Objects
 ------------------------
-To create concoord objects (to be used by the client and the server)
-you can use:
+To create concoord objects you can use:
 
 .. sourcecode:: console
 
-	$ concoord object -f /foo/counter.py -c Counter -s
+	$ concoord object -f /foo/counter.py -c Counter -s -v
 
-``Usage: concoord object -f objectfilepath -c classname -s safe``
+``Usage: concoord object -f objectfilepath -c classname -s safe -v verbose``
 
 where ``objectfilepath`` := path of the object you want to concoordify
       	  ``classname`` := name of the class that you'll use to access your object
 	  ``safe`` := boolean flag to include safety checks for the object
+	  ``verbose`` := boolean flag to turn on verbose outputs
 
-This script will create two files under the directory that the object resides (i.e. ``/foo/``):
-
-* ``/foo/counter.pyfixed`` := the object that can be used on the server side by replicas and nameservers
+This script will create the proxy under the directory that the object resides (i.e. ``/foo/``):
 
 * ``/foo/counter.pyproxy`` := the proxy that can be used like the original object by the client
 
-Remember to rename the files back to the original filename before you
-import them on the client or server side. To avoid confusion, we will
-name them ``counter.py`` and ``counterproxy.py`` in this tutorial.
+Remember to rename the file back to the original filename before you
+import it on the client side. To avoid confusion, we will
+name it ``counterproxy.py`` in this tutorial.
 
 .. sourcecode:: console
 
-	    $ mv /foo/counter.pyfixed /foo/counter.py
 	    $ mv /foo/counter.pyproxy /foo/counterproxy.py
 
 Once you have created the objects, update your ``PYTHONPATH`` accordingly,
@@ -71,10 +68,10 @@ Starting Nodes Manually
 To start the system you need to start at least one replica and one
 acceptor. To support bootstrapping through DNS queries, you will also
 need at least one nameserver node that has the necessary delegation
-set up for the address to they are responsible for. Once the
-nameserver node is set up and you can send dig queries to the
-nameserver and learn the node to bootstrap, current set of nodes and
-current set of replicas.
+set up for the address it is responsible for. Once the nameserver node 
+is set up, you can send dig queries to the nameserver and learn the 
+node to bootstrap, the current set of nodes and the current set of
+replicas.
 
 * For bootstrapping concoord requires at least one replica node. If a
   nameserver node is up, bootstrap can be the domainname for the
