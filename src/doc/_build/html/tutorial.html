@@ -58,7 +58,7 @@
 <p>To use ConCoord, first you need to create the local python object to
 represent the state you want to replicate. To walk you through the
 ConCoord approach, we will use one of the example coordination objects
-we have provided, namely Counter. In the source distribution wou can
+we have provided, namely Counter. In the source distribution you can
 locate the Counter object under <tt class="docutils literal"><span class="pre">concoord/object/counter.py</span></tt>. Once you
 install ConCoord, you can create coordination objects and save them
 anywhere in your filesystem. To demonstrate this, we will save
@@ -66,27 +66,25 @@ anywhere in your filesystem. To demonstrate this, we will save
 </div>
 <div class="section" id="concoordifying-python-objects">
 <h2>Concoordifying Python Objects<a class="headerlink" href="#concoordifying-python-objects" title="Permalink to this headline">¶</a></h2>
-<p>To create concoord objects (to be used by the client and the server)
-you can use:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord object -f /foo/counter.py -c Counter -s
+<p>To create concoord objects you can use:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord object -f /foo/counter.py -c Counter -s -v
 </pre></div>
 </div>
-<p><tt class="docutils literal"><span class="pre">Usage:</span> <span class="pre">concoord</span> <span class="pre">object</span> <span class="pre">-f</span> <span class="pre">objectfilepath</span> <span class="pre">-c</span> <span class="pre">classname</span> <span class="pre">-s</span> <span class="pre">safe</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">Usage:</span> <span class="pre">concoord</span> <span class="pre">object</span> <span class="pre">-f</span> <span class="pre">objectfilepath</span> <span class="pre">-c</span> <span class="pre">classname</span> <span class="pre">-s</span> <span class="pre">safe</span> <span class="pre">-v</span> <span class="pre">verbose</span></tt></p>
 <dl class="docutils">
 <dt>where <tt class="docutils literal"><span class="pre">objectfilepath</span></tt> := path of the object you want to concoordify</dt>
 <dd><tt class="docutils literal"><span class="pre">classname</span></tt> := name of the class that you&#8217;ll use to access your object
-<tt class="docutils literal"><span class="pre">safe</span></tt> := boolean flag to include safety checks for the object</dd>
+<tt class="docutils literal"><span class="pre">safe</span></tt> := boolean flag to include safety checks for the object
+<tt class="docutils literal"><span class="pre">verbose</span></tt> := boolean flag to turn on verbose outputs</dd>
 </dl>
-<p>This script will create two files under the directory that the object resides (i.e. <tt class="docutils literal"><span class="pre">/foo/</span></tt>):</p>
+<p>This script will create the proxy under the directory that the object resides (i.e. <tt class="docutils literal"><span class="pre">/foo/</span></tt>):</p>
 <ul class="simple">
-<li><tt class="docutils literal"><span class="pre">/foo/counter.pyfixed</span></tt> := the object that can be used on the server side by replicas and nameservers</li>
 <li><tt class="docutils literal"><span class="pre">/foo/counter.pyproxy</span></tt> := the proxy that can be used like the original object by the client</li>
 </ul>
-<p>Remember to rename the files back to the original filename before you
-import them on the client or server side. To avoid confusion, we will
-name them <tt class="docutils literal"><span class="pre">counter.py</span></tt> and <tt class="docutils literal"><span class="pre">counterproxy.py</span></tt> in this tutorial.</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> mv /foo/counter.pyfixed /foo/counter.py
-<span class="gp">$</span> mv /foo/counter.pyproxy /foo/counterproxy.py
+<p>Remember to rename the file back to the original filename before you
+import it on the client side. To avoid confusion, we will
+name it <tt class="docutils literal"><span class="pre">counterproxy.py</span></tt> in this tutorial.</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> mv /foo/counter.pyproxy /foo/counterproxy.py
 </pre></div>
 </div>
 <p>Once you have created the objects, update your <tt class="docutils literal"><span class="pre">PYTHONPATH</span></tt> accordingly,
@@ -100,10 +98,10 @@ so that the objects can be found and imported:</p>
 <p>To start the system you need to start at least one replica and one
 acceptor. To support bootstrapping through DNS queries, you will also
 need at least one nameserver node that has the necessary delegation
-set up for the address to they are responsible for. Once the
-nameserver node is set up and you can send dig queries to the
-nameserver and learn the node to bootstrap, current set of nodes and
-current set of replicas.</p>
+set up for the address it is responsible for. Once the nameserver node
+is set up, you can send dig queries to the nameserver and learn the
+node to bootstrap, the current set of nodes and the current set of
+replicas.</p>
 <ul class="simple">
 <li>For bootstrapping concoord requires at least one replica node. If a
 nameserver node is up, bootstrap can be the domainname for the
