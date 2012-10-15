@@ -14,4 +14,4 @@ class Test():
         self.value = newvalue
     
     def __str__(self):
-        return "The value is %d" % self.value
+        return "The value is ", self.value
