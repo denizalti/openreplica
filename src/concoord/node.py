@@ -399,3 +399,12 @@ class Node():
         sys.stdout.flush()
         sys.stderr.flush()
         os._exit(0)
+
+    def _graceexit(self, exitcode=0):
+        sys.stdout.flush()
+        sys.stderr.flush()
+        try:
+            self.logger.close()
+        except:
+            pass
+        os._exit(exitcode)
