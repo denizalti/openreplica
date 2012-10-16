@@ -3,7 +3,7 @@
 @note: Value object proxy to test concoord implementation
 @copyright: See LICENSE
 """
-from concoord.clientproxymultithreaded import ClientProxy
+from concoord.clientproxy import ClientProxy
 
 class Value():
     def __init__(self, bootstrap):

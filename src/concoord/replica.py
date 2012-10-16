@@ -33,6 +33,7 @@ class Replica(Node):
             self.object = None
             for objectloc in ['concoord.'+self.objectfilename[:-3],
                               'concoord.object.'+self.objectfilename[:-3],
+                              'concoord.test.'+self.objectfilename[:-3],
                               self.objectfilename[:-3]]:
                 try:
                     ip = objectloc.split('.')

@@ -139,7 +139,7 @@ class Connection():
                         continue
                 raise e
             if len(chunk) == 0:
-                print "Connection closed.."
+                print "Connection closed!"
                 raise IOError
             msgstr += chunk
         return msgstr
