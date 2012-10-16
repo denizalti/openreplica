@@ -123,6 +123,7 @@ class ClientProxy():
                 break
             except socket.error, e:
                 if self.debug:
+                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                     print e
                 continue
         return connected
