@@ -123,7 +123,6 @@ class ClientProxy():
                 break
             except socket.error, e:
                 if self.debug:
-                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                     print e
                 continue
         return connected
@@ -179,15 +178,16 @@ class ClientProxy():
                     else:
                         # server has sent us something and we need to process it
                         reply = self.conn.receive()
-                        if reply and reply.type == MSG_CLIENTREPLY:
+                        if reply is None:
+                            needreconfig = True
+                            print "CAUGHT!"
+                        elif reply and reply.type == MSG_CLIENTREPLY:
                             reqdesc = self.pendingops[reply.inresponseto]
                             with self.lock:
                                 if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode == CR_UNBLOCK:
                                     # actionable response, wake up the thread
                                     if reply.replycode == CR_UNBLOCK:
                                         assert reqdesc.lastcr == CR_BLOCK, "unblocked thread not previously blocked"
-                                    print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", reply
-                                    print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", reply.reply
                                     reqdesc.lastcr = reply.replycode
                                     reqdesc.reply = reply
                                     reqdesc.replyvalid = True
