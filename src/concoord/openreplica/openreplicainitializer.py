@@ -78,9 +78,7 @@ def get_startup_cmd(nodetype, node, port, clientobjectfilename, classname='', bo
 
 def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token):
     # Prepare data necessary for starting nodes
-    print "Give filepath: ", clientobjectfilepath
     clientobjectfilename = os.path.basename(clientobjectfilepath)
-    print "Edited filename: ", clientobjectfilename
     numreplicas, numacceptors, numnameservers = configuration
     if numreplicas < 1 or numacceptors < 1 or numnameservers < 1:
         print "Invalid configuration:"
@@ -208,7 +206,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             print "Name server #%d is started: %s" % (i, nameservername)
 
     # All nodes are started
-    print "All clear!"
+    print "All nodes have been started."
     ## add nodes to OpenReplica coordinator object
     nameservercoordobj = NameserverCoord('openreplica.org')
     print "Adding nodes to OpenReplica Nameserver Coordination Object:"
