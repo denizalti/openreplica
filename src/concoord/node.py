@@ -105,9 +105,10 @@ class Node():
                 LOGGERNODE = None
         self.logger = NetworkLogger("%s-%s" % (node_names[self.type],self.id), LOGGERNODE)
         self.logger.write("State", "Connected.")
-        self.groups = {NODE_ACCEPTOR:Group(self.me),
+        self.groups = {NODE_ACCEPTOR: Group(self.me),
                        NODE_REPLICA: Group(self.me),
-                       NODE_NAMESERVER:Group(self.me)}
+                       NODE_NAMESERVER: Group(self.me)}
+        self.groups[self.me.type].add(self.me)
         # connect to the bootstrap node
         if givenbootstraplist:
             self.bootstraplist = []
@@ -314,7 +315,9 @@ class Node():
         return
 
     def msg_heloreply(self, conn, msg):
-        if msg.reject:
+        if msg.leader:
+            # XXX
+            self.bootstraplist = [msg.leader]
             self.connecttobootstrap()
 
     def msg_ping(self, conn, msg):
