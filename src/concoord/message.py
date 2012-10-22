@@ -44,14 +44,15 @@ class Message():
                                           self.source)
 
 class HandshakeMessage(Message):
-    def __init__(self, msgtype, myname, reject=False):
+    def __init__(self, msgtype, myname, leader=None):
         Message.__init__(self, msgtype, myname)
-        self.reject = reject
+        if leader:
+            self.leader = leader
 
     def __str__(self):
         temp = Message.__str__(self)
         if self.type == MSG_HELOREPLY:
-            temp = '%s Reject: %s' % (temp, str(self.reject))
+            temp = '%s Leader: %s' % (temp, str(self.leader))
         return temp
 
 class UpdateMessage(Message):

@@ -12,7 +12,7 @@ from concoord.peer import *
 
 class Group():
     """A Group is a collection of Peers that perform the same function."""
-    def __init__(self,owner):
+    def __init__(self, owner):
         """Group state
         - owner: Peer that owns the Group
         - members: set of Peers that are in the Group
@@ -20,20 +20,20 @@ class Group():
         self.owner = owner
         self.members = []
 
-    def remove(self,peer):
+    def remove(self, peer):
         """Removes the given peer from the Group."""
         if peer in self.members:
             self.members.remove(peer)
             self.sort()
 
-    def add(self,peer):
+    def add(self, peer):
         """Adds the given peer to the Group if it's not the owner itself."""
         if peer != self.owner:
             if peer not in self.members:
                 self.members.append(peer)
                 self.sort()
 
-    def union(self,othergroup):
+    def union(self, othergroup):
         """Adds the given Group to this one."""
         for peer in othergroup.members:
             if peer not in self.members:

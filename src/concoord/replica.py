@@ -320,6 +320,7 @@ class Replica(Node):
                 noopcommand = self.create_noop_command()
                 self.initiate_command(noopcommand)
         else:
+            self.update_leader()
             if self.isleader:
                 self.logger.write("State", "Adding the new node")
                 addcommand = self.create_add_command(msg.source)
@@ -330,7 +331,9 @@ class Replica(Node):
                     noopcommand = self.create_noop_command()
                     self.initiate_command(noopcommand)
             else:
-                heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, True)
+                self.logger.write("State", "Not the leader, sending a HELOREPLY")
+                self.logger.write("State", "Leader is %s" % self.find_leader())
+                heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, self.find_leader())
                 self.send(heloreplymessage, peer=msg.source)
             
     def msg_update(self, conn, msg):
@@ -448,6 +451,10 @@ class Replica(Node):
     def find_leader(self):
         """returns the minimum peer as the leader"""
         if len(self.groups[NODE_REPLICA].members) > 0:
+            print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+            for i in self.groups[NODE_REPLICA].members:
+                print str(i)
+            print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             return self.groups[NODE_REPLICA].members[0]
         return self.me
         
