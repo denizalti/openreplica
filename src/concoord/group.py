@@ -28,10 +28,9 @@ class Group():
 
     def add(self, peer):
         """Adds the given peer to the Group if it's not the owner itself."""
-        if peer != self.owner:
-            if peer not in self.members:
-                self.members.append(peer)
-                self.sort()
+        if peer not in self.members:
+            self.members.append(peer)
+            self.sort()
 
     def union(self, othergroup):
         """Adds the given Group to this one."""
