@@ -161,8 +161,6 @@ class Node():
                     if success < 0:
                         tries += 1
                         continue
-                    self.groups[NODE_REPLICA].add(bootpeer)
-                    self.logger.write("State", "connected to bootstrap: %s:%d" % (bootpeer.addr,bootpeer.port))
                     keeptrying = False
                     break
                 except socket.error, e:
@@ -316,9 +314,12 @@ class Node():
 
     def msg_heloreply(self, conn, msg):
         if msg.leader:
-            # XXX
-            self.bootstraplist = [msg.leader]
+            self.bootstraplist.remove(msg.source)
+            self.bootstraplist.append(msg.leader)
             self.connecttobootstrap()
+        else:
+            self.groups[NODE_REPLICA].add(msg.source)
+            self.logger.write("State", "connected to bootstrap: %s:%d" % (msg.source.addr,msg.source.port))
 
     def msg_ping(self, conn, msg):
         return
@@ -385,14 +386,15 @@ class Node():
             assert not isresend, "performing a re-send to a group"
             ids = []
             for peer in group.members:
-                connection = self.connectionpool.get_connection_by_peer(peer)
-                if connection == None:
-                    self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
-                    continue
-                connection.send(message)
-                ids.append(message.id)
-                message = copy.copy(message)
-                message.assignuniqueid()
+                if peer != self.me:
+                    connection = self.connectionpool.get_connection_by_peer(peer)
+                    if connection == None:
+                        self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
+                        continue
+                    connection.send(message)
+                    ids.append(message.id)
+                    message = copy.copy(message)
+                    message.assignuniqueid()
             return ids
 
     def terminate_handler(self, signal, frame):

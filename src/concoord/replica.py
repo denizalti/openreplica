@@ -312,8 +312,16 @@ class Replica(Node):
         if msg.source.type == NODE_ACCEPTOR and len(self.groups[NODE_ACCEPTOR]) == 0:
             self.logger.write("State", "Adding the first acceptor")
             self.groups[msg.source.type].add(msg.source)
-            # Agree with other Replicas about adding this acceptor
+            # Agree on adding the first replica and this first acceptor
+            # Add the Acceptor
             addcommand = self.create_add_command(msg.source)
+            self.update_leader()
+            self.initiate_command(addcommand)
+            for i in range(WINDOW):
+                noopcommand = self.create_noop_command()
+                self.initiate_command(noopcommand)
+            # Add self
+            addcommand = self.create_add_command(self.me)
             self.update_leader()
             self.initiate_command(addcommand)
             for i in range(WINDOW):
@@ -451,10 +459,6 @@ class Replica(Node):
     def find_leader(self):
         """returns the minimum peer as the leader"""
         if len(self.groups[NODE_REPLICA].members) > 0:
-            print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-            for i in self.groups[NODE_REPLICA].members:
-                print str(i)
-            print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             return self.groups[NODE_REPLICA].members[0]
         return self.me
         
