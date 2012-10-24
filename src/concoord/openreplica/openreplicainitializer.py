@@ -92,7 +92,6 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
         try:
             bootstrap = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
             print "Trying node: %s" % bootstrap.getHosts()[0]
-            print "Uploading from ", clientobjectfilepath, " to ", CONCOORDPATH + clientobjectfilename
             success = bootstrap.uploadall(clientobjectfilepath, CONCOORDPATH + clientobjectfilename)
         except:
             success = False
@@ -122,7 +121,6 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             try:
                 replica = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
                 print "Trying node: %s"% replica.getHosts()[0]
-                print "Uploading from ", clientobjectfilepath, " to: ", CONCOORDPATH + clientobjectfilename
                 success = replica.uploadall(clientobjectfilepath, CONCOORDPATH + clientobjectfilename)
             except:
                 success = False
