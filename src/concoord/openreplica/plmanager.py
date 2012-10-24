@@ -120,7 +120,6 @@ class PLConnection():
         return proc
 
     def uploadall(self, local, remote=""):
-        print "Uploading from ", local, " to ", remote
         proclist = []
         for node in self.nodes:
             cmd = ["scp", "-i", USERKEYFILE, "-o", "StrictHostKeyChecking=no", local, USERNAME + "@" + node + ":" + remote]
