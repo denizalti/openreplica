@@ -264,6 +264,7 @@ class Node():
         connection = self.connectionpool.get_connection_by_socket(clientsock)
         message = connection.receive()
         if message == None:
+            print "XXX This node should be taken out of the configuration."
             return False
         else:
             self.logger.write("State", "received %s" % message)
