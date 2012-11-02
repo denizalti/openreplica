@@ -109,9 +109,9 @@ class Replica(Node):
     def startservice(self):
         """Start the background services associated with a replica."""
         Node.startservice(self)
-        leaderping_thread = Timer(LIVENESSTIMEOUT, self.ping_leader)
-        leaderping_thread.name = 'LeaderPingThread'
-        leaderping_thread.start()
+#        leaderping_thread = Timer(LIVENESSTIMEOUT, self.ping_leader)
+#        leaderping_thread.name = 'LeaderPingThread'
+#        leaderping_thread.start()
 
     @staticmethod
     def _apply_args_to_method(method, args, _concoord_command):
@@ -209,7 +209,7 @@ class Replica(Node):
         
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
-            if send_result_to_client and self.isleader and command.client.getid() in self.clientpool.poolbypeer.keys():
+            if send_result_to_client and self.isleader and command.client in self.clientpool.poolbypeer.keys():
                 self.send_reply_to_client(clientreplycode, givenresult, command)
 
         if slotnumber % GARBAGEPERIOD == 0 and self.isleader:

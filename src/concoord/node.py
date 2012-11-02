@@ -69,9 +69,9 @@ class Node():
         # lock to synchronize message handling
         self.lock = Lock()
         # create server socket and bind to a port
-        self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.socket.setblocking(0)
         if self.port:
             try:
@@ -180,7 +180,23 @@ class Node():
         # Start a thread that waits for inputs
         input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
         input_thread.start()
+        # Start a thread that pings all neighbors
+        ping_thread = Timer(LIVENESSTIMEOUT, self.ping_neighbor)
+        ping_thread.name = 'PingThread'
+        ping_thread.start()
         return self
+
+    def ping_neighbor(self):
+        """used to ping neighbors periodically"""
+        while True:
+            # Go through existing connections
+            for peer,conn in self.connectionpool.poolbypeer.iteritems():
+                self.logger.write("State", "Sending PING to %s" % peer)
+                pingmessage = HandshakeMessage(MSG_PING, self.me)
+                success = self.send(pingmessage, peer=peer)
+                if success < 0:
+                    self.logger.write("State", "Neighbor not responding, marking the neighbor")
+            time.sleep(LIVENESSTIMEOUT)
 
     def __str__(self):
         return "%s NODE %s:%d" % (node_names[self.type], self.addr, self.port)
@@ -264,7 +280,7 @@ class Node():
         connection = self.connectionpool.get_connection_by_socket(clientsock)
         message = connection.receive()
         if message == None:
-            print "This node will be taken out of the configuration."
+            # XXX
             return False
         else:
             self.logger.write("State", "received %s" % message)

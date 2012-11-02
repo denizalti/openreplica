@@ -28,17 +28,15 @@ class ConnectionPool():
     def add_connection_to_peer(self, peer, conn):
         """Adds a Connection to the ConnectionPool by its Peer"""
         with self.pool_lock:
-            connectionkey = peer.getid()
-            self.poolbypeer[connectionkey] = conn
-            conn.peerid = connectionkey
+            self.poolbypeer[peer] = conn
+            conn.peerid = peer.getid()
             
     def del_connection_by_peer(self, peer):
         """ Deletes a Connection from the ConnectionPool by its Peer"""        
         with self.pool_lock:
-            connectionkey = peer.getid()
-            if self.poolbypeer.has_key(connectionkey):
-                conn = self.poolbypeer[connectionkey]
-                del self.poolbypeer[connectionkey]
+            if self.poolbypeer.has_key(peer):
+                conn = self.poolbypeer[peer]
+                del self.poolbypeer[peer]
                 del self.poolbysocket[conn.thesocket]
                 conn.close()
             else:
@@ -61,9 +59,8 @@ class ConnectionPool():
     def get_connection_by_peer(self, peer):
         """Returns a Connection given corresponding Peer."""
         with self.pool_lock:
-            connectionkey = peer.getid()
-            if self.poolbypeer.has_key(connectionkey):
-                return self.poolbypeer[connectionkey]
+            if self.poolbypeer.has_key(peer):
+                return self.poolbypeer[peer]
             else:
                 try:
                     print "Creating a new socket."
@@ -71,8 +68,8 @@ class ConnectionPool():
                     thesocket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
                     thesocket.connect((peer.addr, peer.port))
                     thesocket.setblocking(0)
-                    conn = Connection(thesocket, connectionkey)
-                    self.poolbypeer[connectionkey] = conn
+                    conn = Connection(thesocket, peer.getid())
+                    self.poolbypeer[peer] = conn
                     self.poolbysocket[thesocket] = conn
                     return conn
                 except:
