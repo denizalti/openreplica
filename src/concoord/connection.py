@@ -42,7 +42,7 @@ class ConnectionPool():
                 del self.poolbysocket[conn.thesocket]
                 conn.close()
             else:
-                print "trying to delete a non-existent connection from the conn pool"
+                print "Trying to delete a non-existent connection from the connection pool."
         
     def del_connection_by_socket(self, thesocket):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
@@ -56,7 +56,7 @@ class ConnectionPool():
                 del self.poolbysocket[daconn.thesocket]
                 daconn.close()
             else:
-                print "trying to delete a non-existent socket from the conn pool"
+                print "Trying to delete a non-existent socket from the connection pool."
 
     def get_connection_by_peer(self, peer):
         """Returns a Connection given corresponding Peer."""
@@ -66,6 +66,7 @@ class ConnectionPool():
                 return self.poolbypeer[connectionkey]
             else:
                 try:
+                    print "Creating a new socket."
                     thesocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     thesocket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
                     thesocket.connect((peer.addr, peer.port))
@@ -148,7 +149,7 @@ class Connection():
         with self.writelock:
             """pickle and send a message on the Connection"""
             if DEBUG and random.random() <= DROPRATE:
-                print "dropping message..."
+                print "Dropping message..."
                 return
             messagestr = pickle.dumps(msg)
             message = struct.pack("I", len(messagestr)) + messagestr
@@ -183,7 +184,7 @@ class Connection():
         except socket.error, e:
             if isinstance(e.args, tuple):
                 if e[0] == errno.EBADF:
-                    print "socket closed"
+                    print "Socket closed."
 
     def close(self):
         """Close the Connection"""
