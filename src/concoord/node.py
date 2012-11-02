@@ -196,6 +196,7 @@ class Node():
                 success = self.send(pingmessage, peer=peer)
                 if success < 0:
                     self.logger.write("State", "Neighbor not responding, marking the neighbor")
+                    self.groups[peer.type].mark_unreachable(peer)
             time.sleep(LIVENESSTIMEOUT)
 
     def __str__(self):

@@ -19,17 +19,20 @@ class Group():
         """
         self.owner = owner
         self.members = []
+        self.liveness = {}
 
     def remove(self, peer):
         """Removes the given peer from the Group."""
         if peer in self.members:
             self.members.remove(peer)
+            del self.liveness[peer]
             self.sort()
 
     def add(self, peer):
         """Adds the given peer to the Group if it's not the owner itself."""
         if peer not in self.members:
             self.members.append(peer)
+            self.liveness[peer] = 0
             self.sort()
 
     def union(self, othergroup):
@@ -37,14 +40,18 @@ class Group():
         for peer in othergroup.members:
             if peer not in self.members:
                 self.members.append(peer)
+                self.liveness[peer] = 0
         self.sort()
 
     def sort(self):
         self.members = sorted(self.members, key=attrgetter('addr'))
         self.members = sorted(self.members, key=attrgetter('port'))
 
-    def haspeer(self,peer):
+    def haspeer(self, peer):
         return peer in self.members
+
+    def mark_unreachable(self, peer):
+        self.liveness[peer] += 1
 
     def get_addresses(self):
         for peer in self.members:
