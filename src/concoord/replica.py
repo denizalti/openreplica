@@ -109,9 +109,9 @@ class Replica(Node):
     def startservice(self):
         """Start the background services associated with a replica."""
         Node.startservice(self)
-#        leaderping_thread = Timer(LIVENESSTIMEOUT, self.ping_leader)
-#        leaderping_thread.name = 'LeaderPingThread'
-#        leaderping_thread.start()
+        leaderping_thread = Timer(LIVENESSTIMEOUT, self.ping_leader)
+        leaderping_thread.name = 'LeaderPingThread'
+        leaderping_thread.start()
 
     @staticmethod
     def _apply_args_to_method(method, args, _concoord_command):
@@ -457,7 +457,7 @@ class Replica(Node):
         return otherleader
             
     def find_leader(self):
-        """returns the minimum peer as the leader"""
+        """returns the minimum peer that is not marked as the leader"""
         if len(self.groups[NODE_REPLICA].members) > 0:
             return self.groups[NODE_REPLICA].members[0]
         return self.me
@@ -919,8 +919,9 @@ class Replica(Node):
                 pingmessage = HandshakeMessage(MSG_PING, self.me)
                 success = self.send(pingmessage, peer=currentleader)
                 if success < 0:
-                    self.logger.write("State", "Leader not responding, removing current leader from the replicalist")
-                    self.groups[NODE_REPLICA].remove(currentleader)
+                    self.logger.write("State", "Leader not responding, marking the leader unreachable.")
+                    self.groups[peer.type].mark_unreachable(peer)
+                    # XXX Check leadership to trigger handover.
             time.sleep(LIVENESSTIMEOUT)
 
     def leader_is_alive(self):
@@ -930,8 +931,8 @@ class Replica(Node):
             pingmessage = HandshakeMessage(MSG_PING, self.me)
             success = self.send(pingmessage, peer=currentleader)
             if success < 0:
-                self.logger.write("State", "Leader not reachable, removing current leader from the replicalist")
-                self.groups[NODE_REPLICA].remove(currentleader)
+                self.logger.write("State", "Leader not responding, marking the leader unreachable.")
+                self.groups[peer.type].mark_unreachable(peer)
                 return False
         return True
 
