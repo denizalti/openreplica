@@ -109,9 +109,6 @@ class Replica(Node):
     def startservice(self):
         """Start the background services associated with a replica."""
         Node.startservice(self)
-        leaderping_thread = Timer(LIVENESSTIMEOUT, self.ping_leader)
-        leaderping_thread.name = 'LeaderPingThread'
-        leaderping_thread.start()
 
     @staticmethod
     def _apply_args_to_method(method, args, _concoord_command):
@@ -914,41 +911,22 @@ class Replica(Node):
     def ping_neighbor(self):
         """used to ping neighbors periodically"""
         while True:
-            # Go through existing connections
-            for peer,conn in self.connectionpool.poolbypeer.iteritems():
-                self.logger.write("State", "Sending PING to %s" % peer)
-                pingmessage = HandshakeMessage(MSG_PING, self.me)
-                success = self.send(pingmessage, peer=peer)
-                if success < 0:
-                    self.logger.write("State", "Neighbor not responding, marking the neighbor")
-                    self.groups[peer.type].mark_unreachable(peer)
-                    self.update_leader()
-                    if self.isleader:
-                        delcommand = self.create_delete_command(currentleader)
-                        self.initiate_command(delcommand)
-                        for i in range(WINDOW):
-                            noopcommand = self.create_noop_command()
-                            self.initiate_command(noopcommand)
-            time.sleep(LIVENESSTIMEOUT)
-
-    def ping_leader(self):
-        """used to ping the current leader periodically"""
-        while True:
-            currentleader = self.find_leader()
-            if currentleader != self.me:
-                self.logger.write("State", "Sending PING to %s" % currentleader)
-                pingmessage = HandshakeMessage(MSG_PING, self.me)
-                success = self.send(pingmessage, peer=currentleader)
-                if success < 0:
-                    self.logger.write("State", "Leader not responding, marking the leader unreachable.")
-                    self.groups[NODE_REPLICA].mark_unreachable(currentleader)
-                    self.update_leader()
-                    if self.isleader:
-                        delcommand = self.create_delete_command(currentleader)
-                        self.initiate_command(delcommand)
-                        for i in range(WINDOW):
-                            noopcommand = self.create_noop_command()
-                            self.initiate_command(noopcommand)
+            # Go through all peers in the view
+            for gtype,group in self.groups.iteritems():
+                for peer in group:
+                    self.logger.write("State", "Sending PING to %s" % peer)
+                    pingmessage = HandshakeMessage(MSG_PING, self.me)
+                    success = self.send(pingmessage, peer=peer)
+                    if success < 0:
+                        self.logger.write("State", "Neighbor not responding, marking the neighbor")
+                        self.groups[peer.type].mark_unreachable(peer)
+                        self.update_leader()
+                        if self.isleader:
+                            delcommand = self.create_delete_command(peer)
+                            self.initiate_command(delcommand)
+                            for i in range(WINDOW):
+                                noopcommand = self.create_noop_command()
+                                self.initiate_command(noopcommand)
             time.sleep(LIVENESSTIMEOUT)
 
     def leader_is_alive(self):
