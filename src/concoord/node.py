@@ -189,14 +189,15 @@ class Node():
     def ping_neighbor(self):
         """used to ping neighbors periodically"""
         while True:
-            # Go through existing connections
-            for peer,conn in self.connectionpool.poolbypeer.iteritems():
-                self.logger.write("State", "Sending PING to %s" % peer)
-                pingmessage = HandshakeMessage(MSG_PING, self.me)
-                success = self.send(pingmessage, peer=peer)
-                if success < 0:
-                    self.logger.write("State", "Neighbor not responding, marking the neighbor")
-                    self.groups[peer.type].mark_unreachable(peer)
+            # Go through all peers in the view
+            for gtype,group in self.groups.iteritems():
+                for peer in group:
+                    self.logger.write("State", "Sending PING to %s" % peer)
+                    pingmessage = HandshakeMessage(MSG_PING, self.me)
+                    success = self.send(pingmessage, peer=peer)
+                    if success < 0:
+                        self.logger.write("State", "Neighbor not responding, marking the neighbor")
+                        self.groups[peer.type].mark_unreachable(peer)
             time.sleep(LIVENESSTIMEOUT)
 
     def __str__(self):
