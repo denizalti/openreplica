@@ -53,6 +53,9 @@ class Group():
     def mark_unreachable(self, peer):
         self.liveness[peer] += 1
 
+    def mark_reachable(self, peer):
+        self.liveness[peer] = 0
+
     def get_addresses(self):
         for peer in self.members:
             yield (peer.addr,peer.port)

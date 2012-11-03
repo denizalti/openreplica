@@ -927,6 +927,8 @@ class Replica(Node):
                             for i in range(WINDOW):
                                 noopcommand = self.create_noop_command()
                                 self.initiate_command(noopcommand)
+                    else:
+                        self.groups[peer.type].mark_reachable(peer)
             time.sleep(LIVENESSTIMEOUT)
 
     def leader_is_alive(self):
