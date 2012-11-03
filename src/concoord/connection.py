@@ -63,7 +63,6 @@ class ConnectionPool():
                 return self.poolbypeer[peer]
             else:
                 try:
-                    print "Creating a new socket."
                     thesocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     thesocket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
                     thesocket.connect((peer.addr, peer.port))
