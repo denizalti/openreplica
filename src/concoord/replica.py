@@ -457,9 +457,10 @@ class Replica(Node):
         return otherleader
             
     def find_leader(self):
-        """returns the minimum peer that is not marked as the leader"""
-        if len(self.groups[NODE_REPLICA].members) > 0:
-            return self.groups[NODE_REPLICA].members[0]
+        """returns the minimum peer that is alive as the leader"""
+        for member in self.groups[NODE_REPLICA].members:
+            if self.groups[NODE_REPLICA].liveness[member] == 0:
+                return member
         return self.me
         
     def update_leader(self):
@@ -910,6 +911,26 @@ class Replica(Node):
                 time.sleep(self.backoff)
                 self.initiate_command(prc.proposal)
 
+    def ping_neighbor(self):
+        """used to ping neighbors periodically"""
+        while True:
+            # Go through existing connections
+            for peer,conn in self.connectionpool.poolbypeer.iteritems():
+                self.logger.write("State", "Sending PING to %s" % peer)
+                pingmessage = HandshakeMessage(MSG_PING, self.me)
+                success = self.send(pingmessage, peer=peer)
+                if success < 0:
+                    self.logger.write("State", "Neighbor not responding, marking the neighbor")
+                    self.groups[peer.type].mark_unreachable(peer)
+                    self.update_leader()
+                    if self.isleader:
+                        delcommand = self.create_delete_command(currentleader)
+                        self.initiate_command(delcommand)
+                        for i in range(WINDOW):
+                            noopcommand = self.create_noop_command()
+                            self.initiate_command(noopcommand)
+            time.sleep(LIVENESSTIMEOUT)
+
     def ping_leader(self):
         """used to ping the current leader periodically"""
         while True:
@@ -920,8 +941,14 @@ class Replica(Node):
                 success = self.send(pingmessage, peer=currentleader)
                 if success < 0:
                     self.logger.write("State", "Leader not responding, marking the leader unreachable.")
-                    self.groups[peer.type].mark_unreachable(peer)
-                    # XXX Check leadership to trigger handover.
+                    self.groups[NODE_REPLICA].mark_unreachable(currentleader)
+                    self.update_leader()
+                    if self.isleader:
+                        delcommand = self.create_delete_command(currentleader)
+                        self.initiate_command(delcommand)
+                        for i in range(WINDOW):
+                            noopcommand = self.create_noop_command()
+                            self.initiate_command(noopcommand)
             time.sleep(LIVENESSTIMEOUT)
 
     def leader_is_alive(self):

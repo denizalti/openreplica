@@ -281,7 +281,6 @@ class Node():
         connection = self.connectionpool.get_connection_by_socket(clientsock)
         message = connection.receive()
         if message == None:
-            # XXX
             return False
         else:
             self.logger.write("State", "received %s" % message)
