@@ -104,8 +104,11 @@ class OpenReplicaNameserver(Nameserver):
             subdomain = subdomain.strip('.')
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
                 for node in self.object.getnodes(subdomain)[NODE_REPLICA]:
-                    addr,port = node.split(":")
-                    yield addr+self.ipconverter,int(port)
+                    try:
+                        addr,port = node.split(":")
+                        yield addr+self.ipconverter,int(port)
+                    except:
+                        pass
 
     def should_answer(self, question):
         print question.name
