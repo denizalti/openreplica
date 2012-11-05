@@ -74,7 +74,6 @@ def get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, class
         startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "acceptor.py -a %s -p %d -f %s -b %s -l %s" % (node, port, clientobjectfilename, bootstrapname, LOGGERNODE)
     elif nodetype == NODE_NAMESERVER:
         startupcmd =  "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s -t %d -m %s -l %s" % (subdomain+'.openreplica.org', node, port, clientobjectfilename, classname, bootstrapname, servicetype, master, LOGGERNODE)
-    print startupcmd
     return startupcmd
         
 def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapname):
@@ -87,24 +86,30 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
         nodeconn = PLConnection(1, [check_planetlab_dnsport, check_planetlab_pythonversion], configdict=CONFIGDICT)
     else:
         nodeconn = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
-    print "Picked Node: %s" % nodeconn.getHosts()[0]
-    print "Connecting to bootstrap: %s" % bootstrapname
-    if nodetype != NODE_ACCEPTOR:
-        nodeconn.uploadall(clientobjectfilepath+"fixed", CONCOORDPATH+clientobjectfilename)
-    for node in nodeconn.getHosts():
+    
+    failure = True
+    trials = 0
+    while failure and trials < 5:
+        node = nodeconn.getHosts()[0]
+        print "Picked Node: %s" % node
+
+        if nodetype != NODE_ACCEPTOR:
+            nodeconn.uploadall(clientobjectfilepath, CONCOORDPATH + clientobjectfilename)
         port = random.randint(14000, 15000)
         p = nodeconn.executecommandone(node, get_startup_cmd(nodetype, subdomain, node, port,
                                                              clientobjectfilename, classname,
                                                              bootstrapname, servicetype, master), False)
-        while terminated(p):
-            port = random.randint(14000, 15000)
-            print get_startup_cmd(nodetype, subdomain, node, port,clientobjectfilename, classname, bootstrapname, servicetype, master)
-            p = nodeconn.executecommandone(node, get_startup_cmd(nodetype, subdomain, node, port,
-                                                                 clientobjectfilename, classname,
-                                                                 bootstrapname, servicetype, master), False)
-            print p
-        nodename = node+':'+str(port)
-        print "Node is started: %s" % nodename
+        nodename = node + ':' + str(port)
+        # the start-up failed is p terminates
+        failure = terminated(p)
+        trials += 1
+
+    if failure:
+        print "Adding node FAILED. Try again."
+        return
+
+    # node is started
+    print "Node is started: %s" % nodename
     # Add it to the object if it is a nameserver
     nameservercoordobj = NameserverCoord('openreplica.org')
     print "Adding node to OpenReplica Nameserver Coordination Object:"
