@@ -114,6 +114,8 @@ class Nameserver(Replica):
                     self.handle_query(data,clientaddr)
             except KeyboardInterrupt, EOFError:
                 os._exit(0)
+            except:
+                continue
         self.udpsocket.close()
         return
 
