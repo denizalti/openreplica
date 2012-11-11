@@ -26,33 +26,43 @@ parser.add_option("-o", "--configpath", action="store", dest="configpath", defau
 parser.add_option("-t", "--token", action="store", dest="token", default='', help="unique security token")
 (options, args) = parser.parse_args()
 
+DEBUG = False
 NODE_BOOTSTRAP = 5
-CONCOORDPATH = 'concoord-0.3.0/concoord/'
+STDOUT, STDERR = range(2)
 
 try:
     CONFIGDICT = load_configdict(options.configpath)
     NPYTHONPATH = CONFIGDICT['NPYTHONPATH']
     CONCOORD_HELPERDIR = CONFIGDICT['CONCOORD_HELPERDIR']
+    CONCOORDPATH = CONFIGDICT['CONCOORDPATH']
     LOGGERNODE = CONFIGDICT['LOGGERNODE']
 except:
     print "You need to set ssh credentials to use this script. Use -o option to provide configuration file path."
     NPYTHONPATH = 'python'
 
 def check_object(clientcode):
-    print "Checking object safety"
+    print ("Checking object for security issues..."),
     astnode = compile(clientcode,"<string>","exec",_ast.PyCF_ONLY_AST)
     v = SafetyVisitor()
     v.visit(astnode)
     return v.safe
 
+# checks if a PL node is suitable for running a nameserver
+def check_planetlab_dnsport(plconn, node):
+    pathtodnstester = CONCOORD_HELPERDIR+'testdnsport.py'
+    plconn.uploadone(node, pathtodnstester)
+    terminated, output = plconn.executecommandone(node, "sudo "+NPYTHONPATH+" testdnsport.py")
+    success = terminated and output[STDERR] == ''
+    plconn.executecommandone(node, "rm testdnsport.py")
+    return success,output
+
 def check_planetlab_pythonversion(plconn, node):
-    print "Checking python version on planetlab.."
     pathtopvtester = CONCOORD_HELPERDIR+'testpythonversion.py' 
     plconn.uploadone(node, pathtopvtester)
-    rtv, output = plconn.executecommandone(node, NPYTHONPATH + " testpythonversion.py")
-    if not rtv:
-        plconn.executecommandone(node, "rm testpythonversion.py")
-    return rtv,output
+    terminated, output = plconn.executecommandone(node, NPYTHONPATH + " testpythonversion.py")
+    success = terminated and output[STDERR] == ''
+    plconn.executecommandone(node, "rm testpythonversion.py")
+    return success,output
 
 def kill_node(node, uniqueid):
     addr,port = node.split(':')
@@ -67,13 +77,13 @@ def kill_node(node, uniqueid):
 def get_startup_cmd(nodetype, node, port, clientobjectfilename, classname='', bootstrapname='', subdomain='', servicetype=None, master=''):
     startupcmd = ''
     if nodetype == NODE_BOOTSTRAP:
-        startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -l %s" % (node, port, clientobjectfilename, classname, LOGGERNODE)
+        startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -l %s > foo.out 2> foo.err < /dev/null &" % (node, port, clientobjectfilename, classname, LOGGERNODE)
     elif nodetype == NODE_REPLICA:
-        startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -b %s -l %s" % (node, port, clientobjectfilename, classname, bootstrapname, LOGGERNODE)
+        startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "replica.py -a %s -p %d -f %s -c %s -b %s -l %s > foo.out 2> foo.err < /dev/null &" % (node, port, clientobjectfilename, classname, bootstrapname, LOGGERNODE)
     elif nodetype == NODE_ACCEPTOR:
-        startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "acceptor.py -a %s -p %d -f %s -b %s -l %s" % (node, port, clientobjectfilename, bootstrapname, LOGGERNODE)
+        startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "acceptor.py -a %s -p %d -f %s -b %s -l %s > foo.out 2> foo.err < /dev/null &" % (node, port, clientobjectfilename, bootstrapname, LOGGERNODE)
     elif nodetype == NODE_NAMESERVER:
-        startupcmd =  "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s -t %d -m %s -l %s" % (subdomain+'.openreplica.org', node, port, clientobjectfilename, classname, bootstrapname, servicetype, master, LOGGERNODE)
+        startupcmd =  "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s -t %d -m %s -l %s > foo.out 2> foo.err < /dev/null &" % (subdomain+'.openreplica.org', node, port, clientobjectfilename, classname, bootstrapname, servicetype, master, LOGGERNODE)
     return startupcmd
 
 def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token):
@@ -83,6 +93,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
     if numreplicas < 1 or numacceptors < 1 or numnameservers < 1:
         print "Invalid configuration:"
         print "The configuration requires at least 1 Replica, 1 Acceptor and 1 Nameserver"
+        print "Please try again."
         os._exit()
     processnames = []
 
@@ -101,10 +112,17 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
         port = random.randint(14000, 15000)
         node = bootstrap.getHosts()[0]
         p = bootstrap.executecommandone(node, get_startup_cmd(NODE_BOOTSTRAP, node, port, clientobjectfilename, classname), False)
+        terminated, output = bootstrap.executecommandone(node, 'cat foo.out')
+        terminated = terminated and output[STDOUT] != ''
+        bootstrap.executecommandone(node, 'rm foo*')
         numtries = 0
-        while terminated(p) and numtries < 5:
+        while terminated and numtries < 5:
+            print "Failed to start node, trying again.."
             port = random.randint(14000, 15000)
             p = bootstrap.executecommandone(node, get_startup_cmd(NODE_BOOTSTRAP, node, port, clientobjectfilename, classname), False)
+            terminated, output = bootstrap.executecommandone(node, 'cat foo.out')
+            terminated = terminated and output[STDOUT] != ''
+            bootstrap.executecommandone(node, 'rm foo*')
             numtries += 1
         if numtries == 5:
             success = False
@@ -112,7 +130,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
         # Bootstrap is started
         bootstrapname = bootstrap.getHosts()[0]+':'+str(port)
         processnames.append((NODE_REPLICA, bootstrapname))
-        print "Bootstrap is started: %s" % bootstrapname
+        print "Replica #0 is started: %s" % bootstrapname
 
     # locate the PlanetLab node for replicas, check the nodes, upload object and start the nodes
     for i in range(numreplicas-1):
@@ -130,10 +148,16 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             port = random.randint(14000, 15000)
             node = replica.getHosts()[0]
             p = replica.executecommandone(replica.getHosts()[0], get_startup_cmd(NODE_REPLICA, node, port, clientobjectfilename, classname, bootstrapname), False)
+            terminated, output = replica.executecommandone(node, 'cat foo.out')
+            terminated = terminated and output[STDOUT] != ''
+            replica.executecommandone(node, 'rm foo*')
             numtries = 0
-            while terminated(p) and numtries < 5:
+            while terminated and numtries < 5:
                 port = random.randint(14000, 15000)
                 p = replica.executecommandone(replica.getHosts()[0], get_startup_cmd(NODE_REPLICA, node, port, clientobjectfilename, classname, bootstrapname), False)
+                terminated, output = replica.executecommandone(node, 'cat foo.out')
+                terminated = terminated and output[STDOUT] != ''
+                replica.executecommandone(node, 'rm foo*')
                 numtries += 1
             if numtries == 5:
                 success = False
@@ -141,7 +165,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             # Replica is started
             replicaname = replica.getHosts()[0]+':'+str(port)
             processnames.append((NODE_REPLICA, replicaname))
-            print "Replica #%d is started: %s" % (i, replicaname)
+            print "\nReplica #%d is started: %s" % (i, replicaname)
     
     # locate the PlanetLab node for acceptors, check the nodes, upload object and start the nodes
     for i in range(numacceptors):
@@ -159,10 +183,16 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             port = random.randint(14000, 15000)
             node = acceptor.getHosts()[0]
             p = acceptor.executecommandone(acceptor.getHosts()[0], get_startup_cmd(NODE_ACCEPTOR, node, port, clientobjectfilename, bootstrapname=bootstrapname), False)
+            terminated, output = acceptor.executecommandone(node, 'cat foo.out')
+            terminated = terminated and output[STDOUT] != ''
+            acceptor.executecommandone(node, 'rm foo*')
             numtries = 0
-            while terminated(p) and numtries < 5:
+            while terminated and numtries < 5:
                 port = random.randint(14000, 15000)
                 p = acceptor.executecommandone(acceptor.getHosts()[0], get_startup_cmd(NODE_ACCEPTOR, node, port, clientobjectfilename, bootstrapname=bootstrapname), False)
+                terminated, output = acceptor.executecommandone(node, 'cat foo.out')
+                terminated = terminated and output[STDOUT] != ''
+                acceptor.executecommandone(node, 'rm foo*')
                 numtries += 1
             if numtries == 5:
                 success = False
@@ -190,10 +220,16 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             port = random.randint(14000, 15000)
             node = nameserver.getHosts()[0]
             p = nameserver.executecommandone(nameserver.getHosts()[0], get_startup_cmd(NODE_NAMESERVER, node, port, clientobjectfilename, classname, bootstrapname, subdomain, servicetype, master), False)
+            terminated, output = nameserver.executecommandone(node, 'cat foo.out')
+            terminated = terminated and output[STDOUT] != ''
+            nameserver.executecommandone(node, 'rm foo*')
             numtries = 0
-            while terminated(p) and numtries < 5:
+            while terminated and numtries < 5:
                 port = random.randint(14000, 15000)
                 p = nameserver.executecommandone(nameserver.getHosts()[0], get_startup_cmd(NODE_NAMESERVER, node, port, clientobjectfilename, classname, bootstrapname, subdomain, servicetype, master), False)
+                terminated, output = nameserver.executecommandone(node, 'cat foo.out')
+                terminated = terminated and output[STDOUT] != ''
+                nameserver.executecommandone(node, 'rm foo*')
                 numtries += 1
             if numtries == 5:
                 success = False
@@ -201,44 +237,36 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             # Nameserver is started
             nameservername = nameserver.getHosts()[0]+':'+str(port)
             processnames.append((NODE_NAMESERVER, nameservername))
-            print "Name server #%d is started: %s" % (i, nameservername)
+            print "Nameserver #%d is started: %s" % (i, nameservername)
 
-    # All nodes are started
-    print "All nodes have been started."
     ## add nodes to OpenReplica coordinator object
     nameservercoordobj = NameserverCoord('openreplica.org')
-    print "Adding nodes to OpenReplica Nameserver Coordination Object:"
     for nodetype,node in processnames:
-        print "- ",  node_names[nodetype] , "| ", node
         nameservercoordobj.addnodetosubdomain(subdomain, nodetype, node)
+    # All nodes are started
+    print "All nodes have been started!"
     return bootstrapname
 
-def terminated(p):
-    i = 5
-    done = p.poll() is not None
-    while not done and i>0: # Not terminated yet                                                                                                                                  
-        sleep(1)
-        i -= 1
-        done = p.poll() is not None
-    return done
-    
 def main():
     with open(options.objectfilepath, 'rU') as fd:
         clientcode = fd.read()
         # Check safety
     if not check_object(clientcode):
         print "Object is not safe for us to execute."
+        print "If you would like to use this object, use ConCoord to deploy it."
         os._exit(1)
         # Start Nodes
-    print "Connecting to Planet Lab"
+    print " [PASSED]"
     configuration = (int(options.replicanum), int(options.acceptornum), int(options.nameservernum))
+    print "Starting nodes..."
     start_nodes(options.subdomain, options.objectfilepath, options.classname, configuration, options.token)
-        # Create Proxy
+    # Create Proxy
     print "Creating proxy..."
     clientproxycode = createclientproxy(clientcode, options.classname, options.token, None)
     clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
     print "Proxy Code:"
     print clientproxycode
+    return 0
     
 if __name__=='__main__':
     main()
