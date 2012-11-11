@@ -69,7 +69,8 @@ class NameserverCoord():
         rstr = ''	
         for domain,nodes in self._nodes.iteritems():
             rstr += domain + ';('
-            for nodetype, nodename in nodes.iteritems():
-                rstr += str(nodetype) + '-' + ' '.join(nodename) + "--"
+            for nodetype, nodes in nodes.iteritems():
+                if len(nodes) > 0:
+                    rstr += str(nodetype) + '-' + ' '.join(nodes) + "--"
             rstr += ');'
         return rstr

@@ -138,7 +138,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
         while not success:
             try:
                 replica = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
-                print "Trying node: %s"% replica.getHosts()[0]
+                print "Trying node: %s" % replica.getHosts()[0]
                 success = replica.uploadall(clientobjectfilepath, CONCOORDPATH + clientobjectfilename)
             except:
                 success = False
@@ -165,7 +165,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             # Replica is started
             replicaname = replica.getHosts()[0]+':'+str(port)
             processnames.append((NODE_REPLICA, replicaname))
-            print "\nReplica #%d is started: %s" % (i, replicaname)
+            print "Replica #%d is started: %s" % (i+1, replicaname)
     
     # locate the PlanetLab node for acceptors, check the nodes, upload object and start the nodes
     for i in range(numacceptors):
