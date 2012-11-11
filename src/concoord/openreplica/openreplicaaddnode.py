@@ -99,7 +99,6 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
     print "Node is started: %s" % nodename
 
 def main():
-    print "Starting nodes..."
     start_node(options.nodetype, options.subdomain, options.objectfilepath,
                options.classname, options.bootstrapname)
     
