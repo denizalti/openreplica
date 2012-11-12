@@ -15,6 +15,8 @@ class NameserverCoord():
 
     def addnodetosubdomain(self, subdomain, nodetype, node):
         nodetype = int(nodetype)
+        if subdomain.find('openreplica') == -1:
+            subdomain+'.openreplica.org.'
         if subdomain in self._nodes:
             if nodetype in self._nodes[subdomain]:
                 self._nodes[subdomain][nodetype].add(node)
@@ -27,12 +29,16 @@ class NameserverCoord():
             self._nodes[subdomain][nodetype].add(node)
 
     def delsubdomain(self, subdomain):
+        if subdomain.find('openreplica') == -1:
+            subdomain+'.openreplica.org.'
         exists = subdomain in self._nodes
         if exists:
             del self._nodes[subdomain]
         return exists
         
     def delnodefromsubdomain(self, subdomain, nodetype, node):
+        if subdomain.find('openreplica') == -1:
+            subdomain+'.openreplica.org.'
         nodetype = int(nodetype)
         exists = subdomain in self._nodes and nodetype in self._nodes[subdomain] and node in self._nodes[subdomain][nodetype]
         if exists:
@@ -40,6 +46,8 @@ class NameserverCoord():
         return exists
 
     def updatesubdomain(self, subdomain, nodes):
+        if subdomain.find('openreplica') == -1:
+            subdomain+'.openreplica.org.'
         if subdomain in self._nodes:
             self._nodes[subdomain] = nodes
         else:
@@ -47,6 +55,8 @@ class NameserverCoord():
             self._nodes[subdomain] = nodes
 
     def getnodes(self, subdomain):
+        if subdomain.find('openreplica') == -1:
+            subdomain+'.openreplica.org.'
         return self._nodes[subdomain]
 
     def getsubdomains(self):
@@ -68,6 +78,8 @@ class NameserverCoord():
     def __str__(self):
         rstr = ''	
         for domain,nodes in self._nodes.iteritems():
+            if domain.find('openreplica') == -1:
+                continue
             rstr += domain + ';('
             for nodetype, nodes in nodes.iteritems():
                 if len(nodes) > 0:
