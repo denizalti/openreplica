@@ -16,7 +16,7 @@ class NameserverCoord():
     def addnodetosubdomain(self, subdomain, nodetype, node):
         nodetype = int(nodetype)
         if subdomain.find('openreplica') == -1:
-            subdomain+'.openreplica.org.'
+            subdomain = subdomain+'.openreplica.org.'
         if subdomain in self._nodes:
             if nodetype in self._nodes[subdomain]:
                 self._nodes[subdomain][nodetype].add(node)
@@ -30,7 +30,7 @@ class NameserverCoord():
 
     def delsubdomain(self, subdomain):
         if subdomain.find('openreplica') == -1:
-            subdomain+'.openreplica.org.'
+            subdomain = subdomain+'.openreplica.org.'
         exists = subdomain in self._nodes
         if exists:
             del self._nodes[subdomain]
@@ -38,7 +38,7 @@ class NameserverCoord():
         
     def delnodefromsubdomain(self, subdomain, nodetype, node):
         if subdomain.find('openreplica') == -1:
-            subdomain+'.openreplica.org.'
+            subdomain = subdomain+'.openreplica.org.'
         nodetype = int(nodetype)
         exists = subdomain in self._nodes and nodetype in self._nodes[subdomain] and node in self._nodes[subdomain][nodetype]
         if exists:
@@ -47,19 +47,25 @@ class NameserverCoord():
 
     def updatesubdomain(self, subdomain, nodes):
         if subdomain.find('openreplica') == -1:
-            subdomain+'.openreplica.org.'
-        if subdomain in self._nodes:
+            subdomain = subdomain+'.openreplica.org.'
+        if subdomain in self._nodes.keys():
             self._nodes[subdomain] = nodes
         else:
-            self._nodes[subdomain] = {}
+            self._nodes[subdomain] = set()
             self._nodes[subdomain] = nodes
 
     def getnodes(self, subdomain):
         if subdomain.find('openreplica') == -1:
-            subdomain+'.openreplica.org.'
+            subdomain = subdomain+'.openreplica.org.'
         return self._nodes[subdomain]
 
     def getsubdomains(self):
+        subdomains = []
+        for domain in self._nodes.keys():
+            subdomains.append(domain.split('.')[0])
+        return subdomains
+
+    def getdomains(self):
         return self._nodes.keys()
 
     def _reinstantiate(self, state):
