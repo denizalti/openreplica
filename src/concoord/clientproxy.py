@@ -153,7 +153,7 @@ class ClientProxy():
         elif reqdesc.reply.replycode == CR_EXCEPTION:
             raise Exception(reqdesc.reply.reply)
         else:
-            print "should not happen -- client thread saw reply code %d" % reqdesc.reply.replycode
+            print "Unexpected Client Reply Code: %d" % reqdesc.reply.replycode
 
     def comm_loop(self, *args):
         try:
@@ -180,7 +180,6 @@ class ClientProxy():
                         reply = self.conn.receive()
                         if reply is None:
                             needreconfig = True
-                            print "CAUGHT!"
                         elif reply and reply.type == MSG_CLIENTREPLY:
                             reqdesc = self.pendingops[reply.inresponseto]
                             with self.lock:
@@ -206,7 +205,6 @@ class ClientProxy():
                     needreconfig = False
 
                     # check if we need to re-send any pending operations
-                    print "GOING THROUGH..."
                     for commandno,reqdesc in self.pendingops.iteritems():
                         print commandno, ": ", str(reqdesc)
                         if not reqdesc.replyvalid and reqdesc.lastreplycr != CR_BLOCK: # XXX CR_INPROGRESS?

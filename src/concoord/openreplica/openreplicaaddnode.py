@@ -101,6 +101,7 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
 def main():
     start_node(options.nodetype, options.subdomain, options.objectfilepath,
                options.classname, options.bootstrapname)
+    print 'DONE'
     
 if __name__=='__main__':
     main()
