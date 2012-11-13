@@ -266,6 +266,7 @@ def main():
     clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
     print "Proxy Code:"
     print clientproxycode
+    print 'DONE'
     return 0
     
 if __name__=='__main__':
