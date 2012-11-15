@@ -88,6 +88,7 @@ class Replica(Node):
         self.throughput_start = 0
         
     def __str__(self):
+        self.update_leader()
         rstr = "%s %s:%d\n" % ("LEADER" if self.isleader else node_names[self.type], self.addr, self.port)
         rstr += "Waiting to execute command %d.\n" % self.nexttoexecute
         rstr += "Commands:\n"
@@ -275,6 +276,11 @@ class Replica(Node):
                 self.issue_command(self.nexttoexecute)
         self.logger.write("State", "Returning from PERFORM!")
             
+    def pick_commandnumber_add_to_pending(self, givenproposal):
+        # Add command to pending commands
+        givencommandnumber = self.find_commandnumber()
+        self.add_to_pendingcommands(givencommandnumber, givenproposal)
+
     def initiate_command(self, givenproposal):
         # Add command to pending commands
         givencommandnumber = self.find_commandnumber()
@@ -923,10 +929,10 @@ class Replica(Node):
                         self.update_leader()
                         if self.isleader:
                             delcommand = self.create_delete_command(peer)
-                            self.initiate_command(delcommand)
+                            self.pick_commandnumber_add_to_pending(delcommand)
                             for i in range(WINDOW):
                                 noopcommand = self.create_noop_command()
-                                self.initiate_command(noopcommand)
+                                self.pick_commandnumber_add_to_pending(noopcommand)
                     else:
                         self.groups[peer.type].mark_reachable(peer)
             time.sleep(LIVENESSTIMEOUT)
