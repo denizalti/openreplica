@@ -41,7 +41,7 @@ class Acceptor(Node):
         pvalues accepted thus far.
         """
         # this ballot should be strictly higher than previous ballots we have accepted,
-        if msg.ballotnumber > self.ballotnumber:
+        if msg.ballotnumber >= self.ballotnumber:
             self.logger.write("Paxos State", "prepare received with acceptable ballotnumber %s" % str(msg.ballotnumber))
             self.ballotnumber = msg.ballotnumber
             self.last_accept_msg_id = msg.fullid()
