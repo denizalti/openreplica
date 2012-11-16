@@ -208,6 +208,9 @@ class Replica(Node):
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
             if send_result_to_client and self.isleader and command.client in self.clientpool.poolbypeer.keys():
+                print "Send Result to Client: ", send_result_to_client
+                print "Is leader: ", self.isleader
+                print "Client in Clientpool: ", command.client in self.clientpool.poolbypeer.keys()
                 self.send_reply_to_client(clientreplycode, givenresult, command)
 
         if slotnumber % GARBAGEPERIOD == 0 and self.isleader:
@@ -945,7 +948,7 @@ class Replica(Node):
             success = self.send(pingmessage, peer=currentleader)
             if success < 0:
                 self.logger.write("State", "Leader not responding, marking the leader unreachable.")
-                self.groups[peer.type].mark_unreachable(peer)
+                self.groups[currentleader.type].mark_unreachable(currentleader)
                 return False
         return True
 
