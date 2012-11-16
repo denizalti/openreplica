@@ -57,7 +57,6 @@ def get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, class
         startupcmd = "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "acceptor.py -a %s -p %d -f %s -b %s -l %s > foo.out 2> foo.err < /dev/null &" % (node, port, clientobjectfilename, bootstrapname, LOGGERNODE)
     elif nodetype == NODE_NAMESERVER:
         startupcmd =  "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s -t %d -m %s -l %s > foo.out 2> foo.err < /dev/null &" % (subdomain+'.openreplica.org', node, port, clientobjectfilename, classname, bootstrapname, servicetype, master, LOGGERNODE)
-    print startupcmd
     return startupcmd
         
 def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapname):
