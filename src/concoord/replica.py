@@ -72,6 +72,8 @@ class Replica(Node):
         self.pendingcommandset = set()
         # commandnumbers known to be in use
         self.usedcommandnumbers = set()
+        # pending metacommands
+        self.pendingmetacommands = set()
         # number for metacommands initiated from this replica
         self.metacommandnumber = 0
         self.clientpool = ConnectionPool()
@@ -286,7 +288,10 @@ class Replica(Node):
         givencommandnumber = self.find_commandnumber()
         self.add_to_pendingcommands(givencommandnumber, givenproposal)
         # Try issuing command
-        self.issue_command(givencommandnumber)
+        # Pick the smallest pendingcommandnumber
+        smallestcommandnumber = sorted(self.pendingcommands.keys())[0]
+        print "SMALLEST CMDNO IS: ", smallestcommandnumber
+        self.issue_command(smallestcommandnumber)
 
     def issue_command(self, candidatecommandno):
         """propose a command from the pending commands"""
@@ -929,10 +934,12 @@ class Replica(Node):
                         self.update_leader()
                         if self.isleader:
                             delcommand = self.create_delete_command(peer)
-                            self.pick_commandnumber_add_to_pending(delcommand)
-                            for i in range(WINDOW):
-                                noopcommand = self.create_noop_command()
-                                self.pick_commandnumber_add_to_pending(noopcommand)
+                            if delcommand not in self.pendingmetacommands:
+                                print "DEL ACCEPTOR!!!!"
+                                self.pick_commandnumber_add_to_pending(delcommand)
+                                for i in range(WINDOW):
+                                    noopcommand = self.create_noop_command()
+                                    self.pick_commandnumber_add_to_pending(noopcommand)
                     else:
                         self.groups[peer.type].mark_reachable(peer)
             time.sleep(LIVENESSTIMEOUT)
