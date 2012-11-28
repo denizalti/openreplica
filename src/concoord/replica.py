@@ -88,10 +88,11 @@ class Replica(Node):
         self.throughput_runs = 0
         self.throughput_stop = 0
         self.throughput_start = 0
-        
+
     def __str__(self):
         self.update_leader()
         rstr = "%s %s:%d\n" % ("LEADER" if self.isleader else node_names[self.type], self.addr, self.port)
+        rstr += "Members:\n %s\n" % "\n".join(str(group) for type,group in self.groups.iteritems())
         rstr += "Waiting to execute command %d.\n" % self.nexttoexecute
         rstr += "Commands:\n"
         for commandnumber, command in self.decisions.iteritems():
@@ -290,7 +291,6 @@ class Replica(Node):
         # Try issuing command
         # Pick the smallest pendingcommandnumber
         smallestcommandnumber = sorted(self.pendingcommands.keys())[0]
-        print "SMALLEST CMDNO IS: ", smallestcommandnumber
         self.issue_command(smallestcommandnumber)
 
     def issue_command(self, candidatecommandno):
@@ -569,8 +569,6 @@ class Replica(Node):
             # Check if the request has been executed
             if self.executed.has_key(givencommand):
                 # send REPLY
-                print self.executed[givencommand]
-                print self.executed[givencommand][RESULT]
                 clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me,
                                                  reply=self.executed[givencommand][RESULT],
                                                  replycode=self.executed[givencommand][RCODE],
@@ -935,7 +933,6 @@ class Replica(Node):
                         if self.isleader:
                             delcommand = self.create_delete_command(peer)
                             if delcommand not in self.pendingmetacommands:
-                                print "DEL ACCEPTOR!!!!"
                                 self.pick_commandnumber_add_to_pending(delcommand)
                                 for i in range(WINDOW):
                                     noopcommand = self.create_noop_command()
