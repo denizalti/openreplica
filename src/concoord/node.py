@@ -309,8 +309,16 @@ class Node():
     def handle_messages(self):
         while True:
             self.receivedmessages_semaphore.acquire()
-            (message_to_process, connection) = self.receivedmessages.pop(0)
-            self.process_message(message_to_process, connection)
+            if self.type == NODE_REPLICA and len(self.pendingmetacommands) > 0:
+                # A node should be removed from the view
+                with self.pendingmetalock:
+                    self.pendingmetacommands = set()
+                self.initiate_command()
+            try:
+                (message_to_process, connection) = self.receivedmessages.pop(0)
+                self.process_message(message_to_process, connection)
+            except:
+                continue
         return
 
     def process_message(self, message, connection):

@@ -73,6 +73,7 @@ class Replica(Node):
         # commandnumbers known to be in use
         self.usedcommandnumbers = set()
         # pending metacommands
+        self.pendingmetalock = Lock()
         self.pendingmetacommands = set()
         # number for metacommands initiated from this replica
         self.metacommandnumber = 0
@@ -92,7 +93,7 @@ class Replica(Node):
     def __str__(self):
         self.update_leader()
         rstr = "%s %s:%d\n" % ("LEADER" if self.isleader else node_names[self.type], self.addr, self.port)
-        rstr += "Members:\n %s\n" % "\n".join(str(group) for type,group in self.groups.iteritems())
+        rstr += "Members:\n%s\n" % "\n".join(str(group) for type,group in self.groups.iteritems())
         rstr += "Waiting to execute command %d.\n" % self.nexttoexecute
         rstr += "Commands:\n"
         for commandnumber, command in self.decisions.iteritems():
@@ -284,10 +285,11 @@ class Replica(Node):
         givencommandnumber = self.find_commandnumber()
         self.add_to_pendingcommands(givencommandnumber, givenproposal)
 
-    def initiate_command(self, givenproposal):
-        # Add command to pending commands
-        givencommandnumber = self.find_commandnumber()
-        self.add_to_pendingcommands(givencommandnumber, givenproposal)
+    def initiate_command(self, givenproposal=None):
+        if givenproposal:
+            # Add command to pending commands
+            givencommandnumber = self.find_commandnumber()
+            self.add_to_pendingcommands(givencommandnumber, givenproposal)
         # Try issuing command
         # Pick the smallest pendingcommandnumber
         smallestcommandnumber = sorted(self.pendingcommands.keys())[0]
@@ -933,10 +935,13 @@ class Replica(Node):
                         if self.isleader:
                             delcommand = self.create_delete_command(peer)
                             if delcommand not in self.pendingmetacommands:
+                                with self.pendingmetalock:
+                                    self.pendingmetacommands.add(delcommand)
                                 self.pick_commandnumber_add_to_pending(delcommand)
                                 for i in range(WINDOW):
                                     noopcommand = self.create_noop_command()
                                     self.pick_commandnumber_add_to_pending(noopcommand)
+                                self.receivedmessages_semaphore.release()
                     else:
                         self.groups[peer.type].mark_reachable(peer)
             time.sleep(LIVENESSTIMEOUT)
