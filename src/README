@@ -73,19 +73,15 @@ Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
       classname      := name of the class that you’ll use to access your object
       safe 	     := boolean flag to include safety checks for the object
 
-      This script will create two files under the directory that the
+      This script will create a proxy file under the directory that the
       object resides (i.e. /foo/):
 
-      /foo/counter.pyfixed := the object that can be used on the server side by replicas and nameservers
       /foo/counter.pyproxy := the proxy that can be used like the original object by the client
       
-      Remember to rename the files back to the original filename
-      before you import them on the client or server side. To avoid
-      confusion, we will name them counter.py and counterproxy.py in
-      this tutorial.
+      Remember to rename the file back to the original filename
+      before you import them on the client side. To avoid confusion,
+      we will name the file counterproxy.py in this tutorial.
 
-
-      $ mv /foo/counter.pyfixed /foo/counter.py
       $ mv /foo/counter.pyproxy /foo/counterproxy.py
 
       Once you have created the objects, update your PYTHONPATH
