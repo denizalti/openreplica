@@ -84,7 +84,6 @@ class Pinger():
     def __str__(self):
         return " ".join([str(m) for m in self.members])
 
-
 class PingMessage():
     def __init__(self, srcname):
         self.type = MSG_PING
