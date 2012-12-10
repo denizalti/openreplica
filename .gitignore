@@ -2,7 +2,6 @@ src/build
 src/dist
 src/MANIFEST
 secret
-scripts
 planetlab_packages
 credentials.py
 *.tar.gz
