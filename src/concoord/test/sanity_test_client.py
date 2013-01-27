@@ -7,7 +7,7 @@ import random
 import os, sys
 import threading
 from threading import Lock, Thread
-from test_proxy import *
+from sanity_test_proxy import *
 from optparse import OptionParser
 
 parser = OptionParser()
