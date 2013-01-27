@@ -1,5 +1,5 @@
-import socket
-from threading import RLock
+import socket, time
+from threading import RLock, Thread
 from concoord.exception import *
 from concoord.threadingobject.dcondition import DCondition
 
@@ -15,7 +15,7 @@ class Pinger():
 
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        myaddr = findOwnIP()
+        myaddr = socket.gethostbyname(socket.gethostname())
         myport = self.socket.getsockname()[1]
         self.me = "%s:%d", (myaddr,myport)
 
