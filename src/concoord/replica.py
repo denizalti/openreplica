@@ -1022,7 +1022,7 @@ class Replica(Node):
         for cmdnum,command in self.pendingcommands.iteritems():
             print "%d: %s" % (cmdnum,str(command))
 
-## MESUREMENT OUTPUT
+## MEASUREMENT OUTPUT
     def msg_output(self, conn, msg):
         time.sleep(10)
         sys.stdout.flush()
