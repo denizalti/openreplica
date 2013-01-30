@@ -33,8 +33,11 @@ class ConsoleLogger():
         self.logfile = open("concoord_log_"+name, 'w')
 
     def write(self, cls, str):
-        print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix + '_' + threading.current_thread().name, cls, str)
-        self.logfile.write("%s [%s] %s: %s\n" % ((time.asctime(time.localtime(time.time())), self.prefix, cls, str)))
+        print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())),
+                                    self.prefix + '_' + threading.current_thread().name,
+                                    cls, str)
+        self.logfile.write("%s [%s] %s: %s\n" % ((time.asctime(time.localtime(time.time())),
+                                                  self.prefix, cls, str)))
         self.logfile.flush()
 
     def close(self):
@@ -55,8 +58,12 @@ class NetworkLogger():
 
     def write(self, cls, str):
         try:
-            print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())), self.prefix + '_' + threading.current_thread().name, cls, str)
-            self.socket.send("[%s] %s: %s\n" % (self.prefix + '_' + threading.current_thread().name, cls, str))
+            print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())),
+                                        self.prefix + '_' + threading.current_thread().name,
+                                        cls, str)
+            self.socket.send("[%s] %s: %s\n" % (self.prefix + '_' +
+                                                threading.current_thread().name,
+                                                cls, str))
         except:
             return
 
@@ -93,22 +100,32 @@ def dumptimers(numreplicas, numacceptors, ownertype, outputdict):
     for index,numbers in timers.iteritems():
         timerkey, timerno = index.rsplit("-")
         if not numbers[1]-numbers[0] < 0:
-            outputfile.write("%s:\t%s\t%s\t%s\n"  % (str(timerno), str(numreplicas), str(numacceptors), str(numbers[1]-numbers[0])))
+            outputfile.write("%s:\t%s\t%s\t%s\n"  % (str(timerno),
+                                                     str(numreplicas),
+                                                     str(numacceptors),
+                                                     str(numbers[1]-numbers[0])))
     outputfile.close()
 
 def starttiming(fn):
-    """Decorator used to start timing. Keeps track of the count for the first and second calls."""
+    """
+    Decorator used to start timing.
+    Keeps track of the count for the first and second calls.
+    """
     def new(*args, **kw):
         obj = args[0]
         if obj.firststarttime == 0:
             obj.firststarttime = time.time()
         elif obj.secondstarttime == 0:
             obj.secondstarttime = time.time()
+        profile_on()
         return fn(*args, **kw)
     return new
 
 def endtiming(fn):
-    """Decorator used to end timing. Keeps track of the count for the first and second calls."""
+    """
+    Decorator used to end timing.
+    Keeps track of the count for the first and second calls.
+    """
     NITER = 10000
     def new(*args, **kw):
         ret = fn(*args, **kw)
@@ -121,16 +138,20 @@ def endtiming(fn):
             now = time.time()
             total = now - obj.secondstarttime
             perrequest = total/NITER
-            filename = "output/%s-%s" % (str(len(obj.groups[NODE_REPLICA])+1),str(len(obj.groups[NODE_ACCEPTOR])))
+            filename = "output/%s-%s" % (str(len(obj.groups[NODE_REPLICA])+1),
+                                         str(len(obj.groups[NODE_ACCEPTOR])))
             outputfile = open("./"+filename, "a")
             # numreplicas #numacceptors #perrequest #total
-            outputfile.write("%s\t%s\t%s\t%s\n" % (str(len(obj.groups[NODE_REPLICA])+1), str(len(obj.groups[NODE_ACCEPTOR])), str(perrequest), str(total)))
+            outputfile.write("%s\t%s\t%s\t%s\n" % (str(len(obj.groups[NODE_REPLICA])+1),
+                                                   str(len(obj.groups[NODE_ACCEPTOR])),
+                                                   str(perrequest), str(total)))
             outputfile.close()
             obj.count += 1
             sys.stdout.flush()
             profile_off()
             profilerdict = get_profile_stats()
-            for key, value in sorted(profilerdict.iteritems(), key=lambda (k,v): (v[2],k)):
+            for key, value in sorted(profilerdict.iteritems(),
+                                     key=lambda (k,v): (v[2],k)):
                 print "%s: %s" % (key, value)
             time.sleep(10)
             sys.stdout.flush()

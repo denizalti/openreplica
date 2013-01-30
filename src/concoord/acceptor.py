@@ -110,7 +110,6 @@ class Acceptor(Node):
                                     inresponsetoballotnumber=msg.ballotnumber,
                                     commandnumber=msg.commandnumber)
         self.send(replymsg,peer=msg.source)
-        profile_off() #turn profiling off
 
     def msg_garbagecollect(self, conn, msg):
         self.logger.write("Paxos State",
@@ -130,17 +129,13 @@ class Acceptor(Node):
         print sorted(keytuples, key=lambda keytuple: keytuple[0])
 
     def terminate_handler(self, signal, frame):
+        profile_off() #turn profiling off
         print_profile_stats()
-        self.logger.write("State", "exiting...")
-        self.logger.close()
-        sys.stdout.flush()
-        sys.stderr.flush()
-        os._exit(0)
+        self._graceexit()
 
     def _graceexit(self, exitcode=0):
         sys.stdout.flush()
         sys.stderr.flush()
-        print get_profile_stats()
         try:
             self.logger.close()
         except:
