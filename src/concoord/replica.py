@@ -91,7 +91,7 @@ class Replica(Node):
         self.throughput_stop = 0
         self.throughput_start = 0
 
-        profile_on() # Turn profiling on!
+        #profile_on() # Turn profiling on!
 
     def __str__(self):
         self.update_leader()
@@ -1036,8 +1036,8 @@ class Replica(Node):
         
 ## TERMINATION METHODS
     def terminate_handler(self, signal, frame):
-        profile_off()
-        print_profile_stats()
+        #profile_off()
+        #print_profile_stats()
         self._graceexit()
 
     def _graceexit(self, exitcode=0):
