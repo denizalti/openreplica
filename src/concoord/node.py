@@ -19,6 +19,7 @@ from concoord.group import Group
 from concoord.command import Command
 from concoord.pvalue import PValue, PValueSet
 from concoord.connection import ConnectionPool,Connection
+
 try:
     import dns.resolver, dns.exception
 except:
@@ -436,6 +437,7 @@ class Node():
     def _graceexit(self, exitcode=0):
         sys.stdout.flush()
         sys.stderr.flush()
+        print get_profile_stats()
         try:
             self.logger.close()
         except:

@@ -1,9 +1,9 @@
 '''
-@author: denizalti
+@author: deniz
 @note: The profiler shows the performance of ConCoord.
 @date: May, 2011
 '''
-
+import operator
 import time
 import threading
 import sys
@@ -64,3 +64,15 @@ def get_profile_stats():
       stats_tuple = (call_cnt, real_time, cpu_time)
     """
     return p_stats
+
+def print_profile_stats():
+    """
+    prints the profiler statistics in a readable form
+    sorted by real_time
+    """
+    sorted_stats = sorted(p_stats.items(), key=lambda e: e[1][1])
+    for f in sorted_stats:
+        print f
+
+
+ 
