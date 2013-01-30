@@ -278,15 +278,6 @@ class Replica(Node):
                 self.logger.write("State", "performcore %d" % self.nexttoexecute)
                 self.performcore(msg, self.nexttoexecute, designated=designated)
                 self.nexttoexecute += 1
-                if self.nexttoexecute == 45:
-                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    profile_off()
                 # the window just got bumped by one
                 # check if there are pending commands, and issue one of them
                 self.issue_command(self.nexttoexecute)
@@ -1045,6 +1036,7 @@ class Replica(Node):
         
 ## TERMINATION METHODS
     def terminate_handler(self, signal, frame):
+        profile_off()
         print_profile_stats()
         self._graceexit()
 
