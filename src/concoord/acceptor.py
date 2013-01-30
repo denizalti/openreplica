@@ -13,6 +13,7 @@ from concoord.group import Group
 from concoord.pvalue import PValue, PValueSet
 from concoord.connection import ConnectionPool
 from concoord.message import Message, PaxosMessage, GarbageCollectMessage
+from concoordprofiler import *
 
 class Acceptor(Node):
     """Acceptor keeps track of past Paxos ballots. It supports garbage collection by keeping track
@@ -28,6 +29,7 @@ class Acceptor(Node):
         self.last_accept_msg_id = -1
         self.accepted = PValueSet()
         self.objectsnapshot = (0,None)
+        profile_on() # Turn profiling on!
         
     def msg_prepare(self, conn, msg):
         """
@@ -75,6 +77,7 @@ class Acceptor(Node):
             self.logger.write("Paxos State", "propose received with non-acceptable ballotnumber %s" % str(msg.ballotnumber))
             replymsg = PaxosMessage(MSG_PROPOSE_REJECT,self.me,ballotnumber=self.ballotnumber,inresponsetoballotnumber=msg.ballotnumber,commandnumber=msg.commandnumber)
         self.send(replymsg,peer=msg.source)
+        profile_off() #turn profiling off
 
     def msg_garbagecollect(self, conn, msg):
         self.logger.write("Paxos State", "Doing garbage collection upto %d" % msg.commandnumber)
@@ -88,6 +91,24 @@ class Acceptor(Node):
         """Shell command [paxos]: Print the paxos state of the Acceptor."""
         keytuples = self.accepted.pvalues.keys()
         print sorted(keytuples, key=lambda keytuple: keytuple[0])
+
+    def terminate_handler(self, signal, frame):
+        print_profile_stats()
+        self.logger.write("State", "exiting...")
+        self.logger.close()
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(0)
+
+    def _graceexit(self, exitcode=0):
+        sys.stdout.flush()
+        sys.stderr.flush()
+        print get_profile_stats()
+        try:
+            self.logger.close()
+        except:
+            pass
+        os._exit(exitcode)
 
 def main():
     acceptornode = Acceptor().startservice()
