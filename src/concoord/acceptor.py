@@ -31,7 +31,7 @@ class Acceptor(Node):
         self.last_accept_msg_id = -1
         self.accepted = PValueSet()
         self.objectsnapshot = (0,None)
-        #profile_on() # Turn profiling on!
+        profile_on() # Turn profiling on!
         
     def msg_prepare(self, conn, msg):
         """
@@ -129,8 +129,8 @@ class Acceptor(Node):
         print sorted(keytuples, key=lambda keytuple: keytuple[0])
 
     def terminate_handler(self, signal, frame):
-        #profile_off() #turn profiling off
-        #print_profile_stats()
+        profile_off() #turn profiling off
+        print_profile_stats()
         self._graceexit()
 
     def _graceexit(self, exitcode=0):
