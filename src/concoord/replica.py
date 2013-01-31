@@ -220,7 +220,7 @@ class Replica(Node):
         if slotnumber % GARBAGEPERIOD == 0 and self.isleader:
             mynumber = self.metacommandnumber
             self.metacommandnumber += 1
-            garbagetuple = ("garbage_collect", slotnumber)
+            garbagetuple = ("_garbage_collect", slotnumber)
             garbagecommand = Command(self.me, mynumber, garbagetuple)
             if self.leader_initializing:
                 self.handle_client_command(garbagecommand, prepare=True)
@@ -270,7 +270,7 @@ class Replica(Node):
                 self.issue_command(self.nexttoexecute)
             elif requestedcommand not in self.executed:
                 self.logger.write("State", "executing command %d." % self.nexttoexecute)
-                # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
+                # check to see if there was a metacommand precisely WINDOW commands ago that should now take effect
                 # We are calling performcore 2 times, the timing gets screwed plus this is very unefficient
                 if self.nexttoexecute > WINDOW:
                     self.logger.write("State", "performcore %d" % (self.nexttoexecute-WINDOW))
