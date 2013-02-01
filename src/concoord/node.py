@@ -58,15 +58,13 @@ class Node():
         self.port = port
         self.connectionpool = ConnectionPool()
         self.type = nodetype
+        self.debug = debugoption
         if instantiateobj:
             if objectfilename == '':
                 parser.print_help()
                 self._graceexit(1)
             self.objectfilename = objectfilename
             self.objectname = objectname
-        ## initialize receive queue
-        self.receivedmessages_semaphore = Semaphore(0)
-        self.receivedmessages = []        
         # lock to synchronize message handling
         self.lock = Lock()
         # create server socket and bind to a port
@@ -172,11 +170,8 @@ class Node():
             time.sleep(1)
 
     def startservice(self):
-        # Start a thread that waits for inputs
-        receiver_thread = Thread(target=self.server_loop, name='ReceiverThread')
-        receiver_thread.start()
         # Start a thread with the server which will start a thread for each request
-        main_thread = Thread(target=self.handle_messages, name='MainThread')
+        main_thread = Thread(target=self.server_loop, name='MainThread')
         main_thread.start()
         # Start a thread that waits for inputs
         input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
@@ -295,9 +290,6 @@ class Node():
                     message = struct.pack("I", len(messagestr)) + messagestr
                     clientsock.send(message)
                 return
-            # add to receivedmessages
-            self.receivedmessages.append((message,connection))
-            self.receivedmessages_semaphore.release()
             if message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
                 try:
                     self.clientpool.add_connection_to_peer(message.source, connection)
@@ -305,26 +297,19 @@ class Node():
                     pass
             else:
                 self.connectionpool.add_connection_to_peer(message.source, connection)
+            # process the message received
+            self.process_message(message,connection)
         return True
-
-    def handle_messages(self):
-        while True:
-            self.receivedmessages_semaphore.acquire()
-            if self.type == NODE_REPLICA and len(self.pendingmetacommands) > 0:
-                # A node should be removed from the view
-                with self.pendingmetalock:
-                    self.pendingmetacommands = set()
-                self.initiate_command()
-            try:
-                (message_to_process, connection) = self.receivedmessages.pop(0)
-                self.process_message(message_to_process, connection)
-            except:
-                continue
-        return
 
     def process_message(self, message, connection):
         """Process message loop that takes messages out of
         the receivedmessages list and handles them."""
+        if self.type == NODE_REPLICA and len(self.pendingmetacommands) > 0:
+            # a node should be removed from the view
+            with self.pendingmetalock:
+                self.pendingmetacommands = set()
+            self.initiate_command()
+
         # find method and invoke it holding a lock
         mname = "msg_%s" % msg_names[message.type].lower()
         try:
