@@ -57,8 +57,6 @@ class Acceptor(Node):
                                     self.me,ballotnumber=self.ballotnumber,
                                     inresponsetoballotnumber=msg.ballotnumber,
                                     givenpvalueset=self.accepted)
-                                    #XXX The accepted set grows, messages become larger
-                                    #The garbage collection should be used more efficiently
         # or else it should be a precise duplicate of the last request
         # in this case we do nothing
         elif msg.ballotnumber == self.ballotnumber and \
@@ -101,7 +99,6 @@ class Acceptor(Node):
                                     self.me,ballotnumber=self.ballotnumber,
                                     inresponsetoballotnumber=msg.ballotnumber,
                                     commandnumber=msg.commandnumber)
-                                    #XXX self.accepted is not carried normally
         else:
             self.logger.write("Paxos State",
                               "propose received with non-acceptable ballotnumber %s"

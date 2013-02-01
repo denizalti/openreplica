@@ -413,10 +413,44 @@ class Replica(Node):
 
     def _garbage_collect(self, garbagecommandnumber):
         """ garbage collect """
-        self.logger.write("State", "Initiating garbage collection upto cmd#%d" % garbagecommandnumber)
-        garbagemsg = GarbageCollectMessage(MSG_GARBAGECOLLECT,self.me,commandnumber=garbagecommandnumber,snapshot=self.object)
+        self.logger.write("State", 
+                          "Initiating garbage collection upto cmd#%d"
+                          % garbagecommandnumber)
+        garbagemsg = GarbageCollectMessage(MSG_GARBAGECOLLECT,
+                                           self.me,
+                                           commandnumber=garbagecommandnumber,
+                                           snapshot=self.object)
         self.send(garbagemsg,group=self.groups[NODE_ACCEPTOR])
-            
+        # do local garbage collection
+        self.local_garbage_collect(garbagecommandnumber)
+
+    def local_garbage_collect(self, commandnumber):
+        """
+        Truncates decisions, executed and proposals
+        up to given commandnumber
+        """
+        keys = sorted(self.decisions.keys())
+        # Sanity checking
+        lastkey = keys[0]
+        candelete = True
+        for cmdno in keys:
+            if cmdno == lastkey:
+                lastkey += 1
+            else:
+                candelete = False
+                break
+        # Truncating
+        if not candelete:
+            return False
+        for cmdno in keys:
+            if cmdno < commandnumber:
+                del self.executed[self.decisions[cmdno]]
+                del self.decisions[cmdno]
+                del self.proposals[cmdno]
+        return True
+    
+
+
 # LEADER STATE
     def become_leader(self):
         """Leader State
