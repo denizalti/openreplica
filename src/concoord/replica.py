@@ -422,7 +422,7 @@ class Replica(Node):
                                            snapshot=self.object)
         self.send(garbagemsg,group=self.groups[NODE_ACCEPTOR])
         # do local garbage collection
-        self.local_garbage_collect(garbagecommandnumber)
+        # self.local_garbage_collect(garbagecommandnumber)
 
     def local_garbage_collect(self, commandnumber):
         """
@@ -444,9 +444,15 @@ class Replica(Node):
             return False
         for cmdno in keys:
             if cmdno < commandnumber:
-                del self.executed[self.decisions[cmdno]]
-                del self.decisions[cmdno]
-                del self.proposals[cmdno]
+                if self.decisions[cmdno] in self.executed:
+                    del self.executed[self.decisions[cmdno]]
+                    try:
+                        del self.proposals[cmdno]
+                    except:
+                        pass
+                    #del self.decisions[cmdno]
+                else:
+                    break
         return True
     
 
@@ -979,7 +985,6 @@ class Replica(Node):
                                 for i in range(WINDOW):
                                     noopcommand = self.create_noop_command()
                                     self.pick_commandnumber_add_to_pending(noopcommand)
-                                self.receivedmessages_semaphore.release()
                     else:
                         self.groups[peer.type].mark_reachable(peer)
             time.sleep(LIVENESSTIMEOUT)
