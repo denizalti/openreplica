@@ -6,9 +6,7 @@
 from threading import Lock
 from concoord.enums import *
 from concoord.utils import *
-from concoord.peer import Peer
-from concoord.command import Command
-
+from pack import *
 msgidpool = 0
 msgidpool_lock=Lock()
 
@@ -36,7 +34,7 @@ class Message():
         return self
 
     def fullid(self):
-        return "%s+%d" % (self.source.getid(), self.id)
+        return "%s+%d" % (getpeerid(self.source), self.id)
 
     def __str__(self):
         return 'Message#%d: %s src %s' % (self.id,

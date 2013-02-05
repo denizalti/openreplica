@@ -4,11 +4,11 @@
 @copyright: See LICENSE
 """
 import signal
+from pack import *
 from threading import Thread
 from concoord.node import *
 from concoord.enums import *
 from concoord.utils import *
-from concoord.peer import Peer
 from concoord.group import Group
 from concoord.pvalue import PValue, PValueSet
 from concoord.connection import ConnectionPool

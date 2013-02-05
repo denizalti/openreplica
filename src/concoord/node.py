@@ -8,15 +8,14 @@ import os, sys
 import random, struct
 import cPickle as pickle
 import time, socket, select
+from pack import *
 from Queue import Queue
 from optparse import OptionParser
 from threading import Thread, RLock, Lock, Condition, Timer, Semaphore
 from concoord.enums import *
 from concoord.utils import *
 from concoord.message import *
-from concoord.peer import Peer
 from concoord.group import Group
-from concoord.command import Command
 from concoord.pvalue import PValue, PValueSet
 from concoord.connection import ConnectionPool,Connection
 
@@ -91,7 +90,7 @@ class Node():
         # initialize empty groups
         self.me = Peer(self.addr,self.port,self.type)
         # set id
-        self.id = self.me.getid()
+        self.id = getpeerid(self.me)
         # set path for additional configuration data
         self.configpath = configpath
         # set the logger
@@ -143,7 +142,7 @@ class Node():
                 try:
                     answers = dns.resolver.query('_concoord._tcp.'+bootstrap, 'SRV')
                 except (dns.resolver.NXDOMAIN, dns.exception.Timeout):
-                    self.logger.write("DNS Error", "Cannot resolve %s" % bootstrap)
+                    self.logger.write("DNS Error", "Cannot resolve %s" % str(bootstrap))
                 for rdata in answers:
                     for peer in self._getipportpairs(str(rdata.target), rdata.port):
                         self.bootstraplist.append(peer)
@@ -154,7 +153,7 @@ class Node():
         while tries < BOOTSTRAPCONNECTTIMEOUT and keeptrying:
             for bootpeer in self.bootstraplist:
                 try:
-                    self.logger.write("State", "trying to connect to bootstrap: %s" % bootpeer)
+                    self.logger.write("State", "trying to connect to bootstrap: %s" % str(bootpeer))
                     helomessage = HandshakeMessage(MSG_HELO, self.me)
                     success = self.send(helomessage, peer=bootpeer)
                     if success < 0:
@@ -188,7 +187,7 @@ class Node():
             # Go through all peers in the view
             for gtype,group in self.groups.iteritems():
                 for peer in group:
-                    self.logger.write("State", "Sending PING to %s" % peer)
+                    self.logger.write("State", "Sending PING to %s" % str(peer))
                     pingmessage = HandshakeMessage(MSG_PING, self.me)
                     success = self.send(pingmessage, peer=peer)
                     if success < 0:
