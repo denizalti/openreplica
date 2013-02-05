@@ -6,14 +6,13 @@
 import socket, os, sys, time, random, threading, select
 from threading import Thread, Condition, RLock, Lock
 import pickle
+from pack import *
 from concoord.enums import *
 from concoord.utils import *
 from concoord.exception import *
 from concoord.connection import ConnectionPool, Connection
 from concoord.group import Group
-from concoord.peer import Peer
 from concoord.message import ClientMessage, Message, PaxosMessage, HandshakeMessage
-from concoord.command import Command
 from concoord.pvalue import PValue, PValueSet
 try:
     import dns
@@ -31,7 +30,7 @@ class ReqDesc:
             # acquire a unique command number
             self.mynumber = clientproxy.commandnumber
             clientproxy.commandnumber += 1
-        self.cm = ClientMessage(MSG_CLIENTREQUEST, clientproxy.me, Command(clientproxy.me, self.mynumber, args), token=token)
+        self.cm = ClientMessage(MSG_CLIENTREQUEST, clientproxy.me, Proposal(clientproxy.me, self.mynumber, args), token=token)
         self.starttime = time.time()
         self.replyarrived = Condition(clientproxy.lock)
         self.lastreplycr = -1
@@ -181,6 +180,7 @@ class ClientProxy():
                         if reply is None:
                             needreconfig = True
                         elif reply and reply.type == MSG_CLIENTREPLY:
+                            print reply
                             reqdesc = self.pendingops[reply.inresponseto]
                             with self.lock:
                                 if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode == CR_UNBLOCK:

@@ -7,10 +7,10 @@ import inspect
 import math, random, time
 import os, sys
 import signal
+from pack import *
 from threading import Thread, Lock, Condition, Timer, Event
-from concoord.peer import Peer
 from concoord.group import Group
-from concoord.command import Command
+from concoord.pack import Proposal
 from concoord.pvalue import PValue, PValueSet
 from concoord.responsecollector import ResponseCollector
 from concoord.connection import Connection, ConnectionPool
@@ -215,14 +215,14 @@ class Replica(Node):
         
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
-            if send_result_to_client and self.isleader and command.client in self.clientpool.poolbypeer.keys():
+            if send_result_to_client and self.isleader and str(command.client) in self.clientpool.poolbypeer.keys():
                 self.send_reply_to_client(clientreplycode, givenresult, command)
 
         if slotnumber % GARBAGEPERIOD == 0 and self.isleader:
             mynumber = self.metacommandnumber
             self.metacommandnumber += 1
             garbagetuple = ("_garbage_collect", slotnumber)
-            garbagecommand = Command(self.me, mynumber, garbagetuple)
+            garbagecommand = Proposal(self.me, mynumber, garbagetuple)
             if self.leader_initializing:
                 self.handle_client_command(garbagecommand, prepare=True)
             else:
@@ -232,7 +232,8 @@ class Replica(Node):
     def send_reply_to_client(self, clientreplycode, givenresult, command):
         self.logger.write("State", "Sending REPLY to CLIENT")
         clientreply = ClientReplyMessage(MSG_CLIENTREPLY, self.me, reply=givenresult, replycode=clientreplycode, inresponseto=command.clientcommandnumber)
-        self.logger.write("State", "Clientreply: %s\nAcceptors: %s" % (str(clientreply), str(self.groups[NODE_ACCEPTOR])))
+        self.logger.write("State", "Clientreply: %s\nAcceptors: %s" 
+                          % (str(clientreply), str(self.groups[NODE_ACCEPTOR])))
         clientconn = self.clientpool.get_connection_by_peer(command.client)
         if clientconn == None or clientconn.thesocket == None:
             self.logger.write("State", "Client connection does not exist.")
@@ -321,7 +322,7 @@ class Replica(Node):
             self.send(updatemessage, peer=msg.source)
 
     def msg_helo(self, conn, msg):
-        self.logger.write("State", "Received HELO from %s" % (msg.source))
+        self.logger.write("State", "Received HELO from %s" % str(msg.source))
         # This is the first acceptor, it has to be added by this replica
         if msg.source.type == NODE_ACCEPTOR and len(self.groups[NODE_ACCEPTOR]) == 0:
             self.logger.write("State", "Adding the first acceptor")
@@ -354,7 +355,7 @@ class Replica(Node):
                     self.initiate_command(noopcommand)
             else:
                 self.logger.write("State", "Not the leader, sending a HELOREPLY")
-                self.logger.write("State", "Leader is %s" % self.find_leader())
+                self.logger.write("State", "Leader is %s" % str(self.find_leader()))
                 heloreplymessage = HandshakeMessage(MSG_HELOREPLY, self.me, self.find_leader())
                 self.send(heloreplymessage, peer=msg.source)
             
@@ -908,7 +909,7 @@ class Replica(Node):
                                   "got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts"
                                   % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
                 if len(prc.received) >= prc.nquorum:
-                    self.logger.write("Paxos State", "Agreed on %s" % prc.proposal) 
+                    self.logger.write("Paxos State", "Agreed on %s" % str(prc.proposal))
                     # take this response collector out of the outstanding propose set
                     self.add_to_proposals(prc.commandnumber, prc.proposal)
                     # delete outstanding messages that caller doesn't need to check for anymore
@@ -969,7 +970,7 @@ class Replica(Node):
             # Go through all peers in the view
             for gtype,group in self.groups.iteritems():
                 for peer in group:
-                    self.logger.write("State", "Sending PING to %s" % peer)
+                    self.logger.write("State", "Sending PING to %s" % str(peer))
                     pingmessage = HandshakeMessage(MSG_PING, self.me)
                     success = self.send(pingmessage, peer=peer)
                     if success < 0:
@@ -1006,7 +1007,7 @@ class Replica(Node):
         self.metacommandnumber += 1
         nodename = node.addr + ":" + str(node.port)
         operationtuple = ("_del_node", node.type, nodename)
-        command = Command(self.me, mynumber, operationtuple)
+        command = Proposal(self.me, mynumber, operationtuple)
         return command
 
     def create_add_command(self, node):
@@ -1014,21 +1015,21 @@ class Replica(Node):
         self.metacommandnumber += 1
         nodename = node.addr + ":" + str(node.port)
         operationtuple = ("_add_node", node.type, nodename)
-        command = Command(self.me, mynumber, operationtuple)
+        command = Proposal(self.me, mynumber, operationtuple)
         return command
 
     def create_noop_command(self):
         mynumber = self.metacommandnumber
         self.metacommandnumber += 1
         nooptuple = ("noop")
-        command = Command(self.me, mynumber, nooptuple)
+        command = Proposal(self.me, mynumber, nooptuple)
         return command
 
 ## SHELL COMMANDS
     def cmd_command(self, *args):
         """shell command [command]: initiate a new command."""
         try:
-            cmdproposal = Command(self.me, random.randint(1,10000000), args[1:])
+            cmdproposal = Proposal(self.me, random.randint(1,10000000), args[1:])
             self.handle_client_command(cmdproposal)
         except IndexError:
             print "command expects only one command"

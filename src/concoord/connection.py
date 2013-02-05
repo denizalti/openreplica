@@ -12,6 +12,7 @@ import time
 import cPickle as pickle
 import random
 from threading import Lock
+from pack import *
 
 DEBUG=False
 DROPRATE=0.3
@@ -28,15 +29,16 @@ class ConnectionPool():
     def add_connection_to_peer(self, peer, conn):
         """Adds a Connection to the ConnectionPool by its Peer"""
         with self.pool_lock:
-            self.poolbypeer[peer] = conn
-            conn.peerid = peer.getid()
+            self.poolbypeer[str(peer)] = conn
+            conn.peerid = getpeerid(peer)
             
     def del_connection_by_peer(self, peer):
-        """ Deletes a Connection from the ConnectionPool by its Peer"""        
+        """ Deletes a Connection from the ConnectionPool by its Peer"""
+        peerstr = str(peer)
         with self.pool_lock:
-            if self.poolbypeer.has_key(peer):
-                conn = self.poolbypeer[peer]
-                del self.poolbypeer[peer]
+            if self.poolbypeer.has_key(peerstr):
+                conn = self.poolbypeer[peerstr]
+                del self.poolbypeer[peerstr]
                 del self.poolbysocket[conn.thesocket]
                 conn.close()
             else:
@@ -58,16 +60,17 @@ class ConnectionPool():
 
     def get_connection_by_peer(self, peer):
         """Returns a Connection given corresponding Peer."""
+        peerstr = str(peer)
         with self.pool_lock:
-            if self.poolbypeer.has_key(peer):
-                return self.poolbypeer[peer]
+            if self.poolbypeer.has_key(peerstr):
+                return self.poolbypeer[peerstr]
             else:
                 try:
                     thesocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     thesocket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
                     thesocket.connect((peer.addr, peer.port))
                     thesocket.setblocking(0)
-                    conn = Connection(thesocket, peer.getid())
+                    conn = Connection(thesocket, getpeerid(peer))
                     self.poolbypeer[peer] = conn
                     self.poolbysocket[thesocket] = conn
                     return conn
