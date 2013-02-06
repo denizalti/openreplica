@@ -9,7 +9,6 @@ import os, sys
 import signal
 from pack import *
 from threading import Thread, Lock, Condition, Timer, Event
-from concoord.group import Group
 from concoord.pack import Proposal
 from concoord.pvalue import PValue, PValueSet
 from concoord.responsecollector import ResponseCollector
@@ -326,7 +325,7 @@ class Replica(Node):
         # This is the first acceptor, it has to be added by this replica
         if msg.source.type == NODE_ACCEPTOR and len(self.groups[NODE_ACCEPTOR]) == 0:
             self.logger.write("State", "Adding the first acceptor")
-            self.groups[msg.source.type].add(msg.source)
+            self.groups[msg.source.type][msg.source] = 0
             # Agree on adding the first replica and this first acceptor
             # Add the Acceptor
             addcommand = self.create_add_command(msg.source)
@@ -403,14 +402,14 @@ class Replica(Node):
         self.logger.write("State", "Adding node: %s %s" % (node_names[nodetype], nodename))
         ipaddr,port = nodename.split(":")
         nodepeer = Peer(ipaddr,int(port),nodetype)
-        self.groups[nodetype].add(nodepeer)
+        self.groups[nodetype][nodepeer] = 0
         
     def _del_node(self, nodetype, nodename):
         nodetype = int(nodetype)
         self.logger.write("State", "Deleting node: %s %s" % (node_names[nodetype], nodename))
         ipaddr,port = nodename.split(":")
         nodepeer = Peer(ipaddr,int(port),nodetype)
-        self.groups[nodetype].remove(nodepeer)
+        del self.groups[nodetype][nodepeer]
 
     def _garbage_collect(self, garbagecommandnumber):
         """ garbage collect """
@@ -513,9 +512,14 @@ class Replica(Node):
             
     def find_leader(self):
         """returns the minimum peer that is alive as the leader"""
-        for member in self.groups[NODE_REPLICA].members:
-            if self.groups[NODE_REPLICA].liveness[member] == 0:
-                return member
+        # sort the replicas first
+        replicas = sorted(self.replicas.items(), key=lambda t: t[0])
+        print replicas
+        for (replica,liveness) in replicas:
+            if liveness == 0:
+                del replicas
+                return replica
+        del replicas
         return self.me
         
     def update_leader(self):
@@ -975,7 +979,7 @@ class Replica(Node):
                     success = self.send(pingmessage, peer=peer)
                     if success < 0:
                         self.logger.write("State", "Neighbor not responding, marking the neighbor")
-                        self.groups[peer.type].mark_unreachable(peer)
+                        self.groups[peer.type][peer] += 1
                         self.update_leader()
                         if self.isleader:
                             delcommand = self.create_delete_command(peer)
@@ -987,7 +991,7 @@ class Replica(Node):
                                     noopcommand = self.create_noop_command()
                                     self.pick_commandnumber_add_to_pending(noopcommand)
                     else:
-                        self.groups[peer.type].mark_reachable(peer)
+                        self.groups[peer.type][peer] = 0
             time.sleep(LIVENESSTIMEOUT)
 
     def leader_is_alive(self):
@@ -998,7 +1002,7 @@ class Replica(Node):
             success = self.send(pingmessage, peer=currentleader)
             if success < 0:
                 self.logger.write("State", "Leader not responding, marking the leader unreachable.")
-                self.groups[currentleader.type].mark_unreachable(currentleader)
+                self.groups[currentleader.type][currentleader] += 1
                 return False
         return True
 

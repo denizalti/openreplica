@@ -15,7 +15,6 @@ from threading import Thread, RLock, Lock, Condition, Timer, Semaphore
 from concoord.enums import *
 from concoord.utils import *
 from concoord.message import *
-from concoord.group import Group
 from concoord.pvalue import PValue, PValueSet
 from concoord.connection import ConnectionPool,Connection
 
@@ -103,10 +102,15 @@ class Node():
                 LOGGERNODE = None
         self.logger = NetworkLogger("%s-%s" % (node_names[self.type],self.id), LOGGERNODE)
         self.logger.write("State", "Connected.")
-        self.groups = {NODE_ACCEPTOR: Group(self.me),
-                       NODE_REPLICA: Group(self.me),
-                       NODE_NAMESERVER: Group(self.me)}
-        self.groups[self.me.type].add(self.me)
+        # Initialize groups
+        # Keeps {peer:outofreachcount}
+        self.replicas = {}
+        self.acceptors = {}
+        self.nameservers = {}
+        self.groups = {NODE_REPLICA: self.replicas,
+                       NODE_ACCEPTOR: self.acceptors,
+                       NODE_NAMESERVER: self.nameservers}
+        self.groups[self.me.type][self.me] = 0
         # connect to the bootstrap node
         if givenbootstraplist:
             self.bootstraplist = []
@@ -186,15 +190,15 @@ class Node():
         while True:
             # Go through all peers in the view
             for gtype,group in self.groups.iteritems():
-                for peer in group:
+                for peer in group.iterkeys():
                     self.logger.write("State", "Sending PING to %s" % str(peer))
                     pingmessage = HandshakeMessage(MSG_PING, self.me)
                     success = self.send(pingmessage, peer=peer)
                     if success < 0:
                         self.logger.write("State", "Neighbor not responding, marking the neighbor")
-                        self.groups[peer.type].mark_unreachable(peer)
+                        self.groups[peer.type][peer] += 1
                     else:
-                        self.groups[peer.type].mark_reachable(peer)
+                        self.groups[peer.type][peer] = 0
             time.sleep(LIVENESSTIMEOUT)
 
     def __str__(self):
@@ -339,7 +343,7 @@ class Node():
 
     def msg_bye(self, conn, msg):
         """Deletes the source of MSG_BYE from groups"""
-        self.groups[msg.source.type].remove(msg.source)
+        del self.groups[msg.source.type][msg.source]
         
     # shell commands generic to all nodes
     def cmd_help(self, args):
@@ -398,7 +402,7 @@ class Node():
         elif group:
             assert not isresend, "performing a re-send to a group"
             ids = []
-            for peer in group.members:
+            for peer in group.keys():
                 if peer != self.me:
                     connection = self.connectionpool.get_connection_by_peer(peer)
                     if connection == None:
