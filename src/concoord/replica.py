@@ -7,7 +7,6 @@ import inspect
 import math, random, time
 import os, sys
 import signal
-from pack import *
 from threading import Thread, Lock, Condition, Timer, Event
 from concoord.pack import Proposal
 from concoord.pvalue import PValue, PValueSet
@@ -205,7 +204,7 @@ class Replica(Node):
                     unblocked = {}
                 self.lock.acquire()
         except (TypeError, AttributeError) as t:
-            self.logger.write("Execution Error", "command not supported: %s" % (command))
+            self.logger.write("Execution Error", "command not supported: %s" % str(command))
             givenresult = 'Method Does Not Exist: ', commandname
             clientreplycode = CR_EXCEPTION
             unblocked = {}

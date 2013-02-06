@@ -12,7 +12,7 @@ import time
 import cPickle as pickle
 import random
 from threading import Lock
-from pack import *
+from concoord.pack import *
 
 DEBUG=False
 DROPRATE=0.3

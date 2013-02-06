@@ -8,13 +8,13 @@ import os, sys
 import random, struct
 import cPickle as pickle
 import time, socket, select
-from pack import *
 from Queue import Queue
 from optparse import OptionParser
 from threading import Thread, RLock, Lock, Condition, Timer, Semaphore
 from concoord.enums import *
 from concoord.utils import *
 from concoord.message import *
+from concoord.pack import *
 from concoord.pvalue import PValue, PValueSet
 from concoord.connection import ConnectionPool,Connection
 

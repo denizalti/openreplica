@@ -12,4 +12,4 @@ Peer = namedtuple('Peer', ['addr', 'port', 'type'])
 def getpeerid(peer):
     return '%s:%d' % (peer.addr, peer.port)
 
-
+PValue = namedtuple('PValue', ['ballotnumber', 'commandnumber', 'proposal'])
