@@ -205,7 +205,6 @@ class ClientProxy():
 
                     # check if we need to re-send any pending operations
                     for commandno,reqdesc in self.pendingops.iteritems():
-                        print commandno, ": ", str(reqdesc)
                         if not reqdesc.replyvalid and reqdesc.lastreplycr != CR_BLOCK: # XXX CR_INPROGRESS?
                             if not self.conn.send(reqdesc.cm):
                                 needreconfig = True
