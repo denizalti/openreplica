@@ -1,5 +1,5 @@
 SERVERFILES := *.py
-CLIENTFILES := connection.py group.py clientproxy.py pvalue.py command.py message.py peer.py enums.py utils.py
+CLIENTFILES := connection.py clientproxy.py pvalue.py message.py enums.py utils.py
 ALL := concoordserver.tar.gz
 
 all:	$(ALL)
