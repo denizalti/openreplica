@@ -10,6 +10,7 @@ from concoord.node import *
 from concoord.utils import *
 from concoord.enums import *
 from concoord.replica import *
+from concoord.pack import *
 from concoord.proxy.nameservercoord import NameserverCoord
 import concoord.concoordroute53
 import concoord.route53
