@@ -8,8 +8,8 @@ import math, random, time
 import os, sys
 import signal
 from threading import Thread, Lock, Condition, Timer, Event
-from concoord.pack import Proposal
-from concoord.pvalue import PValue, PValueSet
+from concoord.pack import Proposal, PValue
+from concoord.pvalue import PValueSet
 from concoord.responsecollector import ResponseCollector
 from concoord.connection import Connection, ConnectionPool
 from concoord.exception import ConCoordException, BlockingReturn, UnblockingReturn

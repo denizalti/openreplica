@@ -15,7 +15,7 @@ from concoord.enums import *
 from concoord.utils import *
 from concoord.message import *
 from concoord.pack import *
-from concoord.pvalue import PValue, PValueSet
+from concoord.pvalue import PValueSet
 from concoord.connection import ConnectionPool,Connection
 
 try:

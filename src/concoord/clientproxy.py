@@ -13,7 +13,7 @@ from concoord.exception import *
 from concoord.connection import ConnectionPool, Connection
 from concoord.group import Group
 from concoord.message import ClientMessage, Message, PaxosMessage, HandshakeMessage
-from concoord.pvalue import PValue, PValueSet
+from concoord.pvalue import PValueSet
 try:
     import dns
     import dns.resolver
