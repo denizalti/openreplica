@@ -47,21 +47,21 @@ def parse_message(msg):
     elif msg[MSGTYPE] == MSG_PREPARE:
         return PrepareMessage(msg[MSGID], msg[MSGTYPE], src, msg[BALLOTNUMBER])
     elif msg[MSGTYPE] == MSG_PREPARE_ADOPTED or msg[MSGTYPE] == MSG_PREPARE_PREEMPTED:
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-        print msg
-        print msg[PVALUESET]
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         pvalueset = PValueSet()
         pvalueset.pvalues = msg[PVALUESET]
         return PrepareReplyMessage(msg[MSGID], msg[MSGTYPE], src,
-                       msg[BALLOTNUMBER], msg[INRESPONSETO],
-                       pvalueset)
+                                   msg[BALLOTNUMBER], msg[INRESPONSETO],
+                                   pvalueset)
     elif msg[MSGTYPE] == MSG_PROPOSE:
-        return Message(msg[MSGID], msg[MSGTYPE], src)
-    elif msg[MSGTYPE] == MSG_PROPOSE_ACCEPT:
-        return Message(msg[MSGID], msg[MSGTYPE], src)
-    elif msg[MSGTYPE] == MSG_PROPOSE_REJECT:
-        return Message(msg[MSGID], msg[MSGTYPE], src)
+        proposal = Proposal(*msg[PROPOSAL])
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        print msg
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        return ProposeMessage(msg[MSGID], msg[MSGTYPE], src,
+                              msg[BALLOTNUMBER], msg[COMMANDNUMBER],
+                              proposal)
+    elif msg[MSGTYPE] == MSG_PROPOSE_ACCEPT or msg[MSGTYPE] == MSG_PROPOSE_REJECT:
+        return ProposeReplyMessage(msg[MSGID], msg[MSGTYPE], src)
     elif msg[MSGTYPE] == MSG_PERFORM:
         return Message(msg[MSGID], msg[MSGTYPE], src)
     elif msg[MSGTYPE] == MSG_RESPONSE:

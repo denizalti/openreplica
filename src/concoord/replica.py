@@ -764,7 +764,8 @@ class Replica(Node):
             self.add_to_pendingcommands(givencommandnumber, givenproposal)
             return
         self.outstandingproposes[givencommandnumber] = prc
-        propose = create_message(MSG_PROPOSE, self.me, recentballotnumber,
+        propose = create_message(MSG_PROPOSE, self.me,
+                                 (BALLOTNUMBER, recentballotnumber),
                                  (COMMANDNUMBER, givencommandnumber),
                                  (PROPOSAL, givenproposal))
         # the msgs sent may be less than the number of prc.acceptors
