@@ -3,33 +3,6 @@
 @note: PValue is used to keep Paxos state in Acceptor and Leader nodes.
 @copyright: See LICENSE
 '''
-class PValue():
-    """PValue encloses a ballotnumber, commandnumber and proposal."""
-    def __init__(self,ballotnumber=(0,0),commandnumber=0,proposal=None,serialpvalue=None):
-        self.ballotnumber = ballotnumber
-        self.commandnumber = commandnumber
-        self.proposal = proposal
-
-    def id(self):
-        """Returns the id (ballotnumber:commandnumber:proposal) of the PValue"""
-        return "%s:%d:%s" % (str(self.ballotnumber),self.commandnumber,self.proposal)
-
-    def __hash__(self):
-        """Returns the hashed id"""
-        return hash(self.id())
-
-    def __eq__(self, otherpvalue):
-        """Equality function for two PValues.
-        Returns True if given PValue is equal to PValue, False otherwise.
-        """
-        return self.ballotnumber == otherpvalue.ballotnumber and \
-            self.commandnumber == otherpvalue.commandnumber and \
-            self.proposal == otherpvalue.proposal
-    
-    def __str__(self):
-        """Returns PValue information"""
-        return 'PValue(%s,%d,%s)' % (str(self.ballotnumber),self.commandnumber,self.proposal)
-
 class PValueSet():
     """PValueSet encloses a set of pvalues with the highest ballotnumber (always)
     and supports corresponding set functions.

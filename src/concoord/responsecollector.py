@@ -3,7 +3,8 @@
 @note: Class used to collect responses to both PREPARE and PROPOSE messages
 @copyright: See LICENSE
 '''
-from concoord.pvalue import PValue, PValueSet
+from concoord.pvalue import PValueSet
+from concoord.pack import PValue
 
 class ResponseCollector():
     """ResponseCollector keeps the state related to both MSG_PREPARE and
