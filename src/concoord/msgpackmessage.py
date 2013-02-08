@@ -54,9 +54,6 @@ def parse_message(msg):
                                    pvalueset)
     elif msg[MSGTYPE] == MSG_PROPOSE:
         proposal = Proposal(*msg[PROPOSAL])
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-        print msg
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         return ProposeMessage(msg[MSGID], msg[MSGTYPE], src,
                               msg[BALLOTNUMBER], msg[COMMANDNUMBER],
                               proposal)
@@ -65,7 +62,9 @@ def parse_message(msg):
                                    msg[BALLOTNUMBER], msg[INRESPONSETO],
                                    msg[COMMANDNUMBER])
     elif msg[MSGTYPE] == MSG_PERFORM:
-        return Message(msg[MSGID], msg[MSGTYPE], src)
+        proposal = Proposal(*msg[PROPOSAL])
+        return PerformMessage(msg[MSGID], msg[MSGTYPE], src,
+                              msg[COMMANDNUMBER], proposal)
     elif msg[MSGTYPE] == MSG_RESPONSE:
         return Message(msg[MSGID], msg[MSGTYPE], src)
     elif msg[MSGTYPE] == MSG_CLIENTREQUEST:

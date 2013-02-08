@@ -936,7 +936,7 @@ class Replica(Node):
                             self.send(performmessage, group=self.groups[NODE_NAMESERVER])
                     except:
                         self.logger.write("Connection Error", "Couldn't send perform messages!")
-                    self.perform(performmessage, designated=True)
+                    self.perform(parse_message(performmessage), designated=True)
             self.logger.write("State", "returning from msg_propose_accept")
         
     def msg_propose_reject(self, conn, msg):
