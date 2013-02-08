@@ -61,7 +61,9 @@ def parse_message(msg):
                               msg[BALLOTNUMBER], msg[COMMANDNUMBER],
                               proposal)
     elif msg[MSGTYPE] == MSG_PROPOSE_ACCEPT or msg[MSGTYPE] == MSG_PROPOSE_REJECT:
-        return ProposeReplyMessage(msg[MSGID], msg[MSGTYPE], src)
+        return ProposeReplyMessage(msg[MSGID], msg[MSGTYPE], src,
+                                   msg[BALLOTNUMBER], msg[INRESPONSETO],
+                                   msg[COMMANDNUMBER])
     elif msg[MSGTYPE] == MSG_PERFORM:
         return Message(msg[MSGID], msg[MSGTYPE], src)
     elif msg[MSGTYPE] == MSG_RESPONSE:

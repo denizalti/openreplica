@@ -24,7 +24,7 @@ ProposeMessage = namedtuple('ProposeMessage', ['id', 'type', 'source',
                                                'proposal'])
 ProposeReplyMessage = namedtuple('ProposeReplyMessage', ['id', 'type', 'source',
                                                          'ballotnumber', 'inresponseto',
-                                                         'pvalueset'])
+                                                         'commandnumber'])
 
 '''
 prepare = namedtuple('prepare', ['id', 'type', 'source', 'ballotnumber'])
