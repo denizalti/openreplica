@@ -12,7 +12,7 @@ from concoord.utils import *
 from concoord.pack import *
 from concoord.pvalue import PValueSet
 from concoord.connection import ConnectionPool
-from concoord.message import Message, PaxosMessage, GarbageCollectMessage
+from concoord.msgpackmessage import *
 from concoordprofiler import *
 
 class Acceptor(Node):
@@ -52,15 +52,15 @@ class Acceptor(Node):
                               % str(msg.ballotnumber))
 
             self.ballotnumber = msg.ballotnumber
-            self.last_accept_msg_id = msg.fullid()
-            replymsg = PaxosMessage(MSG_PREPARE_ADOPTED,
-                                    self.me,ballotnumber=self.ballotnumber,
-                                    inresponsetoballotnumber=msg.ballotnumber,
-                                    givenpvalueset=self.accepted)
+            self.last_accept_msg_id = msg.id
+            replymsg = create_message(MSG_PREPARE_ADOPTED, self.me,
+                                      (BALLOTNUMBER, self.ballotnumber),
+                                      (INRESPONSETO, msg.ballotnumber),
+                                      (GIVENPVALUESET, self.accepted))
         # or else it should be a precise duplicate of the last request
         # in this case we do nothing
         elif msg.ballotnumber == self.ballotnumber and \
-                msg.fullid() == self.last_accept_msg_id:
+                msg.id == self.last_accept_msg_id:
             return
         else:
             self.logger.write("Paxos State",
@@ -69,10 +69,10 @@ class Acceptor(Node):
                                "for commandnumber %s") % (str(msg.ballotnumber),
                                                           str(msg.commandnumber)))
 
-            replymsg = PaxosMessage(MSG_PREPARE_PREEMPTED,
-                                    self.me,ballotnumber=self.ballotnumber,
-                                    inresponsetoballotnumber=msg.ballotnumber,
-                                    givenpvalueset=self.accepted)
+            replymsg = create_message(MSG_PREPARE_PREEMPTED, self.me,
+                                      (BALLOTNUMBER, self.ballotnumber),
+                                      (INRESPONSETO, msg.ballotnumber),
+                                      (GIVENPVALUESET, self.accepted))
 
         self.logger.write("Paxos State", "prepare responding with %s"
                           % str(replymsg))
@@ -95,18 +95,18 @@ class Acceptor(Node):
             self.ballotnumber = msg.ballotnumber
             newpvalue = PValue(msg.ballotnumber,msg.commandnumber,msg.proposal)
             self.accepted.add(newpvalue)
-            replymsg = PaxosMessage(MSG_PROPOSE_ACCEPT,
-                                    self.me,ballotnumber=self.ballotnumber,
-                                    inresponsetoballotnumber=msg.ballotnumber,
-                                    commandnumber=msg.commandnumber)
+            replymsg = create_message(MSG_PROPOSE_ACCEPT, self.me,
+                                      (BALLOTNUMBER, self.ballotnumber),
+                                      (INRESPONSETO, msg.ballotnumber),
+                                      (COMMANDNUMBER, msg.commandnumber))
         else:
             self.logger.write("Paxos State",
                               "propose received with non-acceptable ballotnumber %s"
                               % str(msg.ballotnumber))
-            replymsg = PaxosMessage(MSG_PROPOSE_REJECT,
-                                    self.me,ballotnumber=self.ballotnumber,
-                                    inresponsetoballotnumber=msg.ballotnumber,
-                                    commandnumber=msg.commandnumber)
+            replymsg = create_message(MSG_PROPOSE_REJECT, self.me, 
+                                      (BALLOTNUMBER, self.ballotnumber),
+                                      (INRESPONSETO, msg.ballotnumber),
+                                      (COMMANDNUMBER, msg.commandnumber))
         self.send(replymsg,peer=msg.source)
 
     def msg_garbagecollect(self, conn, msg):

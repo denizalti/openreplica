@@ -13,7 +13,7 @@ from optparse import OptionParser
 from threading import Thread, RLock, Lock, Condition, Timer, Semaphore
 from concoord.enums import *
 from concoord.utils import *
-from concoord.message import *
+from concoord.msgpackmessage import *
 from concoord.pack import *
 from concoord.pvalue import PValueSet
 from concoord.connection import ConnectionPool,Connection
@@ -158,7 +158,7 @@ class Node():
             for bootpeer in self.bootstraplist:
                 try:
                     self.logger.write("State", "trying to connect to bootstrap: %s" % str(bootpeer))
-                    helomessage = HandshakeMessage(MSG_HELO, self.me)
+                    helomessage = create_message(MSG_HELO, self.me)
                     success = self.send(helomessage, peer=bootpeer)
                     if success < 0:
                         tries += 1
@@ -192,7 +192,7 @@ class Node():
             for gtype,group in self.groups.iteritems():
                 for peer in group.iterkeys():
                     self.logger.write("State", "Sending PING to %s" % str(peer))
-                    pingmessage = HandshakeMessage(MSG_PING, self.me)
+                    pingmessage = create_message(MSG_PING, self.me)
                     success = self.send(pingmessage, peer=peer)
                     if success < 0:
                         self.logger.write("State", "Neighbor not responding, marking the neighbor")
@@ -285,7 +285,7 @@ class Node():
         if message == None:
             return False
         else:
-            self.logger.write("State", "received %s" % message)
+            self.logger.write("State", "received %s" % str(message))
             if message.type == MSG_STATUS:
                 if self.type == NODE_REPLICA:
                     self.logger.write("State", "Answering status message %s" % self.__str__())
@@ -357,7 +357,7 @@ class Node():
     def cmd_exit(self, args):
         """Changes the liveness state and send MSG_BYE to Peers.""" 
         self.alive = False
-        byemessage = Message(MSG_BYE,self.me)
+        byemessage = create_message(MSG_BYE, self.me)
         for type,nodegroup in self.groups.iteritems():
             self.send(byemessage, group=nodegroup)
         self.send(byemessage, peer=self.me)
@@ -398,7 +398,7 @@ class Node():
                 self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
                 return -1
             connection.send(message)
-            return message.id
+            return message[MSGID]
         elif group:
             assert not isresend, "performing a re-send to a group"
             ids = []
@@ -409,9 +409,8 @@ class Node():
                         self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
                         continue
                     connection.send(message)
-                    ids.append(message.id)
-                    message = copy.copy(message)
-                    message.assignuniqueid()
+                    ids.append(message[MSGID])
+                    message[MSGID] = assignuniqueid()
             return ids
 
     def terminate_handler(self, signal, frame):
