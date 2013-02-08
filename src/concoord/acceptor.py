@@ -56,7 +56,7 @@ class Acceptor(Node):
             replymsg = create_message(MSG_PREPARE_ADOPTED, self.me,
                                       (BALLOTNUMBER, self.ballotnumber),
                                       (INRESPONSETO, msg.ballotnumber),
-                                      (GIVENPVALUESET, self.accepted))
+                                      (PVALUESET, self.accepted.pvalues))
         # or else it should be a precise duplicate of the last request
         # in this case we do nothing
         elif msg.ballotnumber == self.ballotnumber and \
@@ -72,7 +72,7 @@ class Acceptor(Node):
             replymsg = create_message(MSG_PREPARE_PREEMPTED, self.me,
                                       (BALLOTNUMBER, self.ballotnumber),
                                       (INRESPONSETO, msg.ballotnumber),
-                                      (GIVENPVALUESET, self.accepted))
+                                      (PVALUESET, self.accepted.pvalues))
 
         self.logger.write("Paxos State", "prepare responding with %s"
                           % str(replymsg))

@@ -1,5 +1,6 @@
 from concoord.pack import *
 from concoord.enums import *
+from concoord.pvalue import *
 import msgpack
 from threading import Lock
 
@@ -14,7 +15,7 @@ REPLY = 7
 REPLYCODE = 8
 INRESPONSETO = 9
 SNAPSHOT = 10
-GIVENPVALUESET = 11
+PVALUESET = 11
 LEADER = 12
 
 msgidpool = 0
@@ -48,10 +49,13 @@ def parse_message(msg):
     elif msg[MSGTYPE] == MSG_PREPARE_ADOPTED or msg[MSGTYPE] == MSG_PREPARE_PREEMPTED:
         print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         print msg
+        print msg[PVALUESET]
         print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        pvalueset = PValueSet()
+        pvalueset.pvalues = msg[PVALUESET]
         return PrepareReplyMessage(msg[MSGID], msg[MSGTYPE], src,
                        msg[BALLOTNUMBER], msg[INRESPONSETO],
-                       msg[GIVENPVALUESET])
+                       pvalueset)
     elif msg[MSGTYPE] == MSG_PROPOSE:
         return Message(msg[MSGID], msg[MSGTYPE], src)
     elif msg[MSGTYPE] == MSG_PROPOSE_ACCEPT:
