@@ -28,6 +28,13 @@ ProposeReplyMessage = namedtuple('ProposeReplyMessage', ['id', 'type', 'source',
 PerformMessage = namedtuple('PerformMessage', ['id', 'type', 'source',
                                                'commandnumber', 'proposal'])
 
+ClientRequestMessage = namedtuple('ClientRequestMessage', ['id', 'type', 'source',
+                                                           'command', 'token'])
+
+ClientReplyMessage = namedtuple('ClientReplyMessage', ['id', 'type', 'source',
+                                                       'reply', 'replycode', 'inresponseto'])
+
+
 '''
 prepare = namedtuple('prepare', ['id', 'type', 'source', 'ballotnumber'])
 prepare_adopted = namedtuple('prepare_adopted', ['id', 'type', 'source', 'ballotnumber'])
