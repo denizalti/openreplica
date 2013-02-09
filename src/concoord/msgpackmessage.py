@@ -17,6 +17,7 @@ INRESPONSETO = 9
 SNAPSHOT = 10
 PVALUESET = 11
 LEADER = 12
+TOKEN = 13
 
 msgidpool = 0
 msgidpool_lock = Lock()
@@ -53,7 +54,8 @@ def parse_message(msg):
                                    msg[BALLOTNUMBER], msg[INRESPONSETO],
                                    pvalueset)
     elif msg[MSGTYPE] == MSG_PROPOSE:
-        proposal = Proposal(*msg[PROPOSAL])
+        proposalclient = Peer(*msg[PROPOSAL][0])
+        proposal = Proposal(proposalclient, *msg[PROPOSAL][1:])
         return ProposeMessage(msg[MSGID], msg[MSGTYPE], src,
                               msg[BALLOTNUMBER], msg[COMMANDNUMBER],
                               proposal)
@@ -62,15 +64,22 @@ def parse_message(msg):
                                    msg[BALLOTNUMBER], msg[INRESPONSETO],
                                    msg[COMMANDNUMBER])
     elif msg[MSGTYPE] == MSG_PERFORM:
-        proposal = Proposal(*msg[PROPOSAL])
+        proposalclient = Peer(*msg[PROPOSAL][0])
+        proposal = Proposal(proposalclient, *msg[PROPOSAL][1:])
         return PerformMessage(msg[MSGID], msg[MSGTYPE], src,
                               msg[COMMANDNUMBER], proposal)
     elif msg[MSGTYPE] == MSG_RESPONSE:
         return Message(msg[MSGID], msg[MSGTYPE], src)
     elif msg[MSGTYPE] == MSG_CLIENTREQUEST:
-        return Message(msg[MSGID], msg[MSGTYPE], src)
+        proposalclient = Peer(*msg[PROPOSAL][0])
+        proposal = Proposal(proposalclient, *msg[PROPOSAL][1:])
+        return ClientRequestMessage(msg[MSGID], msg[MSGTYPE], src,
+                                    proposal, msg[TOKEN])
     elif msg[MSGTYPE] == MSG_CLIENTREPLY:
-        return Message(msg[MSGID], msg[MSGTYPE], src)
+        return ClientReplyMessage(msg[MSGID], msg[MSGTYPE], src,
+                                   msg[REPLY], msg[REPLYCODE],
+                                   msg[INRESPONSETO])
+
     elif msg[MSGTYPE] == MSG_INCCLIENTREQUEST:
         return Message(msg[MSGID], msg[MSGTYPE], src)
     elif msg[MSGTYPE] == MSG_GARBAGECOLLECT:

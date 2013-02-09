@@ -12,7 +12,7 @@ from concoord.utils import *
 from concoord.exception import *
 from concoord.connection import ConnectionPool, Connection
 from concoord.group import Group
-from concoord.message import ClientMessage, Message, PaxosMessage, HandshakeMessage
+from concoord.msgpackmessage import *
 from concoord.pvalue import PValueSet
 try:
     import dns
@@ -30,7 +30,9 @@ class ReqDesc:
             # acquire a unique command number
             self.mynumber = clientproxy.commandnumber
             clientproxy.commandnumber += 1
-        self.cm = ClientMessage(MSG_CLIENTREQUEST, clientproxy.me, Proposal(clientproxy.me, self.mynumber, args), token=token)
+        self.cm = create_message(MSG_CLIENTREQUEST, clientproxy.me,
+                                 (PROPOSAL, Proposal(clientproxy.me, self.mynumber, args)),
+                                 (TOKEN, token))
         self.starttime = time.time()
         self.replyarrived = Condition(clientproxy.lock)
         self.lastreplycr = -1
@@ -38,7 +40,7 @@ class ReqDesc:
         self.reply = None
 
     def __str__(self):
-        return "Request Descriptor for cmd %d\nMessage %s\nReply %s" % (self.mynumber, self.cm, self.reply)
+        return "Request Descriptor for cmd %d\nMessage %s\nReply %s" % (self.mynumber, str(self.cm), self.reply)
 
 class ClientProxy():
     def __init__(self, bootstrap, timeout=60, debug=False, token=None):
