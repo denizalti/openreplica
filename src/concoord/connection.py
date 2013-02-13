@@ -13,7 +13,7 @@ import msgpack
 import random
 from threading import Lock
 from concoord.pack import *
-from concoord.msgpackmessage import *
+from concoord.message import *
 
 DEBUG=False
 DROPRATE=0.3

@@ -7,6 +7,7 @@ import inspect
 import math, random, time
 import os, sys
 import signal
+import cPickle as pickle
 from threading import Thread, Lock, Condition, Timer, Event
 from concoord.pack import Proposal, PValue
 from concoord.pvalue import PValueSet
@@ -16,7 +17,7 @@ from concoord.exception import ConCoordException, BlockingReturn, UnblockingRetu
 from concoord.node import *
 from concoord.enums import *
 from concoord.utils import *
-from concoord.msgpackmessage import *
+from concoord.message import *
 from concoordprofiler import *
 
 backoff_event = Event()
@@ -133,9 +134,6 @@ class Replica(Node):
         to the managements of the Paxos protocol) with a delay of WINDOW commands."""
         command = self.decisions[slotnumber]
         commandtuple = command.command
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-        print commandtuple
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         if type(commandtuple) == str:
             commandname = commandtuple
             commandargs = []
@@ -216,8 +214,6 @@ class Replica(Node):
         
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
-            print self.clientpool.poolbypeer.keys()
-            print command.client
             if send_result_to_client and self.isleader and str(command.client) in self.clientpool.poolbypeer.keys():
                 self.send_reply_to_client(clientreplycode, givenresult, command)
 
@@ -423,13 +419,14 @@ class Replica(Node):
         self.logger.write("State", 
                           "Initiating garbage collection upto cmd#%d"
                           % garbagecommandnumber)
+        snapshot = pickle.dumps(self.object)
         garbagemsg = create_message(MSG_GARBAGECOLLECT,
                                     self.me,
                                     (COMMANDNUMBER, garbagecommandnumber),
-                                    (SNAPSHOT, self.object))
+                                    (SNAPSHOT, snapshot))
         self.send(garbagemsg,group=self.groups[NODE_ACCEPTOR])
         # do local garbage collection
-        # self.local_garbage_collect(garbagecommandnumber)
+        self.local_garbage_collect(garbagecommandnumber)
 
     def local_garbage_collect(self, commandnumber):
         """
@@ -521,7 +518,6 @@ class Replica(Node):
         """returns the minimum peer that is alive as the leader"""
         # sort the replicas first
         replicas = sorted(self.replicas.items(), key=lambda t: t[0])
-        print replicas
         for (replica,liveness) in replicas:
             if liveness == 0:
                 del replicas
@@ -1008,7 +1004,7 @@ class Replica(Node):
     def leader_is_alive(self):
         currentleader = self.find_leader()
         if currentleader != self.me:
-            self.logger.write("State", "Sending PING to %s" % currentleader)
+            self.logger.write("State", "Sending PING to %s" % str(currentleader))
             pingmessage = create_message(MSG_PING, self.me)
             success = self.send(pingmessage, peer=currentleader)
             if success < 0:
@@ -1066,7 +1062,7 @@ class Replica(Node):
         print "Waiting to execute #%d" % self.nexttoexecute
         print "Decisions:\n"
         for (commandnumber,command) in self.decisions.iteritems():
-            temp = "%d:\t%s" %  (commandnumber, command)
+            temp = "%d:\t%s" %  (commandnumber, str(command))
             if command in self.executed:
                 temp += "\t%s\n" % (str(self.executed[command]))
             print temp
@@ -1083,7 +1079,6 @@ class Replica(Node):
 
 ## MEASUREMENT OUTPUT
     def msg_output(self, conn, msg):
-        time.sleep(10)
         sys.stdout.flush()
         self.send(msg, self.groups[NODE_ACCEPTOR].members[0])
         dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
