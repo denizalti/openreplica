@@ -12,7 +12,7 @@ from concoord.utils import *
 from concoord.exception import *
 from concoord.connection import ConnectionPool, Connection
 from concoord.group import Group
-from concoord.msgpackmessage import *
+from concoord.message import *
 from concoord.pvalue import PValueSet
 try:
     import dns

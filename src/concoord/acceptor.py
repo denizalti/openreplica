@@ -4,6 +4,7 @@
 @copyright: See LICENSE
 """
 import signal
+import cPickle as pickle
 from pack import *
 from threading import Thread
 from concoord.node import *
@@ -12,7 +13,7 @@ from concoord.utils import *
 from concoord.pack import *
 from concoord.pvalue import PValueSet
 from concoord.connection import ConnectionPool
-from concoord.msgpackmessage import *
+from concoord.message import *
 from concoordprofiler import *
 
 class Acceptor(Node):
@@ -114,7 +115,7 @@ class Acceptor(Node):
                           "Doing garbage collection upto %d" % msg.commandnumber)
         success = self.accepted.truncateto(msg.commandnumber)
         if success:
-            self.objectsnapshot = (msg.commandnumber,msg.snapshot)
+            self.objectsnapshot = (msg.commandnumber,pickle.loads(msg.snapshot))
         else:
             self.logger.write("Garbage Collection Error",
                               "Garbege Collection failed.")

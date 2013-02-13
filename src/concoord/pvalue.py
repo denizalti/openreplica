@@ -3,6 +3,8 @@
 @note: PValue is used to keep Paxos state in Acceptor and Leader nodes.
 @copyright: See LICENSE
 '''
+import types
+
 class PValueSet():
     """PValueSet encloses a set of pvalues with the highest ballotnumber (always)
     and supports corresponding set functions.

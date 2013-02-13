@@ -13,7 +13,7 @@ from optparse import OptionParser
 from threading import Thread, RLock, Lock, Condition, Timer, Semaphore
 from concoord.enums import *
 from concoord.utils import *
-from concoord.msgpackmessage import *
+from concoord.message import *
 from concoord.pack import *
 from concoord.pvalue import PValueSet
 from concoord.connection import ConnectionPool,Connection
@@ -289,6 +289,7 @@ class Node():
             if message.type == MSG_STATUS:
                 if self.type == NODE_REPLICA:
                     self.logger.write("State", "Answering status message %s" % self.__str__())
+                    # XXX
                     messagestr = pickle.dumps(self.__str__())
                     message = struct.pack("I", len(messagestr)) + messagestr
                     clientsock.send(message)
