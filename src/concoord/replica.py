@@ -368,6 +368,8 @@ class Replica(Node):
 
     def msg_updatereply(self, conn, msg):
         """merge decisions received with local decisions"""
+        if self.stateuptodate:
+            return
         for key,value in self.decisions.iteritems():
             if msg.decisions.has_key(key):
                 assert self.decisions[key] == msg.decisions[key], "Update Error"
