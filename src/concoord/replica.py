@@ -78,6 +78,9 @@ class Replica(Node):
         # number for metacommands initiated from this replica
         self.metacommandnumber = 0
         self.clientpool = ConnectionPool()
+        # keep nodes that are recently updated
+        self.recentlyupdatedpeerslock = Lock()
+        self.recentlyupdatedpeers = []
 
         # PERFORMANCE MEASUREMENT VARS
         self.firststarttime = 0
@@ -363,11 +366,19 @@ class Replica(Node):
             
     def msg_update(self, conn, msg):
         """a replica needs to be updated on the set of past decisions, send caller's decisions"""
+        # This should be done only if it has not been done recently.
+        with self.recentlyupdatedpeerslock:
+            if msg.source in self.recentlyupdatedpeers:
+                return
+        
         updatereplymessage = create_message(MSG_UPDATEREPLY, self.me, (DECISIONS, self.decisions))
         self.send(updatereplymessage, peer=msg.source)
+        with self.recentlyupdatedpeerslock:
+            self.recentlyupdatedpeers.append(msg.source)
 
     def msg_updatereply(self, conn, msg):
         """merge decisions received with local decisions"""
+        # If the node is already up-to-date, return.
         if self.stateuptodate:
             return
         for key,value in self.decisions.iteritems():
@@ -1001,6 +1012,8 @@ class Replica(Node):
                                     self.pick_commandnumber_add_to_pending(noopcommand)
                     else:
                         self.groups[peer.type][peer] = 0
+            with self.recentlyupdatedpeerslock:
+                self.recentlyupdatedpeers = []
             time.sleep(LIVENESSTIMEOUT)
 
     def leader_is_alive(self):
