@@ -665,6 +665,9 @@ class Replica(Node):
         handles clientrequest message received according to replica's state
         - if not leader: reject
         - if leader: add connection to client connections and handle request"""
+        if self.type == NODE_NAMESERVER:
+            self.logger.write("Error", "NAMESERVER got a CLIENTREQUEST")
+            return
         try:
             if self.token and msg.token != self.token:
                 self.logger.write("Error", "Security Token mismatch.")
@@ -675,9 +678,6 @@ class Replica(Node):
                 conn.send(clientreply)
         except AttributeError:
             pass
-        if self.type == NODE_NAMESERVER:
-            self.logger.write("Error", "NAMESERVER got a CLIENTREQUEST")
-            return
         # Check to see if Leader
         self.update_leader()
         if not self.isleader:
