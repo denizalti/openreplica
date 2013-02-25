@@ -302,12 +302,18 @@ class Replica(Node):
             self.add_to_pendingcommands(givencommandnumber, givenproposal)
         # Try issuing command
         # Pick the smallest pendingcommandnumber
+        print "-------------------------------"
+        print self.pendingcommands.keys()
+        print "-------------------------------"
         smallestcommandnumber = sorted(self.pendingcommands.keys())[0]
         self.issue_command(smallestcommandnumber)
 
     def issue_command(self, candidatecommandno):
         """propose a command from the pending commands"""
         self.logger.write("State:", "issuing pending command")
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        print self.pendingcommands
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         if self.pendingcommands.has_key(candidatecommandno):
             if self.active:
                 self.do_command_propose_from_pending(candidatecommandno)
@@ -617,6 +623,7 @@ class Replica(Node):
         if not self.isleader:
             self.logger.write("Error", "Shouldn't have come here: Called to handle client command but not Leader.")
             clientreply = create_message(MSG_CLIENTREPLY, self.me,
+                                         (REPLY, ''),
                                          (REPLYCODE, CR_REJECTED),
                                          (INRESPONSETO, givencommand.clientcommandnumber))
             self.logger.write("State", "Rejecting clientrequest: %s" % str(clientreply))
@@ -645,6 +652,7 @@ class Replica(Node):
             elif givencommand in self.pendingcommandset or givencommand in self.proposalset or givencommand in self.decisionset:
                 # send INPROGRESS
                 clientreply = create_message(MSG_CLIENTREPLY, self.me,
+                                             (REPLY, ''),
                                              (REPLYCODE, CR_INPROGRESS),
                                              (INRESPONSETO, givencommand.clientcommandnumber))
                 self.logger.write("State", "Clientreply: %s\nAcceptors: %s"
@@ -671,28 +679,26 @@ class Replica(Node):
         try:
             if self.token and msg.token != self.token:
                 self.logger.write("Error", "Security Token mismatch.")
-                clientreply = create_message(MSG_CLIENTREPLY,
-                                                 self.me,
-                                                 replycode=CR_REJECTED,
-                                                 inresponseto=msg.command.clientcommandnumber)
+                clientreply = create_message(MSG_CLIENTREPLY, self.me,
+                                             (REPLY, ''),
+                                             (REPLYCODE, CR_REJECTED),
+                                             (INRESPONSETO, msg.command.clientcommandnumber))
                 conn.send(clientreply)
         except AttributeError:
             pass
         # Check to see if Leader
         self.update_leader()
-        if not self.isleader:
-            # Check the Leader to see if the Client had a reason to think that we are the leader
-            if self.leader_is_alive():
-                self.logger.write("State", "Not Leader: Rejecting CLIENTREQUEST")
-                clientreply = create_message(MSG_CLIENTREPLY,
-                                             self.me,
-                                             (REPLYCODE, CR_REJECTED),
-                                             (INRESPONSETO, msg.command.clientcommandnumber))
-                self.logger.write("State", "Clientreply: %s\nAcceptors: %s"
-                                  % (str(clientreply), str(self.groups[NODE_ACCEPTOR])))
-                conn.send(clientreply)
-                return
-            self.update_leader()
+        if not self.isleader and self.leader_is_alive():
+            self.logger.write("State", "Not Leader: Rejecting CLIENTREQUEST")
+            clientreply = create_message(MSG_CLIENTREPLY, self.me,
+                                         (REPLY, ''),
+                                         (REPLYCODE, CR_REJECTED),
+                                         (INRESPONSETO, msg.command.clientcommandnumber))
+            self.logger.write("State", "Clientreply: %s\nAcceptors: %s"
+                              % (str(clientreply), str(self.groups[NODE_ACCEPTOR])))
+            conn.send(clientreply)
+            return
+        self.update_leader()
         # Leader should accept a request even if it's not ready as this
         # way it will make itself ready during the prepare stage.
         if self.isleader:
@@ -814,7 +820,8 @@ class Replica(Node):
             self.add_to_pendingcommands(givencommandnumber, givenproposal)
             return
         self.outstandingprepares[newballotnumber] = prc
-        prepare = create_message(MSG_PREPARE, self.me, (BALLOTNUMBER, newballotnumber))
+        prepare = create_message(MSG_PREPARE, self.me, 
+                                 (BALLOTNUMBER, newballotnumber))
         msgids = self.send(prepare, group=prc.acceptors)
         # the msgs sent may be less than the number of prc.acceptors if a connection to an acceptor is lost
         # add sent messages to sent prepares

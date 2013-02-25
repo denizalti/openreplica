@@ -67,8 +67,8 @@ def parse_message(msg):
                                     proposal, msg[TOKEN])
     elif msg[MSGTYPE] == MSG_CLIENTREPLY:
         return ClientReplyMessage(msg[MSGID], msg[MSGTYPE], src,
-                                   msg[REPLY], msg[REPLYCODE],
-                                   msg[INRESPONSETO])
+                                  msg[REPLY], msg[REPLYCODE],
+                                  msg[INRESPONSETO])
     elif msg[MSGTYPE] == MSG_INCCLIENTREQUEST:
         proposalclient = Peer(*msg[PROPOSAL][0])
         proposal = Proposal(proposalclient, *msg[PROPOSAL][1:])
