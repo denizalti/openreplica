@@ -122,15 +122,6 @@ class Node():
         if self.type == NODE_REPLICA or self.type == NODE_NAMESERVER:
             self.stateuptodate = False
 
-    def createinfofile(self):
-        try:
-            infofile = open(self.objectfilename[:-3]+"-descriptor", 'a')
-            infofile.write("%s:%d" %(self.addr,self.port))
-            infofile.close()
-        except IOError as e:
-            self.logger.write("File Error", "Info file cannot be created.")
-            self._graceexit(1)
-
     def _getipportpairs(self, bootaddr, bootport):
         for node in socket.getaddrinfo(bootaddr, bootport):
             yield Peer(node[4][0],bootport,NODE_REPLICA)
