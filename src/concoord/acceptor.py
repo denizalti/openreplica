@@ -62,6 +62,7 @@ class Acceptor(Node):
         # in this case we do nothing
         elif msg.ballotnumber == self.ballotnumber and \
                 msg.id == self.last_accept_msg_id:
+            self.logger.write("Paxos State","message received before: %s" % msg)
             return
         else:
             self.logger.write("Paxos State",
@@ -69,7 +70,7 @@ class Acceptor(Node):
                                "ballotnumber %s "
                                "for commandnumber %s") % (str(msg.ballotnumber),
                                                           str(msg.commandnumber)))
-
+            self.last_accept_msg_id = msg.id
             replymsg = create_message(MSG_PREPARE_PREEMPTED, self.me,
                                       (BALLOTNUMBER, self.ballotnumber),
                                       (INRESPONSETO, msg.ballotnumber),
