@@ -3,7 +3,7 @@
 @note: Value object to test concoord implementation
 @copyright: See LICENSE
 """
-class Value():
+class TestSanity():
     def __init__(self):
         self.value = 10**6
         self.counter = 0

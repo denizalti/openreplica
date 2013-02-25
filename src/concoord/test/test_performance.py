@@ -3,7 +3,7 @@
 @note: Example test object
 @copyright: See LICENSE
 """
-class Test():
+class TestPerformance():
     def __init__(self):
         self.value = 10
 

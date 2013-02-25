@@ -14,7 +14,6 @@ from concoord.pack import *
 from concoord.pvalue import PValueSet
 from concoord.connection import ConnectionPool
 from concoord.message import *
-from concoordprofiler import *
 
 class Acceptor(Node):
     """
