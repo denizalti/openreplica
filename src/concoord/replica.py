@@ -18,7 +18,6 @@ from concoord.node import *
 from concoord.enums import *
 from concoord.utils import *
 from concoord.message import *
-from concoordprofiler import *
 
 backoff_event = Event()
 class Replica(Node):
@@ -302,18 +301,12 @@ class Replica(Node):
             self.add_to_pendingcommands(givencommandnumber, givenproposal)
         # Try issuing command
         # Pick the smallest pendingcommandnumber
-        print "-------------------------------"
-        print self.pendingcommands.keys()
-        print "-------------------------------"
         smallestcommandnumber = sorted(self.pendingcommands.keys())[0]
         self.issue_command(smallestcommandnumber)
 
     def issue_command(self, candidatecommandno):
         """propose a command from the pending commands"""
         self.logger.write("State:", "issuing pending command")
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-        print self.pendingcommands
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         if self.pendingcommands.has_key(candidatecommandno):
             if self.active:
                 self.do_command_propose_from_pending(candidatecommandno)
