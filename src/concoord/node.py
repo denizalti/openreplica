@@ -311,15 +311,29 @@ class Node():
                     self.pendingmetacommands = set()
                 self.initiate_command()
             try:
-                (message_to_process, connection) = self.receivedmessages.pop(0)
-                self.process_message(message_to_process, connection)
-            except:
+                (message_to_process,connection) = self.receivedmessages.pop(0)
+                if message_to_process.type == MSG_CLIENTREQUEST:
+                    # check if there are other client requests waiting
+                    msgconns = [(message_to_process,connection)]
+                    for m,c in self.receivedmessages:
+                        if m.type == MSG_CLIENTREQUEST:
+                            msgconns.append((m,c))
+                    self.process_messagelist(msgconns)
+                else:
+                    self.process_message(message_to_process, connection)
+            except Exception as e:
+                print e
                 continue
         return
 
+    def process_messagelist(self, msgconnlist):
+        """Processes given message connection pairs"""
+        with self.lock:
+            msg_clientrequest_batch(msgconnlist)
+        return True
+
     def process_message(self, message, connection):
-        """Process message loop that takes messages out of
-        the receivedmessages list and handles them."""
+        """Processes given message connection pair"""
         # find method and invoke it holding a lock
         mname = "msg_%s" % msg_names[message.type].lower()
         try:
