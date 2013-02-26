@@ -318,7 +318,10 @@ class Node():
                     for m,c in self.receivedmessages:
                         if m.type == MSG_CLIENTREQUEST:
                             msgconns.append((m,c))
-                    self.process_messagelist(msgconns)
+                    if len(msgconns) > 1:
+                        self.process_messagelist(msgconns)
+                    else:
+                        self.process_message(message_to_process, connection)
                 else:
                     self.process_message(message_to_process, connection)
             except Exception as e:
