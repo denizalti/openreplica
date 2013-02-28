@@ -311,6 +311,7 @@ class Node():
                     self.pendingmetacommands = set()
                 self.initiate_command()
             try:
+                print len(self.receivedmessages)
                 (message_to_process,connection) = self.receivedmessages.pop(0)
                 if message_to_process.type == MSG_CLIENTREQUEST:
                     # check if there are other client requests waiting
@@ -332,7 +333,7 @@ class Node():
     def process_messagelist(self, msgconnlist):
         """Processes given message connection pairs"""
         with self.lock:
-            msg_clientrequest_batch(msgconnlist)
+            self.msg_clientrequest_batch(msgconnlist)
         return True
 
     def process_message(self, message, connection):
