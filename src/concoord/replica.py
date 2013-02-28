@@ -260,16 +260,16 @@ class Replica(Node):
             print requestedcommand
             if isinstance(requestedcommand, list):
                 for command in requestedcommand:
-                    self.execute_command(command)
+                    self.execute_command(command, msg, designated)
             else:
-                self.execute_command(requestedcommand)
+                self.execute_command(requestedcommand, msg, designated)
             self.nexttoexecute += 1
             # the window just got bumped by one
             # check if there are pending commands, and issue one of them
             self.issue_command(self.nexttoexecute)
         self.logger.write("State", "Returning from PERFORM!")
 
-    def execute_command(self, requestedcommand):
+    def execute_command(self, requestedcommand, msg, designated):
         # commands are executed one by one here.
         if requestedcommand in self.executed:
             self.logger.write("State", "Previously executed command %d." % self.nexttoexecute)
