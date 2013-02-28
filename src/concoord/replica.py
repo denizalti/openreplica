@@ -103,7 +103,7 @@ class Replica(Node):
         rstr += "Commands:\n"
         for commandnumber, command in self.decisions.iteritems():
             state = ''
-            if self.executed.has_key(command):
+            if command in self.executed:
                 state = '\t' + cr_codes[self.executed[command][0]]+ '\t' + str(self.executed[command][1])
             rstr += str(commandnumber) + ":\t" + str(command) + state + '\n'
         if len(self.pendingcommands):
@@ -252,42 +252,51 @@ class Replica(Node):
         # If replica was using this commandnumber for a different proposal, initiate it again
         if self.proposals.has_key(msg.commandnumber) and msg.proposal != self.proposals[msg.commandnumber]:
             self.initiate_command(self.proposals[msg.commandnumber])
-            
+        
         while self.decisions.has_key(self.nexttoexecute):
             requestedcommand = self.decisions[self.nexttoexecute]
-            if requestedcommand in self.executed:
-                self.logger.write("State", "Previously executed command %d." % self.nexttoexecute)
-                # If we are a leader, we should send a reply to the client for this command
-                # in case the client didn't receive the reply from the previous leader
-                if self.isleader:
-                    prevrcode, prevresult, prevunblocked = self.executed[requestedcommand]
-                    if prevrcode == CR_BLOCK:
-                        # As dictionary is not sorted we have to start from the beginning every time
-                        for resultset in self.executed.itervalues():
-                            if resultset[UNBLOCKED] == requestedcommand:
-                                # This client has been UNBLOCKED
-                                prevresult = None
-                                prevrcode = CR_UNBLOCK
-                    self.logger.write("State", "Sending reply to client.")
-                    self.send_reply_to_client(prevrcode, prevresult, requestedcommand)
-                self.nexttoexecute += 1
-                # the window just got bumped by one
-                # check if there are pending commands, and issue one of them
-                self.issue_command(self.nexttoexecute)
-            elif requestedcommand not in self.executed:
-                self.logger.write("State", "executing command %d." % self.nexttoexecute)
-                # check to see if there was a metacommand precisely WINDOW commands ago that should now take effect
-                # We are calling performcore 2 times, the timing gets screwed plus this is very unefficient
-                if self.nexttoexecute > WINDOW:
-                    self.logger.write("State", "performcore %d" % (self.nexttoexecute-WINDOW))
-                    self.performcore(msg, self.nexttoexecute-WINDOW, True, designated=designated)
-                self.logger.write("State", "performcore %d" % self.nexttoexecute)
-                self.performcore(msg, self.nexttoexecute, designated=designated)
-                self.nexttoexecute += 1
-                # the window just got bumped by one
-                # check if there are pending commands, and issue one of them
-                self.issue_command(self.nexttoexecute)
+            # requestedcommand can be a batch
+            #XXX Add a bit to make this obvious
+            print requestedcommand
+            if isinstance(requestedcommand, list):
+                for command in requestedcommand:
+                    self.execute_command(command)
+            else:
+                self.execute_command(requestedcommand)
+            self.nexttoexecute += 1
+            # the window just got bumped by one
+            # check if there are pending commands, and issue one of them
+            self.issue_command(self.nexttoexecute)
         self.logger.write("State", "Returning from PERFORM!")
+
+    def execute_command(self, requestedcommand):
+        # commands are executed one by one here.
+        if requestedcommand in self.executed:
+            self.logger.write("State", "Previously executed command %d." % self.nexttoexecute)
+            # If we are a leader, we should send a reply to the client for this command
+            # in case the client didn't receive the reply from the previous leader
+            if self.isleader:
+                prevrcode, prevresult, prevunblocked = self.executed[requestedcommand]
+                if prevrcode == CR_BLOCK:
+                    # As dictionary is not sorted we have to start from the beginning every time
+                    for resultset in self.executed.itervalues():
+                        if resultset[UNBLOCKED] == requestedcommand:
+                            # This client has been UNBLOCKED
+                            prevresult = None
+                            prevrcode = CR_UNBLOCK
+                self.logger.write("State", "Sending reply to client.")
+                self.send_reply_to_client(prevrcode, prevresult, requestedcommand)
+        elif requestedcommand not in self.executed:
+            self.logger.write("State", "executing command %d." % self.nexttoexecute)
+            # check to see if there was a metacommand precisely WINDOW commands ago
+            # that should now take effect
+            # We are calling performcore 2 times, the timing gets screwed plus this
+            # is very unefficient
+            if self.nexttoexecute > WINDOW:
+                self.logger.write("State", "performcore %d" % (self.nexttoexecute-WINDOW))
+                self.performcore(msg, self.nexttoexecute-WINDOW, True, designated=designated)
+            self.logger.write("State", "performcore %d" % self.nexttoexecute)
+            self.performcore(msg, self.nexttoexecute, designated=designated)
             
     def pick_commandnumber_add_to_pending(self, givenproposal):
         # Add command to pending commands
@@ -540,7 +549,7 @@ class Replica(Node):
     def update_leader(self):
         """checks which node is the leader and changes the state of the caller if necessary"""
         chosenleader = self.find_leader()
-        self.logger.write("State", "Chosen LEADER: %s" % str(chosenleader))
+        self.logger.write("State", "Updated LEADER: %s" % str(chosenleader))
         if self.me == chosenleader:
             # caller needs to become a leader
             if not self.isleader:
@@ -548,7 +557,7 @@ class Replica(Node):
                 if not self.stateuptodate:
                     self.leader_initializing = True
                 self.become_leader()
-        elif self.isleader:
+        elif self.me != chosenleader and self.isleader:
             # there is some other replica that should act as a leader
             self.unbecome_leader()
 
@@ -576,35 +585,62 @@ class Replica(Node):
 
     def add_to_decisions(self, key, value):
         self.decisions[key] = value
-        self.decisionset.add(value)
+        if isinstance(value, list):
+            for item in value:
+                self.decisionset.add(item)
+        else:
+            self.decisionset.add(value)
         self.usedcommandnumbers.add(key)
 
     def add_to_proposals(self, key, value):
         self.proposals[key] = value
-        self.proposalset.add(value)
+        if isinstance(value, list):
+            for item in value:
+                self.proposalset.add(item)
+        else:
+            self.proposalset.add(value)
         self.usedcommandnumbers.add(key)
 
     def add_to_pendingcommands(self, key, value):
         self.pendingcommands[key] = value
-        self.pendingcommandset.add(value)
+        if isinstance(value, list):
+            for item in value:
+                self.pendingcommandset.add(item)
+        else:
+            self.pendingcommandset.add(value)
 
     def remove_from_executed(self, key):
         del self.executed[key]
 
     def remove_from_decisions(self, key):
-        self.decisionset.remove(self.decisions[key])
+        value = self.decisions[key]
+        if isinstance(value, list):
+            for item in value:
+                self.decisionset.remove(item)
+        else:
+            self.decisionset.remove(value)
         del self.decisions[key]
         self.usedcommandnumbers.remove(key)
         self.commandgap = key
 
     def remove_from_proposals(self, key):
-        self.proposalset.remove(self.proposals[key])
+        value = self.proposals[key]
+        if isinstance(value, list):
+            for item in value:
+                self.proposalset.remove(item)
+        else:
+            self.proposalset.remove(value)
         del self.proposals[key]
         self.usedcommandnumbers.remove(key)
         self.commandgap = key
 
     def remove_from_pendingcommands(self, key):
-        self.pendingcommandset.remove(self.pendingcommands[key])
+        value = self.pendingcommands[key]
+        if isinstance(value, list):
+            for item in value:
+                self.pendingcommandset.remove(item)
+        else:
+            self.pendingcommandset.remove(value)
         del self.pendingcommands[key]
 
     def handle_client_command(self, givencommand, prepare=False):
@@ -634,14 +670,14 @@ class Replica(Node):
                                  str(givencommand.clientcommandnumber),
                                  str(self.groups[NODE_ACCEPTOR])))
             # Check if the request has been executed
-            if self.executed.has_key(givencommand):
+            if givencommand in self.executed:
                 # send REPLY
                 clientreply = create_message(MSG_CLIENTREPLY, self.me,
                                              (REPLY, self.executed[givencommand][RESULT]),
                                              (REPLYCODE, self.executed[givencommand][RCODE]),
                                              (INRESPONSETO, givencommand.clientcommandnumber))
                 self.logger.write("State", "Clientreply: %s" % str(clientreply))
-            # Check if the request is somewhere in the Paxos pipeline: pendingcommands, proposals, decisions
+            # Check if the request is somewhere in the Paxos pipeline
             elif givencommand in self.pendingcommandset or givencommand in self.proposalset or givencommand in self.decisionset:
                 # send INPROGRESS
                 clientreply = create_message(MSG_CLIENTREPLY, self.me,
@@ -660,6 +696,75 @@ class Replica(Node):
             self.receivedclientrequests[(givencommand.client,givencommand.clientcommandnumber)] = givencommand
             self.logger.write("State", "Initiating a new command. Leader is active: %s" % self.active)
             self.initiate_command(givencommand)
+
+    def handle_client_command_batch(self, givencommands, prepare=False):
+        """handle received command
+        - if it has been received before check if it has been executed
+        -- if it has been executed send the result
+        -- if it has not been executed yet send INPROGRESS
+        - if this request has not been received before initiate a Paxos round for the command"""
+        if not self.isleader:
+            self.logger.write("Error",
+                              "Shouldn't have come here: Not Leader.")
+            for givencommand in givencommands:
+                clientreply = create_message(MSG_CLIENTREPLY, self.me,
+                                             (REPLY, ''),
+                                             (REPLYCODE, CR_REJECTED),
+                                             (INRESPONSETO, givencommand.clientcommandnumber))
+                conn = self.clientpool.get_connection_by_peer(givencommand.client)
+                if conn is not None:
+                    conn.send(clientreply)
+                else:
+                    self.logger.write("Error", "Can't create connection to client: %s"
+                                      % str(givencommand.client))
+            return
+
+        for givencommand in givencommands:
+            if self.receivedclientrequests.has_key((givencommand.client,
+                                                    givencommand.clientcommandnumber)):
+                self.logger.write("State", "Client request received previously:")
+                # Check if the request has been executed
+                # executed commands: <command:(replycode,commandresult,unblocked{})>
+                if givencommand in self.executed:
+                    # send REPLY
+                    clientreply = create_message(MSG_CLIENTREPLY, self.me,
+                                                 (REPLY, self.executed[givencommand][RESULT]),
+                                                 (REPLYCODE, self.executed[givencommand][RCODE]),
+                                                 (INRESPONSETO, givencommand.clientcommandnumber))
+                    self.logger.write("State", "Clientreply: %s" % str(clientreply))
+                # Check if the request is somewhere in the Paxos pipeline
+                # decided commands: <commandnumber:command>
+                # commands that are proposed: <commandnumber:command>
+                # commands that are received, not yet proposed: <commandnumber:command>
+                elif givencommand in self.pendingcommandset or givencommand in self.proposalset \
+                        or givencommand in self.decisionset:
+                    # send INPROGRESS
+                    clientreply = create_message(MSG_CLIENTREPLY, self.me,
+                                                 (REPLY, ''),
+                                                 (REPLYCODE, CR_INPROGRESS),
+                                                 (INRESPONSETO, givencommand.clientcommandnumber))
+                    self.logger.write("State", "Clientreply: %s\nAcceptors: %s"
+                                      % (str(clientreply),str(self.groups[NODE_ACCEPTOR])))
+                conn = self.clientpool.get_connection_by_peer(givencommand.client)
+                givencommands.remove(givencommand)
+                if conn is not None:
+                    conn.send(clientreply)
+                else:
+                    self.logger.write("Error",
+                                      "Can't create connection to client: %s" % str(givencommand.client))
+            else:
+                # The caller haven't received this command before
+                self.receivedclientrequests[(givencommand.client,
+                                             givencommand.clientcommandnumber)] = givencommand
+                self.logger.write("State", "Initiating a new command. Leader is active: %s" % self.active)
+            
+            # Check if batching is still required
+            if len(givencommands) == 0:
+                return
+            elif len(givencommands) == 1:
+                self.initiate_command(givencommands[0])
+            else: # len(givencommands) > 1:
+                self.initiate_command(givencommands)
 
     def msg_clientrequest(self, conn, msg):
         """called holding self.lock
@@ -687,8 +792,6 @@ class Replica(Node):
                                          (REPLY, ''),
                                          (REPLYCODE, CR_REJECTED),
                                          (INRESPONSETO, msg.command.clientcommandnumber))
-            self.logger.write("State", "Clientreply: %s\nAcceptors: %s"
-                              % (str(clientreply), str(self.groups[NODE_ACCEPTOR])))
             conn.send(clientreply)
             return
         self.update_leader()
@@ -700,6 +803,51 @@ class Replica(Node):
                 self.handle_client_command(msg.command, prepare=True)
             else:
                 self.handle_client_command(msg.command)
+
+    def msg_clientrequest_batch(self, msgconnlist):
+        """called holding self.lock
+        handles clientrequest messages that are batched together"""
+        if self.type == NODE_NAMESERVER:
+            self.logger.write("Error", "NAMESERVER got a CLIENTREQUEST")
+            return
+        try:
+            for (msg,conn) in msgconnlist:
+                if self.token and msg.token != self.token:
+                    self.logger.write("Error", "Security Token mismatch.")
+                    clientreply = create_message(MSG_CLIENTREPLY, self.me,
+                                                 (REPLY, ''),
+                                                 (REPLYCODE, CR_REJECTED),
+                                                 (INRESPONSETO, msg.command.clientcommandnumber))
+                    conn.send(clientreply)
+                    msgconnlist.remove((msg,conn))
+        except AttributeError:
+            pass
+        # Check to see if Leader
+        self.update_leader()
+        if not self.isleader:
+            # Check the Leader to see if the Client had a reason to think that we are the leader
+            if self.leader_is_alive():
+                self.logger.write("State", "Not Leader: Rejecting CLIENTREQUESTS")
+                for (msg,conn) in msgconnlist:
+                    clientreply = create_message(MSG_CLIENTREPLY, self.me,
+                                                 (REPLY, ''),
+                                                 (REPLYCODE, CR_REJECTED),
+                                                 (INRESPONSETO, msg.command.clientcommandnumber))
+                    conn.send(clientreply)
+                    msgconnlist.remove((msg,conn))
+                return
+        self.update_leader()
+        # Leader should accept a request even if it's not ready as this
+        # way it will make itself ready during the prepare stage.
+        if self.isleader:
+            givencommands = []
+            for (msg,conn) in msgconnlist:
+                self.clientpool.add_connection_to_peer(msg.source, conn)
+                givencommands.append(msg.command)
+            if self.leader_initializing:
+                self.handle_client_command_batch(msg.command, prepare=True)
+            else:
+                self.handle_client_command_batch(givencommands)
 
     def msg_incclientrequest(self, conn, msg):
         """handles inconsistent requests from the client"""
@@ -924,7 +1072,6 @@ class Replica(Node):
         -- send MSG_PERFORM to all Replicas and Leaders
         -- execute the command
         """
-        self.logger.write("State", "entered propose accept")
         if self.outstandingproposes.has_key(msg.commandnumber):
             prc = self.outstandingproposes[msg.commandnumber]
             if msg.inresponseto == prc.ballotnumber:
@@ -1023,7 +1170,8 @@ class Replica(Node):
             pingmessage = create_message(MSG_PING, self.me)
             success = self.send(pingmessage, peer=currentleader)
             if success < 0:
-                self.logger.write("State", "Leader not responding, marking the leader unreachable.")
+                self.logger.write("State",
+                                  "Leader not responding, marking the leader unreachable.")
                 self.groups[currentleader.type][currentleader] += 1
                 return False
         return True
