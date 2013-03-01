@@ -232,9 +232,9 @@ class Replica(Node):
     def send_reply_to_client(self, clientreplycode, givenresult, command):
         self.logger.write("State", "Sending REPLY to CLIENT")
         clientreply = create_message(MSG_CLIENTREPLY, self.me,
-                                     {REPLY: givenresult,
-                                      REPLYCODE: clientreplycode,
-                                      INRESPONSETO: command.clientcommandnumber})
+                                     {FLD_REPLY: givenresult,
+                                      FLD_REPLYCODE: clientreplycode,
+                                      FLD_INRESPONSETO: command.clientcommandnumber})
         self.logger.write("State", "Clientreply: %s\nAcceptors: %s" 
                           % (str(clientreply), str(self.groups[NODE_ACCEPTOR])))
         clientconn = self.clientpool.get_connection_by_peer(command.client)
@@ -283,7 +283,7 @@ class Replica(Node):
                 if prevrcode == CR_BLOCK:
                     # As dictionary is not sorted we have to start from the beginning every time
                     for resultset in self.executed.itervalues():
-                        if resultset[UNBLOCKED] == requestedcommand:
+                        if resultset[EXC_UNBLOCKED] == requestedcommand:
                             # This client has been UNBLOCKED
                             prevresult = None
                             prevrcode = CR_UNBLOCK
@@ -449,8 +449,8 @@ class Replica(Node):
                           % garbagecommandnumber)
         snapshot = pickle.dumps(self.object)
         garbagemsg = create_message(MSG_GARBAGECOLLECT, self.me,
-                                    {COMMANDNUMBER: garbagecommandnumber,
-                                     SNAPSHOT: snapshot})
+                                    {FLD_COMMANDNUMBER: garbagecommandnumber,
+                                     FLD_SNAPSHOT: snapshot})
         self.send(garbagemsg,group=self.groups[NODE_ACCEPTOR])
         # do local garbage collection
         self.local_garbage_collect(garbagecommandnumber)
@@ -658,9 +658,9 @@ class Replica(Node):
         if not self.isleader:
             self.logger.write("Error", "Shouldn't have come here: Called to handle client command but not Leader.")
             clientreply = create_message(MSG_CLIENTREPLY, self.me,
-                                         {REPLY: '',
-                                          REPLYCODE: CR_REJECTED,
-                                          INRESPONSETO: givencommand.clientcommandnumber})
+                                         {FLD_REPLY: '',
+                                          FLD_REPLYCODE: CR_REJECTED,
+                                          FLD_INRESPONSETO: givencommand.clientcommandnumber})
             self.logger.write("State", "Rejecting clientrequest: %s" % str(clientreply))
             conn = self.clientpool.get_connection_by_peer(givencommand.client)
             if conn is not None:
@@ -679,9 +679,9 @@ class Replica(Node):
             if givencommand in self.executed:
                 # send REPLY
                 clientreply = create_message(MSG_CLIENTREPLY, self.me,
-                                             {REPLY: self.executed[givencommand][RESULT],
-                                              REPLYCODE: self.executed[givencommand][RCODE],
-                                              INRESPONSETO: givencommand.clientcommandnumber})
+                                             {FLD_REPLY: self.executed[givencommand][EXC_RESULT],
+                                              FLD_REPLYCODE: self.executed[givencommand][EXC_RCODE],
+                                              FLD_INRESPONSETO: givencommand.clientcommandnumber})
                 self.logger.write("State", "Clientreply: %s" % str(clientreply))
             # Check if the request is somewhere in the Paxos pipeline
             elif givencommand in self.pendingcommandset or \
@@ -689,9 +689,9 @@ class Replica(Node):
                     givencommand in self.decisionset:
                 # send INPROGRESS
                 clientreply = create_message(MSG_CLIENTREPLY, self.me,
-                                             {REPLY: '',
-                                              REPLYCODE: CR_INPROGRESS,
-                                              INRESPONSETO: givencommand.clientcommandnumber})
+                                             {FLD_REPLY: '',
+                                              FLD_REPLYCODE: CR_INPROGRESS,
+                                              FLD_INRESPONSETO: givencommand.clientcommandnumber})
                 self.logger.write("State", "Clientreply: %s\nAcceptors: %s"
                                   % (str(clientreply),str(self.groups[NODE_ACCEPTOR])))
             conn = self.clientpool.get_connection_by_peer(givencommand.client)
@@ -716,9 +716,9 @@ class Replica(Node):
                               "Shouldn't have come here: Not Leader.")
             for givencommand in givencommands:
                 clientreply = create_message(MSG_CLIENTREPLY, self.me,
-                                             {REPLY: '',
-                                              REPLYCODE: CR_REJECTED,
-                                              INRESPONSETO: givencommand.clientcommandnumber})
+                                             {FLD_REPLY: '',
+                                              FLD_REPLYCODE: CR_REJECTED,
+                                              FLD_INRESPONSETO: givencommand.clientcommandnumber})
                 conn = self.clientpool.get_connection_by_peer(givencommand.client)
                 if conn is not None:
                     conn.send(clientreply)
@@ -736,9 +736,9 @@ class Replica(Node):
                 if givencommand in self.executed:
                     # send REPLY
                     clientreply = create_message(MSG_CLIENTREPLY, self.me,
-                                                 {REPLY: self.executed[givencommand][RESULT],
-                                                  REPLYCODE: self.executed[givencommand][RCODE],
-                                                  INRESPONSETO: givencommand.clientcommandnumber})
+                                                 {FLD_REPLY: self.executed[givencommand][EXC_RESULT],
+                                                  FLD_REPLYCODE: self.executed[givencommand][EXC_RCODE],
+                                                  FLD_INRESPONSETO: givencommand.clientcommandnumber})
                     self.logger.write("State", "Clientreply: %s" % str(clientreply))
                 # Check if the request is somewhere in the Paxos pipeline
                 # decided commands: <commandnumber:command>
@@ -748,9 +748,9 @@ class Replica(Node):
                         or givencommand in self.decisionset:
                     # send INPROGRESS
                     clientreply = create_message(MSG_CLIENTREPLY, self.me,
-                                                 {REPLY: '',
-                                                  REPLYCODE: CR_INPROGRESS,
-                                                  INRESPONSETO: givencommand.clientcommandnumber})
+                                                 {FLD_REPLY: '',
+                                                  FLD_REPLYCODE: CR_INPROGRESS,
+                                                  FLD_INRESPONSETO: givencommand.clientcommandnumber})
                     self.logger.write("State", "Clientreply: %s\nAcceptors: %s"
                                       % (str(clientreply),str(self.groups[NODE_ACCEPTOR])))
                 conn = self.clientpool.get_connection_by_peer(givencommand.client)
@@ -786,9 +786,9 @@ class Replica(Node):
             if self.token and msg.token != self.token:
                 self.logger.write("Error", "Security Token mismatch.")
                 clientreply = create_message(MSG_CLIENTREPLY, self.me,
-                                             {REPLY: '',
-                                              REPLYCODE: CR_REJECTED,
-                                              INRESPONSETO: msg.command.clientcommandnumber})
+                                             {FLD_REPLY: '',
+                                              FLD_REPLYCODE: CR_REJECTED,
+                                              FLD_INRESPONSETO: msg.command.clientcommandnumber})
                 conn.send(clientreply)
         except AttributeError:
             pass
@@ -797,9 +797,9 @@ class Replica(Node):
         if not self.isleader and self.leader_is_alive():
             self.logger.write("State", "Not Leader: Rejecting CLIENTREQUEST")
             clientreply = create_message(MSG_CLIENTREPLY, self.me,
-                                         {REPLY: '',
-                                          REPLYCODE: CR_REJECTED,
-                                          INRESPONSETO: msg.command.clientcommandnumber})
+                                         {FLD_REPLY: '',
+                                          FLD_REPLYCODE: CR_REJECTED,
+                                          FLD_INRESPONSETO: msg.command.clientcommandnumber})
             conn.send(clientreply)
             return
         self.update_leader()
@@ -823,9 +823,9 @@ class Replica(Node):
                 if self.token and msg.token != self.token:
                     self.logger.write("Error", "Security Token mismatch.")
                     clientreply = create_message(MSG_CLIENTREPLY, self.me,
-                                                 {REPLY: '',
-                                                  REPLYCODE: CR_REJECTED,
-                                                  INRESPONSETO: msg.command.clientcommandnumber})
+                                                 {FLD_REPLY: '',
+                                                  FLD_REPLYCODE: CR_REJECTED,
+                                                  FLD_INRESPONSETO: msg.command.clientcommandnumber})
                     conn.send(clientreply)
                     msgconnlist.remove((msg,conn))
         except AttributeError:
@@ -838,9 +838,9 @@ class Replica(Node):
                 self.logger.write("State", "Not Leader: Rejecting CLIENTREQUESTS")
                 for (msg,conn) in msgconnlist:
                     clientreply = create_message(MSG_CLIENTREPLY, self.me,
-                                                 {REPLY: '',
-                                                  REPLYCODE: CR_REJECTED,
-                                                  INRESPONSETO: msg.command.clientcommandnumber})
+                                                 {FLD_REPLY: '',
+                                                  FLD_REPLYCODE: CR_REJECTED,
+                                                  FLD_INRESPONSETO: msg.command.clientcommandnumber})
                     conn.send(clientreply)
                     msgconnlist.remove((msg,conn))
                 return
@@ -934,10 +934,10 @@ class Replica(Node):
             return
         self.outstandingproposes[givencommandnumber] = prc
         propose = create_message(MSG_PROPOSE, self.me,
-                                 {BALLOTNUMBER: recentballotnumber,
-                                  COMMANDNUMBER: givencommandnumber,
-                                  PROPOSAL: givenproposal,
-                                  BATCH: isinstance(givenproposal, ProposalBatch)})
+                                 {FLD_BALLOTNUMBER: recentballotnumber,
+                                  FLD_COMMANDNUMBER: givencommandnumber,
+                                  FLD_PROPOSAL: givenproposal,
+                                  FLD_BATCH: isinstance(givenproposal, ProposalBatch)})
         # the msgs sent may be less than the number of prc.acceptors
         # if a connection to an acceptor is lost
         msgids = self.send(propose, group=prc.acceptors)
@@ -971,7 +971,7 @@ class Replica(Node):
             return
         self.outstandingprepares[newballotnumber] = prc
         prepare = create_message(MSG_PREPARE, self.me, 
-                                 {BALLOTNUMBER: newballotnumber})
+                                 {FLD_BALLOTNUMBER: newballotnumber})
         msgids = self.send(prepare, group=prc.acceptors)
         # the msgs sent may be less than the number of prc.acceptors if a connection to an acceptor is lost
         # add sent messages to sent prepares
@@ -1025,10 +1025,10 @@ class Replica(Node):
                     newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, chosencommandnumber, chosenproposal)
                     self.outstandingproposes[chosencommandnumber] = newprc
                     propose = create_message(MSG_PROPOSE, self.me, 
-                                             {BALLOTNUMBER: prc.ballotnumber,
-                                              COMMANDNUMBER: chosencommandnumber,
-                                              PROPOSAL: chosenproposal,
-                                              BATCH: isinstance(chosenproposal, ProposalBatch)})
+                                             {FLD_BALLOTNUMBER: prc.ballotnumber,
+                                              FLD_COMMANDNUMBER: chosencommandnumber,
+                                              FLD_PROPOSAL: chosenproposal,
+                                              FLD_BATCH: isinstance(chosenproposal, ProposalBatch)})
                     self.send(propose, group=newprc.acceptors)
                 # As leader collected all proposals from acceptors its state is up-to-date and it is done initializing
                 self.leader_initializing = False
@@ -1097,9 +1097,9 @@ class Replica(Node):
                     del self.outstandingproposes[msg.commandnumber]
                     # now we can perform this action on the replicas
                     performmessage = create_message(MSG_PERFORM, self.me,
-                                                    {COMMANDNUMBER: prc.commandnumber,
-                                                     PROPOSAL: prc.proposal,
-                                                     BATCH: isinstance(prc.proposal, ProposalBatch)})
+                                                    {FLD_COMMANDNUMBER: prc.commandnumber,
+                                                     FLD_PROPOSAL: prc.proposal,
+                                                     FLD_BATCH: isinstance(prc.proposal, ProposalBatch)})
                     try:
                         self.logger.write("Paxos State", "Sending PERFORM!")
                         if len(self.groups[NODE_REPLICA]) > 0:

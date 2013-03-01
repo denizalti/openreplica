@@ -30,8 +30,8 @@ class ReqDesc:
             self.mynumber = clientproxy.commandnumber
             clientproxy.commandnumber += 1
         self.cm = create_message(MSG_CLIENTREQUEST, clientproxy.me,
-                                 {PROPOSAL: Proposal(clientproxy.me, self.mynumber, args), 
-                                  TOKEN: token})
+                                 {FLD_PROPOSAL: Proposal(clientproxy.me, self.mynumber, args), 
+                                  FLD_TOKEN: token})
         self.starttime = time.time()
         self.replyarrived = Condition(clientproxy.lock)
         self.lastreplycr = -1
