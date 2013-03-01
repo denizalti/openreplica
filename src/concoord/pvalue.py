@@ -3,6 +3,7 @@
 @note: PValue is used to keep Paxos state in Acceptor and Leader nodes.
 @copyright: See LICENSE
 '''
+from concoord.pack import *
 import types
 
 class PValueSet():
@@ -16,7 +17,13 @@ class PValueSet():
         """Adds given PValue to the PValueSet overwriting matching
         (commandnumber,proposal) if it exists and has a smaller ballotnumber
         """
-        index = (pvalue.commandnumber,pvalue.proposal)
+        print pvalue.proposal
+        if isinstance(pvalue.proposal, ProposalBatch):
+            # list of Proposals cannot be hashed, cast them to tuple
+            index = (pvalue.commandnumber,tuple(pvalue.proposal.proposals))
+        else:
+            index = (pvalue.commandnumber,pvalue.proposal)
+
         if self.pvalues.has_key(index):
             if self.pvalues[index].ballotnumber < pvalue.ballotnumber:
                 self.pvalues[index] = pvalue
@@ -25,7 +32,11 @@ class PValueSet():
 
     def remove(self, pvalue):
         """Removes given pvalue"""
-        index = (pvalue.commandnumber,pvalue.proposal)
+        if isinstance(pvalue.proposal, ProposalBatch):
+            # list of Proposals cannot be hashed, cast them to tuple
+            index = (pvalue.commandnumber,tuple(pvalue.proposal.proposals))
+        else:
+            index = (pvalue.commandnumber,pvalue.proposal)
         del self.pvalues[index]
 
     def truncateto(self, commandnumber):
