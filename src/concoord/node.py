@@ -103,7 +103,7 @@ class Node():
                 LOGGERNODE=logger
             else:
                 LOGGERNODE = None
-        self.logger = NetworkLogger("%s-%s" % (node_names[self.type],self.id), LOGGERNODE)
+        self.logger = Logger("%s-%s" % (node_names[self.type],self.id), lognode=LOGGERNODE)
         self.logger.write("State", "Connected.")
         # Initialize groups
         # Keeps {peer:outofreachcount}

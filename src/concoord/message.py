@@ -15,14 +15,17 @@ def assignuniqueid():
         msgidpool += 1
     return tempid
 
-# EDIT THIS
-def create_message(type, src, *args):
-    m = {}
-    m[MSGID] = assignuniqueid()
-    m[MSGTYPE] = type
+def create_message(msgtype, src, msgfields={}):
+    global msgidpool
+    global msgidpool_lock
+
+    m = msgfields
+    with msgidpool_lock:
+        m[MSGID] = msgidpool
+        msgidpool += 1
+    m[MSGTYPE] = msgtype
+>>>>>>> 2f8b951ccb2db6fa49402864ebeaa13d974cc2ac
     m[MSGSRC] = src
-    for type,obj in args:
-        m[type] = obj
     return m
 
 def parse_message(msg):

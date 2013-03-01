@@ -11,7 +11,6 @@ from concoord.enums import *
 from concoord.utils import *
 from concoord.exception import *
 from concoord.connection import ConnectionPool, Connection
-from concoord.group import Group
 from concoord.message import *
 from concoord.pvalue import PValueSet
 try:
@@ -31,8 +30,8 @@ class ReqDesc:
             self.mynumber = clientproxy.commandnumber
             clientproxy.commandnumber += 1
         self.cm = create_message(MSG_CLIENTREQUEST, clientproxy.me,
-                                 (PROPOSAL, Proposal(clientproxy.me, self.mynumber, args)),
-                                 (TOKEN, token))
+                                 {PROPOSAL: Proposal(clientproxy.me, self.mynumber, args), 
+                                  TOKEN: token})
         self.starttime = time.time()
         self.replyarrived = Condition(clientproxy.lock)
         self.lastreplycr = -1
