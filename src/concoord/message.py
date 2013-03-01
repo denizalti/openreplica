@@ -20,76 +20,76 @@ def create_message(msgtype, src, msgfields={}):
     global msgidpool_lock
 
     m = msgfields
-    m[MSGID] = assignuniqueid()
-    m[MSGTYPE] = msgtype
-    m[MSGSRC] = src
+    m[FLD_ID] = assignuniqueid()
+    m[FLD_TYPE] = msgtype
+    m[FLD_SRC] = src
     return m
 
 def parse_message(msg):
-    src = Peer(*msg[MSGSRC])
-    if msg[MSGTYPE] == MSG_HELO or msg[MSGTYPE] == MSG_PING or msg[MSGTYPE] == MSG_BYE \
-            or msg[MSGTYPE] == MSG_UPDATE or msg[MSGTYPE] == MSG_STATUS:
-        return Message(msg[MSGID], msg[MSGTYPE], src)
-    elif msg[MSGTYPE] == MSG_CLIENTREQUEST:
-        proposalclient = Peer(*msg[PROPOSAL][0])
-        proposal = Proposal(proposalclient, *msg[PROPOSAL][1:])
-        return ClientRequestMessage(msg[MSGID], msg[MSGTYPE], src,
-                                    proposal, msg[TOKEN])
-    elif msg[MSGTYPE] == MSG_PROPOSE:
-        print "Message is BATCHED: ", msg[BATCH]
-        if msg[BATCH]:
-            # XXX Go through proposals and cast them to Proposal
+    src = Peer(*msg[FLD_SRC])
+    if msg[FLD_TYPE] == MSG_HELO or msg[FLD_TYPE] == MSG_PING or msg[FLD_TYPE] == MSG_BYE \
+            or msg[FLD_TYPE] == MSG_UPDATE or msg[FLD_TYPE] == MSG_STATUS:
+        return Message(msg[FLD_ID], msg[FLD_TYPE], src)
+    elif msg[FLD_TYPE] == MSG_CLIENTREQUEST:
+        proposalclient = Peer(*msg[FLD_PROPOSAL][0])
+        proposal = Proposal(proposalclient, *msg[FLD_PROPOSAL][1:])
+        return ClientRequestMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+                                    proposal, msg[FLD_TOKEN])
+    elif msg[FLD_TYPE] == MSG_PROPOSE:
+        print "Message is BATCHED: ", msg[FLD_BATCH]
+        if msg[FLD_BATCH]:
             proposal = ProposalBatch([])
-            for p in msg[PROPOSAL][0]: #XXX Why is this 0?
+            for p in msg[FLD_PROPOSAL][0]: #XXX Why is this 0?
                 pclient = Peer(*p[0])
                 proposal.proposals.append(Proposal(pclient, *p[1:]))
         else:
-            proposalclient = Peer(*msg[PROPOSAL][0])
-            proposal = Proposal(proposalclient, *msg[PROPOSAL][1:])
+            proposalclient = Peer(*msg[FLD_PROPOSAL][0])
+            proposal = Proposal(proposalclient, *msg[FLD_PROPOSAL][1:])
         print "Proposal: ", proposal
-        return ProposeMessage(msg[MSGID], msg[MSGTYPE], src,
-                              msg[BALLOTNUMBER], msg[COMMANDNUMBER],
-                              proposal, msg[BATCH])
-    elif msg[MSGTYPE] == MSG_PROPOSE_ACCEPT or msg[MSGTYPE] == MSG_PROPOSE_REJECT:
-        return ProposeReplyMessage(msg[MSGID], msg[MSGTYPE], src,
-                                   msg[BALLOTNUMBER], msg[INRESPONSETO],
-                                   msg[COMMANDNUMBER])
-    elif msg[MSGTYPE] == MSG_PERFORM:
-        if msg[BATCH]:
-            # XXX Go through proposals and cast them to Proposal
+        return ProposeMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+                              msg[FLD_BALLOTNUMBER], msg[FLD_COMMANDNUMBER],
+                              proposal, msg[FLD_BATCH])
+    elif msg[FLD_TYPE] == MSG_PROPOSE_ACCEPT or msg[FLD_TYPE] == MSG_PROPOSE_REJECT:
+        return ProposeReplyMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+                                   msg[FLD_BALLOTNUMBER], msg[FLD_INRESPONSETO],
+                                   msg[FLD_COMMANDNUMBER])
+    elif msg[FLD_TYPE] == MSG_PERFORM:
+        if msg[FLD_BATCH]:
             proposal = ProposalBatch([])
-            for p in msg[PROPOSAL][0]:
+            for p in msg[FLD_PROPOSAL][0]: #XXX Why is this 0?
                 pclient = Peer(*p[0])
                 proposal.proposals.append(Proposal(pclient, *p[1:]))
         else:
-            proposalclient = Peer(*msg[PROPOSAL][0])
-            proposal = Proposal(proposalclient, *msg[PROPOSAL][1:])
-        return PerformMessage(msg[MSGID], msg[MSGTYPE], src,
-                              msg[COMMANDNUMBER], proposal, msg[BATCH])
-    elif msg[MSGTYPE] == MSG_PREPARE:
-        return PrepareMessage(msg[MSGID], msg[MSGTYPE], src, msg[BALLOTNUMBER])
-    elif msg[MSGTYPE] == MSG_PREPARE_ADOPTED or msg[MSGTYPE] == MSG_PREPARE_PREEMPTED:
+            proposalclient = Peer(*msg[FLD_PROPOSAL][0])
+            proposal = Proposal(proposalclient, *msg[FLD_PROPOSAL][1:])
+        return PerformMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+                              msg[FLD_COMMANDNUMBER], proposal, msg[FLD_BATCH])
+    elif msg[FLD_TYPE] == MSG_PREPARE:
+        return PrepareMessage(msg[FLD_ID], msg[FLD_TYPE], src, msg[FLD_BALLOTNUMBER])
+    elif msg[FLD_TYPE] == MSG_PREPARE_ADOPTED or msg[FLD_TYPE] == MSG_PREPARE_PREEMPTED:
         pvalueset = PValueSet()
-        for index,pvalue in msg[PVALUESET].iteritems():
+        for index,pvalue in msg[FLD_PVALUESET].iteritems():
             pvalueset.pvalues[Proposal(*index[1])] = PValue(*pvalue)
-        return PrepareReplyMessage(msg[MSGID], msg[MSGTYPE], src,
-                                   msg[BALLOTNUMBER], msg[INRESPONSETO],
+        return PrepareReplyMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+                                   msg[FLD_BALLOTNUMBER], msg[FLD_INRESPONSETO],
                                    pvalueset)
-    elif msg[MSGTYPE] == MSG_RESPONSE:
-        return Message(msg[MSGID], msg[MSGTYPE], src)
-    elif msg[MSGTYPE] == MSG_CLIENTREPLY:
-        return ClientReplyMessage(msg[MSGID], msg[MSGTYPE], src,
-                                  msg[REPLY], msg[REPLYCODE],
-                                  msg[INRESPONSETO])
-    elif msg[MSGTYPE] == MSG_INCCLIENTREQUEST:
-        proposalclient = Peer(*msg[PROPOSAL][0])
-        proposal = Proposal(proposalclient, *msg[PROPOSAL][1:])
-        return ClientRequestMessage(msg[MSGID], msg[MSGTYPE], src,
-                                    proposal, msg[TOKEN])
-    elif msg[MSGTYPE] == MSG_UPDATEREPLY:
-        for commandnumber,command in msg[DECISIONS].iteritems():
-            proposalclient = Peer(*msg[DECISIONS][commandnumber][0])
-            msg[DECISIONS][commandnumber] = Proposal(proposalclient, *msg[DECISIONS][commandnumber][1:])
-        return UpdateReplyMessage(msg[MSGID], msg[MSGTYPE], src, msg[DECISIONS])
-    elif msg[MSGTYPE] == MSG_GARBAGECOLLECT:
-        return GarbageCollectMessage(msg[MSGID], msg[MSGTYPE], src, msg[COMMANDNUMBER], msg[SNAPSHOT])
+    elif msg[FLD_TYPE] == MSG_RESPONSE:
+        return Message(msg[FLD_ID], msg[FLD_TYPE], src)
+    elif msg[FLD_TYPE] == MSG_CLIENTREPLY:
+        return ClientReplyMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+                                  msg[FLD_REPLY], msg[FLD_REPLYCODE],
+                                  msg[FLD_INRESPONSETO])
+    elif msg[FLD_TYPE] == MSG_INCCLIENTREQUEST:
+        proposalclient = Peer(*msg[FLD_PROPOSAL][0])
+        proposal = Proposal(proposalclient, *msg[FLD_PROPOSAL][1:])
+        return ClientRequestMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+                                    proposal, msg[FLD_TOKEN])
+    elif msg[FLD_TYPE] == MSG_UPDATEREPLY:
+        for commandnumber,command in msg[FLD_DECISIONS].iteritems():
+            proposalclient = Peer(*msg[FLD_DECISIONS][commandnumber][0])
+            msg[FLD_DECISIONS][commandnumber] = Proposal(proposalclient,
+                                                         *msg[FLD_DECISIONS][commandnumber][1:])
+        return UpdateReplyMessage(msg[FLD_ID], msg[FLD_TYPE], src, msg[FLD_DECISIONS])
+    elif msg[FLD_TYPE] == MSG_GARBAGECOLLECT:
+        return GarbageCollectMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+                                     msg[FLD_COMMANDNUMBER], msg[FLD_SNAPSHOT])

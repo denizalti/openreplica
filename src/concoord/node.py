@@ -422,7 +422,7 @@ class Node():
                 self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
                 return -1
             connection.send(message)
-            return message[MSGID]
+            return message[FLD_ID]
         elif group:
             assert not isresend, "performing a re-send to a group"
             ids = []
@@ -433,8 +433,8 @@ class Node():
                         self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
                         continue
                     connection.send(message)
-                    ids.append(message[MSGID])
-                    message[MSGID] = assignuniqueid()
+                    ids.append(message[FLD_ID])
+                    message[FLD_ID] = assignuniqueid()
             return ids
 
     def terminate_handler(self, signal, frame):

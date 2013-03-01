@@ -54,9 +54,9 @@ class Acceptor(Node):
             self.ballotnumber = msg.ballotnumber
             self.last_accept_msg_id = msg.id
             replymsg = create_message(MSG_PREPARE_ADOPTED, self.me,
-                                      {BALLOTNUMBER: self.ballotnumber,
-                                       INRESPONSETO: msg.ballotnumber,
-                                       PVALUESET: self.accepted.pvalues})
+                                      {FLD_BALLOTNUMBER: self.ballotnumber,
+                                       FLD_INRESPONSETO: msg.ballotnumber,
+                                       FLD_PVALUESET: self.accepted.pvalues})
         # or else it should be a precise duplicate of the last request
         # in this case we do nothing
         elif msg.ballotnumber == self.ballotnumber and \
@@ -69,9 +69,9 @@ class Acceptor(Node):
                                "ballotnumber %s ") % (str(msg.ballotnumber),))
             self.last_accept_msg_id = msg.id
             replymsg = create_message(MSG_PREPARE_PREEMPTED, self.me,
-                                      {BALLOTNUMBER: self.ballotnumber,
-                                       INRESPONSETO: msg.ballotnumber,
-                                       PVALUESET: self.accepted.pvalues})
+                                      {FLD_BALLOTNUMBER: self.ballotnumber,
+                                       FLD_INRESPONSETO: msg.ballotnumber,
+                                       FLD_PVALUESET: self.accepted.pvalues})
 
         self.logger.write("Paxos State", "prepare responding with %s"
                           % str(replymsg))
@@ -96,17 +96,17 @@ class Acceptor(Node):
             self.accepted.add(newpvalue)
             print "Added to accepted.."
             replymsg = create_message(MSG_PROPOSE_ACCEPT, self.me,
-                                      {BALLOTNUMBER: self.ballotnumber,
-                                       INRESPONSETO: msg.ballotnumber,
-                                       COMMANDNUMBER: msg.commandnumber})
+                                      {FLD_BALLOTNUMBER: self.ballotnumber,
+                                       FLD_INRESPONSETO: msg.ballotnumber,
+                                       FLD_COMMANDNUMBER: msg.commandnumber})
         else:
             self.logger.write("Paxos State",
                               "propose received with non-acceptable ballotnumber %s"
                               % str(msg.ballotnumber))
             replymsg = create_message(MSG_PROPOSE_REJECT, self.me, 
-                                      {BALLOTNUMBER: self.ballotnumber,
-                                       INRESPONSETO: msg.ballotnumber,
-                                       COMMANDNUMBER: msg.commandnumber})
+                                      {FLD_BALLOTNUMBER: self.ballotnumber,
+                                       FLD_INRESPONSETO: msg.ballotnumber,
+                                       FLD_COMMANDNUMBER: msg.commandnumber})
         self.send(replymsg,peer=msg.source)
 
     def msg_garbagecollect(self, conn, msg):
