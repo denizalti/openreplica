@@ -15,6 +15,7 @@ def assignuniqueid():
         msgidpool += 1
     return tempid
 
+# EDIT THIS
 def create_message(type, src, *args):
     m = {}
     m[MSGID] = assignuniqueid()

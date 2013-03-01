@@ -27,6 +27,7 @@ def load_configdict(configpath):
             config_dict[key] = getattr(configmodule, key)
     return config_dict
 
+#XXX Get rid of this
 class ConsoleLogger():
     def __init__(self, name):
         self.prefix = name
