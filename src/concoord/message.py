@@ -35,20 +35,36 @@ def parse_message(msg):
         return ClientRequestMessage(msg[MSGID], msg[MSGTYPE], src,
                                     proposal, msg[TOKEN])
     elif msg[MSGTYPE] == MSG_PROPOSE:
-        proposalclient = Peer(*msg[PROPOSAL][0])
-        proposal = Proposal(proposalclient, *msg[PROPOSAL][1:])
+        print "Message is BATCHED: ", msg[BATCH]
+        if msg[BATCH]:
+            # XXX Go through proposals and cast them to Proposal
+            proposal = ProposalBatch([])
+            for p in msg[PROPOSAL][0]: #XXX Why is this 0?
+                pclient = Peer(*p[0])
+                proposal.proposals.append(Proposal(pclient, *p[1:]))
+        else:
+            proposalclient = Peer(*msg[PROPOSAL][0])
+            proposal = Proposal(proposalclient, *msg[PROPOSAL][1:])
+        print "Proposal: ", proposal
         return ProposeMessage(msg[MSGID], msg[MSGTYPE], src,
                               msg[BALLOTNUMBER], msg[COMMANDNUMBER],
-                              proposal)
+                              proposal, msg[BATCH])
     elif msg[MSGTYPE] == MSG_PROPOSE_ACCEPT or msg[MSGTYPE] == MSG_PROPOSE_REJECT:
         return ProposeReplyMessage(msg[MSGID], msg[MSGTYPE], src,
                                    msg[BALLOTNUMBER], msg[INRESPONSETO],
                                    msg[COMMANDNUMBER])
     elif msg[MSGTYPE] == MSG_PERFORM:
-        proposalclient = Peer(*msg[PROPOSAL][0])
-        proposal = Proposal(proposalclient, *msg[PROPOSAL][1:])
+        if msg[BATCH]:
+            # XXX Go through proposals and cast them to Proposal
+            proposal = ProposalBatch([])
+            for p in msg[PROPOSAL][0]:
+                pclient = Peer(*p[0])
+                proposal.proposals.append(Proposal(pclient, *p[1:]))
+        else:
+            proposalclient = Peer(*msg[PROPOSAL][0])
+            proposal = Proposal(proposalclient, *msg[PROPOSAL][1:])
         return PerformMessage(msg[MSGID], msg[MSGTYPE], src,
-                              msg[COMMANDNUMBER], proposal)
+                              msg[COMMANDNUMBER], proposal, msg[BATCH])
     elif msg[MSGTYPE] == MSG_PREPARE:
         return PrepareMessage(msg[MSGID], msg[MSGTYPE], src, msg[BALLOTNUMBER])
     elif msg[MSGTYPE] == MSG_PREPARE_ADOPTED or msg[MSGTYPE] == MSG_PREPARE_PREEMPTED:
