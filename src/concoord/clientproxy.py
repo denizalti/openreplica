@@ -182,10 +182,10 @@ class ClientProxy():
                         if reply is None:
                             needreconfig = True
                         elif reply and reply.type == MSG_CLIENTREPLY:
-                            if reply.inresponseto not in self.pendingops:
-                                continue
-                            reqdesc = self.pendingops[reply.inresponseto]
                             with self.lock:
+                                if reply.inresponseto not in self.pendingops:
+                                    continue
+                                reqdesc = self.pendingops[reply.inresponseto]
                                 if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode == CR_UNBLOCK:
                                     # actionable response, wake up the thread
                                     if reply.replycode == CR_UNBLOCK:

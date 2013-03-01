@@ -215,9 +215,6 @@ class Replica(Node):
         
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
-            print "XXXXXXXXXXXXXXXXXXXXX: Sending result to client.............."
-            print "Command: ", command
-            print self.decisions
             if send_result_to_client and self.isleader and str(command.client) in self.clientpool.poolbypeer.keys():
                 self.send_reply_to_client(clientreplycode, givenresult, command)
 
