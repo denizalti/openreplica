@@ -6,6 +6,7 @@
 from collections import namedtuple, OrderedDict
 
 Proposal = namedtuple('Proposal', ['client', 'clientcommandnumber', 'command'])
+ProposalBatch = namedtuple('ProposalBatch', ['proposals'])
 
 Peer = namedtuple('Peer', ['addr', 'port', 'type'])
 def getpeerid(peer):
@@ -20,12 +21,12 @@ PrepareReplyMessage = namedtuple('PrepareReplyMessage', ['id', 'type', 'source',
                                                          'pvalueset'])
 ProposeMessage = namedtuple('ProposeMessage', ['id', 'type', 'source',
                                                'ballotnumber', 'commandnumber',
-                                               'proposal'])
+                                               'proposal', 'batch'])
 ProposeReplyMessage = namedtuple('ProposeReplyMessage', ['id', 'type', 'source',
                                                          'ballotnumber', 'inresponseto',
                                                          'commandnumber'])
 PerformMessage = namedtuple('PerformMessage', ['id', 'type', 'source',
-                                               'commandnumber', 'proposal'])
+                                               'commandnumber', 'proposal', 'batch'])
 
 ClientRequestMessage = namedtuple('ClientRequestMessage', ['id', 'type', 'source',
                                                            'command', 'token'])

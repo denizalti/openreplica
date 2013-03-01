@@ -96,6 +96,7 @@ class Acceptor(Node):
             self.ballotnumber = msg.ballotnumber
             newpvalue = PValue(msg.ballotnumber,msg.commandnumber,msg.proposal)
             self.accepted.add(newpvalue)
+            print "Added to accepted.."
             replymsg = create_message(MSG_PROPOSE_ACCEPT, self.me,
                                       (BALLOTNUMBER, self.ballotnumber),
                                       (INRESPONSETO, msg.ballotnumber),

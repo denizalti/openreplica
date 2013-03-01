@@ -310,24 +310,23 @@ class Node():
                 with self.pendingmetalock:
                     self.pendingmetacommands = set()
                 self.initiate_command()
-            try:
-                print len(self.receivedmessages)
-                (message_to_process,connection) = self.receivedmessages.pop(0)
-                if message_to_process.type == MSG_CLIENTREQUEST:
-                    # check if there are other client requests waiting
-                    msgconns = [(message_to_process,connection)]
-                    for m,c in self.receivedmessages:
-                        if m.type == MSG_CLIENTREQUEST:
-                            msgconns.append((m,c))
-                    if len(msgconns) > 1:
-                        self.process_messagelist(msgconns)
-                    else:
-                        self.process_message(message_to_process, connection)
+#            try:
+            (message_to_process,connection) = self.receivedmessages.pop(0)
+            if message_to_process.type == MSG_CLIENTREQUEST:
+                # check if there are other client requests waiting
+                msgconns = [(message_to_process,connection)]
+                for m,c in self.receivedmessages:
+                    if m.type == MSG_CLIENTREQUEST:
+                        msgconns.append((m,c))
+                if len(msgconns) > 1:
+                    print "BATCHING NOW!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                    self.process_messagelist(msgconns)
                 else:
                     self.process_message(message_to_process, connection)
-            except Exception as e:
-                print e
-                continue
+            else:
+                self.process_message(message_to_process, connection)
+#            except Exception as e:
+#                continue
         return
 
     def process_messagelist(self, msgconnlist):
