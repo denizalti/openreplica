@@ -27,49 +27,43 @@ def load_configdict(configpath):
             config_dict[key] = getattr(configmodule, key)
     return config_dict
 
+<<<<<<< HEAD
 #XXX Get rid of this
 class ConsoleLogger():
     def __init__(self, name):
+=======
+# A logger will always print to the screen. It can also log to a file or to a network log daemon.
+class Logger():
+    def __init__(self, name, filename=None, lognode=None):
+>>>>>>> 2f8b951ccb2db6fa49402864ebeaa13d974cc2ac
         self.prefix = name
-        self.logfile = open("concoord_log_"+name, 'w')
-
-    def write(self, cls, str):
-        print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())),
-                                    self.prefix + '_' + threading.current_thread().name,
-                                    cls, str)
-        self.logfile.write("%s [%s] %s: %s\n" % ((time.asctime(time.localtime(time.time())),
-                                                  self.prefix, cls, str)))
-        self.logfile.flush()
-
-    def close(self):
-        self.logfile.close()
-
-class NetworkLogger():
-    def __init__(self, name, lognode):
-        self.prefix = name
-        if lognode:
+        self.log = None
+        if filename is not None:
+            self.log = open("concoord_log_"+name, 'w')
+        if lognode is not None:
             logaddr,logport = lognode.split(':')
-        try:
-            self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-            self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-            self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
-            self.socket.connect((logaddr,int(logport)))
-        except:
-            return
+            try:
+                self.log = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+                self.log.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+                self.log.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
+                self.log.connect((logaddr,int(logport)))
+            except IOError:
+                self.log = None
+                return
 
-    def write(self, cls, str):
-        try:
-            print "%s [%s] %s: %s\n" % (time.asctime(time.localtime(time.time())),
-                                        self.prefix + '_' + threading.current_thread().name,
-                                        cls, str)
-            self.socket.send("[%s] %s: %s\n" % (self.prefix + '_' +
-                                                threading.current_thread().name,
-                                                cls, str))
-        except:
-            return
+    def write(self, cls, string):
+        print "[%s] %s %s: %s" % (self.prefix + '_' + threading.current_thread().name,
+                                  time.time(), # time.asctime(time.localtime(time.time())),
+                                  cls, string)
+        if self.log is not None:
+            self.log.write("[%s] %s %s: %s" % (self.prefix + '_' + threading.current_thread().name,
+                                               time.time(), # time.asctime(time.localtime(time.time())),
+                                               cls, string))
+            self.log.flush()
 
     def close(self):
-        self.socket.close()
+        if self.log is not None:
+            self.log.close()
 
 # PERFORMANCE MEASUREMENT UTILS
 timers = {}
