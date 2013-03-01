@@ -27,15 +27,9 @@ def load_configdict(configpath):
             config_dict[key] = getattr(configmodule, key)
     return config_dict
 
-<<<<<<< HEAD
-#XXX Get rid of this
-class ConsoleLogger():
-    def __init__(self, name):
-=======
 # A logger will always print to the screen. It can also log to a file or to a network log daemon.
 class Logger():
     def __init__(self, name, filename=None, lognode=None):
->>>>>>> 2f8b951ccb2db6fa49402864ebeaa13d974cc2ac
         self.prefix = name
         self.log = None
         if filename is not None:
