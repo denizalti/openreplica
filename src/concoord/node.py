@@ -311,9 +311,6 @@ class Node():
                     self.pendingmetacommands = set()
                 self.initiate_command()
 #            try:
-            print "******************************"
-            print self.receivedmessages
-            print "******************************"
             (message_to_process,connection) = self.receivedmessages.pop(0)
             if message_to_process.type == MSG_CLIENTREQUEST:
                 # check if there are other client requests waiting
@@ -327,9 +324,6 @@ class Node():
                         msgconns.append((m,c))
                 if len(msgconns) > 1:
                     print "BATCHING NOW!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-                    print "----------------------------------------"
-                    print self.receivedmessages
-                    print "----------------------------------------"
                     self.process_messagelist(msgconns)
                 else:
                     self.process_message(message_to_process, connection)
