@@ -36,7 +36,6 @@ def parse_message(msg):
         return ClientRequestMessage(msg[FLD_ID], msg[FLD_TYPE], src,
                                     proposal, msg[FLD_TOKEN])
     elif msg[FLD_TYPE] == MSG_PROPOSE:
-        print "Message is BATCHED: ", msg[FLD_BATCH]
         if msg[FLD_BATCH]:
             proposal = ProposalBatch([])
             for p in msg[FLD_PROPOSAL][0]: #XXX Why is this 0?

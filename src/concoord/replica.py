@@ -787,7 +787,10 @@ class Replica(Node):
                                               FLD_REPLYCODE: CR_REJECTED,
                                               FLD_INRESPONSETO: msg.command.clientcommandnumber})
                 conn.send(clientreply)
-        except AttributeError:
+        except AttributeError as e:
+            print "#################################################"
+            print e
+            print "#################################################"
             pass
         # Check to see if Leader
         self.update_leader()
@@ -815,19 +818,7 @@ class Replica(Node):
         if self.type == NODE_NAMESERVER:
             self.logger.write("Error", "NAMESERVER got a CLIENTREQUEST")
             return
-        try:
-            for (msg,conn) in msgconnlist:
-                # XXX Make this more explicit and correct!
-                if self.token and msg.token != self.token:
-                    self.logger.write("Error", "Security Token mismatch.")
-                    clientreply = create_message(MSG_CLIENTREPLY, self.me,
-                                                 {FLD_REPLY: '',
-                                                  FLD_REPLYCODE: CR_REJECTED,
-                                                  FLD_INRESPONSETO: msg.command.clientcommandnumber})
-                    conn.send(clientreply)
-                    msgconnlist.remove((msg,conn))
-        except AttributeError:
-            pass
+
         # Check to see if Leader
         self.update_leader()
         if not self.isleader:
@@ -849,8 +840,17 @@ class Replica(Node):
         if self.isleader:
             givencommands = []
             for (msg,conn) in msgconnlist:
-                self.clientpool.add_connection_to_peer(msg.source, conn)
-                givencommands.append(msg.command)
+                if self.token and msg.token != self.token:
+                    self.logger.write("Error", "Security Token mismatch.")
+                    clientreply = create_message(MSG_CLIENTREPLY, self.me,
+                                                 {FLD_REPLY: '',
+                                                  FLD_REPLYCODE: CR_REJECTED,
+                                                  FLD_INRESPONSETO: msg.command.clientcommandnumber})
+                    conn.send(clientreply)
+                else:
+                    self.clientpool.add_connection_to_peer(msg.source, conn)
+                    givencommands.append(msg.command)
+
             if self.leader_initializing:
                 self.handle_client_command_batch(msg.command, prepare=True)
             else:

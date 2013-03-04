@@ -17,17 +17,20 @@ parser.add_option("-b", "--boot", action="store", dest="bootstrap",
                   help="address:port:type triple for the bootstrap peer")
 parser.add_option("-n", "--num", action="store", dest="setting",
                   help="x,y tuple for the number of replicas and acceptors")
+parser.add_option("-o", "--op", action="store", dest="operations", type='int',
+                  default=10000, help="number of operations")
+
 (options, args) = parser.parse_args()
 
 def test_loop():
   proxy = Test(options.bootstrap)
-  for i in range(10000):
-    if i == 1000:
+  for i in range(options.operations):
+    if i == (options.operations*0.1):
       starttime = time.time()
     proxy.getvalue()
   
   stoptime = time.time()
-  latency = float(stoptime-starttime)/9000
+  latency = float(stoptime-starttime)/(options.operations*0.9)
   print "*****************************************"
   print "AVERAGE CLIENT LATENCY: %f secs" % latency 
   if options.setting:
