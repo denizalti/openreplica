@@ -706,7 +706,6 @@ class Replica(Node):
         -- if it has been executed send the result
         -- if it has not been executed yet send INPROGRESS
         - if this request has not been received before initiate a Paxos round for the command"""
-        print "entered handle_client_command_batch"
         if not self.isleader:
             self.logger.write("Error",
                               "Shouldn't have come here: Not Leader.")
@@ -728,7 +727,6 @@ class Replica(Node):
                                                     givencommand.clientcommandnumber)):
                 self.logger.write("State", "Client request received previously:")
                 # Check if the request has been executed
-                # executed commands: <command:(replycode,commandresult,unblocked{})>
                 if givencommand in self.executed:
                     # send REPLY
                     clientreply = create_message(MSG_CLIENTREPLY, self.me,
@@ -737,9 +735,6 @@ class Replica(Node):
                                                   FLD_INRESPONSETO: givencommand.clientcommandnumber})
                     self.logger.write("State", "Clientreply: %s" % str(clientreply))
                 # Check if the request is somewhere in the Paxos pipeline
-                # decided commands: <commandnumber:command>
-                # commands that are proposed: <commandnumber:command>
-                # commands that are received, not yet proposed: <commandnumber:command>
                 elif givencommand in self.pendingcommandset or givencommand in self.proposalset \
                         or givencommand in self.decisionset:
                     # send INPROGRESS
@@ -769,7 +764,6 @@ class Replica(Node):
             self.initiate_command(givencommands[0])
         else: # len(givencommands) > 1:
             self.initiate_command(ProposalBatch(givencommands))
-        print "left handle_client_command_batch"
 
     def msg_clientrequest(self, conn, msg):
         """called holding self.lock
