@@ -256,13 +256,8 @@ class Replica(Node):
         
         while self.decisions.has_key(self.nexttoexecute):
             requestedcommand = self.decisions[self.nexttoexecute]
-            # requestedcommand can be a batch
-            #XXX Add a bit to make this obvious
-            print requestedcommand
             if isinstance(requestedcommand, ProposalBatch):
                 for command in requestedcommand.proposals:
-                    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    print command
                     self.execute_command(command, msg, designated)
             else:
                 self.execute_command(requestedcommand, msg, designated)
@@ -711,6 +706,7 @@ class Replica(Node):
         -- if it has been executed send the result
         -- if it has not been executed yet send INPROGRESS
         - if this request has not been received before initiate a Paxos round for the command"""
+        print "entered handle_client_command_batch"
         if not self.isleader:
             self.logger.write("Error",
                               "Shouldn't have come here: Not Leader.")
@@ -764,15 +760,16 @@ class Replica(Node):
                 # The caller haven't received this command before
                 self.receivedclientrequests[(givencommand.client,
                                              givencommand.clientcommandnumber)] = givencommand
-                self.logger.write("State", "Initiating a new command. Leader is active: %s" % self.active)
-            
-            # Check if batching is still required
-            if len(givencommands) == 0:
-                return
-            elif len(givencommands) == 1:
-                self.initiate_command(givencommands[0])
-            else: # len(givencommands) > 1:
-                self.initiate_command(ProposalBatch(givencommands))
+        
+        self.logger.write("State", "Initiating a new command. Leader is active: %s" % self.active)    
+        # Check if batching is still required
+        if len(givencommands) == 0:
+            return
+        elif len(givencommands) == 1:
+            self.initiate_command(givencommands[0])
+        else: # len(givencommands) > 1:
+            self.initiate_command(ProposalBatch(givencommands))
+        print "left handle_client_command_batch"
 
     def msg_clientrequest(self, conn, msg):
         """called holding self.lock
@@ -820,6 +817,7 @@ class Replica(Node):
             return
         try:
             for (msg,conn) in msgconnlist:
+                # XXX Make this more explicit and correct!
                 if self.token and msg.token != self.token:
                     self.logger.write("Error", "Security Token mismatch.")
                     clientreply = create_message(MSG_CLIENTREPLY, self.me,
@@ -844,7 +842,8 @@ class Replica(Node):
                     conn.send(clientreply)
                     msgconnlist.remove((msg,conn))
                 return
-        self.update_leader()
+            else:
+                self.update_leader()
         # Leader should accept a request even if it's not ready as this
         # way it will make itself ready during the prepare stage.
         if self.isleader:
