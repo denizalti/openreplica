@@ -38,13 +38,12 @@ def parse_message(msg):
     elif msg[FLD_TYPE] == MSG_PROPOSE:
         if msg[FLD_BATCH]:
             proposal = ProposalBatch([])
-            for p in msg[FLD_PROPOSAL][0]: #XXX Why is this 0?
+            for p in msg[FLD_PROPOSAL][0]:
                 pclient = Peer(*p[0])
                 proposal.proposals.append(Proposal(pclient, *p[1:]))
         else:
             proposalclient = Peer(*msg[FLD_PROPOSAL][0])
             proposal = Proposal(proposalclient, *msg[FLD_PROPOSAL][1:])
-        print "Proposal: ", proposal
         return ProposeMessage(msg[FLD_ID], msg[FLD_TYPE], src,
                               msg[FLD_BALLOTNUMBER], msg[FLD_COMMANDNUMBER],
                               proposal, msg[FLD_BATCH])
@@ -55,7 +54,7 @@ def parse_message(msg):
     elif msg[FLD_TYPE] == MSG_PERFORM:
         if msg[FLD_BATCH]:
             proposal = ProposalBatch([])
-            for p in msg[FLD_PROPOSAL][0]: #XXX Why is this 0?
+            for p in msg[FLD_PROPOSAL][0]:
                 pclient = Peer(*p[0])
                 proposal.proposals.append(Proposal(pclient, *p[1:]))
         else:
