@@ -311,15 +311,25 @@ class Node():
                     self.pendingmetacommands = set()
                 self.initiate_command()
 #            try:
+            print "******************************"
+            print self.receivedmessages
+            print "******************************"
             (message_to_process,connection) = self.receivedmessages.pop(0)
             if message_to_process.type == MSG_CLIENTREQUEST:
                 # check if there are other client requests waiting
                 msgconns = [(message_to_process,connection)]
                 for m,c in self.receivedmessages:
                     if m.type == MSG_CLIENTREQUEST:
+                        # decrement the semaphore count
+                        self.receivedmessages_semaphore.acquire()
+                        # remove the m,c pair from receivedmessages
+                        self.receivedmessages.remove((m,c))
                         msgconns.append((m,c))
                 if len(msgconns) > 1:
                     print "BATCHING NOW!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                    print "----------------------------------------"
+                    print self.receivedmessages
+                    print "----------------------------------------"
                     self.process_messagelist(msgconns)
                 else:
                     self.process_message(message_to_process, connection)
@@ -332,6 +342,7 @@ class Node():
     def process_messagelist(self, msgconnlist):
         """Processes given message connection pairs"""
         with self.lock:
+            #XXX batched
             self.msg_clientrequest_batch(msgconnlist)
         return True
 
