@@ -107,7 +107,7 @@ class Node():
             self.logger = Logger("%s-%s" % (node_names[self.type],self.id), lognode=LOGGERNODE)
         else:
             self.logger = NoneLogger()
-        self.logger.write("State", "Connected.")
+        if self.debug: self.logger.write("State", "Connected.")
         # Initialize groups
         # Keeps {peer:outofreachcount}
         self.replicas = {}
@@ -143,7 +143,7 @@ class Node():
                 try:
                     answers = dns.resolver.query('_concoord._tcp.'+bootstrap, 'SRV')
                 except (dns.resolver.NXDOMAIN, dns.exception.Timeout):
-                    self.logger.write("DNS Error", "Cannot resolve %s" % str(bootstrap))
+                    if self.debug: self.logger.write("DNS Error", "Cannot resolve %s" % str(bootstrap))
                 for rdata in answers:
                     for peer in self._getipportpairs(str(rdata.target), rdata.port):
                         self.bootstraplist.append(peer)
@@ -154,7 +154,7 @@ class Node():
         while tries < BOOTSTRAPCONNECTTIMEOUT and keeptrying:
             for bootpeer in self.bootstraplist:
                 try:
-                    self.logger.write("State", "trying to connect to bootstrap: %s" % str(bootpeer))
+                    if self.debug: self.logger.write("State", "trying to connect to bootstrap: %s" % str(bootpeer))
                     helomessage = create_message(MSG_HELO, self.me)
                     success = self.send(helomessage, peer=bootpeer)
                     if success < 0:
@@ -163,7 +163,7 @@ class Node():
                     keeptrying = False
                     break
                 except socket.error, e:
-                    self.logger.write("Connection Error", "cannot connect to bootstrap: %s" % str(e))
+                    if self.debug: self.logger.write("Connection Error", "cannot connect to bootstrap: %s" % str(e))
                     print e
                     tries += 1
                     continue
@@ -191,11 +191,11 @@ class Node():
             # Go through all peers in the view
             for gtype,group in self.groups.iteritems():
                 for peer in group.iterkeys():
-                    self.logger.write("State", "Sending PING to %s" % str(peer))
+                    if self.debug: self.logger.write("State", "Sending PING to %s" % str(peer))
                     pingmessage = create_message(MSG_PING, self.me)
                     success = self.send(pingmessage, peer=peer)
                     if success < 0:
-                        self.logger.write("State", "Neighbor not responding, marking the neighbor")
+                        if self.debug: self.logger.write("State", "Neighbor not responding, marking the neighbor")
                         self.groups[peer.type][peer] += 1
                     else:
                         self.groups[peer.type][peer] = 0
@@ -261,7 +261,7 @@ class Node():
                 for s in inputready:
                     if s == self.socket:
                         clientsock,clientaddr = self.socket.accept()
-                        self.logger.write("State", "accepted a connection from address %s" % str(clientaddr))
+                        if self.debug: self.logger.write("State", "accepted a connection from address %s" % str(clientaddr))
                         nascentset.append((clientsock,time.time()))
                         success = True
                     else:
@@ -285,10 +285,10 @@ class Node():
         if message == None:
             return False
         else:
-            self.logger.write("State", "received %s" % str(message))
+            if self.debug: self.logger.write("State", "received %s" % str(message))
             if message.type == MSG_STATUS:
                 if self.type == NODE_REPLICA:
-                    self.logger.write("State", "Answering status message %s" % self.__str__())
+                    if self.debug: self.logger.write("State", "Answering status message %s" % self.__str__())
                     messagestr = pickle.dumps(self.__str__())
                     message = struct.pack("I", len(messagestr)) + messagestr
                     clientsock.send(message)
@@ -352,9 +352,9 @@ class Node():
         mname = "msg_%s" % msg_names[message.type].lower()
         try:
             method = getattr(self, mname)
-            self.logger.write("State", "invoking method: %s" % mname)
+            if self.debug: self.logger.write("State", "invoking method: %s" % mname)
         except AttributeError:
-            self.logger.write("Method Error", "method not supported: %s" % mname)
+            if self.debug: self.logger.write("Method Error", "method not supported: %s" % mname)
             return False
         with self.lock:
             method(connection, message)
@@ -371,7 +371,7 @@ class Node():
             self.connecttobootstrap()
         else:
             self.groups[NODE_REPLICA].add(msg.source)
-            self.logger.write("State", "connected to bootstrap: %s:%d" % (msg.source.addr,msg.source.port))
+            if self.debug: self.logger.write("State", "connected to bootstrap: %s:%d" % (msg.source.addr,msg.source.port))
 
     def msg_ping(self, conn, msg):
         return
@@ -400,7 +400,7 @@ class Node():
                     
     def cmd_state(self, args):
         """prints connectivity state of the corresponding Node."""
-        self.logger.write("State", "\n%s\n" % (self.statestr()))
+        if self.debug: self.logger.write("State", "\n%s\n" % (self.statestr()))
 
     def get_user_input_from_shell(self):
         """Shell loop that accepts inputs from the command prompt and 
@@ -430,7 +430,7 @@ class Node():
         if peer:
             connection = self.connectionpool.get_connection_by_peer(peer)
             if connection == None:
-                self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
+                if self.debug: self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
                 return -1
             connection.send(message)
             return message[FLD_ID]
@@ -441,7 +441,7 @@ class Node():
                 if peer != self.me:
                     connection = self.connectionpool.get_connection_by_peer(peer)
                     if connection == None:
-                        self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
+                        if self.debug: self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
                         continue
                     connection.send(message)
                     ids.append(message[FLD_ID])
@@ -450,7 +450,7 @@ class Node():
 
     def terminate_handler(self, signal, frame):
         print self.me, "exiting.."
-        self.logger.write("State", "exiting...")
+        if self.debug: self.logger.write("State", "exiting...")
         self.logger.close()
         sys.stdout.flush()
         sys.stderr.flush()

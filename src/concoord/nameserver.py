@@ -45,7 +45,7 @@ class Nameserver(Replica):
         if servicetype:
             self.servicetype = int(servicetype)
         else:
-            self.logger.write("Initialization Error", "Service type of the nameserver is required. Use -t option.")
+            if self.debug: self.logger.write("Initialization Error", "Service type of the nameserver is required. Use -t option.")
             self._graceexit(1)
         self.ipconverter = '.ipaddr.'+domain+'.'
         try:
@@ -56,14 +56,14 @@ class Nameserver(Replica):
             print self.mydomain
             self.mysrvdomain = dns.name.Name((SRVNAME+domain+'.').split('.'))
         except dns.name.EmptyLabel:
-            self.logger.write("Initialization Error", "A DNS name is required. Use -n option.")
+            if self.debug: self.logger.write("Initialization Error", "A DNS name is required. Use -n option.")
             self._graceexit(1)
             
         if self.servicetype == NS_SLAVE:
             if master:
                 self.master = master
             else:
-                self.logger.write("Initialization Error", "A master is required. Use -m option.")
+                if self.debug: self.logger.write("Initialization Error", "A master is required. Use -m option.")
                 self._graceexit(1)
         elif self.servicetype == NS_ROUTE53:
             try:
@@ -86,10 +86,10 @@ class Nameserver(Replica):
             try:
                 self.udpsocket.bind((self.addr,self.udpport))
             except socket.error as e:
-                self.logger.write("DNS Error", "Can't bind to UDP port 53: %s" % str(e))
+                if self.debug: self.logger.write("DNS Error", "Can't bind to UDP port 53: %s" % str(e))
                 self._graceexit(1)
         else:
-            self.logger.write("Initialization Error", "Servicetype is required. Use -t option.")
+            if self.debug: self.logger.write("Initialization Error", "Servicetype is required. Use -t option.")
             self._graceexit(1)
             
         # When the nameserver starts the revision number is 00 for that day
@@ -108,10 +108,10 @@ class Nameserver(Replica):
             try:
                 inputready,outputready,exceptready = select.select([self.udpsocket],[],[self.udpsocket])
                 for s in exceptready:
-                    self.logger.write("DNS Error", s)
+                    if self.debug: self.logger.write("DNS Error", s)
                 for s in inputready:
                     data,clientaddr = self.udpsocket.recvfrom(UDPMAXLEN)
-                    self.logger.write("DNS State", "received a message from address %s" % str(clientaddr))
+                    if self.debug: self.logger.write("DNS State", "received a message from address %s" % str(clientaddr))
                     self.handle_query(data,clientaddr)
             except KeyboardInterrupt, EOFError:
                 os._exit(0)
@@ -156,10 +156,10 @@ class Nameserver(Replica):
         query = dns.message.from_wire(data)
         response = dns.message.make_response(query)
         for question in query.question:
-            self.logger.write("DNS State", "Received Query for %s\n" % question.name)
-            self.logger.write("DNS State", "Mydomainname: %s Questionname: %s" % (self.mydomain, str(question.name)))
+            if self.debug: self.logger.write("DNS State", "Received Query for %s\n" % question.name)
+            if self.debug: self.logger.write("DNS State", "Mydomainname: %s Questionname: %s" % (self.mydomain, str(question.name)))
             if self.should_answer(question):
-                self.logger.write("DNS State", "Query for my domain: %s" % str(question))
+                if self.debug: self.logger.write("DNS State", "Query for my domain: %s" % str(question))
                 flagstr = 'QR AA' # response, authoritative
                 answerstr = ''
                 if question.rdtype == dns.rdatatype.AAAA:
@@ -188,13 +188,13 @@ class Nameserver(Replica):
                                                    authority='',additional='')
                 response = dns.message.from_text(responsestr)
             else:
-                self.logger.write("DNS State", "UNSUPPORTED QUERY, %s" %str(question))
+                if self.debug: self.logger.write("DNS State", "UNSUPPORTED QUERY, %s" %str(question))
                 return
-        self.logger.write("DNS State", "RESPONSE:\n%s\n---\n" % str(response))
+        if self.debug: self.logger.write("DNS State", "RESPONSE:\n%s\n---\n" % str(response))
         try:
             self.udpsocket.sendto(response.to_wire(), addr)
         except:
-            self.logger.write("DNS Error", "Cannot send RESPONSE:\n%s\n---\n" % str(response))
+            if self.debug: self.logger.write("DNS Error", "Cannot send RESPONSE:\n%s\n---\n" % str(response))
 
     def create_response(self, id, opcode=0, rcode=0, flags='', question='', answer='', authority='', additional=''):
         answerstr     = ';ANSWER\n'     + answer     + '\n' if answer != '' else ''
@@ -253,7 +253,7 @@ class Nameserver(Replica):
 
     def _add_node(self, nodetype, nodename):
         nodetype = int(nodetype)
-        self.logger.write("State", "Adding node: %s %s" % (node_names[nodetype], nodename))
+        if self.debug: self.logger.write("State", "Adding node: %s %s" % (node_names[nodetype], nodename))
         ipaddr,port = nodename.split(":")
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype].add(nodepeer)
@@ -265,7 +265,7 @@ class Nameserver(Replica):
         
     def _del_node(self, nodetype, nodename):
         nodetype = int(nodetype)
-        self.logger.write("State", "Deleting node: %s %s" % (node_names[nodetype], nodename))
+        if self.debug: self.logger.write("State", "Deleting node: %s %s" % (node_names[nodetype], nodename))
         ipaddr,port = nodename.split(":")
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype].remove(nodepeer)
@@ -303,7 +303,7 @@ class Nameserver(Replica):
         return strings
 
     def updateroute53(self):
-        self.logger.write("State", "Updating Route 53")
+        if self.debug: self.logger.write("State", "Updating Route 53")
         # type A: update only if added node is a Replica
         rtype = 'A'
         newvalue = self.route53_a()
@@ -328,7 +328,7 @@ class Nameserver(Replica):
         return values
 
     def updatemaster(self, node, add=True):
-        self.logger.write("State", "Updating Master at %s" % self.master)
+        if self.debug: self.logger.write("State", "Updating Master at %s" % self.master)
         nscoord = NameserverCoord(self.master)
         nodes = {}
         for nodetype,group in self.groups.iteritems():
@@ -339,14 +339,14 @@ class Nameserver(Replica):
         nscoord.updatesubdomain(str(self.mydomain), nodes)
             
     def updaterevision(self):
-        self.logger.write("State", "Updating Revision -- from: %s" % self.revision)
+        if self.debug: self.logger.write("State", "Updating Revision -- from: %s" % self.revision)
         if strftime("%Y%m%d", gmtime()) in self.revision:
             rno = int(self.revision[-2]+self.revision[-1])
             rno += 1
             self.revision = strftime("%Y%m%d", gmtime())+str(rno).zfill(2)
         else:
             self.revision = strftime("%Y%m%d", gmtime())+str(0).zfill(2)
-        self.logger.write("State", "Updating Revision -- to: %s" % self.revision)
+        if self.debug: self.logger.write("State", "Updating Revision -- to: %s" % self.revision)
 
 def main():
     nameservernode = Nameserver(instantiateobj=True)
