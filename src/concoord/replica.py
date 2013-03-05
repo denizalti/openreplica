@@ -306,7 +306,6 @@ class Replica(Node):
         if givenproposal:
             # Add command to pending commands
             givencommandnumber = self.find_commandnumber()
-            # XXX Proposals are being added one-by-one here, they should be added as a batch
             self.add_to_pendingcommands(givencommandnumber, givenproposal)
         # Try issuing command
         # Pick the smallest pendingcommandnumber
