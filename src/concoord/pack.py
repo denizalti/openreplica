@@ -3,7 +3,7 @@
 @note: Tuples used by ConCoord
 @copyright: See LICENSE
 """
-from collections import namedtuple, OrderedDict
+from collections import namedtuple
 
 Proposal = namedtuple('Proposal', ['client', 'clientcommandnumber', 'command'])
 ProposalBatch = namedtuple('ProposalBatch', ['proposals'])
