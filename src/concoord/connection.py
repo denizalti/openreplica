@@ -120,7 +120,7 @@ class Connection():
                 lstr = self.receive_n_bytes(4)
                 msg_length = struct.unpack("I", lstr[0:4])[0]
                 msgstr = self.receive_n_bytes(msg_length)
-                msgdict = msgpack.unpackb(msgstr)
+                msgdict = msgpack.unpackb(msgstr, use_list=False)
                 return parse_message(msgdict)
             except IOError as inst:           
                 return None

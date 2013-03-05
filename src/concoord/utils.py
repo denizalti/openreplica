@@ -28,6 +28,13 @@ def load_configdict(configpath):
     return config_dict
 
 # A logger will always print to the screen. It can also log to a file or to a network log daemon.
+class NoneLogger():
+    def write(self, cls, string):
+        return
+
+    def close(self):
+        return
+    
 class Logger():
     def __init__(self, name, filename=None, lognode=None):
         self.prefix = name

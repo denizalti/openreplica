@@ -103,7 +103,10 @@ class Node():
                 LOGGERNODE=logger
             else:
                 LOGGERNODE = None
-        self.logger = Logger("%s-%s" % (node_names[self.type],self.id), lognode=LOGGERNODE)
+        if self.debug:
+            self.logger = Logger("%s-%s" % (node_names[self.type],self.id), lognode=LOGGERNODE)
+        else:
+            self.logger = NoneLogger()
         self.logger.write("State", "Connected.")
         # Initialize groups
         # Keeps {peer:outofreachcount}
