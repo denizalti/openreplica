@@ -29,7 +29,8 @@ PerformMessage = namedtuple('PerformMessage', ['id', 'type', 'source',
                                                'commandnumber', 'proposal', 'batch'])
 
 ClientRequestMessage = namedtuple('ClientRequestMessage', ['id', 'type', 'source',
-                                                           'command', 'token'])
+                                                           'command', 'token',
+                                                           'sendcount'])
 
 ClientReplyMessage = namedtuple('ClientReplyMessage', ['id', 'type', 'source',
                                                        'reply', 'replycode', 'inresponseto'])

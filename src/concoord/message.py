@@ -34,11 +34,13 @@ def parse_message(msg):
         proposalclient = Peer(*msg[FLD_PROPOSAL][0])
         proposal = Proposal(proposalclient, *msg[FLD_PROPOSAL][1:])
         return ClientRequestMessage(msg[FLD_ID], msg[FLD_TYPE], src,
-                                    proposal, msg[FLD_TOKEN])
+                                    proposal, msg[FLD_TOKEN], msg[FLD_SENDCOUNT])
     elif msg[FLD_TYPE] == MSG_PROPOSE:
         if msg[FLD_BATCH]:
             proposal = ProposalBatch([])
+            print msg[FLD_PROPOSAL][0]
             for p in msg[FLD_PROPOSAL][0]:
+                print "One proposal: ", p
                 pclient = Peer(*p[0])
                 proposal.proposals.append(Proposal(pclient, *p[1:]))
         else:

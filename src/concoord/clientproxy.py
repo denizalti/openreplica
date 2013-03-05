@@ -31,12 +31,14 @@ class ReqDesc:
             clientproxy.commandnumber += 1
         self.cm = create_message(MSG_CLIENTREQUEST, clientproxy.me,
                                  {FLD_PROPOSAL: Proposal(clientproxy.me, self.mynumber, args), 
-                                  FLD_TOKEN: token})
+                                  FLD_TOKEN: token,
+                                  FLD_SENDCOUNT: 0})
         self.starttime = time.time()
         self.replyarrived = Condition(clientproxy.lock)
         self.lastreplycr = -1
         self.replyvalid = False
         self.reply = None
+        self.sendcount = 0
 
     def __str__(self):
         return "Request Descriptor for cmd %d\nMessage %s\nReply %s" % (self.mynumber, str(self.cm), self.reply)
@@ -206,7 +208,9 @@ class ClientProxy():
 
                     # check if we need to re-send any pending operations
                     for commandno,reqdesc in self.pendingops.iteritems():
-                        if not reqdesc.replyvalid and reqdesc.lastreplycr != CR_BLOCK: # XXX CR_INPROGRESS?
+                        if not reqdesc.replyvalid and reqdesc.lastreplycr != CR_BLOCK:
+                            reqdesc.sendcount += 1
+                            reqdesc.cm[FLD_SENDCOUNT] = reqdesc.sendcount
                             if not self.conn.send(reqdesc.cm):
                                 needreconfig = True
                             continue
@@ -216,7 +220,3 @@ class ClientProxy():
             
     def _graceexit(self):
         return
-  
-
-
-    
