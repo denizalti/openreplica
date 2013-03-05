@@ -293,7 +293,7 @@ class Replica(Node):
             if self.nexttoexecute > WINDOW:
                 # XXX Needs fix for batching
                 self.logger.write("State", "performcore %d" % (self.nexttoexecute-WINDOW))
-                #self.performcore(self.decisions[self.nexttoexecute-WINDOW], True, designated=designated)
+                self.performcore(self.decisions[self.nexttoexecute-WINDOW], True, designated=designated)
             self.logger.write("State", "performcore %s" % str(requestedcommand))
             self.performcore(requestedcommand, designated=designated)
             
