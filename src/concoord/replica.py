@@ -306,7 +306,7 @@ class Replica(Node):
         if givenproposal:
             # Add command to pending commands
             givencommandnumber = self.find_commandnumber()
-            print givenproposal
+            # XXX Proposals are being added one-by-one here, they should be added as a batch
             self.add_to_pendingcommands(givencommandnumber, givenproposal)
         # Try issuing command
         # Pick the smallest pendingcommandnumber
@@ -644,7 +644,7 @@ class Replica(Node):
             self.pendingcommandset.remove(value)
         del self.pendingcommands[key]
 
-    def handle_client_command(self, givencommand, prepare=False):
+    def handle_client_command(self, givencommand, sendcount=1, prepare=False):
         """handle received command
         - if it has been received before check if it has been executed
         -- if it has been executed send the result
@@ -664,7 +664,7 @@ class Replica(Node):
                 self.logger.write("Error", "Can't create connection to client: %s - Result not sent." % str(givencommand.client))
             return
         
-        if self.receivedclientrequests.has_key((givencommand.client, givencommand.clientcommandnumber)):
+        if sendcount > 0 and self.receivedclientrequests.has_key((givencommand.client, givencommand.clientcommandnumber)):
             self.logger.write("State", "Client request received previously:")
             self.logger.write("State", "Client: %s Commandnumber: %s\nAcceptors: %s"
                               % (str(givencommand.client),
@@ -700,7 +700,7 @@ class Replica(Node):
             self.logger.write("State", "Initiating a new command. Leader is active: %s" % self.active)
             self.initiate_command(givencommand)
 
-    def handle_client_command_batch(self, givencommands, prepare=False):
+    def handle_client_command_batch(self, givencommandscounts, prepare=False):
         """handle received command
         - if it has been received before check if it has been executed
         -- if it has been executed send the result
@@ -709,7 +709,7 @@ class Replica(Node):
         if not self.isleader:
             self.logger.write("Error",
                               "Shouldn't have come here: Not Leader.")
-            for givencommand in givencommands:
+            for (givencommand,sendcount) in givencommandscounts:
                 clientreply = create_message(MSG_CLIENTREPLY, self.me,
                                              {FLD_REPLY: '',
                                               FLD_REPLYCODE: CR_REJECTED,
@@ -722,7 +722,14 @@ class Replica(Node):
                                       % str(givencommand.client))
             return
 
-        for givencommand in givencommands:
+        commandstohandle = []
+        for (givencommand,sendcount) in givencommandscounts:
+            if sendcount == 0:
+                # The caller haven't received this command before
+                self.receivedclientrequests[(givencommand.client,
+                                             givencommand.clientcommandnumber)] = givencommand
+                commandstohandle.append(givencommand)
+                continue
             if self.receivedclientrequests.has_key((givencommand.client,
                                                     givencommand.clientcommandnumber)):
                 self.logger.write("State", "Client request received previously:")
@@ -745,25 +752,20 @@ class Replica(Node):
                     self.logger.write("State", "Clientreply: %s\nAcceptors: %s"
                                       % (str(clientreply),str(self.groups[NODE_ACCEPTOR])))
                 conn = self.clientpool.get_connection_by_peer(givencommand.client)
-                givencommands.remove(givencommand)
                 if conn is not None:
                     conn.send(clientreply)
                 else:
                     self.logger.write("Error",
                                       "Can't create connection to client: %s" % str(givencommand.client))
-            else:
-                # The caller haven't received this command before
-                self.receivedclientrequests[(givencommand.client,
-                                             givencommand.clientcommandnumber)] = givencommand
         
         self.logger.write("State", "Initiating a new command. Leader is active: %s" % self.active)    
         # Check if batching is still required
-        if len(givencommands) == 0:
+        if len(commandstohandle) == 0:
             return
-        elif len(givencommands) == 1:
-            self.initiate_command(givencommands[0])
+        elif len(commandstohandle) == 1:
+            self.initiate_command(commandstohandle[0])
         else: # len(givencommands) > 1:
-            self.initiate_command(ProposalBatch(givencommands))
+            self.initiate_command(ProposalBatch(commandstohandle))
 
     def msg_clientrequest(self, conn, msg):
         """called holding self.lock
@@ -802,9 +804,9 @@ class Replica(Node):
         if self.isleader:
             self.clientpool.add_connection_to_peer(msg.source, conn)
             if self.leader_initializing:
-                self.handle_client_command(msg.command, prepare=True)
+                self.handle_client_command(msg.command, msg.sendcount, prepare=True)
             else:
-                self.handle_client_command(msg.command)
+                self.handle_client_command(msg.command, msg.sendcount)
 
     def msg_clientrequest_batch(self, msgconnlist):
         """called holding self.lock
@@ -843,10 +845,10 @@ class Replica(Node):
                     conn.send(clientreply)
                 else:
                     self.clientpool.add_connection_to_peer(msg.source, conn)
-                    givencommands.append(msg.command)
+                    givencommands.append((msg.command,msg.sendcount))
 
             if self.leader_initializing:
-                self.handle_client_command_batch(msg.command, prepare=True)
+                self.handle_client_command_batch(givencommands, prepare=True)
             else:
                 self.handle_client_command_batch(givencommands)
 
@@ -1230,8 +1232,6 @@ class Replica(Node):
         print "Decisions:\n"
         for (commandnumber,command) in self.decisions.iteritems():
             temp = "%d:\t%s" %  (commandnumber, str(command))
-            if command in self.executed:
-                temp += "\t%s\n" % (str(self.executed[command]))
             print temp
 
     def cmd_proposals(self,args):
