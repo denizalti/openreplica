@@ -302,6 +302,8 @@ class Node():
                 except AttributeError:
                     pass
             else:
+                # XXX For every connection we are adding it to the connectionpool with
+                # XXX the source in the msg
                 self.connectionpool.add_connection_to_peer(message.source, connection)
         return True
 
@@ -313,27 +315,28 @@ class Node():
                 with self.pendingmetalock:
                     self.pendingmetacommands = set()
                 self.initiate_command()
-#            try:
-            (message_to_process,connection) = self.receivedmessages.pop(0)
-            if message_to_process.type == MSG_CLIENTREQUEST:
-                # check if there are other client requests waiting
-                msgconns = [(message_to_process,connection)]
-                for m,c in self.receivedmessages:
-                    if m.type == MSG_CLIENTREQUEST:
-                        # decrement the semaphore count
-                        self.receivedmessages_semaphore.acquire()
-                        # remove the m,c pair from receivedmessages
-                        self.receivedmessages.remove((m,c))
-                        msgconns.append((m,c))
-                if len(msgconns) > 1:
-                    print "BATCHING NOW!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-                    self.process_messagelist(msgconns)
+            try:
+                (message_to_process,connection) = self.receivedmessages.pop(0)
+                if message_to_process.type == MSG_CLIENTREQUEST:
+                    # check if there are other client requests waiting
+                    msgconns = [(message_to_process,connection)]
+                    for m,c in self.receivedmessages:
+                        if m.type == MSG_CLIENTREQUEST:
+                            # decrement the semaphore count
+                            self.receivedmessages_semaphore.acquire()
+                            # remove the m,c pair from receivedmessages
+                            self.receivedmessages.remove((m,c))
+                            msgconns.append((m,c))
+                    if len(msgconns) > 1:
+                        print "BATCHING NOW!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                        self.process_messagelist(msgconns)
+                    else:
+                        self.process_message(message_to_process, connection)
                 else:
                     self.process_message(message_to_process, connection)
-            else:
-                self.process_message(message_to_process, connection)
-#            except Exception as e:
-#                continue
+            except Exception as e:
+                print "Exception during handling message: ", e
+                continue
         return
 
     def process_messagelist(self, msgconnlist):
