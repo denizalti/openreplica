@@ -232,14 +232,6 @@ class Node():
                     if sock is not None:
                         if sock not in socketset:
                             socketset.append(sock)
-                # add clientsockets if they exist
-                try:
-                    for conn in self.clientpool.poolbypeer.itervalues():
-                        sock = conn.thesocket
-                        if sock is not None and sock not in socketset:
-                            socketset.append(sock)
-                except AttributeError:
-                    pass
                 
                 # add sockets we didn't receive a message from yet, which are not expired
                 for s,timestamp in nascentset:
@@ -297,10 +289,7 @@ class Node():
             self.receivedmessages.append((message,connection))
             self.receivedmessages_semaphore.release()
             if message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
-                try:
-                    self.clientpool.add_connection_to_peer(message.source, connection)
-                except AttributeError:
-                    pass
+                    self.connectionpool.add_connection_to_peer(message.source, connection)
             else:
                 # XXX For every connection we are adding it to the connectionpool with
                 # XXX the source in the msg

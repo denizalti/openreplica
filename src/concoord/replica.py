@@ -76,7 +76,6 @@ class Replica(Node):
         self.pendingmetacommands = set()
         # number for metacommands initiated from this replica
         self.metacommandnumber = 0
-        self.clientpool = ConnectionPool()
         # keep nodes that are recently updated
         self.recentlyupdatedpeerslock = Lock()
         self.recentlyupdatedpeers = []
@@ -92,7 +91,7 @@ class Replica(Node):
         self.throughput_stop = 0
         self.throughput_start = 0
 
-        if self.debug:
+        if self.debug and False:
             profile_on() # Turn profiling on!
 
     def __str__(self):
@@ -215,7 +214,7 @@ class Replica(Node):
         
         if commandname not in METACOMMANDS:
             # if this client contacted me for this operation, return him the response 
-            if send_result_to_client and self.isleader and str(command.client) in self.clientpool.poolbypeer.keys():
+            if send_result_to_client and self.isleader and str(command.client) in self.connectionpool.poolbypeer.keys():
                 self.send_reply_to_client(clientreplycode, givenresult, command)
 
         if self.nexttoexecute % GARBAGEPERIOD == 0 and self.isleader:
@@ -237,7 +236,7 @@ class Replica(Node):
                                       FLD_INRESPONSETO: command.clientcommandnumber})
         if self.debug: self.logger.write("State", "Clientreply: %s\nAcceptors: %s" 
                           % (str(clientreply), str(self.groups[NODE_ACCEPTOR])))
-        clientconn = self.clientpool.get_connection_by_peer(command.client)
+        clientconn = self.connectionpool.get_connection_by_peer(command.client)
         if clientconn == None or clientconn.thesocket == None:
             if self.debug: self.logger.write("State", "Client connection does not exist.")
             return
@@ -493,7 +492,6 @@ class Replica(Node):
         indexed by commandnumber
         - receivedclientrequests: commands received from clients as
         <(client,clientcommandnumber):command> mappings
-        - clientpool: connections to clients
         - backoff: backoff amount that is used to determine how much a leader should
         backoff during a collusion
         - commandgap: next commandnumber that will be used by this leader
@@ -656,7 +654,7 @@ class Replica(Node):
                                           FLD_REPLYCODE: CR_REJECTED,
                                           FLD_INRESPONSETO: givencommand.clientcommandnumber})
             if self.debug: self.logger.write("State", "Rejecting clientrequest: %s" % str(clientreply))
-            conn = self.clientpool.get_connection_by_peer(givencommand.client)
+            conn = self.connectionpool.get_connection_by_peer(givencommand.client)
             if conn is not None:
                 conn.send(clientreply)
             else:
@@ -688,7 +686,7 @@ class Replica(Node):
                                               FLD_INRESPONSETO: givencommand.clientcommandnumber})
                 if self.debug: self.logger.write("State", "Clientreply: %s\nAcceptors: %s"
                                   % (str(clientreply),str(self.groups[NODE_ACCEPTOR])))
-            conn = self.clientpool.get_connection_by_peer(givencommand.client)
+            conn = self.connectionpool.get_connection_by_peer(givencommand.client)
             if conn is not None:
                 conn.send(clientreply)
             else:
@@ -713,7 +711,7 @@ class Replica(Node):
                                              {FLD_REPLY: '',
                                               FLD_REPLYCODE: CR_REJECTED,
                                               FLD_INRESPONSETO: givencommand.clientcommandnumber})
-                conn = self.clientpool.get_connection_by_peer(givencommand.client)
+                conn = self.connectionpool.get_connection_by_peer(givencommand.client)
                 if conn is not None:
                     conn.send(clientreply)
                 else:
@@ -750,7 +748,7 @@ class Replica(Node):
                                                   FLD_INRESPONSETO: givencommand.clientcommandnumber})
                     if self.debug: self.logger.write("State", "Clientreply: %s\nAcceptors: %s"
                                       % (str(clientreply),str(self.groups[NODE_ACCEPTOR])))
-                conn = self.clientpool.get_connection_by_peer(givencommand.client)
+                conn = self.connectionpool.get_connection_by_peer(givencommand.client)
                 if conn is not None:
                     conn.send(clientreply)
                 else:
@@ -801,7 +799,7 @@ class Replica(Node):
         # Leader should accept a request even if it's not ready as this
         # way it will make itself ready during the prepare stage.
         if self.isleader:
-            self.clientpool.add_connection_to_peer(msg.source, conn)
+            self.connectionpool.add_connection_to_peer(msg.source, conn)
             if self.leader_initializing:
                 self.handle_client_command(msg.command, msg.sendcount, prepare=True)
             else:
@@ -843,7 +841,7 @@ class Replica(Node):
                                                   FLD_INRESPONSETO: msg.command.clientcommandnumber})
                     conn.send(clientreply)
                 else:
-                    self.clientpool.add_connection_to_peer(msg.source, conn)
+                    self.connectionpool.add_connection_to_peer(msg.source, conn)
                     givencommands.append((msg.command,msg.sendcount))
 
             if self.leader_initializing:
@@ -1217,10 +1215,6 @@ class Replica(Node):
         """start Leader state""" 
         self.become_leader()
 
-    def cmd_clients(self,args):
-        """prints client connections"""
-        print self.clientpool
-
     def cmd_showobject(self, args):
         """print replicated object information""" 
         print self.object
@@ -1243,17 +1237,9 @@ class Replica(Node):
         for cmdnum,command in self.pendingcommands.iteritems():
             print "%d: %s" % (cmdnum,str(command))
 
-## MEASUREMENT OUTPUT
-    def msg_output(self, conn, msg):
-        sys.stdout.flush()
-        self.send(msg, self.groups[NODE_ACCEPTOR].members[0])
-        dumptimers(str(len(self.groups[NODE_REPLICA])+1), str(len(self.groups[NODE_ACCEPTOR])), self.type)
-        numclients = len(self.clientpool.poolbypeer.keys())
-        dumptimers(str(numclients), str(len(self.groups[NODE_ACCEPTOR])), self.type)
-        
 ## TERMINATION METHODS
     def terminate_handler(self, signal, frame):
-        if self.debug:
+        if self.debug and False:
             profile_off()
             print_profile_stats()
         self._graceexit()
