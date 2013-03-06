@@ -143,17 +143,24 @@ class Connection():
         return msgstr
 
     def received_bytes(self):
-        # do the length business here
-        self.incoming += self.thesocket.recv(100000)
-        if len(self.incoming) >= 4:
-            msg_length = struct.unpack("I", self.incoming[0:4])[0]
-            # check if there is a complete msg, if so return the msg
-            # otherwise return None
-            if len(self.incoming) >= msg_length+4:
-                msgdict = msgpack.unpackb(self.incoming[4:msg_length+4], use_list=False)
-                self.incoming = self.incoming[msg_length+4:]
-                return parse_message(msgdict)
-        return None
+        with self.readlock:
+            rcvdmsgs = None
+            # do the length business here
+            self.incoming += self.thesocket.recv(100000)
+            while len(self.incoming) >= 4:
+                msg_length = struct.unpack("I", self.incoming[0:4])[0]
+                # check if there is a complete msg, if so return the msg
+                # otherwise return None
+                if len(self.incoming) >= msg_length+4:
+                    msgdict = msgpack.unpackb(self.incoming[4:msg_length+4], use_list=False)
+                    self.incoming = self.incoming[msg_length+4:]
+                    if rcvdmsgs:
+                        rcvdmsgs.append(parse_message(msgdict))
+                    else:
+                        rcvdmsgs = [parse_message(msgdict)]
+                else:
+                    break
+            return rcvdmsgs
     
     def send(self, msg):
         with self.writelock:
