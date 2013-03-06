@@ -321,7 +321,8 @@ class Replica(Node):
                 self.do_command_prepare_from_pending(candidatecommandno)
 
     def msg_perform(self, conn, msg):
-        """received a PERFORM message, perform it and send an UPDATE message to the source if necessary"""
+        """received a PERFORM message, perform it and send an 
+        UPDATE message to the source if necessary"""
         self.perform(msg)
 
         if not self.stateuptodate and (self.type == NODE_REPLICA or self.type == NODE_NAMESERVER):

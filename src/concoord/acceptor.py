@@ -12,7 +12,6 @@ from concoord.enums import *
 from concoord.utils import *
 from concoord.pack import *
 from concoord.pvalue import PValueSet
-from concoord.connection import ConnectionPool
 from concoord.message import *
 
 class Acceptor(Node):
