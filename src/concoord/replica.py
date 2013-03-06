@@ -331,10 +331,10 @@ class Replica(Node):
                 self.stateuptodate = True
                 return
             updatemessage = create_message(MSG_UPDATE, self.me)
-            self.send(updatemessage, peer=msg.source)
+            conn.send(updatemessage)
 
     def msg_helo(self, conn, msg):
-        if self.debug: self.logger.write("State", "Received HELO from %s" % str(msg.source))
+        if self.debug: self.logger.write("State", "Received HELO from %s")
         # This is the first acceptor, it has to be added by this replica
         if msg.source.type == NODE_ACCEPTOR and len(self.groups[NODE_ACCEPTOR]) == 0:
             if self.debug: self.logger.write("State", "Adding the first acceptor")
@@ -370,7 +370,7 @@ class Replica(Node):
                 if self.debug: self.logger.write("State", "Leader is %s" % str(self.find_leader()))
                 heloreplymessage = create_message(MSG_HELOREPLY, self.me, 
                                                   {FLD_LEADER: self.find_leader()})
-                self.send(heloreplymessage, peer=msg.source)
+                conn.send(heloreplymessage)
             
     def msg_update(self, conn, msg):
         """a replica needs to be updated on the set of past decisions, send caller's decisions"""
@@ -381,7 +381,7 @@ class Replica(Node):
         
         updatereplymessage = create_message(MSG_UPDATEREPLY, self.me, 
                                             {FLD_DECISIONS: self.decisions})
-        self.send(updatereplymessage, peer=msg.source)
+        conn.send(updatereplymessage)
         with self.recentlyupdatedpeerslock:
             self.recentlyupdatedpeers.append(msg.source)
 
@@ -800,7 +800,6 @@ class Replica(Node):
         # Leader should accept a request even if it's not ready as this
         # way it will make itself ready during the prepare stage.
         if self.isleader:
-            self.connectionpool.add_connection_to_peer(msg.source, conn)
             if self.leader_initializing:
                 self.handle_client_command(msg.command, msg.sendcount, prepare=True)
             else:
@@ -842,7 +841,6 @@ class Replica(Node):
                                                   FLD_INRESPONSETO: msg.command.clientcommandnumber})
                     conn.send(clientreply)
                 else:
-                    self.connectionpool.add_connection_to_peer(msg.source, conn)
                     givencommands.append((msg.command,msg.sendcount))
 
             if self.leader_initializing:
@@ -931,11 +929,7 @@ class Replica(Node):
                                   FLD_COMMANDNUMBER: givencommandnumber,
                                   FLD_PROPOSAL: givenproposal,
                                   FLD_BATCH: isinstance(givenproposal, ProposalBatch)})
-        # the msgs sent may be less than the number of prc.acceptors
-        # if a connection to an acceptor is lost
-        msgids = self.send(propose, group=prc.acceptors)
-        # add sent messages to the sent proposes
-        prc.sent.extend(msgids)
+        self.send(propose, group=prc.acceptors)
                     
     def do_command_prepare_from_pending(self, givencommandnumber):
         """Initiates givencommandnumber from pendingcommands list.
@@ -965,10 +959,7 @@ class Replica(Node):
         self.outstandingprepares[newballotnumber] = prc
         prepare = create_message(MSG_PREPARE, self.me, 
                                  {FLD_BALLOTNUMBER: newballotnumber})
-        msgids = self.send(prepare, group=prc.acceptors)
-        # the msgs sent may be less than the number of prc.acceptors if a connection to an acceptor is lost
-        # add sent messages to sent prepares
-        prc.sent.extend(msgids)
+        self.send(prepare, group=prc.acceptors)
 
 ## PAXOS MESSAGE HANDLERS
     def msg_prepare_adopted(self, conn, msg):
@@ -994,14 +985,14 @@ class Replica(Node):
         """
         if self.outstandingprepares.has_key(msg.inresponseto):
             prc = self.outstandingprepares[msg.inresponseto]
-            prc.received[msg.source] = msg
-            if self.debug: self.logger.write("Paxos State", "got an accept for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
+            prc.receivedcount += 1
+            if self.debug: self.logger.write("Paxos State", "got an accept for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, prc.receivedcount, prc.ntotal))
             assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PREPARE_ADOPTED can't have non-matching ballotnumber" % self
             # add all the p-values from the response to the possiblepvalueset
             if msg.pvalueset is not None:
                 prc.possiblepvalueset.union(msg.pvalueset)
 
-            if len(prc.received) >= prc.nquorum:
+            if prc.receivedcount >= prc.nquorum:
                 if self.debug: self.logger.write("Paxos State", "suffiently many accepts on prepare!")
                 # take this response collector out of the outstanding prepare set
                 del self.outstandingprepares[msg.inresponseto]
@@ -1044,7 +1035,7 @@ class Replica(Node):
         """
         if self.outstandingprepares.has_key(msg.inresponseto):
             prc = self.outstandingprepares[msg.inresponseto]
-            if self.debug: self.logger.write("Paxos State", "got a reject for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
+            if self.debug: self.logger.write("Paxos State", "got a reject for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, prc.receivedcount, prc.ntotal))
             # take this response collector out of the outstanding prepare set
             del self.outstandingprepares[msg.inresponseto]
             # become inactive
@@ -1068,8 +1059,8 @@ class Replica(Node):
         and its state is updated accordingly.
 
         State Updates:
-        - message is added to the received dictionary
-        - if length of received is greater than the quorum size, PROPOSE STAGE is successful.
+        - increment receivedcount
+        - if receivedcount is greater than the quorum size, PROPOSE STAGE is successful.
         -- remove the old ResponseCollector from the outstanding prepare set
         -- create MSG_PERFORM: message carries the chosen commandnumber and proposal.
         -- send MSG_PERFORM to all Replicas and Leaders
@@ -1078,11 +1069,11 @@ class Replica(Node):
         if self.outstandingproposes.has_key(msg.commandnumber):
             prc = self.outstandingproposes[msg.commandnumber]
             if msg.inresponseto == prc.ballotnumber:
-                prc.received[msg.source] = msg
+                prc.receivedcount += 1
                 if self.debug: self.logger.write("Paxos State",
                                   "got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts"
-                                  % (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
-                if len(prc.received) >= prc.nquorum:
+                                  % (prc.ballotnumber, prc.commandnumber, prc.proposal, prc.receivedcount, prc.ntotal))
+                if prc.receivedcount >= prc.nquorum:
                     if self.debug: self.logger.write("Paxos State", "Agreed on %s" % str(prc.proposal))
                     # take this response collector out of the outstanding propose set
                     self.add_to_proposals(prc.commandnumber, prc.proposal)
@@ -1121,7 +1112,7 @@ class Replica(Node):
             prc = self.outstandingproposes[msg.commandnumber]
             if msg.inresponseto == prc.ballotnumber:
                 if self.debug: self.logger.write("Paxos State", "got a reject for proposal ballotno %s commandno %s proposal %s still %d out of %d accepts" % \
-                       (prc.ballotnumber, prc.commandnumber, prc.proposal, len(prc.received), prc.ntotal))
+                       (prc.ballotnumber, prc.commandnumber, prc.proposal, prc.receivedcount, prc.ntotal))
                 # take this response collector out of the outstanding propose set
                 del self.outstandingproposes[msg.commandnumber]
                 # become inactive

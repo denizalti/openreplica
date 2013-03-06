@@ -359,7 +359,6 @@ class Node():
             self.connecttobootstrap()
         else:
             self.groups[NODE_REPLICA].add(msg.source)
-            if self.debug: self.logger.write("State", "connected to bootstrap: %s:%d" % (msg.source.addr,msg.source.port))
 
     def msg_ping(self, conn, msg):
         return
