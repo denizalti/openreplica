@@ -179,27 +179,28 @@ class ClientProxy():
                                 needreconfig = not self.conn.send(reqdesc.cm)
                     else:
                         # server has sent us something and we need to process it
-                        reply = self.conn.receive()
-                        if reply is None:
-                            needreconfig = True
-                        elif reply and reply.type == MSG_CLIENTREPLY:
-                            with self.lock:
-                                reqdesc = self.pendingops[reply.inresponseto]
-                                if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode == CR_UNBLOCK:
-                                    # actionable response, wake up the thread
-                                    if reply.replycode == CR_UNBLOCK:
-                                        assert reqdesc.lastcr == CR_BLOCK, "unblocked thread not previously blocked"
-                                    reqdesc.lastcr = reply.replycode
-                                    reqdesc.reply = reply
-                                    reqdesc.replyvalid = True
-                                    reqdesc.replyarrived.notify()
-                                elif reply.replycode == CR_INPROGRESS or reply.replycode == CR_BLOCK:
-                                    # the thread is already waiting, no need to do anything
-                                    reqdesc.lastcr = reply.replycode
-                                elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
-                                    needreconfig = True
-                                else:
-                                    print "should not happen -- unknown response type"
+                        replies = self.conn.received_bytes()
+                        if replies is None:
+                            continue
+                        for reply in replies:
+                            if reply and reply.type == MSG_CLIENTREPLY:
+                                with self.lock:
+                                    reqdesc = self.pendingops[reply.inresponseto]
+                                    if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode == CR_UNBLOCK:
+                                        # actionable response, wake up the thread
+                                        if reply.replycode == CR_UNBLOCK:
+                                            assert reqdesc.lastcr == CR_BLOCK, "unblocked thread not previously blocked"
+                                        reqdesc.lastcr = reply.replycode
+                                        reqdesc.reply = reply
+                                        reqdesc.replyvalid = True
+                                        reqdesc.replyarrived.notify()
+                                    elif reply.replycode == CR_INPROGRESS or reply.replycode == CR_BLOCK:
+                                        # the thread is already waiting, no need to do anything
+                                        reqdesc.lastcr = reply.replycode
+                                    elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
+                                        needreconfig = True
+                                    else:
+                                        print "should not happen -- unknown response type"
 
                 while needreconfig:
                     if not self.trynewbootstrap(triedreplicas):

@@ -74,7 +74,7 @@ class Acceptor(Node):
 
         if self.debug: self.logger.write("Paxos State", "prepare responding with %s"
                           % str(replymsg))
-        self.send(replymsg,peer=msg.source)
+        conn.send(replymsg)
 
     def msg_propose(self, conn, msg):
         """
