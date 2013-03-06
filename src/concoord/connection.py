@@ -54,7 +54,7 @@ class ConnectionPool():
                         del self.poolbypeer[connkey]
                         break
                 del self.poolbysocket[daconn.thesocket]
-                self.activesockets.remove(conn.thesocket)
+                self.activesockets.remove(daconn.thesocket)
                 daconn.close()
             else:
                 print "Trying to delete a non-existent socket from the connection pool."
@@ -74,6 +74,7 @@ class ConnectionPool():
                     conn = Connection(thesocket, getpeerid(peer))
                     self.poolbypeer[peer] = conn
                     self.poolbysocket[thesocket] = conn
+                    self.activesockets.append(thesocket)
                     return conn
                 except:
                     return None
@@ -89,6 +90,7 @@ class ConnectionPool():
             else:
                 conn = Connection(thesocket)
                 self.poolbysocket[thesocket] = conn
+                self.activesockets.append(thesocket)
                 return conn
 
     def __str__(self):
@@ -146,7 +148,11 @@ class Connection():
         with self.readlock:
             rcvdmsgs = None
             # do the length business here
-            self.incoming += self.thesocket.recv(100000)
+            temp = self.thesocket.recv(100000)
+            if not temp:
+                print "Connection closed"
+                return False
+            self.incoming += temp
             while len(self.incoming) >= 4:
                 msg_length = struct.unpack("I", self.incoming[0:4])[0]
                 # check if there is a complete msg, if so return the msg

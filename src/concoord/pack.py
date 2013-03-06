@@ -15,18 +15,18 @@ def getpeerid(peer):
 PValue = namedtuple('PValue', ['ballotnumber', 'commandnumber', 'proposal'])
 Message = namedtuple('Message', ['id', 'type', 'source'])
 HeloReplyMessage = namedtuple('HeloReplyMessage', ['id', 'type', 'source', 'leader'])
-UpdateReplyMessage = namedtuple('UpdateReplyMessage', ['id', 'type', 'source', 'decisions'])
+UpdateReplyMessage = namedtuple('UpdateReplyMessage', ['id', 'type', 'decisions'])
 PrepareMessage = namedtuple('PrepareMessage', ['id', 'type', 'ballotnumber'])
-PrepareReplyMessage = namedtuple('PrepareReplyMessage', ['id', 'type', 'source',
+PrepareReplyMessage = namedtuple('PrepareReplyMessage', ['id', 'type',
                                                          'ballotnumber', 'inresponseto',
                                                          'pvalueset'])
 ProposeMessage = namedtuple('ProposeMessage', ['id', 'type',
                                                'ballotnumber', 'commandnumber',
                                                'proposal', 'batch'])
-ProposeReplyMessage = namedtuple('ProposeReplyMessage', ['id', 'type', 'source',
+ProposeReplyMessage = namedtuple('ProposeReplyMessage', ['id', 'type',
                                                          'ballotnumber', 'inresponseto',
                                                          'commandnumber'])
-PerformMessage = namedtuple('PerformMessage', ['id', 'type', 'source',
+PerformMessage = namedtuple('PerformMessage', ['id', 'type',
                                                'commandnumber', 'proposal', 'batch'])
 
 ClientRequestMessage = namedtuple('ClientRequestMessage', ['id', 'type', 'source',
@@ -36,5 +36,5 @@ ClientRequestMessage = namedtuple('ClientRequestMessage', ['id', 'type', 'source
 ClientReplyMessage = namedtuple('ClientReplyMessage', ['id', 'type', 'source',
                                                        'reply', 'replycode', 'inresponseto'])
 
-GarbageCollectMessage = namedtuple('GarbageCollectMessage', ['id', 'type', 'source',
+GarbageCollectMessage = namedtuple('GarbageCollectMessage', ['id', 'type',
                                                              'commandnumber', 'snapshot'])

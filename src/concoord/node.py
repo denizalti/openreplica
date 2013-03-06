@@ -182,7 +182,7 @@ class Node():
         # Start a thread that pings all neighbors
         ping_thread = Timer(LIVENESSTIMEOUT, self.ping_neighbor)
         ping_thread.name = 'PingThread'
-        #ping_thread.start()
+        ping_thread.start()
         return self
 
     def ping_neighbor(self):
@@ -274,7 +274,9 @@ class Node():
         """Receives a message and calls the corresponding message handler"""
         connection = self.connectionpool.get_connection_by_socket(clientsock)
         messages = connection.received_bytes()
-        if messages == None:
+        if messages is False:
+            return False
+        elif messages == None:
             return True
         else:
             for message in messages:
@@ -291,7 +293,7 @@ class Node():
                 self.receivedmessages_semaphore.release()
                 if message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
                     self.connectionpool.add_connection_to_peer(message.source, connection)
-                elif self.type != NODE_ACCEPTOR: #if message.type == MSG_HELO:
+                elif message.type in (MSG_HELO, MSG_HELOREPLY, MSG_UPDATE, MSG_BYE):
                     self.connectionpool.add_connection_to_peer(message.source, connection)
             return True
 

@@ -50,11 +50,10 @@ def parse_prepare(msg):
     return PrepareMessage(msg[FLD_ID], msg[FLD_TYPE], msg[FLD_BALLOTNUMBER])
 
 def parse_prepare_reply(msg):
-    src = Peer(*msg[FLD_SRC])
     pvalueset = PValueSet()
     for index,pvalue in msg[FLD_PVALUESET].iteritems():
         pvalueset.pvalues[Proposal(*index[1])] = PValue(*pvalue)
-    return PrepareReplyMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+    return PrepareReplyMessage(msg[FLD_ID], msg[FLD_TYPE],
                                msg[FLD_BALLOTNUMBER], msg[FLD_INRESPONSETO],
                                pvalueset)
 def parse_propose(msg):
@@ -72,13 +71,11 @@ def parse_propose(msg):
 
 
 def parse_propose_reply(msg):
-    src = Peer(*msg[FLD_SRC])
-    return ProposeReplyMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+    return ProposeReplyMessage(msg[FLD_ID], msg[FLD_TYPE],
                                msg[FLD_BALLOTNUMBER], msg[FLD_INRESPONSETO],
                                msg[FLD_COMMANDNUMBER])
 
 def parse_perform(msg):
-    src = Peer(*msg[FLD_SRC])
     if msg[FLD_BATCH]:
         proposal = ProposalBatch([])
         for p in msg[FLD_PROPOSAL][0]: #XXX Why is this 0?
@@ -87,7 +84,7 @@ def parse_perform(msg):
     else:
         proposalclient = Peer(*msg[FLD_PROPOSAL][0])
         proposal = Proposal(proposalclient, *msg[FLD_PROPOSAL][1:])
-    return PerformMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+    return PerformMessage(msg[FLD_ID], msg[FLD_TYPE],
                           msg[FLD_COMMANDNUMBER], proposal, msg[FLD_BATCH])
 
 def parse_response(msg):
@@ -102,16 +99,14 @@ def parse_incclientrequest(msg):
                                 proposal, msg[FLD_TOKEN])
 
 def parse_updatereply(msg):
-    src = Peer(*msg[FLD_SRC]) 
     for commandnumber,command in msg[FLD_DECISIONS].iteritems():
         proposalclient = Peer(*msg[FLD_DECISIONS][commandnumber][0])
         msg[FLD_DECISIONS][commandnumber] = Proposal(proposalclient,
                                                      *msg[FLD_DECISIONS][commandnumber][1:])
-    return UpdateReplyMessage(msg[FLD_ID], msg[FLD_TYPE], src, msg[FLD_DECISIONS])
+    return UpdateReplyMessage(msg[FLD_ID], msg[FLD_TYPE], msg[FLD_DECISIONS])
 
 def parse_garbagecollect(msg):
-    src = Peer(*msg[FLD_SRC])
-    return GarbageCollectMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+    return GarbageCollectMessage(msg[FLD_ID], msg[FLD_TYPE],
                                  msg[FLD_COMMANDNUMBER], msg[FLD_SNAPSHOT])
 
 def parse_message(msg):

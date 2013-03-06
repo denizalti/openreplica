@@ -826,8 +826,7 @@ class Replica(Node):
                     conn.send(clientreply)
                     msgconnlist.remove((msg,conn))
                 return
-            else:
-                self.update_leader()
+        self.update_leader()
         # Leader should accept a request even if it's not ready as this
         # way it will make itself ready during the prepare stage.
         if self.isleader:

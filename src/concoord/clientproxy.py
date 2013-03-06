@@ -44,7 +44,7 @@ class ReqDesc:
         return "Request Descriptor for cmd %d\nMessage %s\nReply %s" % (self.mynumber, str(self.cm), self.reply)
 
 class ClientProxy():
-    def __init__(self, bootstrap, timeout=60, debug=False, token=None):
+    def __init__(self, bootstrap, timeout=60, debug=True, token=None):
         self.debug = debug
         self.timeout = timeout 
         self.domainname = None
@@ -183,7 +183,10 @@ class ClientProxy():
                     else:
                         # server has sent us something and we need to process it
                         replies = self.conn.received_bytes()
-                        if replies is None:
+                        if replies is False:
+                            needreconfig = True
+                            break
+                        elif replies is None:
                             continue
                         for reply in replies:
                             if reply and reply.type == MSG_CLIENTREPLY:
