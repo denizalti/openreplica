@@ -290,9 +290,7 @@ class Node():
             self.receivedmessages_semaphore.release()
             if message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
                     self.connectionpool.add_connection_to_peer(message.source, connection)
-            else:
-                # XXX For every connection we are adding it to the connectionpool with
-                # XXX the source in the msg
+            elif message.type == MSG_HELO:
                 self.connectionpool.add_connection_to_peer(message.source, connection)
         return True
 
