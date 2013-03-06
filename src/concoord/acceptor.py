@@ -105,7 +105,7 @@ class Acceptor(Node):
                                       {FLD_BALLOTNUMBER: self.ballotnumber,
                                        FLD_INRESPONSETO: msg.ballotnumber,
                                        FLD_COMMANDNUMBER: msg.commandnumber})
-        self.send(replymsg,peer=msg.source)
+        conn.send(replymsg)
 
     def msg_garbagecollect(self, conn, msg):
         if self.debug: self.logger.write("Paxos State",
