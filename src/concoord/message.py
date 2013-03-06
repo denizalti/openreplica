@@ -29,6 +29,10 @@ def parse_basic(msg):
     src = Peer(*msg[FLD_SRC])
     return Message(msg[FLD_ID], msg[FLD_TYPE], src)
 
+def parse_heloreply(msg):
+    src = Peer(*msg[FLD_SRC])
+    return Message(msg[FLD_ID], msg[FLD_TYPE], src, Peer(*msg[FLD_LEADER]))
+
 def parse_clientrequest(msg):
     src = Peer(*msg[FLD_SRC])
     proposalclient = Peer(*msg[FLD_PROPOSAL][0])
@@ -192,7 +196,7 @@ parse_functions = [
     parse_propose_reply, # MSG_PROPOSE_REJECT
     
     parse_basic, # MSG_HELO
-    parse_basic, # MSG_HELOREPLY
+    parse_heloreply, # MSG_HELOREPLY
     parse_basic, # MSG_PING
     parse_basic, # MSG_BYE
 

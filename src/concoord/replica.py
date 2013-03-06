@@ -369,7 +369,7 @@ class Replica(Node):
                 if self.debug: self.logger.write("State", "Not the leader, sending a HELOREPLY")
                 if self.debug: self.logger.write("State", "Leader is %s" % str(self.find_leader()))
                 heloreplymessage = create_message(MSG_HELOREPLY, self.me, 
-                                                  {LEADER: self.find_leader()})
+                                                  {FLD_LEADER: self.find_leader()})
                 self.send(heloreplymessage, peer=msg.source)
             
     def msg_update(self, conn, msg):
@@ -380,7 +380,7 @@ class Replica(Node):
                 return
         
         updatereplymessage = create_message(MSG_UPDATEREPLY, self.me, 
-                                            {DECISIONS: self.decisions})
+                                            {FLD_DECISIONS: self.decisions})
         self.send(updatereplymessage, peer=msg.source)
         with self.recentlyupdatedpeerslock:
             self.recentlyupdatedpeers.append(msg.source)

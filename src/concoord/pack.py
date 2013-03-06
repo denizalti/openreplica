@@ -14,6 +14,7 @@ def getpeerid(peer):
 
 PValue = namedtuple('PValue', ['ballotnumber', 'commandnumber', 'proposal'])
 Message = namedtuple('Message', ['id', 'type', 'source'])
+HeloReplyMessage = namedtuple('HeloReplyMessage', ['id', 'type', 'source', 'leader'])
 UpdateReplyMessage = namedtuple('UpdateReplyMessage', ['id', 'type', 'source', 'decisions'])
 PrepareMessage = namedtuple('PrepareMessage', ['id', 'type', 'source', 'ballotnumber'])
 PrepareReplyMessage = namedtuple('PrepareReplyMessage', ['id', 'type', 'source',
