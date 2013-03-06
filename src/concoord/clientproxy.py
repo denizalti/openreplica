@@ -147,8 +147,11 @@ class ClientProxy():
             # append the request descriptor to the list of requests
             self.reqlist.append(reqdesc)
             self.ctrlsockets.send('a')
-            while not reqdesc.replyvalid:
-                reqdesc.replyarrived.wait()
+            try:
+                while not reqdesc.replyvalid:
+                    reqdesc.replyarrived.wait()
+            except KeyboardInterrupt:
+                self._graceexit()
             del self.pendingops[reqdesc.mynumber]
         if reqdesc.reply.replycode == CR_OK or reqdesc.reply.replycode == CR_UNBLOCK:
             return reqdesc.reply.reply
@@ -220,4 +223,4 @@ class ClientProxy():
             self._graceexit()
             
     def _graceexit(self):
-        return
+        os._exit(0)
