@@ -291,7 +291,7 @@ class Node():
                 self.receivedmessages_semaphore.release()
                 if message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
                     self.connectionpool.add_connection_to_peer(message.source, connection)
-                else: #if message.type == MSG_HELO:
+                elif self.type != NODE_ACCEPTOR: #if message.type == MSG_HELO:
                     self.connectionpool.add_connection_to_peer(message.source, connection)
             return True
 

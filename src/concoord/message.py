@@ -47,8 +47,7 @@ def parse_clientreply(msg):
                               msg[FLD_INRESPONSETO])
 
 def parse_prepare(msg):
-    src = Peer(*msg[FLD_SRC])
-    return PrepareMessage(msg[FLD_ID], msg[FLD_TYPE], src, msg[FLD_BALLOTNUMBER])
+    return PrepareMessage(msg[FLD_ID], msg[FLD_TYPE], msg[FLD_BALLOTNUMBER])
 
 def parse_prepare_reply(msg):
     src = Peer(*msg[FLD_SRC])
@@ -59,16 +58,15 @@ def parse_prepare_reply(msg):
                                msg[FLD_BALLOTNUMBER], msg[FLD_INRESPONSETO],
                                pvalueset)
 def parse_propose(msg):
-    src = Peer(*msg[FLD_SRC])
     if msg[FLD_BATCH]:
         proposal = ProposalBatch([])
-        for p in msg[FLD_PROPOSAL][0]: #XXX Why is this 0?
+        for p in msg[FLD_PROPOSAL][0]:
             pclient = Peer(*p[0])
             proposal.proposals.append(Proposal(pclient, *p[1:]))
     else:
         proposalclient = Peer(*msg[FLD_PROPOSAL][0])
         proposal = Proposal(proposalclient, *msg[FLD_PROPOSAL][1:])
-    return ProposeMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+    return ProposeMessage(msg[FLD_ID], msg[FLD_TYPE],
                           msg[FLD_BALLOTNUMBER], msg[FLD_COMMANDNUMBER],
                           proposal, msg[FLD_BATCH])
 

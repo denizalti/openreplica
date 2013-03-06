@@ -16,11 +16,11 @@ PValue = namedtuple('PValue', ['ballotnumber', 'commandnumber', 'proposal'])
 Message = namedtuple('Message', ['id', 'type', 'source'])
 HeloReplyMessage = namedtuple('HeloReplyMessage', ['id', 'type', 'source', 'leader'])
 UpdateReplyMessage = namedtuple('UpdateReplyMessage', ['id', 'type', 'source', 'decisions'])
-PrepareMessage = namedtuple('PrepareMessage', ['id', 'type', 'source', 'ballotnumber'])
+PrepareMessage = namedtuple('PrepareMessage', ['id', 'type', 'ballotnumber'])
 PrepareReplyMessage = namedtuple('PrepareReplyMessage', ['id', 'type', 'source',
                                                          'ballotnumber', 'inresponseto',
                                                          'pvalueset'])
-ProposeMessage = namedtuple('ProposeMessage', ['id', 'type', 'source',
+ProposeMessage = namedtuple('ProposeMessage', ['id', 'type',
                                                'ballotnumber', 'commandnumber',
                                                'proposal', 'batch'])
 ProposeReplyMessage = namedtuple('ProposeReplyMessage', ['id', 'type', 'source',
