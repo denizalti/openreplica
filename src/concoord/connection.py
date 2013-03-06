@@ -15,10 +15,6 @@ from threading import Lock
 from concoord.pack import *
 from concoord.message import *
 
-DEBUG=False
-DROPRATE=0.3
-PICKLESAFE=False
-
 class ConnectionPool():
     """ConnectionPool keeps the connections that a certain Node knows of.
     The connections can be indexed by a Peer instance or a socket."""
@@ -26,12 +22,14 @@ class ConnectionPool():
         self.poolbypeer = {}
         self.poolbysocket = {}
         self.pool_lock = Lock()
+        self.activesockets = []
         
     def add_connection_to_peer(self, peer, conn):
         """Adds a Connection to the ConnectionPool by its Peer"""
         with self.pool_lock:
             self.poolbypeer[str(peer)] = conn
             conn.peerid = getpeerid(peer)
+            self.activesockets.append(conn.thesocket)
             
     def del_connection_by_peer(self, peer):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
@@ -41,6 +39,7 @@ class ConnectionPool():
                 conn = self.poolbypeer[peerstr]
                 del self.poolbypeer[peerstr]
                 del self.poolbysocket[conn.thesocket]
+                self.activesockets.remove(conn.thesocket)
                 conn.close()
             else:
                 print "Trying to delete a non-existent connection from the connection pool."
@@ -55,6 +54,7 @@ class ConnectionPool():
                         del self.poolbypeer[connkey]
                         break
                 del self.poolbysocket[daconn.thesocket]
+                self.activesockets.remove(conn.thesocket)
                 daconn.close()
             else:
                 print "Trying to delete a non-existent socket from the connection pool."
@@ -106,6 +106,8 @@ class Connection():
         self.peerid = peerid
         self.readlock = Lock()
         self.writelock = Lock()
+        self.outgoing = ''
+        self.incoming = ''
     
     def __str__(self):
         """Return Connection information"""
@@ -136,17 +138,26 @@ class Connection():
                         continue
                 raise e
             if len(chunk) == 0:
-                print "Connection closed!"
                 raise IOError
             msgstr += chunk
         return msgstr
+
+    def received_bytes(self):
+        # do the length business here
+        self.incoming += self.thesocket.recv(100000)
+        if len(self.incoming) >= 4:
+            msg_length = struct.unpack("I", self.incoming[0:4])[0]
+            # check if there is a complete msg, if so return the msg
+            # otherwise return None
+            if len(self.incoming) >= msg_length+4:
+                msgdict = msgpack.unpackb(self.incoming[4:msg_length+4], use_list=False)
+                self.incoming = self.incoming[msg_length+4:]
+                return parse_message(msgdict)
+        return None
     
     def send(self, msg):
         with self.writelock:
             """pickle and send a message on the Connection"""
-            if DEBUG and random.random() <= DROPRATE:
-                print "Dropping message..."
-                return
             messagestr = msgpack.packb(msg)
             message = struct.pack("I", len(messagestr)) + messagestr
             try:
