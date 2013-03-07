@@ -274,28 +274,25 @@ class Node():
         """Receives a message and calls the corresponding message handler"""
         connection = self.connectionpool.get_connection_by_socket(clientsock)
         messages = connection.received_bytes()
-        if messages is False:
-            return False
-        elif messages == None:
-            return True
-        else:
-            for message in messages:
-                if self.debug: self.logger.write("State", "received %s" % str(message))
-                if message.type == MSG_STATUS:
-                    if self.type == NODE_REPLICA:
-                        if self.debug: self.logger.write("State", "Answering status message %s" % self.__str__())
-                        messagestr = pickle.dumps(self.__str__())
-                        message = struct.pack("I", len(messagestr)) + messagestr
-                        clientsock.send(message)
-                    return False
-                # add to receivedmessages
-                self.receivedmessages.append((message,connection))
-                self.receivedmessages_semaphore.release()
-                if message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
-                    self.connectionpool.add_connection_to_peer(message.source, connection)
-                elif message.type in (MSG_HELO, MSG_HELOREPLY, MSG_UPDATE, MSG_BYE):
-                    self.connectionpool.add_connection_to_peer(message.source, connection)
-            return True
+        for message in messages:
+            if self.debug: self.logger.write("State", "received %s" % str(message))
+            if message == False:
+                return False
+            if message.type == MSG_STATUS:
+                if self.type == NODE_REPLICA:
+                    if self.debug: self.logger.write("State", "Answering status message %s" % self.__str__())
+                    messagestr = pickle.dumps(self.__str__())
+                    message = struct.pack("I", len(messagestr)) + messagestr
+                    clientsock.send(message)
+                return False
+            # add to receivedmessages
+            self.receivedmessages.append((message,connection))
+            self.receivedmessages_semaphore.release()
+            if message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
+                self.connectionpool.add_connection_to_peer(message.source, connection)
+            elif message.type in (MSG_HELO, MSG_HELOREPLY, MSG_UPDATE, MSG_BYE):
+                self.connectionpool.add_connection_to_peer(message.source, connection)
+        return True
 
     def handle_messages(self):
         while True:

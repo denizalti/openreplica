@@ -147,12 +147,12 @@ class Connection():
 
     def received_bytes(self):
         with self.readlock:
-            rcvdmsgs = None
             # do the length business here
             datalen = self.thesocket.recv_into(self.incoming[self.incomingoffset:], 100000)
             if datalen == 0:
                 print "Connection closed"
-                return False
+                yield False
+                return
             self.incomingoffset += datalen
             while len(self.incoming) >= 4:
                 msg_length = struct.unpack("I", self.incoming[0:4].tobytes())[0]
@@ -163,13 +163,9 @@ class Connection():
                     # this operation cuts the incoming buffer
                     self.incoming[:self.incomingoffset-(msg_length+4)] = self.incoming[msg_length+4:self.incomingoffset]
                     self.incomingoffset -= msg_length+4
-                    if rcvdmsgs:
-                        rcvdmsgs.append(parse_message(msgdict))
-                    else:
-                        rcvdmsgs = [parse_message(msgdict)]
+                    yield parse_message(msgdict)
                 else:
                     break
-            return rcvdmsgs
     
     def send(self, msg):
         with self.writelock:
