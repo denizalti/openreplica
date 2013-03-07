@@ -22,14 +22,14 @@ class ConnectionPool():
         self.poolbypeer = {}
         self.poolbysocket = {}
         self.pool_lock = Lock()
-        self.activesockets = []
+        self.activesockets = set([])
         
     def add_connection_to_peer(self, peer, conn):
         """Adds a Connection to the ConnectionPool by its Peer"""
         with self.pool_lock:
             self.poolbypeer[str(peer)] = conn
             conn.peerid = getpeerid(peer)
-            self.activesockets.append(conn.thesocket)
+            self.activesockets.add(conn.thesocket)
             
     def del_connection_by_peer(self, peer):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
@@ -74,7 +74,7 @@ class ConnectionPool():
                     conn = Connection(thesocket, getpeerid(peer))
                     self.poolbypeer[peer] = conn
                     self.poolbysocket[thesocket.fileno()] = conn
-                    self.activesockets.append(thesocket)
+                    self.activesockets.add(thesocket)
                     return conn
                 except:
                     return None
@@ -90,7 +90,7 @@ class ConnectionPool():
             else:
                 conn = Connection(thesocket)
                 self.poolbysocket[thesocket.fileno()] = conn
-                self.activesockets.append(thesocket)
+                self.activesockets.add(thesocket)
                 return conn
 
     def __str__(self):

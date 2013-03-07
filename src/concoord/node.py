@@ -88,6 +88,11 @@ class Node():
                 except socket.error:
                     pass
         self.socket.listen(10)
+        # socketsets
+        self.nascentset = {}
+        self.nascentsetlock = Lock()
+        self.socketset = set([self.socket]) # add the server socket
+        self.socketsetlock = Lock()
         self.alive = True
         # initialize empty groups
         self.me = Peer(self.addr,self.port,self.type)
@@ -199,6 +204,19 @@ class Node():
                         self.groups[peer.type][peer] += 1
                     else:
                         self.groups[peer.type][peer] = 0
+
+            # Handle nascentset
+            now = time.time()
+            with self.nascentsetlock:
+                # add sockets we didn't receive a message from yet, which are not expired
+                for sock in self.nascentset:
+                    # prune and close old sockets that never got turned into connections
+                    if now - self.nascentset[sock] > NASCENTTIMEOUT:
+                        # expired -- if it's not already in the set, it should be closed
+                        with self.socketsetlock:
+                            if sock not in self.socketset:
+                                del self.nascentset[sock]
+                                sock.close()
             time.sleep(LIVENESSTIMEOUT)
 
     def __str__(self):
@@ -221,33 +239,19 @@ class Node():
         - exceptready: sockets that are ready according to an *exceptional condition*
         """
         self.socket.listen(10)
-        nascentset = []
+        self.connectionpool.activesockets.add(self.socket)
         while self.alive:
             try:
-                # collect the set of all sockets that we want to listen to
-                socketset = [self.socket] # add the server socket
-                # add sockets from connectionpool
-                for conn in self.connectionpool.poolbypeer.itervalues():
-                    sock = conn.thesocket
-                    if sock is not None:
-                        if sock not in socketset:
-                            socketset.append(sock)
-                
-                now = time.time()
-                # add sockets we didn't receive a message from yet, which are not expired
-                for s,timestamp in nascentset:
-                    # prune and close old sockets that never got turned into connections
-                    if now - timestamp > NASCENTTIMEOUT:
-                        # expired -- if it's not already in the set, it should be closed
-                        if s not in socketset:
-                            nascentset.remove((s,timestamp))
-                            s.close()
-                    elif s not in socketset:
-                        # check if it has been added before
-                        socketset.append(s)
+                with self.socketsetlock:
+                    self.socketset = self.connectionpool.activesockets
 
-                assert len(socketset) == len(set(socketset)), "[%s] socketset has Duplicates." % self
-                inputready,outputready,exceptready = select.select(socketset,[],socketset,1)
+                with self.nascentsetlock:
+                    for sock in self.nascentset:
+                        with self.socketsetlock:
+                            self.socketset.add(sock)
+
+                assert len(self.socketset) == len(set(self.socketset)), "[%s] socketset has Duplicates." % self
+                inputready,outputready,exceptready = select.select(self.socketset,[],self.socketset,1)
   
                 for s in exceptready:
                     print "EXCEPTION ", s
@@ -255,15 +259,15 @@ class Node():
                     if s == self.socket:
                         clientsock,clientaddr = self.socket.accept()
                         if self.debug: self.logger.write("State", "accepted a connection from address %s" % str(clientaddr))
-                        nascentset.append((clientsock,time.time()))
+                        with self.nascentsetlock:
+                            self.nascentset[clientsock] = time.time()
                         success = True
                     else:
                         success = self.handle_connection(s)
                     if not success:
-                        # s is closed, take it out of nascentset and connection pool
-                        for sock,timestamp in nascentset:
-                            if sock == s:
-                                nascentset.remove((sock,timestamp))
+                        # s is closed, take it out of nascentset, socketset and connection pool
+                        with self.nascentsetlock:
+                            del self.nascentset[s]
                         self.connectionpool.del_connection_by_socket(s)
                         s.close()
             except KeyboardInterrupt, EOFError:
