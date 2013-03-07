@@ -547,7 +547,7 @@ class Replica(Node):
     def update_leader(self):
         """checks which node is the leader and changes the state of the caller if necessary"""
         chosenleader = self.find_leader()
-        print "Chosen Leader: ", chosenleader
+        #print "Chosen Leader: ", chosenleader
         if self.debug: self.logger.write("State", "Updated LEADER: %s" % str(chosenleader))
         if self.me == chosenleader:
             # caller needs to become a leader
@@ -770,7 +770,7 @@ class Replica(Node):
         handles clientrequest message received according to replica's state
         - if not leader: reject
         - if leader: add connection to client connections and handle request"""
-        print "MSG_CLIENTREQUEST received.."
+        #print "MSG_CLIENTREQUEST received.."
         if self.type == NODE_NAMESERVER:
             if self.debug: self.logger.write("Error", "NAMESERVER got a CLIENTREQUEST")
             return
