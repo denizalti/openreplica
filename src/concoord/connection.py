@@ -14,6 +14,7 @@ import random
 from threading import Lock
 from concoord.pack import *
 from concoord.message import *
+from concoord.exception import ConnectionError
 
 class ConnectionPool():
     """ConnectionPool keeps the connections that a certain Node knows of.
@@ -151,9 +152,7 @@ class Connection():
             datalen = self.thesocket.recv_into(self.incoming[self.incomingoffset:], 100000)
             if datalen == 0:
                 print "Connection closed"
-                yield False
-                return
-            #raise ConnectionError() #XXX
+                raise ConnectionError()
             self.incomingoffset += datalen
             while len(self.incoming) >= 4:
                 msg_length = struct.unpack("I", self.incoming[0:4].tobytes())[0]
