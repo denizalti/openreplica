@@ -38,7 +38,7 @@ class ConnectionPool():
             if self.poolbypeer.has_key(peerstr):
                 conn = self.poolbypeer[peerstr]
                 del self.poolbypeer[peerstr]
-                del self.poolbysocket[conn.thesocket]
+                del self.poolbysocket[conn.thesocket.fileno()]
                 self.activesockets.remove(conn.thesocket)
                 conn.close()
             else:
@@ -47,13 +47,13 @@ class ConnectionPool():
     def del_connection_by_socket(self, thesocket):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
         with self.pool_lock:
-            if self.poolbysocket.has_key(thesocket):
-                daconn = self.poolbysocket[thesocket]
+            if self.poolbysocket.has_key(thesocket.fileno()):
+                daconn = self.poolbysocket[thesocket.fileno()]
                 for connkey,conn in self.poolbypeer.iteritems():
                     if conn == daconn:
                         del self.poolbypeer[connkey]
                         break
-                del self.poolbysocket[daconn.thesocket]
+                del self.poolbysocket[daconn.thesocket.fileno()]
                 self.activesockets.remove(daconn.thesocket)
                 daconn.close()
             else:
@@ -73,7 +73,7 @@ class ConnectionPool():
                     thesocket.setblocking(0)
                     conn = Connection(thesocket, getpeerid(peer))
                     self.poolbypeer[peer] = conn
-                    self.poolbysocket[thesocket] = conn
+                    self.poolbysocket[thesocket.fileno()] = conn
                     self.activesockets.append(thesocket)
                     return conn
                 except:
@@ -85,11 +85,11 @@ class ConnectionPool():
         ConnectionPool if it doesn't exist.
         """
         with self.pool_lock:
-            if self.poolbysocket.has_key(thesocket):
-                return self.poolbysocket[thesocket]
+            if self.poolbysocket.has_key(thesocket.fileno()):
+                return self.poolbysocket[thesocket.fileno()]
             else:
                 conn = Connection(thesocket)
-                self.poolbysocket[thesocket] = conn
+                self.poolbysocket[thesocket.fileno()] = conn
                 self.activesockets.append(thesocket)
                 return conn
 
@@ -153,6 +153,7 @@ class Connection():
                 print "Connection closed"
                 yield False
                 return
+            #raise ConnectionError() #XXX
             self.incomingoffset += datalen
             while len(self.incoming) >= 4:
                 msg_length = struct.unpack("I", self.incoming[0:4].tobytes())[0]
@@ -161,7 +162,8 @@ class Connection():
                 if self.incomingoffset >= msg_length+4:
                     msgdict = msgpack.unpackb(self.incoming[4:msg_length+4].tobytes(), use_list=False)
                     # this operation cuts the incoming buffer
-                    self.incoming[:self.incomingoffset-(msg_length+4)] = self.incoming[msg_length+4:self.incomingoffset]
+                    if self.incomingoffset > msg_length+4:
+                        self.incoming[:self.incomingoffset-(msg_length+4)] = self.incoming[msg_length+4:self.incomingoffset]
                     self.incomingoffset -= msg_length+4
                     yield parse_message(msgdict)
                 else:

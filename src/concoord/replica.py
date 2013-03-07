@@ -786,9 +786,9 @@ class Replica(Node):
             print "#################################################"
             print e
             print "#################################################"
-            pass
+    
         # Check to see if Leader
-        self.update_leader()
+        self.update_leader() #XXX
         if not self.isleader and self.leader_is_alive():
             if self.debug: self.logger.write("State", "Not Leader: Rejecting CLIENTREQUEST")
             clientreply = create_message(MSG_CLIENTREPLY, self.me,
@@ -797,24 +797,17 @@ class Replica(Node):
                                           FLD_INRESPONSETO: msg.command.clientcommandnumber})
             conn.send(clientreply)
             return
-        self.update_leader()
+        self.update_leader() #XXX
         # Leader should accept a request even if it's not ready as this
         # way it will make itself ready during the prepare stage.
         if self.isleader:
-            if self.leader_initializing:
-                self.handle_client_command(msg.command, msg.sendcount, prepare=True)
-            else:
-                self.handle_client_command(msg.command, msg.sendcount)
+            self.handle_client_command(msg.command, prepare=self.leader_initializing)
 
     def msg_clientrequest_batch(self, msgconnlist):
         """called holding self.lock
         handles clientrequest messages that are batched together"""
-        if self.type == NODE_NAMESERVER:
-            if self.debug: self.logger.write("Error", "NAMESERVER got a CLIENTREQUEST")
-            return
-
         # Check to see if Leader
-        self.update_leader()
+        self.update_leader() #XXX
         if not self.isleader:
             # Check the Leader to see if the Client had a reason to think that we are the leader
             if self.leader_is_alive():
@@ -827,7 +820,7 @@ class Replica(Node):
                     conn.send(clientreply)
                     msgconnlist.remove((msg,conn))
                 return
-        self.update_leader()
+        self.update_leader() #XXX
         # Leader should accept a request even if it's not ready as this
         # way it will make itself ready during the prepare stage.
         if self.isleader:
@@ -842,11 +835,7 @@ class Replica(Node):
                     conn.send(clientreply)
                 else:
                     givencommands.append((msg.command,msg.sendcount))
-
-            if self.leader_initializing:
-                self.handle_client_command_batch(givencommands, prepare=True)
-            else:
-                self.handle_client_command_batch(givencommands)
+            self.handle_client_command_batch(givencommands, prepare=self.leader_initializing)
 
     def msg_incclientrequest(self, conn, msg):
         """handles inconsistent requests from the client"""
