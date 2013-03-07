@@ -161,7 +161,7 @@ class Connection():
                 if self.incomingoffset >= msg_length+4:
                     msgdict = msgpack.unpackb(self.incoming[4:msg_length+4].tobytes(), use_list=False)
                     # this operation cuts the incoming buffer
-                    self.incoming[:len(self.incoming)-(msg_length+4)] = self.incoming[msg_length+4:]
+                    self.incoming[:self.incomingoffset-(msg_length+4)] = self.incoming[msg_length+4:self.incomingoffset]
                     self.incomingoffset -= msg_length+4
                     if rcvdmsgs:
                         rcvdmsgs.append(parse_message(msgdict))
