@@ -182,13 +182,10 @@ class ClientProxy():
                                 needreconfig = not self.conn.send(reqdesc.cm)
                     else:
                         # server has sent us something and we need to process it
-                        replies = self.conn.received_bytes()
-                        if replies is False:
-                            needreconfig = True
-                            break
-                        elif replies is None:
-                            continue
-                        for reply in replies:
+                        for reply in self.conn.received_bytes():
+                            if reply == False:
+                                needreconfig = True
+                                break
                             if reply and reply.type == MSG_CLIENTREPLY:
                                 with self.lock:
                                     reqdesc = self.pendingops[reply.inresponseto]
