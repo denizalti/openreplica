@@ -90,7 +90,7 @@ class Node():
                     pass
         self.socket.listen(10)
         # socketsets
-        self.nascentset = {}
+        self.nascentset = set([])
         self.nascentsetlock = Lock()
         self.socketset = set([self.socket]) # add the server socket
         self.socketsetlock = Lock()
@@ -210,14 +210,15 @@ class Node():
             now = time.time()
             with self.nascentsetlock:
                 # add sockets we didn't receive a message from yet, which are not expired
-                for sock in self.nascentset:
+                for (sock,timestamp) in self.nascentset:
                     # prune and close old sockets that never got turned into connections
-                    if now - self.nascentset[sock] > NASCENTTIMEOUT:
-                        # expired -- if it's not already in the set, it should be closed
+                    if now - timestamp > NASCENTTIMEOUT:
                         with self.socketsetlock:
+                            # expired -- if it's not already in the set, it should be closed
                             if sock not in self.socketset:
-                                del self.nascentset[sock]
+                                self.nascentset.remove((sock,timestamp))
                                 sock.close()
+
             time.sleep(LIVENESSTIMEOUT)
 
     def __str__(self):
@@ -245,10 +246,8 @@ class Node():
             try:
                 with self.socketsetlock:
                     self.socketset = self.connectionpool.activesockets
-
-                with self.nascentsetlock:
-                    for sock in self.nascentset:
-                        with self.socketsetlock:
+                    with self.nascentsetlock:
+                        for (sock,timestamp) in self.nascentset:
                             self.socketset.add(sock)
 
                 assert len(self.socketset) == len(set(self.socketset)), "[%s] socketset has Duplicates." % self
@@ -261,14 +260,17 @@ class Node():
                         clientsock,clientaddr = self.socket.accept()
                         if self.debug: self.logger.write("State", "accepted a connection from address %s" % str(clientaddr))
                         with self.nascentsetlock:
-                            self.nascentset[clientsock] = time.time()
+                            self.nascentset.add((clientsock,time.time()))
                         success = True
                     else:
                         success = self.handle_connection(s)
                     if not success:
-                        # s is closed, take it out of nascentset, socketset and connection pool
+                        # s is closed, take it out of connectionpool
                         with self.nascentsetlock:
-                            del self.nascentset[s]
+                            for nsock,timestamp in self.nascentset:
+                                if nsock == s:
+                                    self.nascentset.remove((nsock,timestamp))
+                                    break
                         self.connectionpool.del_connection_by_socket(s)
                         s.close()
             except KeyboardInterrupt, EOFError:
