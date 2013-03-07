@@ -233,10 +233,11 @@ class Node():
                         if sock not in socketset:
                             socketset.append(sock)
                 
+                now = time.time()
                 # add sockets we didn't receive a message from yet, which are not expired
                 for s,timestamp in nascentset:
                     # prune and close old sockets that never got turned into connections
-                    if time.time() - timestamp > NASCENTTIMEOUT:
+                    if now - timestamp > NASCENTTIMEOUT:
                         # expired -- if it's not already in the set, it should be closed
                         if s not in socketset:
                             nascentset.remove((s,timestamp))
@@ -273,8 +274,7 @@ class Node():
     def handle_connection(self, clientsock):
         """Receives a message and calls the corresponding message handler"""
         connection = self.connectionpool.get_connection_by_socket(clientsock)
-        messages = connection.received_bytes()
-        for message in messages:
+        for message in connection.received_bytes():
             if self.debug: self.logger.write("State", "received %s" % str(message))
             if message == False:
                 return False
