@@ -283,7 +283,7 @@ class Node():
                 self.receivedmessages_semaphore.release()
                 if message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
                     self.connectionpool.add_connection_to_peer(message.source, connection)
-                elif message.type in (MSG_HELO, MSG_HELOREPLY, MSG_UPDATE, MSG_BYE):
+                elif message.type in (MSG_HELO, MSG_HELOREPLY, MSG_UPDATE):
                     self.connectionpool.add_connection_to_peer(message.source, connection)
             return True
         except ConnectionError:
@@ -356,10 +356,6 @@ class Node():
     def msg_ping(self, conn, msg):
         return
 
-    def msg_bye(self, conn, msg):
-        """Deletes the source of MSG_BYE from groups"""
-        del self.groups[msg.source.type][msg.source]
-        
     # shell commands generic to all nodes
     def cmd_help(self, args):
         """prints the commands that are supported
@@ -370,12 +366,8 @@ class Node():
                 print attr.replace("cmd_", "")
 
     def cmd_exit(self, args):
-        """Changes the liveness state and send MSG_BYE to Peers.""" 
+        """Changes the liveness state and dies""" 
         self.alive = False
-        byemessage = create_message(MSG_BYE, self.me)
-        for type,nodegroup in self.groups.iteritems():
-            self.send(byemessage, group=nodegroup)
-        self.send(byemessage, peer=self.me)
         os._exit(0)
                     
     def cmd_state(self, args):
