@@ -115,7 +115,7 @@ def parse_message(msg):
 # XXX deprecated
 def old_parse_message(msg):
     src = Peer(*msg[FLD_SRC])
-    if msg[FLD_TYPE] == MSG_HELO or msg[FLD_TYPE] == MSG_PING or msg[FLD_TYPE] == MSG_BYE \
+    if msg[FLD_TYPE] == MSG_HELO or msg[FLD_TYPE] == MSG_PING \
             or msg[FLD_TYPE] == MSG_UPDATE or msg[FLD_TYPE] == MSG_STATUS:
         return Message(msg[FLD_ID], msg[FLD_TYPE], src)
     elif msg[FLD_TYPE] == MSG_CLIENTREQUEST:
@@ -191,7 +191,6 @@ parse_functions = [
     parse_basic, # MSG_HELO
     parse_heloreply, # MSG_HELOREPLY
     parse_basic, # MSG_PING
-    parse_basic, # MSG_BYE
 
     parse_basic, # MSG_UPDATE
     parse_updatereply, # MSG_UPDATEREPLY
