@@ -532,6 +532,19 @@ class Replica(Node):
         otherleader_addr,otherleader_port = ballotnumber[BALLOTNODE].split(":")
         otherleader = Peer(otherleader_addr, int(otherleader_port), NODE_REPLICA)
         return otherleader
+
+    def leader_is_alive(self):
+        currentleader = self.find_leader()
+        if currentleader != self.me:
+            if self.debug: self.logger.write("State", "Sending PING to %s" % str(currentleader))
+            pingmessage = create_message(MSG_PING, self.me)
+            success = self.send(pingmessage, peer=currentleader)
+            if success < 0:
+                if self.debug: self.logger.write("State",
+                                  "Leader not responding, marking the leader unreachable.")
+                self.groups[currentleader.type][currentleader] += 1
+                return False
+        return True
             
     def find_leader(self):
         """returns the minimum peer that is alive as the leader"""
@@ -820,7 +833,8 @@ class Replica(Node):
                     conn.send(clientreply)
                     msgconnlist.remove((msg,conn))
                 return
-        self.update_leader() #XXX
+            else:
+                self.update_leader()
         # Leader should accept a request even if it's not ready as this
         # way it will make itself ready during the prepare stage.
         if self.isleader:
@@ -1146,19 +1160,6 @@ class Replica(Node):
             with self.recentlyupdatedpeerslock:
                 self.recentlyupdatedpeers = []
             time.sleep(LIVENESSTIMEOUT)
-
-    def leader_is_alive(self):
-        currentleader = self.find_leader()
-        if currentleader != self.me:
-            if self.debug: self.logger.write("State", "Sending PING to %s" % str(currentleader))
-            pingmessage = create_message(MSG_PING, self.me)
-            success = self.send(pingmessage, peer=currentleader)
-            if success < 0:
-                if self.debug: self.logger.write("State",
-                                  "Leader not responding, marking the leader unreachable.")
-                self.groups[currentleader.type][currentleader] += 1
-                return False
-        return True
 
     def create_delete_command(self, node):
         mynumber = self.metacommandnumber
