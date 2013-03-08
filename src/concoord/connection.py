@@ -23,14 +23,19 @@ class ConnectionPool():
         self.poolbypeer = {}
         self.poolbysocket = {}
         self.pool_lock = Lock()
+        # Sockets that are being actively listened to
         self.activesockets = set([])
-        
+        # Sockets that we didn't receive a msg on yet
+        self.nascentsockets = set([])
+
     def add_connection_to_peer(self, peer, conn):
         """Adds a Connection to the ConnectionPool by its Peer"""
         with self.pool_lock:
             self.poolbypeer[str(peer)] = conn
             conn.peerid = getpeerid(peer)
             self.activesockets.add(conn.thesocket)
+            if conn.thesocket in self.nascentsockets:
+                self.nascentsockets.remove(conn.thesocket)
             
     def del_connection_by_peer(self, peer):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
@@ -41,6 +46,8 @@ class ConnectionPool():
                 del self.poolbypeer[peerstr]
                 del self.poolbysocket[conn.thesocket.fileno()]
                 self.activesockets.remove(conn.thesocket)
+                if conn.thesocket in self.nascentsockets:
+                    self.nascentsockets.remove(conn.thesocket)
                 conn.close()
             else:
                 print "Trying to delete a non-existent connection from the connection pool."
@@ -56,6 +63,8 @@ class ConnectionPool():
                         break
                 del self.poolbysocket[daconn.thesocket.fileno()]
                 self.activesockets.remove(daconn.thesocket)
+                if daconn.thesocket in self.nascentsockets:
+                    self.nascentsockets.remove(daconn.thesocket)
                 daconn.close()
             else:
                 print "Trying to delete a non-existent socket from the connection pool."
@@ -92,6 +101,8 @@ class ConnectionPool():
                 conn = Connection(thesocket)
                 self.poolbysocket[thesocket.fileno()] = conn
                 self.activesockets.add(thesocket)
+                if thesocket in self.nascentsockets:
+                    self.nascentsockets.remove(thesocket)
                 return conn
 
     def __str__(self):

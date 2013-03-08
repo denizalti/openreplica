@@ -89,11 +89,6 @@ class Node():
                 except socket.error:
                     pass
         self.socket.listen(10)
-        # socketsets
-        self.nascentset = set([])
-        self.nascentsetlock = Lock()
-        self.socketset = set([self.socket]) # add the server socket
-        self.socketsetlock = Lock()
         self.alive = True
         # initialize empty groups
         self.me = Peer(self.addr,self.port,self.type)
@@ -160,7 +155,8 @@ class Node():
         while tries < BOOTSTRAPCONNECTTIMEOUT and keeptrying:
             for bootpeer in self.bootstraplist:
                 try:
-                    if self.debug: self.logger.write("State", "trying to connect to bootstrap: %s" % str(bootpeer))
+                    if self.debug: self.logger.write("State",
+                                                     "trying to connect to bootstrap: %s" % str(bootpeer))
                     helomessage = create_message(MSG_HELO, self.me)
                     success = self.send(helomessage, peer=bootpeer)
                     if success < 0:
@@ -169,7 +165,8 @@ class Node():
                     keeptrying = False
                     break
                 except socket.error, e:
-                    if self.debug: self.logger.write("Connection Error", "cannot connect to bootstrap: %s" % str(e))
+                    if self.debug: self.logger.write("Connection Error",
+                                                     "cannot connect to bootstrap: %s" % str(e))
                     print e
                     tries += 1
                     continue
@@ -189,6 +186,10 @@ class Node():
         ping_thread = Timer(LIVENESSTIMEOUT, self.ping_neighbor)
         ping_thread.name = 'PingThread'
         ping_thread.start()
+        # Start a thread that goes through the nascentset and cleans expired ones
+        ping_thread = Timer(NASCENTTIMEOUT, self.clean_nascent)
+        ping_thread.name = 'NascentThread'
+        ping_thread.start()
         return self
 
     def ping_neighbor(self):
@@ -205,21 +206,19 @@ class Node():
                         self.groups[peer.type][peer] += 1
                     else:
                         self.groups[peer.type][peer] = 0
-
-            # Handle nascentset
-            now = time.time()
-            with self.nascentsetlock:
-                # add sockets we didn't receive a message from yet, which are not expired
-                for (sock,timestamp) in self.nascentset:
-                    # prune and close old sockets that never got turned into connections
-                    if now - timestamp > NASCENTTIMEOUT:
-                        with self.socketsetlock:
-                            # expired -- if it's not already in the set, it should be closed
-                            if sock not in self.socketset:
-                                self.nascentset.remove((sock,timestamp))
-                                sock.close()
-
             time.sleep(LIVENESSTIMEOUT)
+
+    def clean_nascent(self):
+        lastnascentset = set([])
+        while True:
+            for sock in lastnascentset.intersection(self.connectionpool.nascentsockets):
+                # expired -- if it's not already in the set, it should be closed
+                self.activesockets.remove(sock)
+                self.nascentsockets.remove(sock)
+                sock.close()
+            lastnascentset = self.connectionpool.nascentsockets
+
+            time.sleep(NASCENTTIMEOUT)
 
     def __str__(self):
         return "%s NODE %s:%d" % (node_names[self.type], self.addr, self.port)
@@ -235,8 +234,6 @@ class Node():
         """Serverloop that listens to multiple connections and accepts new ones.
 
         Server State
-        - nascentset: set of sockets on which a MSG_HELO has not been received yet
-        - socketset: sockets the server waits on
         - inputready: sockets that are ready for reading
         - exceptready: sockets that are ready according to an *exceptional condition*
         """
@@ -244,33 +241,23 @@ class Node():
         self.connectionpool.activesockets.add(self.socket)
         while self.alive:
             try:
-                with self.socketsetlock:
-                    self.socketset = self.connectionpool.activesockets
-                    with self.nascentsetlock:
-                        for (sock,timestamp) in self.nascentset:
-                            self.socketset.add(sock)
-
-                assert len(self.socketset) == len(set(self.socketset)), "[%s] socketset has Duplicates." % self
-                inputready,outputready,exceptready = select.select(self.socketset,[],self.socketset,1)
+                inputready,outputready,exceptready = select.select(self.connectionpool.activesockets,
+                                                                   [],
+                                                                   self.connectionpool.activesockets,
+                                                                   1)
   
                 for s in exceptready:
-                    print "EXCEPTION ", s
+                    if self.debug: self.logger.write("Exception", "%s" % s)
                 for s in inputready:
                     if s == self.socket:
                         clientsock,clientaddr = self.socket.accept()
                         if self.debug: self.logger.write("State", "accepted a connection from address %s" % str(clientaddr))
-                        with self.nascentsetlock:
-                            self.nascentset.add((clientsock,time.time()))
+                        self.connectionpool.activesockets.add(clientsock)
+                        self.connectionpool.nascentsockets.add(clientsock)
                         success = True
                     else:
                         success = self.handle_connection(s)
                     if not success:
-                        # s is closed, take it out of connectionpool
-                        with self.nascentsetlock:
-                            for nsock,timestamp in self.nascentset:
-                                if nsock == s:
-                                    self.nascentset.remove((nsock,timestamp))
-                                    break
                         self.connectionpool.del_connection_by_socket(s)
                         s.close()
             except KeyboardInterrupt, EOFError:
@@ -337,7 +324,6 @@ class Node():
     def process_messagelist(self, msgconnlist):
         """Processes given message connection pairs"""
         with self.lock:
-            #XXX batched
             self.msg_clientrequest_batch(msgconnlist)
         return True
 
