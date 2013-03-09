@@ -792,7 +792,7 @@ class Replica(Node):
         handles clientrequest message received according to replica's state
         - if not leader: reject
         - if leader: add connection to client connections and handle request"""
-        #print "MSG_CLIENTREQUEST received.."
+        print "MSG_CLIENTREQUEST received.."
         if self.type == NODE_NAMESERVER:
             if self.debug: self.logger.write("Error", "NAMESERVER got a CLIENTREQUEST")
             return
@@ -806,17 +806,21 @@ class Replica(Node):
                 self.handle_client_command(msg.command, prepare=self.leader_initializing)
         else:
             if self.leader_is_alive():
+                print "Leader is alive!"
                 # if not leader and leader is alive, reject the request
                 if self.debug: self.logger.write("State", "Not Leader: Rejecting CLIENTREQUEST")
                 self.send_reject_to_client(conn, msg.command.clientcommandnumber)
             else:
                 # check if should become leader
                 if self.find_leader() == self.me:
+                    print "Leader is dead, I'm the new leader!"
                     self.become_leader()
                     if self.token and msg.token != self.token:
+                        print "TOKEN ERROR"
                         if self.debug: self.logger.write("Error", "Security Token mismatch.")
                         self.send_reject_to_client(conn, msg.command.clientcommandnumber)
                     else:
+                        print "Handling Command...."
                         self.handle_client_command(msg.command, prepare=self.leader_initializing)
                     
     def msg_clientrequest_batch(self, msgconnlist):

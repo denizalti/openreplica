@@ -213,8 +213,8 @@ class Node():
         while True:
             for sock in lastnascentset.intersection(self.connectionpool.nascentsockets):
                 # expired -- if it's not already in the set, it should be closed
-                self.activesockets.remove(sock)
-                self.nascentsockets.remove(sock)
+                self.connectionpool.activesockets.remove(sock)
+                self.connectionpool.nascentsockets.remove(sock)
                 sock.close()
             lastnascentset = self.connectionpool.nascentsockets
 
@@ -241,10 +241,7 @@ class Node():
         self.connectionpool.activesockets.add(self.socket)
         while self.alive:
             try:
-                inputready,outputready,exceptready = select.select(self.connectionpool.activesockets,
-                                                                   [],
-                                                                   self.connectionpool.activesockets,
-                                                                   1)
+                inputready,outputready,exceptready = select.select(self.connectionpool.activesockets, [], self.connectionpool.activesockets, 1)
   
                 for s in exceptready:
                     if self.debug: self.logger.write("Exception", "%s" % s)
@@ -259,7 +256,6 @@ class Node():
                         success = self.handle_connection(s)
                     if not success:
                         self.connectionpool.del_connection_by_socket(s)
-                        s.close()
             except KeyboardInterrupt, EOFError:
                 os._exit(0)
         self.socket.close()
@@ -402,6 +398,8 @@ class Node():
     
     def send(self, message, peer=None, group=None, isresend=False):
         if peer:
+            if peer == self.me:
+                return 0
             connection = self.connectionpool.get_connection_by_peer(peer)
             if connection == None:
                 if self.debug: self.logger.write("Connection Error",

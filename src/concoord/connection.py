@@ -33,6 +33,7 @@ class ConnectionPool():
         with self.pool_lock:
             self.poolbypeer[str(peer)] = conn
             conn.peerid = getpeerid(peer)
+            print "Adding connection to peer: ", peer
             self.activesockets.add(conn.thesocket)
             if conn.thesocket in self.nascentsockets:
                 self.nascentsockets.remove(conn.thesocket)
@@ -45,6 +46,7 @@ class ConnectionPool():
                 conn = self.poolbypeer[peerstr]
                 del self.poolbypeer[peerstr]
                 del self.poolbysocket[conn.thesocket.fileno()]
+                print "Removing connection to peer: ", peer
                 self.activesockets.remove(conn.thesocket)
                 if conn.thesocket in self.nascentsockets:
                     self.nascentsockets.remove(conn.thesocket)
@@ -56,16 +58,17 @@ class ConnectionPool():
         """ Deletes a Connection from the ConnectionPool by its Peer"""
         with self.pool_lock:
             if self.poolbysocket.has_key(thesocket.fileno()):
-                daconn = self.poolbysocket[thesocket.fileno()]
+                connindict = self.poolbysocket[thesocket.fileno()]
                 for connkey,conn in self.poolbypeer.iteritems():
-                    if conn == daconn:
+                    if conn == connindict:
                         del self.poolbypeer[connkey]
                         break
-                del self.poolbysocket[daconn.thesocket.fileno()]
-                self.activesockets.remove(daconn.thesocket)
-                if daconn.thesocket in self.nascentsockets:
-                    self.nascentsockets.remove(daconn.thesocket)
-                daconn.close()
+                del self.poolbysocket[thesocket.fileno()]
+                print "Removing connection to socket: ", thesocket
+                self.activesockets.remove(thesocket)
+                if thesocket in self.nascentsockets:
+                    self.nascentsockets.remove(thesocket)
+                connindict.close()
             else:
                 print "Trying to delete a non-existent socket from the connection pool."
 
@@ -84,6 +87,7 @@ class ConnectionPool():
                     conn = Connection(thesocket, getpeerid(peer))
                     self.poolbypeer[peer] = conn
                     self.poolbysocket[thesocket.fileno()] = conn
+                    print "Created connection to peer: ", peer
                     self.activesockets.add(thesocket)
                     return conn
                 except:
@@ -100,9 +104,6 @@ class ConnectionPool():
             else:
                 conn = Connection(thesocket)
                 self.poolbysocket[thesocket.fileno()] = conn
-                self.activesockets.add(thesocket)
-                if thesocket in self.nascentsockets:
-                    self.nascentsockets.remove(thesocket)
                 return conn
 
     def __str__(self):
@@ -160,7 +161,24 @@ class Connection():
     def received_bytes(self):
         with self.readlock:
             # do the length business here
-            datalen = self.thesocket.recv_into(self.incoming[self.incomingoffset:], 100000)
+            try:
+                datalen = self.thesocket.recv_into(self.incoming[self.incomingoffset:], 100000)
+            except ValueError as e:
+                # buffer too small for requested bytes
+                print "Value Error: The message is larger than the buffersize"
+                msg_length = struct.unpack("I", self.incoming[0:4].tobytes())[0]
+                msgstr = self.incoming[4:].tobytes()
+                try:
+                    msgstr += self.receive_n_bytes(msg_length-(len(self.incoming)-4))
+                    msgdict = msgpack.unpackb(msgstr, use_list=False)
+                    self.incoming = memoryview(bytearray(100000))
+                    self.incomingoffset = 0
+                    yield parse_message(msgdict)
+                except IOError as inst:
+                    self.incoming = memoryview(bytearray(100000))
+                    self.incomingoffset = 0
+                    raise ConnectionError()
+
             if datalen == 0:
                 print "Connection closed"
                 raise ConnectionError()
