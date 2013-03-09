@@ -95,7 +95,6 @@ class Replica(Node):
             profile_on() # Turn profiling on!
 
     def __str__(self):
-        self.update_leader()
         rstr = "%s %s:%d\n" % ("LEADER" if self.isleader else node_names[self.type], self.addr, self.port)
         rstr += "Members:\n%s\n" % "\n".join(str(group) for type,group in self.groups.iteritems())
         rstr += "Waiting to execute command %d.\n" % self.nexttoexecute
@@ -341,24 +340,21 @@ class Replica(Node):
             # Agree on adding the first replica and this first acceptor
             # Add the Acceptor
             addcommand = self.create_add_command(msg.source)
-            self.update_leader()
+            self.become_leader()
             self.initiate_command(addcommand)
             for i in range(WINDOW):
                 noopcommand = self.create_noop_command()
                 self.initiate_command(noopcommand)
             # Add self
             addcommand = self.create_add_command(self.me)
-            self.update_leader()
             self.initiate_command(addcommand)
             for i in range(WINDOW):
                 noopcommand = self.create_noop_command()
                 self.initiate_command(noopcommand)
         else:
-            self.update_leader()
             if self.isleader:
                 if self.debug: self.logger.write("State", "Adding the new node")
                 addcommand = self.create_add_command(msg.source)
-                self.update_leader()
                 self.initiate_command(addcommand)
                 if self.debug: self.logger.write("State", "Add command created: %s" % str(addcommand))
                 for i in range(WINDOW+3):
@@ -427,6 +423,17 @@ class Replica(Node):
         ipaddr,port = nodename.split(":")
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype][nodepeer] = 0
+        # if the added node is a Replica, check leadership state
+        if nodetype == NODE_REPLICA:
+            chosenleader = self.findleader()
+            if chosenleader == self.me and not self.isleader:
+                # become the leader
+                if not self.stateuptodate:
+                    self.leader_initializing = True
+                self.become_leader()
+            elif chosenleader != self.me and self.isleader:
+                # unbecome the leader
+                self.unbecome_leader()
         
     def _del_node(self, nodetype, nodename):
         nodetype = int(nodetype)
@@ -434,6 +441,17 @@ class Replica(Node):
         ipaddr,port = nodename.split(":")
         nodepeer = Peer(ipaddr,int(port),nodetype)
         del self.groups[nodetype][nodepeer]
+        # if the deleted node is a Replica, check leadership state
+        if nodetype == NODE_REPLICA:
+            chosenleader = self.findleader()
+            if chosenleader == self.me and not self.isleader:
+                # become the leader
+                if not self.stateuptodate:
+                    self.leader_initializing = True
+                self.become_leader()
+            elif chosenleader != self.me and self.isleader:
+                # unbecome the leader
+                self.unbecome_leader()
 
     def _garbage_collect(self, garbagecommandnumber):
         """ garbage collect """
@@ -505,6 +523,7 @@ class Replica(Node):
             self.receivedclientrequests = {}
             self.backoff = 0
             self.commandgap = 1
+            self.leader_initializing = True
             
             backoff_thread = Thread(target=self.update_backoff)
             backoff_event.clear()
@@ -557,22 +576,6 @@ class Replica(Node):
         del replicas
         return self.me
         
-    def update_leader(self):
-        """checks which node is the leader and changes the state of the caller if necessary"""
-        chosenleader = self.find_leader()
-        #print "Chosen Leader: ", chosenleader
-        if self.debug: self.logger.write("State", "Updated LEADER: %s" % str(chosenleader))
-        if self.me == chosenleader:
-            # caller needs to become a leader
-            if not self.isleader:
-                # check to see if caller has full history
-                if not self.stateuptodate:
-                    self.leader_initializing = True
-                self.become_leader()
-        elif self.me != chosenleader and self.isleader:
-            # there is some other replica that should act as a leader
-            self.unbecome_leader()
-
     def update_ballotnumber(self,seedballotnumber):
         """update the ballotnumber with a higher value than the given ballotnumber"""
         temp = (seedballotnumber[BALLOTNO]+1,self.ballotnumber[BALLOTNODE])
@@ -777,6 +780,12 @@ class Replica(Node):
             self.initiate_command(commandstohandle[0])
         else: # len(givencommands) > 1:
             self.initiate_command(ProposalBatch(commandstohandle))
+            
+    def send_reject_to_client(self, conn, clientcommandnumber):
+        conn.send(create_message(MSG_CLIENTREPLY, self.me,
+                                 {FLD_REPLY: '',
+                                  FLD_REPLYCODE: CR_REJECTED,
+                                  FLD_INRESPONSETO: clientcommandnumber}))
 
     def msg_clientrequest(self, conn, msg):
         """called holding self.lock
@@ -787,69 +796,62 @@ class Replica(Node):
         if self.type == NODE_NAMESERVER:
             if self.debug: self.logger.write("Error", "NAMESERVER got a CLIENTREQUEST")
             return
-        try:
+    
+        if self.isleader:
+            # if leader, handle the clientrequest
             if self.token and msg.token != self.token:
                 if self.debug: self.logger.write("Error", "Security Token mismatch.")
-                clientreply = create_message(MSG_CLIENTREPLY, self.me,
-                                             {FLD_REPLY: '',
-                                              FLD_REPLYCODE: CR_REJECTED,
-                                              FLD_INRESPONSETO: msg.command.clientcommandnumber})
-                conn.send(clientreply)
-        except AttributeError as e:
-            print "#################################################"
-            print e
-            print "#################################################"
-    
-        # Check to see if Leader
-        self.update_leader() #XXX
-        if not self.isleader and self.leader_is_alive():
-            if self.debug: self.logger.write("State", "Not Leader: Rejecting CLIENTREQUEST")
-            clientreply = create_message(MSG_CLIENTREPLY, self.me,
-                                         {FLD_REPLY: '',
-                                          FLD_REPLYCODE: CR_REJECTED,
-                                          FLD_INRESPONSETO: msg.command.clientcommandnumber})
-            conn.send(clientreply)
-            return
-        self.update_leader() #XXX
-        # Leader should accept a request even if it's not ready as this
-        # way it will make itself ready during the prepare stage.
-        if self.isleader:
-            self.handle_client_command(msg.command, prepare=self.leader_initializing)
-
+                self.send_reject_to_client(conn, msg.command.clientcommandnumber)
+            else:
+                self.handle_client_command(msg.command, prepare=self.leader_initializing)
+        else:
+            if self.leader_is_alive():
+                # if not leader and leader is alive, reject the request
+                if self.debug: self.logger.write("State", "Not Leader: Rejecting CLIENTREQUEST")
+                self.send_reject_to_client(conn, msg.command.clientcommandnumber)
+            else:
+                # check if should become leader
+                if self.find_leader() == self.me:
+                    self.become_leader()
+                    if self.token and msg.token != self.token:
+                        if self.debug: self.logger.write("Error", "Security Token mismatch.")
+                        self.send_reject_to_client(conn, msg.command.clientcommandnumber)
+                    else:
+                        self.handle_client_command(msg.command, prepare=self.leader_initializing)
+                    
     def msg_clientrequest_batch(self, msgconnlist):
         """called holding self.lock
         handles clientrequest messages that are batched together"""
-        # Check to see if Leader
-        self.update_leader() #XXX
-        if not self.isleader:
-            # Check the Leader to see if the Client had a reason to think that we are the leader
-            if self.leader_is_alive():
-                if self.debug: self.logger.write("State", "Not Leader: Rejecting CLIENTREQUESTS")
-                for (msg,conn) in msgconnlist:
-                    clientreply = create_message(MSG_CLIENTREPLY, self.me,
-                                                 {FLD_REPLY: '',
-                                                  FLD_REPLYCODE: CR_REJECTED,
-                                                  FLD_INRESPONSETO: msg.command.clientcommandnumber})
-                    conn.send(clientreply)
-                    msgconnlist.remove((msg,conn))
-                return
-            else:
-                self.update_leader()
-        # Leader should accept a request even if it's not ready as this
-        # way it will make itself ready during the prepare stage.
         if self.isleader:
+            # if leader, handle the clientrequest
             givencommands = []
             for (msg,conn) in msgconnlist:
                 if self.token and msg.token != self.token:
                     if self.debug: self.logger.write("Error", "Security Token mismatch.")
-                    clientreply = create_message(MSG_CLIENTREPLY, self.me,
-                                                 {FLD_REPLY: '',
-                                                  FLD_REPLYCODE: CR_REJECTED,
-                                                  FLD_INRESPONSETO: msg.command.clientcommandnumber})
-                    conn.send(clientreply)
+                    self.send_reject_to_client(conn, msg.command.clientcommandnumber)
                 else:
                     givencommands.append((msg.command,msg.sendcount))
             self.handle_client_command_batch(givencommands, prepare=self.leader_initializing)
+        else:
+            if self.leader_is_alive():
+                # if not leader and leader is alive, reject the request
+                if self.debug: self.logger.write("State", "Not Leader: Rejecting all CLIENTREQUESTS")
+                for (msg,conn) in msgconnlist:
+                    self.send_reject_to_client(conn, msg.command.clientcommandnumber)
+            else:
+                # check if should become leader
+                if self.find_leader() == self.me:
+                    self.become_leader()
+                    # Leader should accept a request even if it's not ready as this
+                    # way it will make itself ready during the prepare stage.
+                    givencommands = []
+                    for (msg,conn) in msgconnlist:
+                        if self.token and msg.token != self.token:
+                            if self.debug: self.logger.write("Error", "Security Token mismatch.")
+                            self.send_reject_to_client(conn, msg.command.clientcommandnumber)
+                        else:
+                            givencommands.append((msg.command,msg.sendcount))
+                    self.handle_client_command_batch(givencommands, prepare=self.leader_initializing)
 
     def msg_incclientrequest(self, conn, msg):
         """handles inconsistent requests from the client"""
@@ -1145,7 +1147,6 @@ class Replica(Node):
                     if success < 0:
                         if self.debug: self.logger.write("State", "Neighbor not responding, marking the neighbor")
                         self.groups[peer.type][peer] += 1
-                        self.update_leader()
                         if self.isleader:
                             delcommand = self.create_delete_command(peer)
                             if delcommand not in self.pendingmetacommands:
@@ -1203,6 +1204,7 @@ class Replica(Node):
 
     def cmd_info(self, args):
         """print next commandnumber to execute and executed commands"""
+        print str(self)
         print "Waiting to execute #%d" % self.nexttoexecute
         print "Decisions:\n"
         for (commandnumber,command) in self.decisions.iteritems():
