@@ -33,7 +33,6 @@ class ConnectionPool():
         with self.pool_lock:
             self.poolbypeer[str(peer)] = conn
             conn.peerid = getpeerid(peer)
-            print "Adding connection to peer: ", peer
             self.activesockets.add(conn.thesocket)
             if conn.thesocket in self.nascentsockets:
                 self.nascentsockets.remove(conn.thesocket)
@@ -46,7 +45,6 @@ class ConnectionPool():
                 conn = self.poolbypeer[peerstr]
                 del self.poolbypeer[peerstr]
                 del self.poolbysocket[conn.thesocket.fileno()]
-                print "Removing connection to peer: ", peer
                 self.activesockets.remove(conn.thesocket)
                 if conn.thesocket in self.nascentsockets:
                     self.nascentsockets.remove(conn.thesocket)
@@ -64,7 +62,6 @@ class ConnectionPool():
                         del self.poolbypeer[connkey]
                         break
                 del self.poolbysocket[thesocket.fileno()]
-                print "Removing connection to socket: ", thesocket
                 self.activesockets.remove(thesocket)
                 if thesocket in self.nascentsockets:
                     self.nascentsockets.remove(thesocket)
@@ -87,7 +84,6 @@ class ConnectionPool():
                     conn = Connection(thesocket, getpeerid(peer))
                     self.poolbypeer[peer] = conn
                     self.poolbysocket[thesocket.fileno()] = conn
-                    print "Created connection to peer: ", peer
                     self.activesockets.add(thesocket)
                     return conn
                 except:
@@ -165,7 +161,6 @@ class Connection():
                 datalen = self.thesocket.recv_into(self.incoming[self.incomingoffset:], 100000)
             except ValueError as e:
                 # buffer too small for requested bytes
-                print "Value Error: The message is larger than the buffersize"
                 msg_length = struct.unpack("I", self.incoming[0:4].tobytes())[0]
                 msgstr = self.incoming[4:].tobytes()
                 try:
