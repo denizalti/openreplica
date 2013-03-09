@@ -347,11 +347,13 @@ class Node():
 
     def msg_heloreply(self, conn, msg):
         if msg.leader:
-            self.bootstraplist.remove(msg.source)
-            self.bootstraplist.append(msg.leader)
-            self.connecttobootstrap()
-        else:
-            self.groups[NODE_REPLICA].add(msg.source)
+            if msg.source == msg.leader:
+                if self.debug: self.logger.write("Error", "There are no acceptors yet, waiting.")
+                return
+            else:
+                self.bootstraplist.remove(msg.source)
+                self.bootstraplist.append(msg.leader)
+                self.connecttobootstrap()
 
     def msg_ping(self, conn, msg):
         return
@@ -402,7 +404,8 @@ class Node():
         if peer:
             connection = self.connectionpool.get_connection_by_peer(peer)
             if connection == None:
-                if self.debug: self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
+                if self.debug: self.logger.write("Connection Error",
+                                                 "Connection for %s cannot be found." % str(peer))
                 return -1
             connection.send(message)
             return message[FLD_ID]
@@ -413,7 +416,8 @@ class Node():
                 if peer != self.me:
                     connection = self.connectionpool.get_connection_by_peer(peer)
                     if connection == None:
-                        if self.debug: self.logger.write("Connection Error", "Connection for %s cannot be found." % str(peer))
+                        if self.debug: self.logger.write("Connection Error",
+                                                         "Connection for %s cannot be found." % str(peer))
                         continue
                     connection.send(message)
                     ids.append(message[FLD_ID])
