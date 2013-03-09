@@ -425,7 +425,7 @@ class Replica(Node):
         self.groups[nodetype][nodepeer] = 0
         # if the added node is a Replica, check leadership state
         if nodetype == NODE_REPLICA:
-            chosenleader = self.findleader()
+            chosenleader = self.find_leader()
             if chosenleader == self.me and not self.isleader:
                 # become the leader
                 if not self.stateuptodate:
@@ -443,7 +443,7 @@ class Replica(Node):
         del self.groups[nodetype][nodepeer]
         # if the deleted node is a Replica, check leadership state
         if nodetype == NODE_REPLICA:
-            chosenleader = self.findleader()
+            chosenleader = self.find_leader()
             if chosenleader == self.me and not self.isleader:
                 # become the leader
                 if not self.stateuptodate:
