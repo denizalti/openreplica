@@ -127,7 +127,7 @@ class Node():
             self.stateuptodate = False
 
     def _getipportpairs(self, bootaddr, bootport):
-        for node in socket.getaddrinfo(bootaddr, bootport):
+        for node in socket.getaddrinfo(bootaddr, bootport, socket.AF_INET, socket.SOCK_STREAM):
             yield Peer(node[4][0],bootport,NODE_REPLICA)
 
     def discoverbootstrap(self, givenbootstraplist):
