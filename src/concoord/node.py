@@ -55,7 +55,6 @@ class Node():
                  logger=options.logger):
         self.addr = addr if addr else findOwnIP()
         self.port = port
-        self.connectionpool = ConnectionPool()
         self.type = nodetype
         self.debug = debugoption
         if instantiateobj:
@@ -89,6 +88,12 @@ class Node():
                 except socket.error:
                     pass
         self.socket.listen(10)
+        self.connectionpool = ConnectionPool()
+        try:
+            self.connectionpool.epoll = select.epoll()
+        except AttributeError:
+            # the os doesn't support epoll
+            self.connectionpool.epoll = None
         self.alive = True
         # initialize empty groups
         self.me = Peer(self.addr,self.port,self.type)
@@ -238,52 +243,45 @@ class Node():
         - exceptready: sockets that are ready according to an *exceptional condition*
         """
         self.socket.listen(10)
-        self.connectionpool.activesockets.add(self.socket)
 
-        try:
-            epoll = select.epoll()
-            epoll.register(self.socket.fileno(), select.EPOLLIN)
-        except AttributeError:
+        if self.connectionpool.epoll:
+            self.connectionpool.epoll.register(self.socket.fileno(), select.EPOLLIN)
+            self.use_epoll()
+        else:
             # the os doesn't support epoll
+            self.connectionpool.activesockets.add(self.socket)
             self.use_select()
 
-        self.use_epoll(epoll)
         self.socket.close()
         return
 
-    def use_epoll(self, epoll):
-        sockets = {}
+    def use_epoll(self):
         while self.alive:
             try:
-                print "POLLING..."
-                events = epoll.poll(1)
+                events = self.connectionpool.epoll.poll(1)
                 for fileno, event in events:
-                    print events
                     if fileno == self.socket.fileno():
                         clientsock, clientaddr = self.socket.accept()
                         clientsock.setblocking(0)
-                        epoll.register(clientsock.fileno(), select.EPOLLIN)
-                        sockets[clientsock.fileno()] = clientsock
+                        self.connectionpool.epoll.register(clientsock.fileno(), select.EPOLLIN)
+                        self.connectionpool.epollsockets[clientsock.fileno()] = clientsock
                     elif event & select.EPOLLIN:
-                        success = self.handle_connection(sockets[fileno])
-                        print "HANDLED CONNECTION!"
-                        print success
+                        success = self.handle_connection(self.connectionpool.epollsockets[fileno])
                         if not success:
-                            epoll.unregister(fileno)
-                            sockets[fileno].close()
-                            del sockets[fileno]
-                    elif event & select.EPOLLOUT:
-                        print "EPOLLOUT EVENT!"
+                            self.connectionpool.epoll.unregister(fileno)
+                            self.connectionpool.epollsockets[fileno].close()
+                            del self.connectionpool.epollsockets[fileno]
                     elif event & select.EPOLLHUP:
-                        epoll.unregister(fileno)
-                        sockets[fileno].close()
-                        del sockets[fileno]
+                        self.connectionpool.epoll.unregister(fileno)
+                        self.connectionpool.epollsockets[fileno].close()
+                        del self.connectionpool.epollsockets[fileno]
             except KeyboardInterrupt, EOFError:
                 os._exit(0)
-        epoll.unregister(self.socket.fileno())
-        epoll.close()
+        self.connectionpool.epoll.unregister(self.socket.fileno())
+        self.connectionpool.epoll.close()
 
     def use_select(self):
+        print "Using select.."
         while self.alive:
             try:
                 inputready,outputready,exceptready = select.select(self.connectionpool.activesockets,
@@ -352,7 +350,7 @@ class Node():
                             self.receivedmessages.remove((m,c))
                             msgconns.append((m,c))
                     if len(msgconns) > 1:
-                        print "BATCHING NOW!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                        print "BATCHING NOW!!!!!"
                         self.process_messagelist(msgconns)
                     else:
                         self.process_message(message_to_process, connection)
