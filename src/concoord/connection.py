@@ -5,7 +5,7 @@
 @copyright: See LICENSE
 '''
 import sys
-import socket, errno
+import socket, errno, select
 import struct
 import StringIO
 import time
@@ -20,9 +20,11 @@ class ConnectionPool():
     """ConnectionPool keeps the connections that a certain Node knows of.
     The connections can be indexed by a Peer instance or a socket."""
     def __init__(self):
+        self.pool_lock = Lock()
         self.poolbypeer = {}
         self.poolbysocket = {}
-        self.pool_lock = Lock()
+        self.epoll = None
+        self.epollsockets = {}
         # Sockets that are being actively listened to
         self.activesockets = set([])
         # Sockets that we didn't receive a msg on yet
@@ -84,9 +86,14 @@ class ConnectionPool():
                     conn = Connection(thesocket, getpeerid(peer))
                     self.poolbypeer[peer] = conn
                     self.poolbysocket[thesocket.fileno()] = conn
-                    self.activesockets.add(thesocket)
+                    if self.epoll:
+                        self.epoll.register(thesocket.fileno(), select.EPOLLIN)
+                        self.epollsockets[thesocket.fileno()] = thesocket
+                    else:
+                        self.activesockets.add(thesocket)
                     return conn
-                except:
+                except Exception as e:
+                    print "Connection Error: ", e
                     return None
 
     def get_connection_by_socket(self, thesocket):
@@ -178,7 +185,6 @@ class Connection():
                 raise ConnectionError()
 
             if datalen == 0:
-                print "Connection closed"
                 raise ConnectionError()
             self.incomingoffset += datalen
             while len(self.incoming) >= 4:
