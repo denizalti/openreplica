@@ -792,7 +792,7 @@ class Replica(Node):
         handles clientrequest message received according to replica's state
         - if not leader: reject
         - if leader: add connection to client connections and handle request"""
-        print "MSG_CLIENTREQUEST received.."
+        #print "MSG_CLIENTREQUEST received.."
         if self.type == NODE_NAMESERVER:
             if self.debug: self.logger.write("Error", "NAMESERVER got a CLIENTREQUEST")
             return
