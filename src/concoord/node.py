@@ -187,9 +187,9 @@ class Node():
         ping_thread.name = 'PingThread'
         ping_thread.start()
         # Start a thread that goes through the nascentset and cleans expired ones
-        ping_thread = Timer(NASCENTTIMEOUT, self.clean_nascent)
-        ping_thread.name = 'NascentThread'
-        ping_thread.start()
+        nascent_thread = Timer(NASCENTTIMEOUT, self.clean_nascent)
+        nascent_thread.name = 'NascentThread'
+        nascent_thread.start()
         return self
 
     def ping_neighbor(self):
@@ -239,9 +239,57 @@ class Node():
         """
         self.socket.listen(10)
         self.connectionpool.activesockets.add(self.socket)
+
+        try:
+            epoll = select.epoll()
+            epoll.register(self.socket.fileno(), select.EPOLLIN)
+        except AttributeError:
+            # the os doesn't support epoll
+            self.use_select()
+
+        self.use_epoll(epoll)
+        self.socket.close()
+        return
+
+    def use_epoll(self, epoll):
+        sockets = {}
         while self.alive:
             try:
-                inputready,outputready,exceptready = select.select(self.connectionpool.activesockets, [], self.connectionpool.activesockets, 1)
+                print "POLLING..."
+                events = epoll.poll(1)
+                for fileno, event in events:
+                    print events
+                    if fileno == self.socket.fileno():
+                        clientsock, clientaddr = self.socket.accept()
+                        clientsock.setblocking(0)
+                        epoll.register(clientsock.fileno(), select.EPOLLIN)
+                        sockets[clientsock.fileno()] = clientsock
+                    elif event & select.EPOLLIN:
+                        success = self.handle_connection(sockets[fileno])
+                        print "HANDLED CONNECTION!"
+                        print success
+                        if not success:
+                            epoll.unregister(fileno)
+                            sockets[fileno].close()
+                            del sockets[fileno]
+                    elif event & select.EPOLLOUT:
+                        print "EPOLLOUT EVENT!"
+                    elif event & select.EPOLLHUP:
+                        epoll.unregister(fileno)
+                        sockets[fileno].close()
+                        del sockets[fileno]
+            except KeyboardInterrupt, EOFError:
+                os._exit(0)
+        epoll.unregister(self.socket.fileno())
+        epoll.close()
+
+    def use_select(self):
+        while self.alive:
+            try:
+                inputready,outputready,exceptready = select.select(self.connectionpool.activesockets,
+                                                                   [],
+                                                                   self.connectionpool.activesockets,
+                                                                   1)
   
                 for s in exceptready:
                     if self.debug: self.logger.write("Exception", "%s" % s)
@@ -257,9 +305,7 @@ class Node():
                     if not success:
                         self.connectionpool.del_connection_by_socket(s)
             except KeyboardInterrupt, EOFError:
-                os._exit(0)
-        self.socket.close()
-        return
+                os._exit(0)        
         
     def handle_connection(self, clientsock):
         """Receives a message and calls the corresponding message handler"""

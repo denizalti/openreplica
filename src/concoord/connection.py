@@ -173,6 +173,9 @@ class Connection():
                     self.incoming = memoryview(bytearray(100000))
                     self.incomingoffset = 0
                     raise ConnectionError()
+            except IOError:
+                # [Errno 104] Connection reset by peer
+                raise ConnectionError()
 
             if datalen == 0:
                 print "Connection closed"
