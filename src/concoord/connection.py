@@ -127,6 +127,8 @@ class Connection():
         self.outgoing = ''
         self.incoming = memoryview(bytearray(100000))
         self.incomingoffset = 0
+        # Busy wait count
+        self.busywait = 0
     
     def __str__(self):
         """Return Connection information"""
@@ -134,6 +136,7 @@ class Connection():
             return ""
         return "Connection to Peer %s" % (self.peerid)
     
+    # deprecated
     def receive(self):
         with self.readlock:
             """receive a message on the Connection"""
@@ -146,6 +149,7 @@ class Connection():
             except IOError as inst:           
                 return None
 
+    # used only while receiving a very large message
     def receive_n_bytes(self, msg_length):
         msgstr = ''
         while len(msgstr) != msg_length:
@@ -214,6 +218,7 @@ class Connection():
                     except IOError, e:
                         if isinstance(e.args, tuple):
                             if e[0] == errno.EAGAIN:
+                                self.busywait += 1
                                 continue
                             else:
                                 raise e
