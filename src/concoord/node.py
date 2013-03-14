@@ -90,7 +90,6 @@ class Node():
         self.socket.listen(10)
         self.connectionpool = ConnectionPool()
         try:
-            print "[EPOLL DEBUG] Creating epoll object.."
             self.connectionpool.epoll = select.epoll()
         except AttributeError:
             # the os doesn't support epoll
@@ -193,9 +192,9 @@ class Node():
         ping_thread.name = 'PingThread'
         ping_thread.start()
         # Start a thread that goes through the nascentset and cleans expired ones
-#        nascent_thread = Timer(NASCENTTIMEOUT, self.clean_nascent)
-#        nascent_thread.name = 'NascentThread'
-#        nascent_thread.start()
+        nascent_thread = Timer(NASCENTTIMEOUT, self.clean_nascent)
+        nascent_thread.name = 'NascentThread'
+        nascent_thread.start()
         return self
 
     def ping_neighbor(self):
@@ -246,7 +245,6 @@ class Node():
         self.socket.listen(10)
 
         if self.connectionpool.epoll:
-            print "[EPOLL DEBUG] Registering server socket with fileno ", self.socket.fileno()
             self.connectionpool.epoll.register(self.socket.fileno(), select.EPOLLIN)
             self.use_epoll()
         else:
@@ -263,33 +261,21 @@ class Node():
                 events = self.connectionpool.epoll.poll(1)
                 for fileno, event in events:
                     if fileno == self.socket.fileno():
-                        print "[EPOLL DEBUG] Received event on server socket."
                         clientsock, clientaddr = self.socket.accept()
-                        print "[EPOLL DEBUG] Accepted connection from ", clientaddr
-                        print "[EPOLL DEBUG] with socket fileno ", clientsock.fileno()
                         clientsock.setblocking(0)
                         self.connectionpool.epoll.register(clientsock.fileno(), select.EPOLLIN)
                         self.connectionpool.epollsockets[clientsock.fileno()] = clientsock
-                        print "[EPOLL DEBUG] Registered the clientsocket and added to sockets"
-                        print "[EPOLL DEBUG] Epoll Sockets: ", self.connectionpool.epollsockets
                     elif event & select.EPOLLIN:
-                        print "[EPOLL DEBUG] Received EPOLLIN on a client socket: ", fileno
                         success = self.handle_connection(self.connectionpool.epollsockets[fileno])
                         if not success:
                             self.connectionpool.epoll.unregister(fileno)
-                            print "[EPOLL DEBUG] EPOLLIN Unregistered socket: ", fileno
                             self.connectionpool.del_connection_by_socket(self.connectionpool.epollsockets[fileno])
                             self.connectionpool.epollsockets[fileno].close()
                             del self.connectionpool.epollsockets[fileno]
-                            print "[EPOLL DEBUG] EPOLLIN Closed the socket and removed from sockets"
-                            print "[EPOLL DEBUG] EPOLLIN Epoll Sockets: ", self.connectionpool.epollsockets
                     elif event & select.EPOLLHUP:
                         self.connectionpool.epoll.unregister(fileno)
-                        print "[EPOLL DEBUG] EPOLLHUP Unregistered socket: ", fileno
                         self.connectionpool.epollsockets[fileno].close()
                         del self.connectionpool.epollsockets[fileno]
-                        print "[EPOLL DEBUG] EPOLLIN Closed the socket and removed from sockets"
-                        print "[EPOLL DEBUG] EPOLLIN Epoll Sockets: ", self.connectionpool.epollsockets
             except KeyboardInterrupt, EOFError:
                 os._exit(0)
         self.connectionpool.epoll.unregister(self.socket.fileno())
@@ -323,10 +309,8 @@ class Node():
     def handle_connection(self, clientsock):
         """Receives a message and calls the corresponding message handler"""
         connection = self.connectionpool.get_connection_by_socket(clientsock)
-        print "[EPOLL DEBUG] Got connection: ", connection
         try:
             for message in connection.received_bytes():
-                print "[EPOLL DEBUG] Received: ", message
                 if self.debug: self.logger.write("State", "received %s" % str(message))
                 if message.type == MSG_STATUS:
                     if self.type == NODE_REPLICA:
@@ -344,7 +328,6 @@ class Node():
                     self.connectionpool.add_connection_to_peer(message.source, connection)
             return True
         except ConnectionError:
-            print "[EPOLL DEBUG] Received Connection Error"
             return False
 
     def handle_messages(self):
