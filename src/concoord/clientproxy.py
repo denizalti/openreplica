@@ -66,7 +66,9 @@ class ClientProxy():
         # synchronization
         self.lock = Lock()
         self.pendingops = {}  # pending requests indexed by commandnumber
-        self.doneops = {}  # requests that are finalized, indexed by command number
+        self.doneops = {}  # requests that are finalized, indexed by commandnumber
+        self.reconfiglock = Lock()
+        self.needreconfig = False
 
         # spawn thread, invoke recv_loop
         recv_thread = Thread(target=self.recv_loop, name='ReceiveThread')
@@ -146,7 +148,9 @@ class ClientProxy():
         self.pendingops[reqdesc.commandnumber] = reqdesc
         # send the request
         with self.writelock:
-            self.conn.send(reqdesc.cm)        
+            success = self.conn.send(reqdesc.cm)
+            with self.reconfiglock:
+                self.needreconfig = True
         with self.lock:
             try:
                 while not reqdesc.replyvalid:
@@ -166,7 +170,6 @@ class ClientProxy():
             triedreplicas = set()
             while True:
                 triedreplicas.add(self.bootstrap)
-                needreconfig = False
                 try:
                     for reply in self.conn.received_bytes():
                         if reply and reply.type == MSG_CLIENTREPLY:
@@ -184,15 +187,18 @@ class ClientProxy():
                                         # the thread is already waiting, no need to do anything
                                         reqdesc.lastcr = reply.replycode
                                     elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
-                                        needreconfig = True
+                                        with self.reconfiglock:
+                                            self.needreconfig = True
                                     else:
                                         print "should not happen -- unknown response type"
                 except:
-                    needreconfig = True
+                    with self.reconfiglock:
+                        self.needreconfig = True
                 while needreconfig:
                     if not self.trynewbootstrap(triedreplicas):
                         raise ConnectionError("Cannot connect to any bootstrap")
-                    needreconfig = False
+                    with self.reconfiglock:
+                        self.needreconfig = False
 
                     # check if we need to re-send any pending operations
                     for commandno,reqdesc in self.pendingops.iteritems():
@@ -200,7 +206,8 @@ class ClientProxy():
                             reqdesc.sendcount += 1
                             reqdesc.cm[FLD_SENDCOUNT] = reqdesc.sendcount
                             if not self.conn.send(reqdesc.cm):
-                                needreconfig = True
+                                with self.reconfiglock:
+                                    self.needreconfig = True
                             continue
 
         except KeyboardInterrupt:
