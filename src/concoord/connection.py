@@ -41,25 +41,22 @@ class ConnectionPool():
             
     def del_connection_by_peer(self, peer):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
-        print "[EPOLL DEBUG] Deleting connection to: ", peer
         peerstr = str(peer)
         with self.pool_lock:
             if self.poolbypeer.has_key(peerstr):
                 conn = self.poolbypeer[peerstr]
                 del self.poolbypeer[peerstr]
                 del self.poolbysocket[conn.thesocket.fileno()]
-                self.activesockets.remove(conn.thesocket)
+                if conn.thesocket in self.activesockets:
+                    self.activesockets.remove(conn.thesocket)
                 if conn.thesocket in self.nascentsockets:
                     self.nascentsockets.remove(conn.thesocket)
                 conn.close()
             else:
                 print "Trying to delete a non-existent connection from the connection pool."
-        print "[EPOLL DEBUG] PeerPool: ", self.poolbypeer
-        print "[EPOLL DEBUG] SocketPool: ", self.poolbysocket
         
     def del_connection_by_socket(self, thesocket):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
-        print "[EPOLL DEBUG] Deleting connection to: ", thesocket
         with self.pool_lock:
             if self.poolbysocket.has_key(thesocket.fileno()):
                 connindict = self.poolbysocket[thesocket.fileno()]
@@ -68,14 +65,13 @@ class ConnectionPool():
                         del self.poolbypeer[connkey]
                         break
                 del self.poolbysocket[thesocket.fileno()]
-                self.activesockets.remove(thesocket)
+                if thesocket in self.activesockets:
+                    self.activesockets.remove(thesocket)
                 if thesocket in self.nascentsockets:
                     self.nascentsockets.remove(thesocket)
                 connindict.close()
             else:
                 print "Trying to delete a non-existent socket from the connection pool."
-        print "[EPOLL DEBUG] PeerPool: ", self.poolbypeer
-        print "[EPOLL DEBUG] SocketPool: ", self.poolbysocket
 
     def get_connection_by_peer(self, peer):
         """Returns a Connection given corresponding Peer."""
@@ -107,15 +103,12 @@ class ConnectionPool():
         A new Connection is created and added to the
         ConnectionPool if it doesn't exist.
         """
-        print "[EPOLL DEBUG] Getting connection by ", thesocket
         with self.pool_lock:
             if self.poolbysocket.has_key(thesocket.fileno()):
-                print "[EPOLL DEBUG] Existing Connection: ", self.poolbysocket[thesocket.fileno()]
                 return self.poolbysocket[thesocket.fileno()]
             else:
                 conn = Connection(thesocket)
                 self.poolbysocket[thesocket.fileno()] = conn
-                print "[EPOLL DEBUG] New Connection: ", self.poolbysocket[thesocket.fileno()]
                 return conn
 
     def __str__(self):
@@ -255,7 +248,6 @@ class Connection():
 
     def close(self):
         """Close the Connection"""
-        print "[EPOLL DEBUG] Closing Connection: ", str(self)
         self.thesocket.close()
         self.thesocket = None
 
