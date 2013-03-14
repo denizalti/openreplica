@@ -149,8 +149,9 @@ class ClientProxy():
         # send the request
         with self.writelock:
             success = self.conn.send(reqdesc.cm)
-            with self.reconfiglock:
-                self.needreconfig = True
+            if not success:
+                with self.reconfiglock:
+                    self.needreconfig = True
         with self.lock:
             try:
                 while not reqdesc.replyvalid:
@@ -194,7 +195,7 @@ class ClientProxy():
                 except:
                     with self.reconfiglock:
                         self.needreconfig = True
-                while needreconfig:
+                while self.needreconfig:
                     if not self.trynewbootstrap(triedreplicas):
                         raise ConnectionError("Cannot connect to any bootstrap")
                     with self.reconfiglock:
