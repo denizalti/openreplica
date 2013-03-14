@@ -200,7 +200,8 @@ class Connection():
             if datalen == 0:
                 raise ConnectionError()
             self.incomingoffset += datalen
-            while len(self.incoming) >= 4:
+            while self.incomingoffset >= 4:
+                # XXX test_msg_length = (ord(self.incoming[3]) << 24) | (ord(self.incoming[2]) << 16) | (ord(self.incoming[1]) << 8) | ord(self.incoming[0]) 
                 msg_length = struct.unpack("I", self.incoming[0:4].tobytes())[0]
                 # check if there is a complete msg, if so return the msg
                 # otherwise return None

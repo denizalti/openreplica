@@ -30,8 +30,8 @@ def parse_basic(msg):
     return Message(msg[FLD_ID], msg[FLD_TYPE], src)
 
 def parse_heloreply(msg):
-    src = Peer(*msg[FLD_SRC])
-    return HeloReplyMessage(msg[FLD_ID], msg[FLD_TYPE], src, Peer(*msg[FLD_LEADER]))
+    src = Peer(*msg[FLD_SRC]) # XXX Get rid of stars
+    return HeloReplyMessage(msg[FLD_ID], msg[FLD_TYPE], src, Peer(*msg[FLD_LEADER])) # XXX Get rid of stars
 
 def parse_clientrequest(msg):
     src = Peer(*msg[FLD_SRC])
