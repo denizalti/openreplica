@@ -127,7 +127,8 @@ class Connection():
         self.readlock = Lock()
         self.writelock = Lock()
         self.outgoing = ''
-        self.incoming = memoryview(bytearray(100000))
+        self.incomingbytearray = bytearray(100000)
+        self.incoming = memoryview(self.incomingbytearray)
         self.incomingoffset = 0
         # Busy wait count
         self.busywait = 0
@@ -194,12 +195,11 @@ class Connection():
                 raise ConnectionError()
             self.incomingoffset += datalen
             while self.incomingoffset >= 4:
-                # XXX test_msg_length = (ord(self.incoming[3]) << 24) | (ord(self.incoming[2]) << 16) | (ord(self.incoming[1]) << 8) | ord(self.incoming[0]) 
-                msg_length = struct.unpack("I", self.incoming[0:4].tobytes())[0]
+                msg_length = (ord(self.incoming[3]) << 24) | (ord(self.incoming[2]) << 16) | (ord(self.incoming[1]) << 8) | ord(self.incoming[0])
                 # check if there is a complete msg, if so return the msg
                 # otherwise return None
                 if self.incomingoffset >= msg_length+4:
-                    msgdict = msgpack.unpackb(self.incoming[4:msg_length+4].tobytes(), use_list=False)
+                    msgdict = msgpack.unpackb(self.incomingbytearray[4:msg_length+4], use_list=False)
                     # this operation cuts the incoming buffer
                     if self.incomingoffset > msg_length+4:
                         self.incoming[:self.incomingoffset-(msg_length+4)] = self.incoming[msg_length+4:self.incomingoffset]
