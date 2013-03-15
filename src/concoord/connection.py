@@ -95,6 +95,7 @@ class ConnectionPool():
                         self.activesockets.add(thesocket)
                     return conn
                 except Exception as e:
+                    print "Get connection by peer.."
                     print "Connection Error: ", e
                     return None
 
