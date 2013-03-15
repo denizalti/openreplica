@@ -289,9 +289,9 @@ class Replica(Node):
             # We are calling performcore 2 times, the timing gets screwed plus this
             # is very unefficient
             if self.nexttoexecute > WINDOW:
-                # XXX Needs fix for batching
                 if self.debug: self.logger.write("State", "performcore %d" % (self.nexttoexecute-WINDOW))
-                self.performcore(self.decisions[self.nexttoexecute-WINDOW], True, designated=designated)
+                if not isinstance(self.decisions[self.nexttoexecute-WINDOW], ProposalBatch):
+                    self.performcore(self.decisions[self.nexttoexecute-WINDOW], True, designated=designated)
             if self.debug: self.logger.write("State", "performcore %s" % str(requestedcommand))
             self.performcore(requestedcommand, designated=designated)
             

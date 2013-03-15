@@ -44,7 +44,7 @@ class ReqDesc:
         return "Request Descriptor for cmd %d\nMessage %s\nReply %s" % (self.commandnumber, str(self.cm), self.reply)
 
 class ClientProxy():
-    def __init__(self, bootstrap, timeout=60, debug=True, token=None):
+    def __init__(self, bootstrap, timeout=60, debug=False, token=None):
         self.debug = debug
         self.timeout = timeout 
         self.domainname = None

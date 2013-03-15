@@ -351,7 +351,6 @@ class Node():
                             self.receivedmessages.remove((m,c))
                             msgconns.append((m,c))
                     if len(msgconns) > 1:
-                        print "BATCHING NOW!!!!!"
                         self.process_messagelist(msgconns)
                     else:
                         self.process_message(message_to_process, connection)
