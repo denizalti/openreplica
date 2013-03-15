@@ -24,15 +24,15 @@ parser.add_option("-o", "--op", action="store", dest="operations", type='int',
 
 def test_loop():
   proxy = Test(options.bootstrap)
-  for i in range(options.operations):
-    if i == (options.operations*0.1):
-      starttime = time.time()
+  for i in range(options.operations/10):
     proxy.getvalue()
-  
+  starttime = time.time()
+  for i in range(options.operations):
+    proxy.getvalue()  
   stoptime = time.time()
-  latency = float(stoptime-starttime)/(options.operations*0.9)
+  latency = float(stoptime-starttime)/(options.operations)
   print "*****************************************"
-  print "AVERAGE CLIENT LATENCY: %f secs" % latency 
+  print "AVERAGE CLIENT LATENCY: %f secs" % latency
   if options.setting:
     r,a = options.setting.split(',')
     print " for %s Replicas %s Acceptors." % (r,a)
