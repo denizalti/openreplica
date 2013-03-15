@@ -66,7 +66,6 @@ class ClientProxy():
         # synchronization
         self.lock = Lock()
         self.pendingops = {}  # pending requests indexed by commandnumber
-        self.doneops = {}  # requests that are finalized, indexed by commandnumber
         self.reconfiglock = Lock()
         self.needreconfig = False
 
@@ -175,26 +174,27 @@ class ClientProxy():
                     for reply in self.conn.received_bytes():
                         if reply and reply.type == MSG_CLIENTREPLY:
                             with self.lock:
-                                    reqdesc = self.pendingops[reply.inresponseto]
-                                    if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode == CR_UNBLOCK:
-                                        # actionable response, wake up the thread
-                                        if reply.replycode == CR_UNBLOCK:
-                                            assert reqdesc.lastcr == CR_BLOCK, "unblocked thread not previously blocked"
-                                        reqdesc.lastcr = reply.replycode
-                                        reqdesc.reply = reply
-                                        reqdesc.replyvalid = True
-                                        reqdesc.replyarrived.notify()
-                                    elif reply.replycode == CR_INPROGRESS or reply.replycode == CR_BLOCK:
-                                        # the thread is already waiting, no need to do anything
-                                        reqdesc.lastcr = reply.replycode
-                                    elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
-                                        with self.reconfiglock:
-                                            self.needreconfig = True
-                                    else:
-                                        print "should not happen -- unknown response type"
+                                reqdesc = self.pendingops[reply.inresponseto]
+                                if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode == CR_UNBLOCK:
+                                    # actionable response, wake up the thread
+                                    if reply.replycode == CR_UNBLOCK:
+                                        assert reqdesc.lastcr == CR_BLOCK, "unblocked thread not previously blocked"
+                                    reqdesc.lastcr = reply.replycode
+                                    reqdesc.reply = reply
+                                    reqdesc.replyvalid = True
+                                    reqdesc.replyarrived.notify()
+                                elif reply.replycode == CR_INPROGRESS or reply.replycode == CR_BLOCK:
+                                    # the thread is already waiting, no need to do anything
+                                    reqdesc.lastcr = reply.replycode
+                                elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
+                                    with self.reconfiglock:
+                                        self.needreconfig = True
+                                else:
+                                    print "should not happen -- unknown response type"
                 except:
                     with self.reconfiglock:
                         self.needreconfig = True
+
                 while self.needreconfig:
                     if not self.trynewbootstrap(triedreplicas):
                         raise ConnectionError("Cannot connect to any bootstrap")
