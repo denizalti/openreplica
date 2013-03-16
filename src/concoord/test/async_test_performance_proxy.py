@@ -10,13 +10,25 @@ class Test():
         self.proxy = ClientProxy(bootstrap, True)
 
     def __concoordinit__(self):
-        return self.proxy.invoke_command_async('__init__')
+        cno,condition = self.proxy.invoke_command_async('__init__')
+        with ccond:
+            while not self.proxy.command_done_async(cno)[0]:
+                ccond.wait()
 
     def getvalue(self):
-        return self.proxy.invoke_command_async('getvalue')
+        cno,ccond = self.proxy.invoke_command_async('getvalue')
+        with ccond:
+            while not self.proxy.command_done_async(cno)[0]:
+                ccond.wait()
 
     def setvalue(self, newvalue):
-        return self.proxy.invoke_command_async('setvalue', newvalue)
+        cno,condition = self.proxy.invoke_command_async('setvalue', newvalue)
+        with ccond:
+            while not self.proxy.command_done_async(cno)[0]:
+                ccond.wait()
 
     def __str__(self):
-        return self.proxy.invoke_command_async('__str__')
+        cno,condition = self.proxy.invoke_command_async('__str__')
+        with ccond:
+            while not self.proxy.command_done_async(cno)[0]:
+                ccond.wait()

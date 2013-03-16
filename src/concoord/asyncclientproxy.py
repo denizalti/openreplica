@@ -153,7 +153,7 @@ class ClientProxy():
                 with self.reconfiglock:
                     self.needreconfig = True
         # Do not wait for the reply, return the commandnumber
-        return reqdesc.commandnumber
+        return reqdesc.commandnumber, reqdesc.replyarrived
 
     def recv_loop(self, *args):
         try:
