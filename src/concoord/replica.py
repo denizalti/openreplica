@@ -3,12 +3,13 @@
 @note: The Replica keeps an object and responds to Perform messages received from the Leader.
 @copyright: See LICENSE
 '''
+import gc
 import inspect
-import math, random, time
+import math, time
 import os, sys
 import signal
 import cPickle as pickle
-from threading import Thread, Lock, Condition, Timer, Event
+from threading import Thread, Lock, Timer, Event
 from concoord.pack import Proposal, PValue
 from concoord.pvalue import PValueSet
 from concoord.responsecollector import ResponseCollector

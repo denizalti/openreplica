@@ -33,8 +33,8 @@ class ConnectionPool():
     def add_connection_to_peer(self, peer, conn):
         """Adds a Connection to the ConnectionPool by its Peer"""
         with self.pool_lock:
-            self.poolbypeer[str(peer)] = conn
-            conn.peerid = getpeerid(peer)
+            conn.peerid = str(peer)
+            self.poolbypeer[conn.peerid] = conn
             self.activesockets.add(conn.thesocket)
             if conn.thesocket in self.nascentsockets:
                 self.nascentsockets.remove(conn.thesocket)
@@ -74,7 +74,7 @@ class ConnectionPool():
                 print "Trying to delete a non-existent socket from the connection pool."
 
     def get_connection_by_peer(self, peer):
-        """Returns a Connection given corresponding Peer."""
+        """Returns a Connection given corresponding Peer triple"""
         peerstr = str(peer)
         with self.pool_lock:
             if self.poolbypeer.has_key(peerstr):
@@ -83,10 +83,10 @@ class ConnectionPool():
                 try:
                     thesocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     thesocket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
-                    thesocket.connect((peer.addr, peer.port))
+                    thesocket.connect((peer[0], peer[1]))
                     thesocket.setblocking(0)
-                    conn = Connection(thesocket, getpeerid(peer))
-                    self.poolbypeer[peer] = conn
+                    conn = Connection(thesocket, peerstr)
+                    self.poolbypeer[peerstr] = conn
                     self.poolbysocket[thesocket.fileno()] = conn
                     if self.epoll:
                         self.epoll.register(thesocket.fileno(), select.EPOLLIN)
