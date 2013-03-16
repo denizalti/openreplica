@@ -3,12 +3,13 @@
 @note: The Replica keeps an object and responds to Perform messages received from the Leader.
 @copyright: See LICENSE
 '''
+import gc
 import inspect
-import math, random, time
+import math, time
 import os, sys
 import signal
 import cPickle as pickle
-from threading import Thread, Lock, Condition, Timer, Event
+from threading import Thread, Lock, Timer, Event
 from concoord.pack import Proposal, PValue
 from concoord.pvalue import PValueSet
 from concoord.responsecollector import ResponseCollector
@@ -289,9 +290,9 @@ class Replica(Node):
             # We are calling performcore 2 times, the timing gets screwed plus this
             # is very unefficient
             if self.nexttoexecute > WINDOW:
-                # XXX Needs fix for batching
                 if self.debug: self.logger.write("State", "performcore %d" % (self.nexttoexecute-WINDOW))
-                self.performcore(self.decisions[self.nexttoexecute-WINDOW], True, designated=designated)
+                if not isinstance(self.decisions[self.nexttoexecute-WINDOW], ProposalBatch):
+                    self.performcore(self.decisions[self.nexttoexecute-WINDOW], True, designated=designated)
             if self.debug: self.logger.write("State", "performcore %s" % str(requestedcommand))
             self.performcore(requestedcommand, designated=designated)
             

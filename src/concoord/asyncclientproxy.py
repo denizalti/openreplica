@@ -66,6 +66,7 @@ class ClientProxy():
         # synchronization
         self.lock = Lock()
         self.pendingops = {}  # pending requests indexed by commandnumber
+        self.doneops = {}  # requests that are finalized, indexed by commandnumber
         self.reconfiglock = Lock()
         self.needreconfig = False
 
@@ -141,7 +142,7 @@ class ClientProxy():
             return False
         return self.connecttobootstrap()
 
-    def invoke_command(self, *args):
+    def invoke_command_async(self, *args):
         # create a request descriptor
         reqdesc = ReqDesc(self, args, self.token)
         self.pendingops[reqdesc.commandnumber] = reqdesc
@@ -151,19 +152,8 @@ class ClientProxy():
             if not success:
                 with self.reconfiglock:
                     self.needreconfig = True
-        with self.lock:
-            try:
-                while not reqdesc.replyvalid:
-                    reqdesc.replyarrived.wait()
-            except KeyboardInterrupt:
-                self._graceexit()
-            del self.pendingops[reqdesc.commandnumber]
-        if reqdesc.reply.replycode == CR_OK or reqdesc.reply.replycode == CR_UNBLOCK:
-            return reqdesc.reply.reply
-        elif reqdesc.reply.replycode == CR_EXCEPTION:
-            raise Exception(reqdesc.reply.reply)
-        else:
-            print "Unexpected Client Reply Code: %d" % reqdesc.reply.replycode
+        # Do not wait for the reply, return the commandnumber
+        return reqdesc.commandnumber, reqdesc.replyarrived
 
     def recv_loop(self, *args):
         try:
@@ -174,14 +164,18 @@ class ClientProxy():
                     for reply in self.conn.received_bytes():
                         if reply and reply.type == MSG_CLIENTREPLY:
                             with self.lock:
+                                # received a reply
                                 reqdesc = self.pendingops[reply.inresponseto]
-                                if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode == CR_UNBLOCK:
+                                if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or \
+                                        reply.replycode == CR_UNBLOCK:
                                     # actionable response, wake up the thread
                                     if reply.replycode == CR_UNBLOCK:
                                         assert reqdesc.lastcr == CR_BLOCK, "unblocked thread not previously blocked"
                                     reqdesc.lastcr = reply.replycode
                                     reqdesc.reply = reply
                                     reqdesc.replyvalid = True
+                                    self.doneops[reqdesc.commandnumber] = reqdesc
+                                    del self.pendingops[reply.inresponseto]
                                     reqdesc.replyarrived.notify()
                                 elif reply.replycode == CR_INPROGRESS or reply.replycode == CR_BLOCK:
                                     # the thread is already waiting, no need to do anything
@@ -213,6 +207,19 @@ class ClientProxy():
 
         except KeyboardInterrupt:
             self._graceexit()
-            
+
+    def command_done_async(self, commandnumber):
+        if commandnumber in self.doneops:
+            # command is done, return the result
+            reqdesc = self.doneops[commandnumber]
+            if reqdesc.reply.replycode == CR_OK or reqdesc.reply.replycode == CR_UNBLOCK:
+                return (True, reqdesc.reply.reply)
+            elif reqdesc.reply.replycode == CR_EXCEPTION:
+                return (True, Exception(reqdesc.reply.reply))
+            else:
+                return (True, "Unexpected Client Reply Code: %d" % reqdesc.reply.replycode)
+        else:
+            return (False, None)
+
     def _graceexit(self):
         os._exit(0)
