@@ -38,10 +38,7 @@ def parse_heloreply(msg):
 
 def parse_clientrequest(msg):
     src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
-    proposalclient = Peer(msg[FLD_PROPOSAL][0][0],
-                          msg[FLD_PROPOSAL][0][1],
-                          msg[FLD_PROPOSAL][0][2])
-    proposal = Proposal(proposalclient, msg[FLD_PROPOSAL][1], msg[FLD_PROPOSAL][2])
+    proposal = Proposal(msg[FLD_PROPOSAL][0], msg[FLD_PROPOSAL][1], msg[FLD_PROPOSAL][2])
     return ClientRequestMessage(msg[FLD_ID], msg[FLD_TYPE], src,
                                 proposal, msg[FLD_TOKEN], msg[FLD_SENDCOUNT])
 
@@ -67,13 +64,9 @@ def parse_propose(msg):
     if msg[FLD_BATCH]:
         proposal = ProposalBatch([])
         for p in msg[FLD_PROPOSAL][0]:
-            pclient = Peer(p[0], p[1], p[2])
-            proposal.proposals.append(Proposal(pclient, p[1], p[2]))
+            proposal.proposals.append(Proposal(p[0], p[1], p[2]))
     else:
-        proposalclient = Peer(msg[FLD_PROPOSAL][0][0],
-                              msg[FLD_PROPOSAL][0][1],
-                              msg[FLD_PROPOSAL][0][2])
-        proposal = Proposal(proposalclient, msg[FLD_PROPOSAL][1], msg[FLD_PROPOSAL][2])
+        proposal = Proposal(msg[FLD_PROPOSAL][0], msg[FLD_PROPOSAL][1], msg[FLD_PROPOSAL][2])
     return ProposeMessage(msg[FLD_ID], msg[FLD_TYPE],
                           msg[FLD_BALLOTNUMBER], msg[FLD_COMMANDNUMBER],
                           proposal, msg[FLD_BATCH])
