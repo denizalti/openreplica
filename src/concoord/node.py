@@ -3,7 +3,7 @@
 @note: Master class for all nodes
 @copyright: See LICENSE
 '''
-import copy
+import gc
 import os, sys
 import random, struct
 import cPickle as pickle
@@ -98,7 +98,8 @@ class Node():
         # initialize empty groups
         self.me = Peer(self.addr,self.port,self.type)
         # set id
-        self.id = getpeerid(self.me)
+        self.id = '%s:%d' % (self.addr, self.port)
+
         # set path for additional configuration data
         self.configpath = configpath
         # set the logger
@@ -351,7 +352,6 @@ class Node():
                             self.receivedmessages.remove((m,c))
                             msgconns.append((m,c))
                     if len(msgconns) > 1:
-                        print "BATCHING NOW!!!!!"
                         self.process_messagelist(msgconns)
                     else:
                         self.process_message(message_to_process, connection)
