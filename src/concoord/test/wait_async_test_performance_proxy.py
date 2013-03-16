@@ -11,12 +11,24 @@ class Test():
 
     def __concoordinit__(self):
         cno,condition = self.proxy.invoke_command_async('__init__')
+        with ccond:
+            while not self.proxy.command_done_async(cno)[0]:
+                ccond.wait()
 
     def getvalue(self):
         cno,ccond = self.proxy.invoke_command_async('getvalue')
+        with ccond:
+            while not self.proxy.command_done_async(cno)[0]:
+                ccond.wait()
 
     def setvalue(self, newvalue):
         cno,condition = self.proxy.invoke_command_async('setvalue', newvalue)
+        with ccond:
+            while not self.proxy.command_done_async(cno)[0]:
+                ccond.wait()
 
     def __str__(self):
         cno,condition = self.proxy.invoke_command_async('__str__')
+        with ccond:
+            while not self.proxy.command_done_async(cno)[0]:
+                ccond.wait()
