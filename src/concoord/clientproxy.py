@@ -114,13 +114,13 @@ class ClientProxy():
         sendcount = -1
         lastreplycode = -1
         self.commandnumber += 1
+        clientmsg = create_message(MSG_CLIENTREQUEST, self.me,
+                                   {FLD_PROPOSAL: Proposal(self.me, self.commandnumber, args), 
+                                    FLD_TOKEN: self.token,
+                                    FLD_SENDCOUNT: sendcount})
         while True:
             sendcount += 1
-            clientmsg = create_message(MSG_CLIENTREQUEST, self.me,
-                                       {FLD_PROPOSAL: Proposal(self.me, self.commandnumber, args), 
-                                        FLD_TOKEN: self.token,
-                                        FLD_SENDCOUNT: sendcount})
-            
+            clientmsg[FLD_SENDCOUNT] = sendcount
             # send the request
             if not senddone:
                 success = self.conn.send(clientmsg)
