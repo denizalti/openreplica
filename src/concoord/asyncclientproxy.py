@@ -188,9 +188,7 @@ class ClientProxy():
                         else:
                             print "Unknown Client Reply Code"
             except ConnectionError:
-                with self.lock:
-                    self.outstanding.append(reqdesc)
-                    self.needreconfig = True
+                self.needreconfig = True
             except KeyboardInterrupt:
                 self._graceexit()
 
