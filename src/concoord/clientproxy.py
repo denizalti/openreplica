@@ -24,7 +24,7 @@ REPLY = 0
 CONDITION = 1
 
 class ClientProxy():
-    def __init__(self, bootstrap, timeout=60, debug=True, token=None):
+    def __init__(self, bootstrap, timeout=60, debug=False, token=None):
         self.debug = debug
         self.timeout = timeout 
         self.domainname = None
@@ -56,8 +56,7 @@ class ClientProxy():
                     if peer not in tmpbootstraplist:
                         tmpbootstraplist.append(peer)
         except (dns.resolver.NXDOMAIN, dns.exception.Timeout):
-            if self.debug:
-                print "Cannot resolve name"
+            if self.debug: print "Cannot resolve name"
         return tmpbootstraplist
 
     def discoverbootstrap(self, givenbootstrap):
@@ -74,8 +73,7 @@ class ClientProxy():
                     self.domainname = bootstrap
                     tmpbootstraplist = self.getbootstrapfromdomain(self.domainname)
         except ValueError:
-            if self.debug:
-                print "bootstrap usage: ipaddr1:port1,ipaddr2:port2 or domainname"
+            if self.debug: print "bootstrap usage: ipaddr1:port1,ipaddr2:port2 or domainname"
             self._graceexit()
         return tmpbootstraplist
 
@@ -91,12 +89,10 @@ class ClientProxy():
                 self.conn.settimeout(CLIENTRESENDTIMEOUT)
                 self.bootstrap = boottuple
                 connected = True
-                if self.debug:
-                    print "Connected to new bootstrap: ", boottuple
+                if self.debug: print "Connected to new bootstrap: ", boottuple
                 break
             except socket.error, e:
-                if self.debug:
-                    print e
+                if self.debug: print "Socket.Error: ", e
                 continue
         return connected
 
