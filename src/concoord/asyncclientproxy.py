@@ -25,20 +25,16 @@ CONDITION = 1
 
 class ReqDesc:
     def __init__(self, clientproxy, args, token):
-        with clientproxy.lock:
-            # acquire a unique command number
-            self.commandnumber = clientproxy.commandnumber
-            clientproxy.commandnumber += 1
+        # acquire a unique command number
+        self.commandnumber = clientproxy.commandnumber
+        clientproxy.commandnumber += 1
         self.cm = create_message(MSG_CLIENTREQUEST, clientproxy.me,
                                  {FLD_PROPOSAL: Proposal(clientproxy.me, self.commandnumber, args), 
                                   FLD_TOKEN: token,
                                   FLD_SENDCOUNT: 0})
-        self.starttime = time.time()
+        self.reply = None
         self.replyarrived = False
         self.replyarrivedcond = Condition()
-        self.lastreplycr = -1
-        self.resendnecessary = False
-        self.reply = None
         self.sendcount = 0
 
     def __str__(self):
@@ -67,15 +63,16 @@ class ClientProxy():
         # synchronization
         self.lock = Lock()
         self.pendingops = {}
-        self.reconfiglock = Lock()
+        self.writelock = Lock()
         self.needreconfig = False
+        self.outstanding = []
 
         # spawn thread, invoke recv_loop
         recv_thread = Thread(target=self.recv_loop, name='ReceiveThread')
         recv_thread.start()
 
-    def getipportpairs(self, bootaddr, bootport):
-        for node in socket.getaddrinfo(bootaddr, bootport):
+    def _getipportpairs(self, bootaddr, bootport):
+        for node in socket.getaddrinfo(bootaddr, bootport, socket.AF_INET, socket.SOCK_STREAM):
             yield (node[4][0],bootport)
 
     def getbootstrapfromdomain(self, domainname):
@@ -83,7 +80,7 @@ class ClientProxy():
         try:
             answers = dns.resolver.query('_concoord._tcp.'+domainname, 'SRV')
             for rdata in answers:
-                for peer in self.getipportpairs(str(rdata.target), rdata.port):
+                for peer in self._getipportpairs(str(rdata.target), rdata.port):
                     if peer not in tmpbootstraplist:
                         tmpbootstraplist.append(peer)
         except (dns.resolver.NXDOMAIN, dns.exception.Timeout):
@@ -98,7 +95,7 @@ class ClientProxy():
                 # The bootstrap list is read only during initialization
                 if bootstrap.find(":") >= 0:
                     bootaddr,bootport = bootstrap.split(":")
-                    for peer in self.getipportpairs(bootaddr, int(bootport)):
+                    for peer in self._getipportpairs(bootaddr, int(bootport)):
                         if peer not in tmpbootstraplist:
                             tmpbootstraplist.append(peer)
                 else:
@@ -131,81 +128,78 @@ class ClientProxy():
                 continue
         return connected
 
-    def trynewbootstrap(self, triedreplicas):
+    def trynewbootstrap(self):
         if self.domainname:
             self.bootstraplist = self.getbootstrapfromdomain(self.domainname)
         else:
             oldbootstrap = self.bootstraplist.pop(0)
             self.bootstraplist.append(oldbootstrap)
-        if triedreplicas == set(self.bootstraplist):
-            # If all replicas in the list are tried already, return False
-            return False
         return self.connecttobootstrap()
 
     def invoke_command_async(self, *args):
         # create a request descriptor
         reqdesc = ReqDesc(self, args, self.token)
-        # send the request
-        success = self.conn.send(reqdesc.cm)
-        if not success:
-            with self.reconfiglock:
-                self.needreconfig = True
+        # send the clientrequest
+        with self.writelock:
+            success = self.conn.send(reqdesc.cm)
         with self.lock:
             self.pendingops[reqdesc.commandnumber] = reqdesc
-        # Do not wait for the reply, return the reqdesc
+            # if the message is not sent, we should reconfigure
+            # and send it without making the client wait
+            self.outstanding.append(reqdesc)
+            self.needreconfig = not success
         return reqdesc
 
-    def recv_loop(self, *args):
-        try:
-            triedreplicas = set()
-            while True:
-                triedreplicas.add(self.bootstrap)
-                try:
-                    for reply in self.conn.received_bytes():
-                        if reply and reply.type == MSG_CLIENTREPLY:
-                            # received a reply
-                            reqdesc = self.pendingops[reply.inresponseto]
-                            if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or \
-                                    reply.replycode == CR_UNBLOCK:
-                                # actionable response, wake up the thread
-                                if reply.replycode == CR_UNBLOCK:
-                                    assert reqdesc.lastcr == CR_BLOCK, "unblocked thread not previously blocked"
-                                reqdesc.lastcr = reply.replycode
-                                reqdesc.reply = reply
-                                reqdesc.replyarrived = True
-                                reqdesc.replyarrivedcond.notify()
-                            elif reply.replycode == CR_INPROGRESS or reply.replycode == CR_BLOCK:
-                                # the thread is already waiting, no need to do anything
-                                reqdesc.lastcr = reply.replycode
-                            elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
-                                reqdesc.replyarrived = True
-                                reqdesc.resendnecessary = True
-                                reqdesc.replyarrivedcond.notify()                                
-                                with self.reconfiglock:
-                                    self.needreconfig = True
-                            else:
-                                print "should not happen -- unknown response type"
-                except:
-                    with self.reconfiglock:
-                        self.needreconfig = True
-
-                with self.reconfiglock:
-                    while self.needreconfig:
-                        if not self.trynewbootstrap(triedreplicas):
-                            raise ConnectionError("Cannot connect to any bootstrap")
-                        self.needreconfig = False
-                        continue
-
-        except KeyboardInterrupt:
-            self._graceexit()
-
     def wait_until_command_done(self, reqdesc):
-        if reqdesc.reply.replycode == CR_OK or reqdesc.reply.replycode == CR_UNBLOCK:
+        if reqdesc.reply.replycode == CR_OK:
             return reqdesc.reply.reply
         elif reqdesc.reply.replycode == CR_EXCEPTION:
             raise Exception(reqdesc.reply.reply)
         else:
             return "Unexpected Client Reply Code: %d" % reqdesc.reply.replycode
+
+    def recv_loop(self, *args):
+        while True:
+            try:
+                for reply in self.conn.received_bytes():
+                    if reply and reply.type == MSG_CLIENTREPLY:
+                        # received a reply
+                        reqdesc = self.pendingops[reply.inresponseto]
+                        # Async Clientproxy doesn't support BLOCK and UNBLOCK
+                        if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION:
+                            # the request is done
+                            reqdesc.reply = reply
+                            reqdesc.replyarrived = True
+                            with reqdesc.replyarrivedcond:
+                                reqdesc.replyarrivedcond.notify()
+                            del self.pendingops[reply.inresponseto]
+                        elif reply.replycode == CR_INPROGRESS:
+                            # the request is not done yet
+                            pass
+                        elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
+                            # the request should be resent after reconfiguration
+                            with self.lock:
+                                self.outstanding.append(reqdesc)
+                                self.needreconfig = True
+                        else:
+                            print "Unknown Client Reply Code"
+            except ConnectionError:
+                with self.lock:
+                    self.outstanding.append(reqdesc)
+                    self.needreconfig = True
+            except KeyboardInterrupt:
+                self._graceexit()
+
+        with self.lock:
+            if self.needreconfig:
+                if not self.trynewbootstrap():
+                    raise ConnectionError("Cannot connect to any bootstrap")
+
+        with self.writelock:
+            for reqdesc in self.outstanding:
+                success = self.conn.send(reqdesc.cm)
+                if success:
+                    self.outstanding.remove(reqdesc)
 
     def _graceexit(self):
         os._exit(0)
