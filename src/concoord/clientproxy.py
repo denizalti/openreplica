@@ -24,7 +24,7 @@ REPLY = 0
 CONDITION = 1
 
 class ClientProxy():
-    def __init__(self, bootstrap, timeout=60, debug=False, token=None):
+    def __init__(self, bootstrap, timeout=60, debug=True, token=None):
         self.debug = debug
         self.timeout = timeout 
         self.domainname = None
@@ -43,8 +43,8 @@ class ClientProxy():
         self.me = Peer(myaddr,myport,NODE_CLIENT)
         self.commandnumber = random.randint(1, sys.maxint)
 
-    def getipportpairs(self, bootaddr, bootport):
-        for node in socket.getaddrinfo(bootaddr, bootport):
+    def _getipportpairs(self, bootaddr, bootport):
+        for node in socket.getaddrinfo(bootaddr, bootport, socket.AF_INET, socket.SOCK_STREAM):
             yield (node[4][0],bootport)
 
     def getbootstrapfromdomain(self, domainname):
@@ -52,7 +52,7 @@ class ClientProxy():
         try:
             answers = dns.resolver.query('_concoord._tcp.'+domainname, 'SRV')
             for rdata in answers:
-                for peer in self.getipportpairs(str(rdata.target), rdata.port):
+                for peer in self._getipportpairs(str(rdata.target), rdata.port):
                     if peer not in tmpbootstraplist:
                         tmpbootstraplist.append(peer)
         except (dns.resolver.NXDOMAIN, dns.exception.Timeout):
@@ -67,7 +67,7 @@ class ClientProxy():
                 # The bootstrap list is read only during initialization
                 if bootstrap.find(":") >= 0:
                     bootaddr,bootport = bootstrap.split(":")
-                    for peer in self.getipportpairs(bootaddr, int(bootport)):
+                    for peer in self._getipportpairs(bootaddr, int(bootport)):
                         if peer not in tmpbootstraplist:
                             tmpbootstraplist.append(peer)
                 else:
@@ -110,7 +110,7 @@ class ClientProxy():
 
     def invoke_command(self, *args):
         # create a request descriptor
-        senddone = False
+        resend = True
         sendcount = -1
         lastreplycode = -1
         self.commandnumber += 1
@@ -122,12 +122,12 @@ class ClientProxy():
             sendcount += 1
             clientmsg[FLD_SENDCOUNT] = sendcount
             # send the request
-            if not senddone:
+            if resend:
                 success = self.conn.send(clientmsg)
                 if not success:
                     self.reconfigure()
                     continue
-                senddone = True
+                resend = False
         # Receive reply
             try:
                 for reply in self.conn.received_bytes():
@@ -146,11 +146,13 @@ class ClientProxy():
                             # go wait for another message
                             continue
                         elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
+                            resend = True
                             self.reconfigure()
                             continue
                         else:
-                            print "should not happen -- unknown response type"
+                            print "Unknown client reply code."
             except ConnectionError:
+                resend = True
                 self.reconfigure()
                 continue
             except KeyboardInterrupt:
