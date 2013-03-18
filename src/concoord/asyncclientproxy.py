@@ -34,9 +34,10 @@ class ReqDesc:
                                   FLD_TOKEN: token,
                                   FLD_SENDCOUNT: 0})
         self.starttime = time.time()
-        self.replyarrived = Condition(clientproxy.lock)
+        self.replyarrived = False
+        self.replyarrivedcond = Condition()
         self.lastreplycr = -1
-        self.replyvalid = False
+        self.resendnecessary = False
         self.reply = None
         self.sendcount = 0
 
@@ -65,8 +66,7 @@ class ClientProxy():
 
         # synchronization
         self.lock = Lock()
-        self.pendingops = {}  # pending requests indexed by commandnumber
-        self.doneops = {}  # requests that are finalized, indexed by commandnumber
+        self.pendingops = {}
         self.reconfiglock = Lock()
         self.needreconfig = False
 
@@ -145,15 +145,15 @@ class ClientProxy():
     def invoke_command_async(self, *args):
         # create a request descriptor
         reqdesc = ReqDesc(self, args, self.token)
-        self.pendingops[reqdesc.commandnumber] = reqdesc
         # send the request
-        with self.writelock:
-            success = self.conn.send(reqdesc.cm)
-            if not success:
-                with self.reconfiglock:
-                    self.needreconfig = True
-        # Do not wait for the reply, return the commandnumber
-        return reqdesc.commandnumber, reqdesc.replyarrived
+        success = self.conn.send(reqdesc.cm)
+        if not success:
+            with self.reconfiglock:
+                self.needreconfig = True
+        with self.lock:
+            self.pendingops[reqdesc.commandnumber] = reqdesc
+        # Do not wait for the reply, return the reqdesc
+        return reqdesc
 
     def recv_loop(self, *args):
         try:
@@ -163,63 +163,49 @@ class ClientProxy():
                 try:
                     for reply in self.conn.received_bytes():
                         if reply and reply.type == MSG_CLIENTREPLY:
-                            with self.lock:
-                                # received a reply
-                                reqdesc = self.pendingops[reply.inresponseto]
-                                if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or \
-                                        reply.replycode == CR_UNBLOCK:
-                                    # actionable response, wake up the thread
-                                    if reply.replycode == CR_UNBLOCK:
-                                        assert reqdesc.lastcr == CR_BLOCK, "unblocked thread not previously blocked"
-                                    reqdesc.lastcr = reply.replycode
-                                    reqdesc.reply = reply
-                                    reqdesc.replyvalid = True
-                                    self.doneops[reqdesc.commandnumber] = reqdesc
-                                    del self.pendingops[reply.inresponseto]
-                                    reqdesc.replyarrived.notify()
-                                elif reply.replycode == CR_INPROGRESS or reply.replycode == CR_BLOCK:
-                                    # the thread is already waiting, no need to do anything
-                                    reqdesc.lastcr = reply.replycode
-                                elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
-                                    with self.reconfiglock:
-                                        self.needreconfig = True
-                                else:
-                                    print "should not happen -- unknown response type"
+                            # received a reply
+                            reqdesc = self.pendingops[reply.inresponseto]
+                            if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or \
+                                    reply.replycode == CR_UNBLOCK:
+                                # actionable response, wake up the thread
+                                if reply.replycode == CR_UNBLOCK:
+                                    assert reqdesc.lastcr == CR_BLOCK, "unblocked thread not previously blocked"
+                                reqdesc.lastcr = reply.replycode
+                                reqdesc.reply = reply
+                                reqdesc.replyarrived = True
+                                reqdesc.replyarrivedcond.notify()
+                            elif reply.replycode == CR_INPROGRESS or reply.replycode == CR_BLOCK:
+                                # the thread is already waiting, no need to do anything
+                                reqdesc.lastcr = reply.replycode
+                            elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
+                                reqdesc.replyarrived = True
+                                reqdesc.resendnecessary = True
+                                reqdesc.replyarrivedcond.notify()                                
+                                with self.reconfiglock:
+                                    self.needreconfig = True
+                            else:
+                                print "should not happen -- unknown response type"
                 except:
                     with self.reconfiglock:
                         self.needreconfig = True
 
-                while self.needreconfig:
-                    if not self.trynewbootstrap(triedreplicas):
-                        raise ConnectionError("Cannot connect to any bootstrap")
-                    with self.reconfiglock:
+                with self.reconfiglock:
+                    while self.needreconfig:
+                        if not self.trynewbootstrap(triedreplicas):
+                            raise ConnectionError("Cannot connect to any bootstrap")
                         self.needreconfig = False
-
-                    # check if we need to re-send any pending operations
-                    for commandno,reqdesc in self.pendingops.iteritems():
-                        if not reqdesc.replyvalid and reqdesc.lastreplycr != CR_BLOCK:
-                            reqdesc.sendcount += 1
-                            reqdesc.cm[FLD_SENDCOUNT] = reqdesc.sendcount
-                            if not self.conn.send(reqdesc.cm):
-                                with self.reconfiglock:
-                                    self.needreconfig = True
-                            continue
+                        continue
 
         except KeyboardInterrupt:
             self._graceexit()
 
-    def command_done_async(self, commandnumber):
-        if commandnumber in self.doneops:
-            # command is done, return the result
-            reqdesc = self.doneops[commandnumber]
-            if reqdesc.reply.replycode == CR_OK or reqdesc.reply.replycode == CR_UNBLOCK:
-                return (True, reqdesc.reply.reply)
-            elif reqdesc.reply.replycode == CR_EXCEPTION:
-                return (True, Exception(reqdesc.reply.reply))
-            else:
-                return (True, "Unexpected Client Reply Code: %d" % reqdesc.reply.replycode)
+    def wait_until_command_done(self, reqdesc):
+        if reqdesc.reply.replycode == CR_OK or reqdesc.reply.replycode == CR_UNBLOCK:
+            return reqdesc.reply.reply
+        elif reqdesc.reply.replycode == CR_EXCEPTION:
+            raise Exception(reqdesc.reply.reply)
         else:
-            return (False, None)
+            return "Unexpected Client Reply Code: %d" % reqdesc.reply.replycode
 
     def _graceexit(self):
         os._exit(0)
