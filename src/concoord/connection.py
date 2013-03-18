@@ -128,6 +128,8 @@ class Connection():
         self.readlock = Lock()
         self.writelock = Lock()
         self.outgoing = ''
+        # Rethink the size of the bytearray versus the 
+        # number of bytes requested in recv_into XXX
         self.incomingbytearray = bytearray(100000)
         self.incoming = memoryview(self.incomingbytearray)
         self.incomingoffset = 0
@@ -171,7 +173,6 @@ class Connection():
 
     def received_bytes(self):
         with self.readlock:
-            # do the length business here
             try:
                 datalen = self.thesocket.recv_into(self.incoming[self.incomingoffset:], 100000)
             except ValueError as e:
@@ -200,6 +201,8 @@ class Connection():
                 # check if there is a complete msg, if so return the msg
                 # otherwise return None
                 if self.incomingoffset >= msg_length+4:
+                    # XXX incomingbytearray breaks in linux
+                    # msgdict = msgpack.unpackb(self.incoming[4:msg_length+4].tobytes(), use_list=False)
                     msgdict = msgpack.unpackb(self.incomingbytearray[4:msg_length+4], use_list=False)
                     # this operation cuts the incoming buffer
                     if self.incomingoffset > msg_length+4:
@@ -232,7 +235,6 @@ class Connection():
             except socket.error, e:
                  if isinstance(e.args, tuple):
                      if e[0] == errno.EPIPE:
-                         print "Remote disconnect"
                          return False
             except IOError, e:
                 print "Send Error: ", e
