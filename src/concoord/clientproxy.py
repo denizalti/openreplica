@@ -117,7 +117,7 @@ class ClientProxy():
         while True:
             sendcount += 1
             clientmsg[FLD_SENDCOUNT] = sendcount
-            # send the request
+            # send the clientrequest
             if resend:
                 success = self.conn.send(clientmsg)
                 if not success:
@@ -146,7 +146,7 @@ class ClientProxy():
                             self.reconfigure()
                             continue
                         else:
-                            print "Unknown client reply code."
+                            print "Unknown Client Reply Code."
             except ConnectionError:
                 resend = True
                 self.reconfigure()
