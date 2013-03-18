@@ -64,6 +64,7 @@ class ClientProxy():
         self.commandnumber = random.randint(1, sys.maxint)
 
         # synchronization
+        # get rid of locks
         self.lock = Lock()
         self.pendingops = {}  # pending requests indexed by commandnumber
         self.reconfiglock = Lock()

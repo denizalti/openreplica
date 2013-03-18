@@ -10,25 +10,42 @@ class Test():
         self.proxy = ClientProxy(bootstrap, True)
 
     def __concoordinit__(self):
-        cno,condition = self.proxy.invoke_command_async('__init__')
-        with ccond:
-            while not self.proxy.command_done_async(cno)[0]:
-                ccond.wait()
+        repeat = True
+        while repeat:
+            reqdesc = self.proxy.invoke_command_async('__init__')
+            with reqdesc.replyarrivedcond:
+                while not reqdesc.replyarrived:
+                    reqdesc.replyarrivedcond.wait()
+            repeat = reqdesc.resendnecessary
+        return reqdesc.reply.reply
 
     def getvalue(self):
-        cno,ccond = self.proxy.invoke_command_async('getvalue')
-        with ccond:
-            while not self.proxy.command_done_async(cno)[0]:
-                ccond.wait()
+        repeat = True
+        while repeat:
+            reqdesc = self.proxy.invoke_command_async('getvalue')
+            with reqdesc.replyarrivedcond:
+                print reqdesc
+                while not reqdesc.replyarrived:
+                    reqdesc.replyarrivedcond.wait()
+            repeat = reqdesc.resendnecessary
+        return reqdesc.reply.reply
 
     def setvalue(self, newvalue):
-        cno,condition = self.proxy.invoke_command_async('setvalue', newvalue)
-        with ccond:
-            while not self.proxy.command_done_async(cno)[0]:
-                ccond.wait()
+        repeat = True
+        while repeat:
+            reqdesc = self.proxy.invoke_command_async('setvalue', newvalue)
+            with reqdesc.replyarrivedcond:
+                while not reqdesc.replyarrived:
+                    reqdesc.replyarrivedcond.wait()
+            repeat = reqdesc.resendnecessary
+        return reqdesc.reply.reply
 
     def __str__(self):
-        cno,condition = self.proxy.invoke_command_async('__str__')
-        with ccond:
-            while not self.proxy.command_done_async(cno)[0]:
-                ccond.wait()
+        repeat = True
+        while repeat:
+            reqdesc = self.proxy.invoke_command_async('__str__')
+            with reqdesc.replyarrivedcond:
+                while not reqdesc.replyarrived:
+                    reqdesc.replyarrivedcond.wait()
+            repeat = reqdesc.resendnecessary
+        return reqdesc.reply.reply
