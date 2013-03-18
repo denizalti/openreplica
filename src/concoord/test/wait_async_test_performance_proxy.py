@@ -10,42 +10,17 @@ class Test():
         self.proxy = ClientProxy(bootstrap, True)
 
     def __concoordinit__(self):
-        repeat = True
-        while repeat:
-            reqdesc = self.proxy.invoke_command_async('__init__')
-            with reqdesc.replyarrivedcond:
-                while not reqdesc.replyarrived:
-                    reqdesc.replyarrivedcond.wait()
-            repeat = reqdesc.resendnecessary
-        return reqdesc.reply.reply
+        reqdesc = self.proxy.invoke_command_async('__init__')
+        return self.proxy.wait_until_command_done(reqdesc)
 
     def getvalue(self):
-        repeat = True
-        while repeat:
-            reqdesc = self.proxy.invoke_command_async('getvalue')
-            with reqdesc.replyarrivedcond:
-                print reqdesc
-                while not reqdesc.replyarrived:
-                    reqdesc.replyarrivedcond.wait()
-            repeat = reqdesc.resendnecessary
-        return reqdesc.reply.reply
+        reqdesc = self.proxy.invoke_command_async('getvalue')
+        return self.proxy.wait_until_command_done(reqdesc)
 
     def setvalue(self, newvalue):
-        repeat = True
-        while repeat:
-            reqdesc = self.proxy.invoke_command_async('setvalue', newvalue)
-            with reqdesc.replyarrivedcond:
-                while not reqdesc.replyarrived:
-                    reqdesc.replyarrivedcond.wait()
-            repeat = reqdesc.resendnecessary
-        return reqdesc.reply.reply
+        reqdesc = self.proxy.invoke_command_async('setvalue', newvalue)
+        return self.proxy.wait_until_command_done(reqdesc)
 
     def __str__(self):
-        repeat = True
-        while repeat:
-            reqdesc = self.proxy.invoke_command_async('__str__')
-            with reqdesc.replyarrivedcond:
-                while not reqdesc.replyarrived:
-                    reqdesc.replyarrivedcond.wait()
-            repeat = reqdesc.resendnecessary
-        return reqdesc.reply.reply
+        reqdesc = self.proxy.invoke_command_async('__str__')
+        return self.proxy.wait_until_command_done(reqdesc)

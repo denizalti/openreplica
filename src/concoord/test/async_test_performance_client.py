@@ -29,9 +29,13 @@ def test_loop():
   starttime = time.time()
   for i in range(options.operations):
     proxy.getvalue()
+  reqdesc = proxy.getvalue()
+  with reqdesc.replyarrivedcond:
+    while not reqdesc.replyarrived:
+      reqdesc.replyarrivedcond.wait()
   stoptime = time.time()
 
-  latency = float(stoptime-starttime)/(options.operations)
+  latency = float(stoptime-starttime)/(options.operations+1)
   print "*****************************************"
   print "AVERAGE CLIENT LATENCY: %f secs" % latency 
   if options.setting:
@@ -46,4 +50,4 @@ def main():
   test_loop()
     
 if __name__=='__main__':
-    main()
+  main()

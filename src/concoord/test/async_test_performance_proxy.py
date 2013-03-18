@@ -10,13 +10,13 @@ class Test():
         self.proxy = ClientProxy(bootstrap, True)
 
     def __concoordinit__(self):
-        reqdesc = self.proxy.invoke_command_async('__init__')
+        return self.proxy.invoke_command_async('__init__')
 
     def getvalue(self):
-        reqdesc = self.proxy.invoke_command_async('getvalue')
+        return self.proxy.invoke_command_async('getvalue')
 
     def setvalue(self, newvalue):
-        reqdesc = self.proxy.invoke_command_async('setvalue', newvalue)
+        return self.proxy.invoke_command_async('setvalue', newvalue)
 
     def __str__(self):
-        reqdesc = self.proxy.invoke_command_async('__str__')
+        return self.proxy.invoke_command_async('__str__')
