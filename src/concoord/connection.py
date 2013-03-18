@@ -32,12 +32,14 @@ class ConnectionPool():
 
     def add_connection_to_peer(self, peer, conn):
         """Adds a Connection to the ConnectionPool by its Peer"""
-        with self.pool_lock:
+        if str(peer) not in self.poolbypeer:
             conn.peerid = str(peer)
-            self.poolbypeer[conn.peerid] = conn
-            self.activesockets.add(conn.thesocket)
-            if conn.thesocket in self.nascentsockets:
-                self.nascentsockets.remove(conn.thesocket)
+            with self.pool_lock:
+                conn.peerid = str(peer)
+                self.poolbypeer[conn.peerid] = conn
+                self.activesockets.add(conn.thesocket)
+                if conn.thesocket in self.nascentsockets:
+                    self.nascentsockets.remove(conn.thesocket)
             
     def del_connection_by_peer(self, peer):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
@@ -95,8 +97,6 @@ class ConnectionPool():
                         self.activesockets.add(thesocket)
                     return conn
                 except Exception as e:
-                    print "Get connection by peer.."
-                    print "Connection Error: ", e
                     return None
 
     def get_connection_by_socket(self, thesocket):
