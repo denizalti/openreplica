@@ -129,7 +129,7 @@ class Connection():
         self.writelock = Lock()
         self.outgoing = ''
         # Rethink the size of the bytearray versus the 
-        # number of bytes requested in recv_into XXX
+        # number of bytes requested in recv_into
         self.incomingbytearray = bytearray(100000)
         self.incoming = memoryview(self.incomingbytearray)
         self.incomingoffset = 0
@@ -174,7 +174,8 @@ class Connection():
     def received_bytes(self):
         with self.readlock:
             try:
-                datalen = self.thesocket.recv_into(self.incoming[self.incomingoffset:], 100000)
+                datalen = self.thesocket.recv_into(self.incoming[self.incomingoffset:],
+                                                   100000-self.incomingoffset)
             except ValueError as e:
                 # buffer too small for requested bytes
                 msg_length = struct.unpack("I", self.incoming[0:4].tobytes())[0]
@@ -201,9 +202,7 @@ class Connection():
                 # check if there is a complete msg, if so return the msg
                 # otherwise return None
                 if self.incomingoffset >= msg_length+4:
-                    # XXX incomingbytearray breaks in linux
-                    # msgdict = msgpack.unpackb(self.incoming[4:msg_length+4].tobytes(), use_list=False)
-                    msgdict = msgpack.unpackb(self.incomingbytearray[4:msg_length+4], use_list=False)
+                    msgdict = msgpack.unpackb(self.incoming[4:msg_length+4].tobytes(), use_list=False)
                     # this operation cuts the incoming buffer
                     if self.incomingoffset > msg_length+4:
                         self.incoming[:self.incomingoffset-(msg_length+4)] = self.incoming[msg_length+4:self.incomingoffset]
@@ -214,7 +213,7 @@ class Connection():
     
     def send(self, msg):
         with self.writelock:
-            """pickle and send a message on the Connection"""
+            """pack and send a message on the Connection"""
             messagestr = msgpack.packb(msg)
             message = struct.pack("I", len(messagestr)) + messagestr
             try:
@@ -253,16 +252,4 @@ class Connection():
     def close(self):
         """Close the Connection"""
         self.thesocket.close()
-        self.thesocket = None
-
-    def _picklefixer(self, module, name):
-        try:
-            __import__(module)
-        except:
-            if module.split('.')[0] == 'concoord':
-                module = module.split('.')[1]
-            else:
-                module = 'concoord.'+module
-            __import__(module)
-        return getattr(sys.modules[module], name)
-        
+        self.thesocket = None        
