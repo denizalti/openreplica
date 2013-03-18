@@ -146,11 +146,15 @@ class ClientProxy():
             self.pendingops[reqdesc.commandnumber] = reqdesc
             # if the message is not sent, we should reconfigure
             # and send it without making the client wait
-            self.outstanding.append(reqdesc)
+            if not success:
+                self.outstanding.append(reqdesc)
             self.needreconfig = not success
         return reqdesc
 
     def wait_until_command_done(self, reqdesc):
+        with reqdesc.replyarrivedcond:
+            while not reqdesc.replyarrived:
+                reqdesc.replyarrivedcond.wait()
         if reqdesc.reply.replycode == CR_OK:
             return reqdesc.reply.reply
         elif reqdesc.reply.replycode == CR_EXCEPTION:
@@ -169,8 +173,8 @@ class ClientProxy():
                         if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION:
                             # the request is done
                             reqdesc.reply = reply
-                            reqdesc.replyarrived = True
                             with reqdesc.replyarrivedcond:
+                                reqdesc.replyarrived = True
                                 reqdesc.replyarrivedcond.notify()
                             del self.pendingops[reply.inresponseto]
                         elif reply.replycode == CR_INPROGRESS:
@@ -190,16 +194,16 @@ class ClientProxy():
             except KeyboardInterrupt:
                 self._graceexit()
 
-        with self.lock:
-            if self.needreconfig:
-                if not self.trynewbootstrap():
-                    raise ConnectionError("Cannot connect to any bootstrap")
+            with self.lock:
+                if self.needreconfig:
+                    if not self.trynewbootstrap():
+                        raise ConnectionError("Cannot connect to any bootstrap")
 
-        with self.writelock:
-            for reqdesc in self.outstanding:
-                success = self.conn.send(reqdesc.cm)
-                if success:
-                    self.outstanding.remove(reqdesc)
+            with self.writelock:
+                for reqdesc in self.outstanding:
+                    success = self.conn.send(reqdesc.cm)
+                    if success:
+                        self.outstanding.remove(reqdesc)
 
     def _graceexit(self):
         os._exit(0)

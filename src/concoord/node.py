@@ -444,7 +444,6 @@ class Node():
     def send(self, message, peer=None, group=None, isresend=False):
         if peer:
             if peer == self.me:
-                print "Not sending.."
                 return 0
             connection = self.connectionpool.get_connection_by_peer(peer)
             if connection == None:

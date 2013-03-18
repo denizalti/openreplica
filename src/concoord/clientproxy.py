@@ -29,8 +29,9 @@ class ClientProxy():
         self.timeout = timeout 
         self.domainname = None
         self.token = token
-        self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,1)
+        self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.writelock = Lock()
 
         self.bootstraplist = self.discoverbootstrap(bootstrap)
@@ -112,8 +113,7 @@ class ClientProxy():
         self.commandnumber += 1
         clientmsg = create_message(MSG_CLIENTREQUEST, self.me,
                                    {FLD_PROPOSAL: Proposal(self.me, self.commandnumber, args), 
-                                    FLD_TOKEN: self.token,
-                                    FLD_SENDCOUNT: sendcount})
+                                    FLD_TOKEN: self.token})
         while True:
             sendcount += 1
             clientmsg[FLD_SENDCOUNT] = sendcount
