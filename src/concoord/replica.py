@@ -129,6 +129,7 @@ class Replica(Node):
         else:
             return method(*args)
 
+    @throughput_test
     def performcore(self, command, dometaonly=False, designated=False):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
