@@ -68,6 +68,7 @@ class ConnectionPool():
                         break
                 del self.poolbysocket[thesocket.fileno()]
                 if thesocket in self.activesockets:
+                    print "Del Connection by socket, removing from activesockets: ", thesocket
                     self.activesockets.remove(thesocket)
                 if thesocket in self.nascentsockets:
                     self.nascentsockets.remove(thesocket)
@@ -176,26 +177,26 @@ class Connection():
             try:
                 datalen = self.thesocket.recv_into(self.incoming[self.incomingoffset:],
                                                    100000-self.incomingoffset)
-            except ValueError as e:
-                # buffer too small for requested bytes
-                msg_length = struct.unpack("I", self.incoming[0:4].tobytes())[0]
-                msgstr = self.incoming[4:].tobytes()
-                try:
-                    msgstr += self.receive_n_bytes(msg_length-(len(self.incoming)-4))
-                    msgdict = msgpack.unpackb(msgstr, use_list=False)
-                    self.incoming = memoryview(bytearray(100000))
-                    self.incomingoffset = 0
-                    yield parse_message(msgdict)
-                except IOError as inst:
-                    self.incoming = memoryview(bytearray(100000))
-                    self.incomingoffset = 0
-                    raise ConnectionError()
             except IOError:
                 # [Errno 104] Connection reset by peer
                 raise ConnectionError()
 
             if datalen == 0:
-                raise ConnectionError()
+                if self.incomingoffset == 100000:
+                    # buffer too small for a complete message
+                    msg_length = struct.unpack("I", self.incoming[0:4].tobytes())[0]
+                    msgstr = self.incoming[4:].tobytes()
+                    try:
+                        msgstr += self.receive_n_bytes(msg_length-(len(self.incoming)-4))
+                        msgdict = msgpack.unpackb(msgstr, use_list=False)
+                        self.incomingoffset = 0
+                        yield parse_message(msgdict)
+                    except IOError as inst:
+                        self.incomingoffset = 0
+                        raise ConnectionError()
+                else:
+                    raise ConnectionError()
+
             self.incomingoffset += datalen
             while self.incomingoffset >= 4:
                 msg_length = (ord(self.incoming[3]) << 24) | (ord(self.incoming[2]) << 16) | (ord(self.incoming[1]) << 8) | ord(self.incoming[0])
