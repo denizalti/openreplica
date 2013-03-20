@@ -3,7 +3,6 @@
 @note: The Replica keeps an object and responds to Perform messages received from the Leader.
 @copyright: See LICENSE
 '''
-import gc
 import inspect
 import math, time
 import os, sys
@@ -129,7 +128,7 @@ class Replica(Node):
         else:
             return method(*args)
 
-    @throughput_test
+#    @throughput_test
     def performcore(self, command, dometaonly=False, designated=False):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related

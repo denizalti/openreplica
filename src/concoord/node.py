@@ -3,7 +3,6 @@
 @note: Master class for all nodes
 @copyright: See LICENSE
 '''
-import gc
 import os, sys
 import random, struct
 import cPickle as pickle
@@ -221,7 +220,7 @@ class Node():
                 # expired -- if it's not already in the set, it should be closed
                 self.connectionpool.activesockets.remove(sock)
                 self.connectionpool.nascentsockets.remove(sock)
-                sock.close()
+                #sock.close() XXX
             lastnascentset = self.connectionpool.nascentsockets
 
             time.sleep(NASCENTTIMEOUT)
