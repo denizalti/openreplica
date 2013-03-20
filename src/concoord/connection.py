@@ -68,7 +68,6 @@ class ConnectionPool():
                         break
                 del self.poolbysocket[thesocket.fileno()]
                 if thesocket in self.activesockets:
-                    print "Del Connection by socket, removing from activesockets: ", thesocket
                     self.activesockets.remove(thesocket)
                 if thesocket in self.nascentsockets:
                     self.nascentsockets.remove(thesocket)
