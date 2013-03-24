@@ -8,7 +8,12 @@ from collections import namedtuple
 Proposal = namedtuple('Proposal', ['client', 'clientcommandnumber', 'command'])
 ProposalBatch = namedtuple('ProposalBatch', ['proposals'])
 
-Peer = namedtuple('Peer', ['addr', 'port', 'type'])
+#Peer = namedtuple('Peer', ['addr', 'port', 'type'])
+
+class Peer(namedtuple('Peer', ['addr', 'port', 'type'])):
+        __slots__ = ()
+        def __str__(self):
+            return str((self.addr, self.port, self.type))
 
 PValue = namedtuple('PValue', ['ballotnumber', 'commandnumber', 'proposal'])
 Message = namedtuple('Message', ['id', 'type', 'source'])

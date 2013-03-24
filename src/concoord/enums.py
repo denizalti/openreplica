@@ -59,7 +59,7 @@ BACKOFFINCREASE = 0.1
 
 METACOMMANDS = set(["_add_node", "_del_node", "_garbage_collect"])
 WINDOW = 10
-GARBAGEPERIOD = 1000
+GARBAGEPERIOD = 100000
 
 NOOP = "do_noop"
 
