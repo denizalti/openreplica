@@ -26,6 +26,7 @@ class Acceptor(Node):
         - accepted: all pvalues Acceptor has accepted thus far
         """
         Node.__init__(self, NODE_ACCEPTOR)
+        # self.file = open('concoordlog', 'a')
         self.ballotnumber = (0,0)
         self.last_accept_msg_id = -1
         self.accepted = PValueSet()
@@ -97,6 +98,8 @@ class Acceptor(Node):
                                       {FLD_BALLOTNUMBER: self.ballotnumber,
                                        FLD_INRESPONSETO: msg.ballotnumber,
                                        FLD_COMMANDNUMBER: msg.commandnumber})
+            conn.send(replymsg)
+            # self.file.write(str(newpvalue))
         else:
             if self.debug: self.logger.write("Paxos State",
                               "propose received with non-acceptable ballotnumber %s"
@@ -105,7 +108,7 @@ class Acceptor(Node):
                                       {FLD_BALLOTNUMBER: self.ballotnumber,
                                        FLD_INRESPONSETO: msg.ballotnumber,
                                        FLD_COMMANDNUMBER: msg.commandnumber})
-        conn.send(replymsg)
+            conn.send(replymsg)
 
     def msg_garbagecollect(self, conn, msg):
         if self.debug: self.logger.write("Paxos State",
@@ -133,10 +136,7 @@ class Acceptor(Node):
     def _graceexit(self, exitcode=0):
         sys.stdout.flush()
         sys.stderr.flush()
-        try:
-            self.logger.close()
-        except:
-            pass
+        self.logger.close()
         os._exit(exitcode)
 
 def main():
