@@ -36,7 +36,6 @@ class ConnectionPool():
             conn.peerid = str(peer)
             with self.pool_lock:
                 conn.peerid = str(peer)
-                print "Adding connection to peer: ", conn.peerid
                 self.poolbypeer[conn.peerid] = conn
                 self.activesockets.add(conn.thesocket)
                 if conn.thesocket in self.nascentsockets:
@@ -48,7 +47,6 @@ class ConnectionPool():
         with self.pool_lock:
             if self.poolbypeer.has_key(peerstr):
                 conn = self.poolbypeer[peerstr]
-                print "P: Deleting connection to peer: ", peerstr
                 del self.poolbypeer[peerstr]
                 del self.poolbysocket[conn.thesocket.fileno()]
                 if conn.thesocket in self.activesockets:
@@ -66,7 +64,6 @@ class ConnectionPool():
                 connindict = self.poolbysocket[thesocket.fileno()]
                 for connkey,conn in self.poolbypeer.iteritems():
                     if conn == connindict:
-                        print "S: Deleting connection to peer: ", connkey
                         del self.poolbypeer[connkey]
                         break
                 del self.poolbysocket[thesocket.fileno()]
@@ -81,7 +78,6 @@ class ConnectionPool():
     def get_connection_by_peer(self, peer):
         """Returns a Connection given corresponding Peer triple"""
         peerstr = str(peer)
-        print "Getting connection to peer: ", peerstr
         with self.pool_lock:
             if self.poolbypeer.has_key(peerstr):
                 return self.poolbypeer[peerstr]
@@ -92,7 +88,6 @@ class ConnectionPool():
                     thesocket.connect((peer[0], peer[1]))
                     thesocket.setblocking(0)
                     conn = Connection(thesocket, peerstr)
-                    print "G: Adding connection to peer: ", peerstr
                     self.poolbypeer[peerstr] = conn
                     self.poolbysocket[thesocket.fileno()] = conn
                     if self.epoll:
@@ -219,7 +214,6 @@ class Connection():
     def send(self, msg):
         with self.writelock:
             """pack and send a message on the Connection"""
-            print "aaaaaaaaaaaaaaaaaaa"
             messagestr = msgpack.packb(msg)
             message = struct.pack("I", len(messagestr)) + messagestr
             try:
@@ -234,9 +228,6 @@ class Connection():
                                 continue
                             else:
                                 raise e
-                    except AttributeError, e:
-                        print "XXXXXXXXXXXXXX: ", e
-                        raise e
                 return True
             except socket.error, e:
                  if isinstance(e.args, tuple):
@@ -245,7 +236,6 @@ class Connection():
             except IOError, e:
                 print "Send Error: ", e
             except AttributeError, e:
-                print self.peerid
                 print "Socket deleted."
             return False
     

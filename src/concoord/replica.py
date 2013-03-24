@@ -619,6 +619,20 @@ class Replica(Node):
         self.usedcommandnumbers.add(key)
 
     def add_to_pendingcommands(self, key, value):
+        # If a Replica adds a pendingcommand before it is up to date
+        # it assigns 1 as a commandnumber for a command. This later
+        # gets overwritten when the same command is added later with
+        # a higher commandnumber in the pendingcommandset but not in
+        # in the pendingcommands as they have different keys. The case
+        # that causes this to happen should be prevented, adding an if
+        # case in this function will not fix the logic, will just get rid
+        # of the symptom.
+        if value in self.pendingcommands.itervalues():
+            print "This command was added before with a different key!"
+            print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+            print "Pending commands: ", self.pendingcommands
+            print "Pending commandset: ", self.pendingcommandset
+            print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         self.pendingcommands[key] = value
         if isinstance(value, ProposalBatch):
             for item in value.proposals:
@@ -706,11 +720,7 @@ class Replica(Node):
                 if self.debug: self.logger.write("State", "Clientreply: %s\nAcceptors: %s"
                                   % (str(clientreply),str(self.groups[NODE_ACCEPTOR])))
             conn = self.connectionpool.get_connection_by_peer(givencommand.client)
-            print conn
-            print self.connectionpool.poolbypeer
-            print self.connectionpool.poolbysocket
             if conn is not None:
-                print "Sending...."
                 conn.send(clientreply)
             else:
                 if self.debug: self.logger.write("Error", "Can't create connection to client")
@@ -800,6 +810,7 @@ class Replica(Node):
                 if self.debug: self.logger.write("Error", "Security Token mismatch.")
                 self.send_reject_to_client(conn, msg.command.clientcommandnumber)
             else:
+                if self.debug: self.logger.write("State", "I'm the leader, handling the request.")
                 self.handle_client_command(msg.command, prepare=self.leader_initializing)
         else:
             leaderalive, leader = self.leader_is_alive()

@@ -20,9 +20,6 @@ try:
 except:
     print("Install dnspython: http://www.dnspython.org/")
 
-REPLY = 0
-CONDITION = 1
-
 class ClientProxy():
     def __init__(self, bootstrap, timeout=60, debug=False, token=None):
         self.debug = debug
