@@ -337,7 +337,6 @@ class Node():
                 with self.pendingmetalock:
                     self.pendingmetacommands = set()
                 self.initiate_command()
-#            try:
             (message_to_process,connection) = self.receivedmessages.pop(0)
             if message_to_process.type == MSG_CLIENTREQUEST:
                 # check if there are other client requests waiting
@@ -355,9 +354,6 @@ class Node():
                     self.process_message(message_to_process, connection)
             else:
                 self.process_message(message_to_process, connection)
-#            except Exception as e:
-#                print "Exception during handling message: ", e
-#                continue
         return
 
     def process_messagelist(self, msgconnlist):
