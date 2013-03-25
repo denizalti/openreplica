@@ -115,6 +115,10 @@ def parse_message(msg):
     return parse_functions[msg[FLD_TYPE]](msg)
 
 parse_functions = [
+    parse_clientrequest, # MSG_CLIENTREQUEST
+    parse_clientreply, # MSG_CLIENTREPLY
+    parse_incclientrequest, # MSG_INCCLIENTREQUEST
+
     parse_prepare, # MSG_PREPARE
     parse_prepare_reply, # MSG_PREPARE_ADOPTED
     parse_prepare_reply, # MSG_PREPARE_PREEMPTED
@@ -132,9 +136,6 @@ parse_functions = [
     parse_perform, # MSG_PERFORM
     parse_response, # MSG_RESPONSE
 
-    parse_clientrequest, # MSG_CLIENTREQUEST
-    parse_clientreply, # MSG_CLIENTREPLY
-    parse_incclientrequest, # MSG_INCCLIENTREQUEST
     parse_garbagecollect,  # MSG_GARBAGECOLLECT
     parse_basic           # MSG_STATUS
     ]
