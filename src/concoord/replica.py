@@ -730,7 +730,7 @@ class Replica(Node):
             if self.debug: self.logger.write("State", "Initiating a new command. Leader is active: %s" % self.active)
             self.initiate_command(givencommand)
 
-    def handle_client_command_batch(self, givencommandscounts, prepare=False):
+    def handle_client_command_batch(self, msgconnlist, prepare=False):
         """handle received command
         - if it has been received before check if it has been executed
         -- if it has been executed send the result
@@ -739,58 +739,50 @@ class Replica(Node):
         if not self.isleader:
             if self.debug: self.logger.write("Error",
                               "Shouldn't have come here: Not Leader.")
-            for (givencommand,sendcount) in givencommandscounts:
+            for (msg,conn) in msgconnlist:
                 clientreply = create_message(MSG_CLIENTREPLY, self.me,
                                              {FLD_REPLY: '',
                                               FLD_REPLYCODE: CR_REJECTED,
-                                              FLD_INRESPONSETO: givencommand.clientcommandnumber})
-                conn = self.connectionpool.get_connection_by_peer(givencommand.client)
-                if conn is not None:
-                    conn.send(clientreply)
-                else:
-                    if self.debug: self.logger.write("Error", "Can't create connection to client")
+                                              FLD_INRESPONSETO: msg.command.clientcommandnumber})
+                conn.send(clientreply)
             return
 
         commandstohandle = []
-        for (givencommand,sendcount) in givencommandscounts:
-            if sendcount == 0:
+        for (msg,conn) in msgconnlist:
+            if msg.sendcount == 0:
                 # The caller haven't received this command before
-                self.receivedclientrequests[(givencommand.client,
-                                             givencommand.clientcommandnumber)] = givencommand
-                commandstohandle.append(givencommand)
+                self.receivedclientrequests[(msg.command.client,
+                                             msg.command.clientcommandnumber)] = msg.command
+                commandstohandle.append(msg.command)
                 continue
-            if (givencommand.client, givencommand.clientcommandnumber) in self.receivedclientrequests:
+            if (msg.command.client, msg.command.clientcommandnumber) in self.receivedclientrequests:
                 if self.debug: self.logger.write("State", "Client request received previously:")
                 # Check if the request has been executed
-                if givencommand in self.executed:
+                if msg.command in self.executed:
                     # send REPLY
                     clientreply = create_message(MSG_CLIENTREPLY, self.me,
-                                                 {FLD_REPLY: self.executed[givencommand][EXC_RESULT],
-                                                  FLD_REPLYCODE: self.executed[givencommand][EXC_RCODE],
-                                                  FLD_INRESPONSETO: givencommand.clientcommandnumber})
+                                                 {FLD_REPLY: self.executed[msg.command][EXC_RESULT],
+                                                  FLD_REPLYCODE: self.executed[msg.command][EXC_RCODE],
+                                                  FLD_INRESPONSETO: msg.command.clientcommandnumber})
                     if self.debug: self.logger.write("State", "Clientreply: %s" % str(clientreply))
                 # Check if the request is somewhere in the Paxos pipeline
-                elif givencommand in self.pendingcommandset or givencommand in self.proposalset \
-                        or givencommand in self.decisionset:
+                elif msg.command in self.pendingcommandset or msg.command in self.proposalset \
+                        or msg.command in self.decisionset:
                     # send INPROGRESS
                     clientreply = create_message(MSG_CLIENTREPLY, self.me,
                                                  {FLD_REPLY: '',
                                                   FLD_REPLYCODE: CR_INPROGRESS,
-                                                  FLD_INRESPONSETO: givencommand.clientcommandnumber})
+                                                  FLD_INRESPONSETO: msg.command.clientcommandnumber})
                     if self.debug: self.logger.write("State", "Clientreply: %s\nAcceptors: %s"
                                       % (str(clientreply),str(self.groups[NODE_ACCEPTOR])))
-                conn = self.connectionpool.get_connection_by_peer(givencommand.client)
-                if conn is not None:
-                    conn.send(clientreply)
-                else:
-                    if self.debug: self.logger.write("Error", "Can't create connection to client")        
+                conn.send(clientreply)
         if self.debug: self.logger.write("State", "Initiating a new command. Leader is active: %s" % self.active)    
         # Check if batching is still required
         if len(commandstohandle) == 0:
             return
         elif len(commandstohandle) == 1:
             self.initiate_command(commandstohandle[0])
-        else: # len(givencommands) > 1:
+        else:
             self.initiate_command(ProposalBatch(commandstohandle))
             
     def send_reject_to_client(self, conn, clientcommandnumber):
@@ -811,7 +803,7 @@ class Replica(Node):
                 self.send_reject_to_client(conn, msg.command.clientcommandnumber)
             else:
                 if self.debug: self.logger.write("State", "I'm the leader, handling the request.")
-                self.handle_client_command(msg.command, prepare=self.leader_initializing)
+                self.handle_client_command(msg.command, msg.sendcount, prepare=self.leader_initializing)
         else:
             leaderalive, leader = self.leader_is_alive()
             if leaderalive and leader != self.me:
@@ -824,7 +816,7 @@ class Replica(Node):
                     if self.debug: self.logger.write("Error", "Security Token mismatch.")
                     self.send_reject_to_client(conn, msg.command.clientcommandnumber)
                 else:
-                    self.handle_client_command(msg.command, prepare=self.leader_initializing)
+                    self.handle_client_command(msg.command, msg.sendcount, prepare=self.leader_initializing)
             elif not leaderalive and self.find_leader() == self.me:
                 # check if should become leader
                 self.become_leader()
@@ -843,21 +835,19 @@ class Replica(Node):
                     if self.debug: self.logger.write("Error", "Security Token mismatch.")
                     self.send_reject_to_client(conn, msg.command.clientcommandnumber)
                 else:
-                    self.handle_client_command(msg.command, prepare=self.leader_initializing)
+                    self.handle_client_command(msg.command, msg.sendcount, prepare=self.leader_initializing)
                     
     def msg_clientrequest_batch(self, msgconnlist):
         """called holding self.lock
         handles clientrequest messages that are batched together"""
         if self.isleader:
             # if leader, handle the clientrequest
-            givencommands = []
             for (msg,conn) in msgconnlist:
                 if self.token and msg.token != self.token:
                     if self.debug: self.logger.write("Error", "Security Token mismatch.")
                     self.send_reject_to_client(conn, msg.command.clientcommandnumber)
-                else:
-                    givencommands.append((msg.command,msg.sendcount))
-            self.handle_client_command_batch(givencommands, prepare=self.leader_initializing)
+                    msgconnlist.remove((msg,conn))
+            self.handle_client_command_batch(msgconnlist, prepare=self.leader_initializing)
         else:
             leaderalive, leader = self.leader_is_alive()
             if leaderalive and leader != self.me:
@@ -867,14 +857,12 @@ class Replica(Node):
             elif leader == self.me:
                 # check if should become leader
                 self.become_leader()
-                givencommands = []
                 for (msg,conn) in msgconnlist:
                     if self.token and msg.token != self.token:
                         if self.debug: self.logger.write("Error", "Security Token mismatch.")
                         self.send_reject_to_client(conn, msg.command.clientcommandnumber)
-                    else:
-                        givencommands.append((msg.command,msg.sendcount))
-                self.handle_client_command_batch(givencommands, prepare=self.leader_initializing)
+                        msgconnlist.remove((msg,conn))
+                self.handle_client_command_batch(msgconnlist, prepare=self.leader_initializing)
             elif not leaderalive and self.find_leader() == self.me:
                 self.become_leader()
                 # take old leader out of the configuration
@@ -888,14 +876,12 @@ class Replica(Node):
                     for i in range(WINDOW):
                         noopcommand = self.create_noop_command()
                         self.pick_commandnumber_add_to_pending(noopcommand)
-                givencommands = []
                 for (msg,conn) in msgconnlist:
                     if self.token and msg.token != self.token:
                         if self.debug: self.logger.write("Error", "Security Token mismatch.")
                         self.send_reject_to_client(conn, msg.command.clientcommandnumber)
-                    else:
-                        givencommands.append((msg.command,msg.sendcount))
-                self.handle_client_command_batch(givencommands, prepare=self.leader_initializing)
+                        msgconnlist.remove((msg,conn))
+                self.handle_client_command_batch(msgconnlist, prepare=self.leader_initializing)
 
     def msg_incclientrequest(self, conn, msg):
         """handles inconsistent requests from the client"""
