@@ -8,7 +8,7 @@ import os, sys
 import threading
 import time
 from threading import Lock, Thread
-from async_test_performance_proxy import *
+from batch_test_performance_proxy import *
 from optparse import OptionParser
 
 parser = OptionParser()
@@ -30,15 +30,19 @@ def test_loop():
   for i in range(options.operations):
     proxy.getvalue()
   stoptime = time.time()
+  print "Done.."
 
   reqdesc = proxy.getvalue()
+  while reqdesc == None:
+    reqdesc = proxy.getvalue()
+
   with reqdesc.replyarrivedcond:
     while not reqdesc.replyarrived:
       reqdesc.replyarrivedcond.wait()
 
   latency = float(stoptime-starttime)/(options.operations+1)
   print "*****************************************"
-  print "AVERAGE CLIENT LATENCY: %f secs" % latency 
+  print "AVERAGE CLIENT LATENCY: %.10f secs" % latency 
   if options.setting:
     r,a = options.setting.split(',')
     print " for %s Replicas %s Acceptors." % (r,a)

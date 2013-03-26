@@ -65,7 +65,6 @@ class Node():
         ## initialize receive queue
         self.receivedmessages_semaphore = Semaphore(0)
         self.receivedmessages = []
-        self.clientmessages = []
         # lock to synchronize message handling
         self.lock = Lock()
         # create server socket and bind to a port
@@ -321,10 +320,8 @@ class Node():
                 # add to receivedmessages
                 self.receivedmessages.append((message,connection))
                 self.receivedmessages_semaphore.release()
-                if message.type == MSG_CLIENTREQUEST:
-                    self.clientmessages.append((message,connection))
-                    self.connectionpool.add_connection_to_peer(message.source, connection)
-                elif message.type == MSG_INCCLIENTREQUEST:
+                if message.type == MSG_CLIENTBATCH or \
+                        message.type == MSG_CLIENTREQUEST or message.type == MSG_INCCLIENTREQUEST:
                     self.connectionpool.add_connection_to_peer(message.source, connection)
                 elif message.type in (MSG_HELO, MSG_HELOREPLY, MSG_UPDATE):
                     self.connectionpool.add_connection_to_peer(message.source, connection)
@@ -342,15 +339,18 @@ class Node():
                     self.pendingmetacommands = set()
                 self.initiate_command()
             (message_to_process,connection) = self.receivedmessages.pop(0)
+            if message_to_process.type == MSG_CLIENTBATCH:
+                self.process_message(message_to_process, connection)
             if message_to_process.type == MSG_CLIENTREQUEST:
-                msgconns = self.clientmessages
-                self.clientmessages = []
                 # check if there are other client requests waiting
-                for m,c in msgconns[1:]:
-                    # decrement the semaphore count
-                    self.receivedmessages_semaphore.acquire()
-                    # remove the m,c pair from receivedmessages
-                    self.receivedmessages.remove((m,c))
+                msgconns = [(message_to_process,connection)]
+                for m,c in self.receivedmessages:
+                    if m.type == MSG_CLIENTREQUEST:
+                        # decrement the semaphore count
+                        self.receivedmessages_semaphore.acquire()
+                        # remove the m,c pair from receivedmessages
+                        self.receivedmessages.remove((m,c))
+                        msgconns.append((m,c))
                 if len(msgconns) > 1:
                     self.process_messagelist(msgconns)
                 else:

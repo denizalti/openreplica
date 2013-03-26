@@ -42,6 +42,12 @@ def parse_clientrequest(msg):
     return ClientRequestMessage(msg[FLD_ID], msg[FLD_TYPE], src,
                                 proposal, msg[FLD_TOKEN], msg[FLD_SENDCOUNT])
 
+def parse_clientbatch(msg):
+    src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
+    proposalbatch = ClientBatch(msg[FLD_PROPOSAL][0], msg[FLD_PROPOSAL][1], msg[FLD_PROPOSAL][2])
+    return ClientBatchMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+                                proposalbatch, msg[FLD_TOKEN], msg[FLD_SENDCOUNT])
+
 def parse_clientreply(msg):
     src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
     return ClientReplyMessage(msg[FLD_ID], msg[FLD_TYPE], src,
@@ -116,6 +122,7 @@ def parse_message(msg):
 
 parse_functions = [
     parse_clientrequest, # MSG_CLIENTREQUEST
+    parse_clientbatch, # MSG_CLIENTBATCH
     parse_clientreply, # MSG_CLIENTREPLY
     parse_incclientrequest, # MSG_INCCLIENTREQUEST
 
