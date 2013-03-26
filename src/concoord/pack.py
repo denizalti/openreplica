@@ -7,6 +7,7 @@ from collections import namedtuple
 
 Proposal = namedtuple('Proposal', ['client', 'clientcommandnumber', 'command'])
 ProposalBatch = namedtuple('ProposalBatch', ['proposals'])
+ClientBatch = namedtuple('ClientBatch', ['client', 'clientcommandnumber', 'batch'])
 
 #Peer = namedtuple('Peer', ['addr', 'port', 'type'])
 
@@ -35,6 +36,10 @@ PerformMessage = namedtuple('PerformMessage', ['id', 'type',
 ClientRequestMessage = namedtuple('ClientRequestMessage', ['id', 'type', 'source',
                                                            'command', 'token',
                                                            'sendcount'])
+
+ClientBatchMessage = namedtuple('ClientRequestMessage', ['id', 'type', 'source',
+							 'command', 'token',
+							 'sendcount'])
 
 ClientReplyMessage = namedtuple('ClientReplyMessage', ['id', 'type', 'source',
                                                        'reply', 'replycode', 'inresponseto'])

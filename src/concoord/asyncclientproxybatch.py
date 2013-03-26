@@ -24,12 +24,12 @@ REPLY = 0
 CONDITION = 1
 
 class ReqDesc:
-    def __init__(self, clientproxy, args, token):
+    def __init__(self, clientproxy, batch, token):
         # acquire a unique command number
         self.commandnumber = clientproxy.commandnumber
         clientproxy.commandnumber += 1
         self.cm = create_message(MSG_CLIENTREQUEST, clientproxy.me,
-                                 {FLD_PROPOSAL: Proposal(clientproxy.me, self.commandnumber, args), 
+                                 {FLD_PROPOSAL: Proposal(clientproxy.me, self.commandnumber, batch), 
                                   FLD_TOKEN: token,
                                   FLD_SENDCOUNT: 0})
         self.reply = None
@@ -63,6 +63,8 @@ class ClientProxy():
         # synchronization
         self.lock = Lock()
         self.pendingops = {}
+        self.pendingoplist = []
+        self.lastsendtime = time.time()
         self.writelock = Lock()
         self.needreconfig = False
         self.outstanding = []
@@ -137,18 +139,22 @@ class ClientProxy():
         return self.connecttobootstrap()
 
     def invoke_command_async(self, *args):
-        # create a request descriptor
-        reqdesc = ReqDesc(self, args, self.token)
-        # send the clientrequest
-        with self.writelock:
-            success = self.conn.send(reqdesc.cm)
-            self.pendingops[reqdesc.commandnumber] = reqdesc
-            # if the message is not sent, we should reconfigure
-            # and send it without making the client wait
-            if not success:
-                self.outstanding.append(reqdesc)
-            self.needreconfig = not success
-        return reqdesc
+        self.pendingoplist.append(args)
+        if len(self.pendingoplist) == 100000 or \
+                time.time() - self.lastsendtime > 0.1 and len(self.pendingoplist) > 0:
+            # create a request descriptor
+            reqdesc = ReqDesc(self, self.pendingoplist, self.token)
+            # send the clientrequest
+            with self.writelock:
+                success = self.conn.send(reqdesc.cm)
+                self.lastsendtime = time.time()
+                self.pendingops[reqdesc.commandnumber] = reqdesc
+                # if the message is not sent, we should reconfigure
+                # and send it without making the client wait
+                if not success:
+                    self.outstanding.append(reqdesc)
+                self.needreconfig = not success
+            return reqdesc
 
     def wait_until_command_done(self, reqdesc):
         with reqdesc.replyarrivedcond:

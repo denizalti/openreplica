@@ -42,6 +42,7 @@ class Replica(Node):
                     if hasattr(mod, self.objectname):
                         self.object = getattr(mod, self.objectname)()
                         break
+
                 except ImportError as e:
                     continue
                 except AttributeError as e:
@@ -134,6 +135,16 @@ class Replica(Node):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
         to the managements of the Paxos protocol) with a delay of WINDOW commands."""
+        if type(command.command) == tuple and len(command.command) > 3:
+            clientreplycode, givenresult, unblocked = (-1, None, {})
+            for i in range(len(command.command)):
+                method = getattr(self, NOOP)
+            clientreplycode = CR_OK
+            givenresult = "NOOP"
+            unblocked = {}
+            self.add_to_executed(command, (clientreplycode,givenresult,unblocked))
+            self.send_reply_to_client(clientreplycode, givenresult, command)
+            return
         commandtuple = command.command
         if type(commandtuple) == str:
             commandname = commandtuple
@@ -790,6 +801,8 @@ class Replica(Node):
                                  {FLD_REPLY: '',
                                   FLD_REPLYCODE: CR_REJECTED,
                                   FLD_INRESPONSETO: clientcommandnumber}))
+    def msg_clientbatch(self, conn, msg):
+        self.msg_clientrequest(conn, msg)
 
     def msg_clientrequest(self, conn, msg):
         """called holding self.lock
