@@ -135,16 +135,7 @@ class Replica(Node):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
         to the managements of the Paxos protocol) with a delay of WINDOW commands."""
-        if type(command.command) == tuple and len(command.command) > 3:
-            clientreplycode, givenresult, unblocked = (-1, None, {})
-            for i in range(len(command.command)):
-                method = getattr(self, NOOP)
-            clientreplycode = CR_OK
-            givenresult = "NOOP"
-            unblocked = {}
-            self.add_to_executed(command, (clientreplycode,givenresult,unblocked))
-            self.send_reply_to_client(clientreplycode, givenresult, command)
-            return
+        print len(command.command)
         commandtuple = command.command
         if type(commandtuple) == str:
             commandname = commandtuple

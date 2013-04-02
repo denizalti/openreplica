@@ -20,9 +20,6 @@ try:
 except:
     print("Install dnspython: http://www.dnspython.org/")
 
-REPLY = 0
-CONDITION = 1
-
 class ReqDesc:
     def __init__(self, clientproxy, args, token):
         # acquire a unique command number

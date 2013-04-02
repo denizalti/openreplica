@@ -20,22 +20,29 @@ try:
 except:
     print("Install dnspython: http://www.dnspython.org/")
 
-REPLY = 0
-CONDITION = 1
-
 class ReqDesc:
-    def __init__(self, clientproxy, batch, token):
+    def __init__(self, clientproxy, token):
+        self.me = clientproxy.me
+        self.token = token
         # acquire a unique command number
         self.commandnumber = clientproxy.commandnumber
         clientproxy.commandnumber += 1
-        self.cm = create_message(MSG_CLIENTREQUEST, clientproxy.me,
-                                 {FLD_PROPOSAL: Proposal(clientproxy.me, self.commandnumber, batch), 
-                                  FLD_TOKEN: token,
+        self.batch = []
+        self.cm = create_message(MSG_CLIENTREQUEST, self.me,
+                                 {FLD_PROPOSAL: Proposal(self.me, self.commandnumber, self.batch),
+                                  FLD_TOKEN: self.token,
                                   FLD_SENDCOUNT: 0})
         self.reply = None
         self.replyarrived = False
         self.replyarrivedcond = Condition()
         self.sendcount = 0
+
+    def rewrite_message(self):
+        self.cm = create_message(MSG_CLIENTREQUEST, self.me,
+                                 {FLD_PROPOSAL: Proposal(self.me, self.commandnumber, self.batch),
+                                  FLD_TOKEN: self.token,
+                                  FLD_SENDCOUNT: 0})
+        print self.cm
 
     def __str__(self):
         return "Request Descriptor for cmd %d\nMessage %s\nReply %s" % (self.commandnumber, str(self.cm), self.reply)
@@ -63,8 +70,8 @@ class ClientProxy():
         # synchronization
         self.lock = Lock()
         self.pendingops = {}
-        self.pendingoplist = []
         self.lastsendtime = time.time()
+        self.reqdesc = ReqDesc(self, self.token)
         self.writelock = Lock()
         self.needreconfig = False
         self.outstanding = []
@@ -139,11 +146,15 @@ class ClientProxy():
         return self.connecttobootstrap()
 
     def invoke_command_async(self, *args):
-        self.pendingoplist.append(args)
-        if len(self.pendingoplist) == 100000 or \
-                time.time() - self.lastsendtime > 0.1 and len(self.pendingoplist) > 0:
-            # create a request descriptor
-            reqdesc = ReqDesc(self, self.pendingoplist, self.token)
+        self.reqdesc.batch.append(args)
+        # batch either 100000 requests or any number of requests that are collected
+        # in less than 0.1 seconds.
+        print len(self.reqdesc.batch)
+        print time.time() - self.lastsendtime > 0.1
+        if len(self.reqdesc.batch) == 100000 or \
+                time.time() - self.lastsendtime > 0.1 and len(self.reqdesc.batch) > 0:
+            self.reqdesc.rewrite_message()
+            reqdesc = self.reqdesc
             # send the clientrequest
             with self.writelock:
                 success = self.conn.send(reqdesc.cm)
@@ -154,7 +165,9 @@ class ClientProxy():
                 if not success:
                     self.outstanding.append(reqdesc)
                 self.needreconfig = not success
+            self.reqdesc = ReqDesc(self, self.token)
             return reqdesc
+        return self.reqdesc
 
     def wait_until_command_done(self, reqdesc):
         with reqdesc.replyarrivedcond:
