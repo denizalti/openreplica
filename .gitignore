@@ -13,3 +13,4 @@ credentials.py
 concoord_log_*
 .DS_Store
 nohup.out
+*.egg-info
