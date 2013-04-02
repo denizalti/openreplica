@@ -25,16 +25,11 @@ parser.add_option("-o", "--op", action="store", dest="operations", type='int',
 def test_loop():
   proxy = Test(options.bootstrap)
   for i in range(options.operations/10):
-    proxy.getvalue()
+    reqdesc = proxy.getvalue()
   starttime = time.time()
   for i in range(options.operations):
-    proxy.getvalue()
-  stoptime = time.time()
-  print "Done.."
-
-  reqdesc = proxy.getvalue()
-  while reqdesc == None:
     reqdesc = proxy.getvalue()
+  stoptime = time.time()
 
   with reqdesc.replyarrivedcond:
     while not reqdesc.replyarrived:
