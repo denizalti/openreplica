@@ -24,24 +24,32 @@ parser.add_option("-o", "--op", action="store", dest="operations", type='int',
 
 def test_loop():
   proxy = Test(options.bootstrap)
-  for i in range(options.operations/10):
-    reqdesc = proxy.getvalue()
-  starttime = time.time()
-  for i in range(options.operations):
-    reqdesc = proxy.getvalue()
-  stoptime = time.time()
+  try:
+    for i in range(options.operations/10):
+      reqdesc = proxy.getvalue()
+    starttime = time.time()
+    for i in range(options.operations):
+      reqdesc = proxy.getvalue()
+    reqdesc.finalize()
+    stoptime = time.time()
 
-  with reqdesc.replyarrivedcond:
-    while not reqdesc.replyarrived:
-      reqdesc.replyarrivedcond.wait()
+    with reqdesc.replyarrivedcond:
+      while not reqdesc.replyarrived:
+        reqdesc.replyarrivedcond.wait()
+  except KeyboardInterrupt:
+    print "Exiting.."
+    _exit()
 
-  latency = float(stoptime-starttime)/(options.operations+1)
+  throughput = 1.0/(float(stoptime-starttime)/(options.operations+1))
   print "*****************************************"
-  print "AVERAGE CLIENT LATENCY: %.10f secs" % latency 
+  print "AVERAGE THROUGHPUT: {:,} ops/sec".format(throughput)
   if options.setting:
     r,a = options.setting.split(',')
     print " for %s Replicas %s Acceptors." % (r,a)
   print "*****************************************"
+  _exit()
+
+def _exit():
   sys.stdout.flush()
   sys.stderr.flush()
   os._exit(0)
