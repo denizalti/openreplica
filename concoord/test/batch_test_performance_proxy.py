@@ -3,7 +3,7 @@
 @note: Value object proxy to test concoord implementation
 @copyright: See LICENSE
 """
-from concoord.asyncclientproxybatch import ClientProxy
+from concoord.batchclientproxy import ClientProxy
 
 class Test():
     def __init__(self, bootstrap):
