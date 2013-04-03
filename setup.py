@@ -50,6 +50,7 @@ setup(
     entry_points={
         'console_scripts': [
             'concoord=concoord.main:main',
+            'concoordify=concoord.main:main_concoordify',
         ]
     },
     install_requires=[
