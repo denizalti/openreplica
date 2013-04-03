@@ -22,14 +22,14 @@ except:
 
 class ReqDesc:
     def __init__(self, clientproxy, token):
-        self.me = clientproxy.me
+        self.clientproxy = clientproxy
         self.token = token
         # acquire a unique command number
         self.commandnumber = clientproxy.commandnumber
         clientproxy.commandnumber += 1
         self.batch = []
-        self.cm = create_message(MSG_CLIENTREQUEST, self.me,
-                                 {FLD_PROPOSAL: Proposal(self.me, self.commandnumber, self.batch),
+        self.cm = create_message(MSG_CLIENTREQUEST, self.clientproxy.me,
+                                 {FLD_PROPOSAL: Proposal(self.clientproxy.me, self.commandnumber, self.batch),
                                   FLD_TOKEN: self.token,
                                   FLD_SENDCOUNT: 0})
         self.reply = None
@@ -38,11 +38,13 @@ class ReqDesc:
         self.sendcount = 0
 
     def rewrite_message(self):
-        self.cm = create_message(MSG_CLIENTREQUEST, self.me,
-                                 {FLD_PROPOSAL: Proposal(self.me, self.commandnumber, self.batch),
+        self.cm = create_message(MSG_CLIENTREQUEST, self.clientproxy.me,
+                                 {FLD_PROPOSAL: Proposal(self.clientproxy.me, self.commandnumber, self.batch),
                                   FLD_TOKEN: self.token,
                                   FLD_SENDCOUNT: 0})
-        print self.cm
+
+    def finalize(self):
+        self.clientproxy.finalize_batch()
 
     def __str__(self):
         return "Request Descriptor for cmd %d\nMessage %s\nReply %s" % (self.commandnumber, str(self.cm), self.reply)
@@ -133,7 +135,7 @@ class ClientProxy():
                 break
             except socket.error, e:
                 if self.debug:
-                    print e
+                    print "Socket Error: ", e
                 continue
         return connected
 
@@ -149,8 +151,6 @@ class ClientProxy():
         self.reqdesc.batch.append(args)
         # batch either 100000 requests or any number of requests that are collected
         # in less than 0.1 seconds.
-        print len(self.reqdesc.batch)
-        print time.time() - self.lastsendtime > 0.1
         if len(self.reqdesc.batch) == 100000 or \
                 time.time() - self.lastsendtime > 0.1 and len(self.reqdesc.batch) > 0:
             self.reqdesc.rewrite_message()
@@ -168,6 +168,21 @@ class ClientProxy():
             self.reqdesc = ReqDesc(self, self.token)
             return reqdesc
         return self.reqdesc
+
+    def finalize_batch(self):
+        self.reqdesc.rewrite_message()
+        reqdesc = self.reqdesc
+        # send the clientrequest
+        with self.writelock:
+            success = self.conn.send(reqdesc.cm)
+            self.lastsendtime = time.time()
+            self.pendingops[reqdesc.commandnumber] = reqdesc
+            # if the message is not sent, we should reconfigure
+            # and send it without making the client wait
+            if not success:
+                self.outstanding.append(reqdesc)
+            self.needreconfig = not success
+        self.reqdesc = ReqDesc(self, self.token)
 
     def wait_until_command_done(self, reqdesc):
         with reqdesc.replyarrivedcond:
