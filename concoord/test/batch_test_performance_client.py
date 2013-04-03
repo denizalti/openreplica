@@ -3,32 +3,28 @@
 @note: Client to test concoord implementation
 @copyright: See LICENSE
 """
-import random
+import argparse
 import os, sys
-import threading
 import time
-from threading import Lock, Thread
-from batch_test_performance_proxy import *
-from optparse import OptionParser
+from batch_test_performance_proxy import Test
 
-parser = OptionParser()
+parser = argparse.ArgumentParser()
 
-parser.add_option("-b", "--boot", action="store", dest="bootstrap",
-                  help="address:port:type triple for the bootstrap peer")
-parser.add_option("-n", "--num", action="store", dest="setting",
-                  help="x,y tuple for the number of replicas and acceptors")
-parser.add_option("-o", "--op", action="store", dest="operations", type='int',
-                  default=10000, help="number of operations")
-
-(options, args) = parser.parse_args()
+parser.add_argument("-b", "--boot", action="store", dest="bootstrap",
+                    help="address:port tuple for the bootstrap peer")
+parser.add_argument("-n", "--num", action="store", dest="setting",
+                    help="x,y tuple for the number of replicas and acceptors")
+parser.add_argument("-o", "--op", action="store", dest="operations", type=int,
+                    default=10000, help="number of operations")
+args = parser.parse_args()
 
 def test_loop():
-  proxy = Test(options.bootstrap)
+  proxy = Test(args.bootstrap)
   try:
-    for i in range(options.operations/10):
+    for i in range(args.operations/10):
       reqdesc = proxy.getvalue()
     starttime = time.time()
-    for i in range(options.operations):
+    for i in range(args.operations):
       reqdesc = proxy.getvalue()
     reqdesc.finalize()
     stoptime = time.time()
@@ -40,11 +36,11 @@ def test_loop():
     print "Exiting.."
     _exit()
 
-  throughput = 1.0/(float(stoptime-starttime)/(options.operations+1))
+  throughput = 1.0/(float(stoptime-starttime)/(args.operations+1))
   print "*****************************************"
   print "AVERAGE THROUGHPUT: {:,} ops/sec".format(throughput)
-  if options.setting:
-    r,a = options.setting.split(',')
+  if args.setting:
+    r,a = args.setting.split(',')
     print " for %s Replicas %s Acceptors." % (r,a)
   print "*****************************************"
   _exit()
