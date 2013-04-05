@@ -133,7 +133,6 @@ class Replica(Node):
         else:
             return method(*args)
 
-<<<<<<< HEAD
     def performcore_clientbatch(self, commandbatch, designated=False):
         '''performs all clientrequests in a clientbatch and returns a batched result.'''
         if self.debug: self.logger.write("State", "Performing client batch.")
@@ -691,7 +690,7 @@ class Replica(Node):
 
     def add_to_proposals(self, key, value):
         self.proposals[key] = value
-        if isinstance(value, ProposalBatch):
+        if isinstance(value, ProposalServerBatch):
             for item in value.proposals:
                 self.proposalset.add(item)
         else:
