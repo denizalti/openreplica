@@ -7,12 +7,17 @@
 import enums
 
 # message types
+<<<<<<< HEAD:build/lib/concoord/enums.py
 MSG_CLIENTREQUEST, MSG_CLIENTREPLY, MSG_INCCLIENTREQUEST, \
     MSG_PREPARE, MSG_PREPARE_ADOPTED, MSG_PREPARE_PREEMPTED, MSG_PROPOSE, \
+=======
+MSG_PREPARE, MSG_PREPARE_ADOPTED, MSG_PREPARE_PREEMPTED, MSG_PROPOSE, \
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7:build/lib/concoord/enums.py
     MSG_PROPOSE_ACCEPT, MSG_PROPOSE_REJECT, \
     MSG_HELO, MSG_HELOREPLY, MSG_PING, \
     MSG_UPDATE, MSG_UPDATEREPLY, \
     MSG_PERFORM, MSG_RESPONSE, \
+<<<<<<< HEAD:build/lib/concoord/enums.py
     MSG_GARBAGECOLLECT, MSG_STATUS = range(18)
 
 # message fields
@@ -22,6 +27,17 @@ FLD_REPLY, FLD_REPLYCODE, FLD_INRESPONSETO, FLD_SNAPSHOT, FLD_PVALUESET, FLD_LEA
 FLD_TOKEN, FLD_CLIENTBATCH, FLD_SERVERBATCH, FLD_SENDCOUNT = range(17)
 
 # node types
+=======
+    MSG_CLIENTREQUEST, MSG_CLIENTREPLY, MSG_INCCLIENTREQUEST, \
+    MSG_GARBAGECOLLECT, MSG_STATUS = range(18)
+
+# message fields
+FLD_ID, FLD_TYPE, FLD_SRC, FLD_BALLOTNUMBER, FLD_COMMANDNUMBER, FLD_PROPOSAL, FLD_DECISIONS, \
+FLD_REPLY, FLD_REPLYCODE, FLD_INRESPONSETO, FLD_SNAPSHOT, FLD_PVALUESET, FLD_LEADER, \
+FLD_TOKEN, FLD_BATCH, FLD_SENDCOUNT = range(16)
+
+# node types 
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7:build/lib/concoord/enums.py
 NODE_CLIENT, NODE_ACCEPTOR, NODE_REPLICA, NODE_NAMESERVER = range(4)
 
 # error_types
@@ -40,7 +56,11 @@ EXC_RCODE, EXC_RESULT, EXC_UNBLOCKED = range(3)
 
 # client reply codes
 CR_OK, CR_INPROGRESS, CR_LEADERNOTREADY, CR_REJECTED, \
+<<<<<<< HEAD:build/lib/concoord/enums.py
 CR_EXCEPTION, CR_BLOCK, CR_UNBLOCK, CR_META, CR_BATCH = range(9)
+=======
+CR_EXCEPTION, CR_BLOCK, CR_UNBLOCK, CR_META = range(8)
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7:build/lib/concoord/enums.py
 
 # timeouts
 ACKTIMEOUT = 1
@@ -60,7 +80,11 @@ BACKOFFINCREASE = 0.1
 
 METACOMMANDS = set(["_add_node", "_del_node", "_garbage_collect"])
 WINDOW = 10
+<<<<<<< HEAD:build/lib/concoord/enums.py
 GARBAGEPERIOD = 100000
+=======
+GARBAGEPERIOD = 1000
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7:build/lib/concoord/enums.py
 
 NOOP = "do_noop"
 
