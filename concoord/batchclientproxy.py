@@ -192,7 +192,7 @@ class ClientProxy():
         with reqdesc.replyarrivedcond:
             while not reqdesc.replyarrived:
                 reqdesc.replyarrivedcond.wait()
-        if reqdesc.reply.replycode == CR_OK:
+        if reqdesc.reply.replycode == CR_OK or reqdesc.reply.replycode == CR_BATCH:
             return reqdesc.reply.reply
         elif reqdesc.reply.replycode == CR_EXCEPTION:
             raise Exception(reqdesc.reply.reply)
@@ -207,7 +207,7 @@ class ClientProxy():
                         # received a reply
                         reqdesc = self.pendingops[reply.inresponseto]
                         # Async Clientproxy doesn't support BLOCK and UNBLOCK
-                        if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION:
+                        if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode == CR_BATCH:
                             # the request is done
                             reqdesc.reply = reply
                             with reqdesc.replyarrivedcond:
