@@ -3,6 +3,10 @@
 @note: Master class for all nodes
 @copyright: See LICENSE
 '''
+<<<<<<< HEAD
+=======
+import gc
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
 import os, sys
 import random, struct
 import cPickle as pickle
@@ -75,9 +79,14 @@ class Node():
         if self.port:
             try:
                 self.socket.bind((self.addr,self.port))
+<<<<<<< HEAD
             except socket.error as e:
                 print "Cannot bind to port %d" % self.port
                 print "Socket Error: ", e
+=======
+            except socket.error:
+                print "Cannot bind to port %d" % self.port
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
                 self._graceexit(1)
         else:
             for i in range(50):
@@ -85,14 +94,22 @@ class Node():
                 try:
                     self.socket.bind((self.addr,self.port))
                     break
+<<<<<<< HEAD
                 except socket.error as e:
                     print "Socket Error: ", e
+=======
+                except socket.error:
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
                     pass
         self.socket.listen(10)
         self.connectionpool = ConnectionPool()
         try:
             self.connectionpool.epoll = select.epoll()
+<<<<<<< HEAD
         except AttributeError as e:
+=======
+        except AttributeError:
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
             # the os doesn't support epoll
             self.connectionpool.epoll = None
         self.alive = True
@@ -106,12 +123,23 @@ class Node():
         # set the logger
         try:
             LOGGERNODE = load_configdict(self.configpath)['LOGGERNODE']
+<<<<<<< HEAD
         except KeyError as e:
+=======
+        except:
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
             if logger:
                 LOGGERNODE=logger
             else:
                 LOGGERNODE = None
+<<<<<<< HEAD
         self.logger = Logger("%s-%s" % (node_names[self.type],self.id), lognode=LOGGERNODE)
+=======
+        if self.debug:
+            self.logger = Logger("%s-%s" % (node_names[self.type],self.id), lognode=LOGGERNODE)
+        else:
+            self.logger = NoneLogger()
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
         if self.debug: self.logger.write("State", "Connected.")
         # Initialize groups
         # Keeps {peer:outofreachcount}
@@ -168,9 +196,16 @@ class Node():
                         continue
                     keeptrying = False
                     break
+<<<<<<< HEAD
                 except socket.error as e:
                     if self.debug: self.logger.write("Socket Error",
                                                      "cannot connect to bootstrap: %s" % str(e))
+=======
+                except socket.error, e:
+                    if self.debug: self.logger.write("Connection Error",
+                                                     "cannot connect to bootstrap: %s" % str(e))
+                    print e
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
                     tries += 1
                     continue
             time.sleep(1)
@@ -218,7 +253,11 @@ class Node():
                 # expired -- if it's not already in the set, it should be closed
                 self.connectionpool.activesockets.remove(sock)
                 self.connectionpool.nascentsockets.remove(sock)
+<<<<<<< HEAD
                 #sock.close() XXX
+=======
+                sock.close()
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
             lastnascentset = self.connectionpool.nascentsockets
 
             time.sleep(NASCENTTIMEOUT)
@@ -280,7 +319,11 @@ class Node():
         self.connectionpool.epoll.close()
 
     def use_select(self):
+<<<<<<< HEAD
         if self.debug: self.logger.write("State", "Using select..")
+=======
+        print "Using select.."
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
         while self.alive:
             try:
                 inputready,outputready,exceptready = select.select(self.connectionpool.activesockets,
@@ -325,8 +368,12 @@ class Node():
                 elif message.type in (MSG_HELO, MSG_HELOREPLY, MSG_UPDATE):
                     self.connectionpool.add_connection_to_peer(message.source, connection)
             return True
+<<<<<<< HEAD
         except ConnectionError as e:
             print e
+=======
+        except ConnectionError:
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
             return False
 
     def handle_messages(self):
@@ -337,6 +384,7 @@ class Node():
                 with self.pendingmetalock:
                     self.pendingmetacommands = set()
                 self.initiate_command()
+<<<<<<< HEAD
             (message_to_process,connection) = self.receivedmessages.pop(0)
             if message_to_process.type == MSG_CLIENTREQUEST:
                 if message_to_process.clientbatch:
@@ -357,6 +405,29 @@ class Node():
                     self.process_message(message_to_process, connection)
             else:
                 self.process_message(message_to_process, connection)
+=======
+            try:
+                (message_to_process,connection) = self.receivedmessages.pop(0)
+                if message_to_process.type == MSG_CLIENTREQUEST:
+                    # check if there are other client requests waiting
+                    msgconns = [(message_to_process,connection)]
+                    for m,c in self.receivedmessages:
+                        if m.type == MSG_CLIENTREQUEST:
+                            # decrement the semaphore count
+                            self.receivedmessages_semaphore.acquire()
+                            # remove the m,c pair from receivedmessages
+                            self.receivedmessages.remove((m,c))
+                            msgconns.append((m,c))
+                    if len(msgconns) > 1:
+                        self.process_messagelist(msgconns)
+                    else:
+                        self.process_message(message_to_process, connection)
+                else:
+                    self.process_message(message_to_process, connection)
+            except Exception as e:
+                print "Exception during handling message: ", e
+                continue
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
         return
 
     def process_messagelist(self, msgconnlist):
@@ -388,11 +459,15 @@ class Node():
             if msg.source == msg.leader:
                 if self.debug: self.logger.write("Error", "There are no acceptors yet, waiting.")
                 return
+<<<<<<< HEAD
             elif msg.leader == self.me:
                 if self.debug: self.logger.write("State", "I'm the leader.")
                 return
             else:
                 if self.debug: self.logger.write("State", "Adding new bootstrap.")
+=======
+            else:
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
                 self.bootstraplist.remove(msg.source)
                 self.bootstraplist.append(msg.leader)
                 self.connecttobootstrap()
@@ -431,6 +506,7 @@ class Node():
                     mname = "cmd_%s" % input[0].lower()
                     try:
                         method = getattr(self, mname)
+<<<<<<< HEAD
                     except AttributeError as e:
                         print "Command not supported: ", str(e)
                         continue
@@ -443,6 +519,20 @@ class Node():
         return           
     
     def send(self, message, peer=None, group=None):
+=======
+                    except AttributeError:
+                        print "command not supported"
+                        continue
+                    with self.lock:
+                        method(input)
+            except (KeyboardInterrupt,):
+                os._exit(0)
+            except (EOFError,):
+                return
+        return           
+    
+    def send(self, message, peer=None, group=None, isresend=False):
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
         if peer:
             if peer == self.me:
                 return 0
@@ -454,9 +544,16 @@ class Node():
             connection.send(message)
             return message[FLD_ID]
         elif group:
+<<<<<<< HEAD
             ids = []
             for peer,liveness in group.iteritems():
                 if peer != self.me and liveness == 0:
+=======
+            assert not isresend, "performing a re-send to a group"
+            ids = []
+            for peer in group.keys():
+                if peer != self.me:
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
                     connection = self.connectionpool.get_connection_by_peer(peer)
                     if connection == None:
                         if self.debug: self.logger.write("Connection Error",
@@ -468,6 +565,10 @@ class Node():
             return ids
 
     def terminate_handler(self, signal, frame):
+<<<<<<< HEAD
+=======
+        print self.me, "exiting.."
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
         if self.debug: self.logger.write("State", "exiting...")
         self.logger.close()
         sys.stdout.flush()
@@ -478,5 +579,12 @@ class Node():
         sys.stdout.flush()
         sys.stderr.flush()
         print get_profile_stats()
+<<<<<<< HEAD
         self.logger.close()
+=======
+        try:
+            self.logger.close()
+        except:
+            pass
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
         os._exit(exitcode)

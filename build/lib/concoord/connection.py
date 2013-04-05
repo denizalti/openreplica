@@ -32,6 +32,7 @@ class ConnectionPool():
 
     def add_connection_to_peer(self, peer, conn):
         """Adds a Connection to the ConnectionPool by its Peer"""
+<<<<<<< HEAD
         if str(peer) not in self.poolbypeer:
             conn.peerid = str(peer)
             with self.pool_lock:
@@ -40,6 +41,14 @@ class ConnectionPool():
                 self.activesockets.add(conn.thesocket)
                 if conn.thesocket in self.nascentsockets:
                     self.nascentsockets.remove(conn.thesocket)
+=======
+        with self.pool_lock:
+            conn.peerid = str(peer)
+            self.poolbypeer[conn.peerid] = conn
+            self.activesockets.add(conn.thesocket)
+            if conn.thesocket in self.nascentsockets:
+                self.nascentsockets.remove(conn.thesocket)
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
             
     def del_connection_by_peer(self, peer):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
@@ -97,6 +106,11 @@ class ConnectionPool():
                         self.activesockets.add(thesocket)
                     return conn
                 except Exception as e:
+<<<<<<< HEAD
+=======
+                    print "Get connection by peer.."
+                    print "Connection Error: ", e
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
                     return None
 
     def get_connection_by_socket(self, thesocket):
@@ -128,8 +142,11 @@ class Connection():
         self.readlock = Lock()
         self.writelock = Lock()
         self.outgoing = ''
+<<<<<<< HEAD
         # Rethink the size of the bytearray versus the 
         # number of bytes requested in recv_into
+=======
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
         self.incomingbytearray = bytearray(100000)
         self.incoming = memoryview(self.incomingbytearray)
         self.incomingoffset = 0
@@ -173,15 +190,36 @@ class Connection():
 
     def received_bytes(self):
         with self.readlock:
+<<<<<<< HEAD
             datalen = 0
             try:
                 datalen = self.thesocket.recv_into(self.incoming[self.incomingoffset:],
                                                    100000-self.incomingoffset)
+=======
+            # do the length business here
+            try:
+                datalen = self.thesocket.recv_into(self.incoming[self.incomingoffset:], 100000)
+            except ValueError as e:
+                # buffer too small for requested bytes
+                msg_length = struct.unpack("I", self.incoming[0:4].tobytes())[0]
+                msgstr = self.incoming[4:].tobytes()
+                try:
+                    msgstr += self.receive_n_bytes(msg_length-(len(self.incoming)-4))
+                    msgdict = msgpack.unpackb(msgstr, use_list=False)
+                    self.incoming = memoryview(bytearray(100000))
+                    self.incomingoffset = 0
+                    yield parse_message(msgdict)
+                except IOError as inst:
+                    self.incoming = memoryview(bytearray(100000))
+                    self.incomingoffset = 0
+                    raise ConnectionError()
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
             except IOError:
                 # [Errno 104] Connection reset by peer
                 raise ConnectionError()
 
             if datalen == 0:
+<<<<<<< HEAD
                 if self.incomingoffset == 100000:
                     # buffer too small for a complete message
                     msg_length = struct.unpack("I", self.incoming[0:4].tobytes())[0]
@@ -197,13 +235,20 @@ class Connection():
                 else:
                     raise ConnectionError()
 
+=======
+                raise ConnectionError()
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
             self.incomingoffset += datalen
             while self.incomingoffset >= 4:
                 msg_length = (ord(self.incoming[3]) << 24) | (ord(self.incoming[2]) << 16) | (ord(self.incoming[1]) << 8) | ord(self.incoming[0])
                 # check if there is a complete msg, if so return the msg
                 # otherwise return None
                 if self.incomingoffset >= msg_length+4:
+<<<<<<< HEAD
                     msgdict = msgpack.unpackb(self.incoming[4:msg_length+4].tobytes(), use_list=False)
+=======
+                    msgdict = msgpack.unpackb(self.incomingbytearray[4:msg_length+4], use_list=False)
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
                     # this operation cuts the incoming buffer
                     if self.incomingoffset > msg_length+4:
                         self.incoming[:self.incomingoffset-(msg_length+4)] = self.incoming[msg_length+4:self.incomingoffset]
@@ -214,7 +259,11 @@ class Connection():
     
     def send(self, msg):
         with self.writelock:
+<<<<<<< HEAD
             """pack and send a message on the Connection"""
+=======
+            """pickle and send a message on the Connection"""
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
             messagestr = msgpack.packb(msg)
             message = struct.pack("I", len(messagestr)) + messagestr
             try:
@@ -229,10 +278,19 @@ class Connection():
                                 continue
                             else:
                                 raise e
+<<<<<<< HEAD
+=======
+                    except AttributeError, e:
+                        raise e
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
                 return True
             except socket.error, e:
                  if isinstance(e.args, tuple):
                      if e[0] == errno.EPIPE:
+<<<<<<< HEAD
+=======
+                         print "Remote disconnect"
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
                          return False
             except IOError, e:
                 print "Send Error: ", e
@@ -251,4 +309,20 @@ class Connection():
     def close(self):
         """Close the Connection"""
         self.thesocket.close()
+<<<<<<< HEAD
         self.thesocket = None        
+=======
+        self.thesocket = None
+
+    def _picklefixer(self, module, name):
+        try:
+            __import__(module)
+        except:
+            if module.split('.')[0] == 'concoord':
+                module = module.split('.')[1]
+            else:
+                module = 'concoord.'+module
+            __import__(module)
+        return getattr(sys.modules[module], name)
+        
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7

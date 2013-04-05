@@ -108,7 +108,6 @@ class Replica(Node):
                     state = '\t' + str(self.executed[command])
                 else:
                     state = '\t' + cr_codes[self.executed[command][0]]+ '\t' + str(self.executed[command][1])
-
             rstr += str(commandnumber) + ":\t" + str(command) + state + '\n'
         if len(self.pendingcommands):
             rstr += "Pending Commands:\n"
@@ -134,6 +133,7 @@ class Replica(Node):
         else:
             return method(*args)
 
+<<<<<<< HEAD
     def performcore_clientbatch(self, commandbatch, designated=False):
         '''performs all clientrequests in a clientbatch and returns a batched result.'''
         if self.debug: self.logger.write("State", "Performing client batch.")
@@ -691,7 +691,7 @@ class Replica(Node):
 
     def add_to_proposals(self, key, value):
         self.proposals[key] = value
-        if isinstance(value, ProposalServerBatch):
+        if isinstance(value, ProposalBatch):
             for item in value.proposals:
                 self.proposalset.add(item)
         else:
@@ -1202,6 +1202,7 @@ class Replica(Node):
                                                      FLD_PROPOSAL: prc.proposal,
                                                      FLD_SERVERBATCH: isinstance(prc.proposal, ProposalServerBatch),
                                                      FLD_CLIENTBATCH: isinstance(prc.proposal, ProposalClientBatch)})
+
 
                     if self.debug: self.logger.write("Paxos State", "Sending PERFORM!")
                     if len(self.groups[NODE_REPLICA]) > 0:

@@ -38,6 +38,7 @@ def parse_heloreply(msg):
 
 def parse_clientrequest(msg):
     src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
+<<<<<<< HEAD
     if msg[FLD_CLIENTBATCH]:
         proposal = ProposalClientBatch(msg[FLD_PROPOSAL][0],
                                        msg[FLD_PROPOSAL][1],
@@ -50,6 +51,11 @@ def parse_clientrequest(msg):
     return ClientRequestMessage(msg[FLD_ID], msg[FLD_TYPE], src,
                                 proposal, msg[FLD_TOKEN],
                                 msg[FLD_SENDCOUNT], msg[FLD_CLIENTBATCH])
+=======
+    proposal = Proposal(msg[FLD_PROPOSAL][0], msg[FLD_PROPOSAL][1], msg[FLD_PROPOSAL][2])
+    return ClientRequestMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+                                proposal, msg[FLD_TOKEN], msg[FLD_SENDCOUNT])
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
 
 def parse_clientreply(msg):
     src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
@@ -70,15 +76,24 @@ def parse_prepare_reply(msg):
                                msg[FLD_BALLOTNUMBER], msg[FLD_INRESPONSETO],
                                pvalueset)
 def parse_propose(msg):
+<<<<<<< HEAD
     if msg[FLD_SERVERBATCH]:
         proposal = ProposalServerBatch([])
+=======
+    if msg[FLD_BATCH]:
+        proposal = ProposalBatch([])
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
         for p in msg[FLD_PROPOSAL][0]:
             proposal.proposals.append(Proposal(p[0], p[1], p[2]))
     else:
         proposal = Proposal(msg[FLD_PROPOSAL][0], msg[FLD_PROPOSAL][1], msg[FLD_PROPOSAL][2])
     return ProposeMessage(msg[FLD_ID], msg[FLD_TYPE],
                           msg[FLD_BALLOTNUMBER], msg[FLD_COMMANDNUMBER],
+<<<<<<< HEAD
                           proposal, msg[FLD_SERVERBATCH])
+=======
+                          proposal, msg[FLD_BATCH])
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
 
 
 def parse_propose_reply(msg):
@@ -87,6 +102,7 @@ def parse_propose_reply(msg):
                                msg[FLD_COMMANDNUMBER])
 
 def parse_perform(msg):
+<<<<<<< HEAD
     if msg[FLD_SERVERBATCH]:
         proposal = ProposalServerBatch([])
         for p in msg[FLD_PROPOSAL][0]:
@@ -95,12 +111,23 @@ def parse_perform(msg):
     elif msg[FLD_CLIENTBATCH]:
         proposalclient = Peer(msg[FLD_PROPOSAL][0][0], msg[FLD_PROPOSAL][0][1], msg[FLD_PROPOSAL][0][2])
         proposal = ProposalClientBatch(proposalclient, msg[FLD_PROPOSAL][1], msg[FLD_PROPOSAL][2])
+=======
+    if msg[FLD_BATCH]:
+        proposal = ProposalBatch([])
+        for p in msg[FLD_PROPOSAL][0]:
+            pclient = Peer(p[0][0], p[0][1], p[0][2])
+            proposal.proposals.append(Proposal(pclient, p[1], p[2]))
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
     else:
         proposalclient = Peer(msg[FLD_PROPOSAL][0][0], msg[FLD_PROPOSAL][0][1], msg[FLD_PROPOSAL][0][2])
         proposal = Proposal(proposalclient, msg[FLD_PROPOSAL][1], msg[FLD_PROPOSAL][2])
     return PerformMessage(msg[FLD_ID], msg[FLD_TYPE],
+<<<<<<< HEAD
                           msg[FLD_COMMANDNUMBER], proposal,
                           msg[FLD_SERVERBATCH], msg[FLD_CLIENTBATCH])
+=======
+                          msg[FLD_COMMANDNUMBER], proposal, msg[FLD_BATCH])
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
 
 def parse_response(msg):
     src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
@@ -115,7 +142,14 @@ def parse_incclientrequest(msg):
 
 def parse_updatereply(msg):
     for commandnumber,command in msg[FLD_DECISIONS].iteritems():
+<<<<<<< HEAD
         msg[FLD_DECISIONS][commandnumber] = Proposal(msg[FLD_DECISIONS][commandnumber][0],
+=======
+        proposalclient = Peer(msg[FLD_DECISIONS][commandnumber][0][0],
+                              msg[FLD_DECISIONS][commandnumber][0][1],
+                              msg[FLD_DECISIONS][commandnumber][0][2])
+        msg[FLD_DECISIONS][commandnumber] = Proposal(proposalclient,
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
                                                      msg[FLD_DECISIONS][commandnumber][1],
                                                      msg[FLD_DECISIONS][commandnumber][2])
     return UpdateReplyMessage(msg[FLD_ID], msg[FLD_TYPE], msg[FLD_DECISIONS])
@@ -128,10 +162,13 @@ def parse_message(msg):
     return parse_functions[msg[FLD_TYPE]](msg)
 
 parse_functions = [
+<<<<<<< HEAD
     parse_clientrequest, # MSG_CLIENTREQUEST
     parse_clientreply, # MSG_CLIENTREPLY
     parse_incclientrequest, # MSG_INCCLIENTREQUEST
 
+=======
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
     parse_prepare, # MSG_PREPARE
     parse_prepare_reply, # MSG_PREPARE_ADOPTED
     parse_prepare_reply, # MSG_PREPARE_PREEMPTED
@@ -149,6 +186,12 @@ parse_functions = [
     parse_perform, # MSG_PERFORM
     parse_response, # MSG_RESPONSE
 
+<<<<<<< HEAD
+=======
+    parse_clientrequest, # MSG_CLIENTREQUEST
+    parse_clientreply, # MSG_CLIENTREPLY
+    parse_incclientrequest, # MSG_INCCLIENTREQUEST
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
     parse_garbagecollect,  # MSG_GARBAGECOLLECT
     parse_basic           # MSG_STATUS
     ]

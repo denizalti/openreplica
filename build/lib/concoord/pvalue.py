@@ -17,7 +17,11 @@ class PValueSet():
         """Adds given PValue to the PValueSet overwriting matching
         (commandnumber,proposal) if it exists and has a smaller ballotnumber
         """
+<<<<<<< HEAD
         if isinstance(pvalue.proposal, ProposalServerBatch):
+=======
+        if isinstance(pvalue.proposal, ProposalBatch):
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
             # list of Proposals cannot be hashed, cast them to tuple
             index = (pvalue.commandnumber,tuple(pvalue.proposal.proposals))
         else:
@@ -31,7 +35,11 @@ class PValueSet():
 
     def remove(self, pvalue):
         """Removes given pvalue"""
+<<<<<<< HEAD
         if isinstance(pvalue.proposal, ProposalServerBatch):
+=======
+        if isinstance(pvalue.proposal, ProposalBatch):
+>>>>>>> deb1a242477c4e5184ae4bcd375ea72cf57058b7
             # list of Proposals cannot be hashed, cast them to tuple
             index = (pvalue.commandnumber,tuple(pvalue.proposal.proposals))
         else:
