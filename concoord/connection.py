@@ -173,6 +173,7 @@ class Connection():
 
     def received_bytes(self):
         with self.readlock:
+            datalen = 0
             try:
                 datalen = self.thesocket.recv_into(self.incoming[self.incomingoffset:],
                                                    100000-self.incomingoffset)

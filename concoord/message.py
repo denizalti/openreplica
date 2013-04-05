@@ -38,15 +38,18 @@ def parse_heloreply(msg):
 
 def parse_clientrequest(msg):
     src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
-    proposal = Proposal(msg[FLD_PROPOSAL][0], msg[FLD_PROPOSAL][1], msg[FLD_PROPOSAL][2])
-    return ClientRequestMessage(msg[FLD_ID], msg[FLD_TYPE], src,
-                                proposal, msg[FLD_TOKEN], msg[FLD_SENDCOUNT])
+    if msg[FLD_CLIENTBATCH]:
+        proposal = ProposalClientBatch(msg[FLD_PROPOSAL][0],
+                                       msg[FLD_PROPOSAL][1],
+                                       msg[FLD_PROPOSAL][2])
+    else:
+        proposal = Proposal(msg[FLD_PROPOSAL][0],
+                            msg[FLD_PROPOSAL][1],
+                            msg[FLD_PROPOSAL][2])
 
-def parse_clientbatch(msg):
-    src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
-    proposalbatch = ClientBatch(msg[FLD_PROPOSAL][0], msg[FLD_PROPOSAL][1], msg[FLD_PROPOSAL][2])
-    return ClientBatchMessage(msg[FLD_ID], msg[FLD_TYPE], src,
-                                proposalbatch, msg[FLD_TOKEN], msg[FLD_SENDCOUNT])
+    return ClientRequestMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+                                proposal, msg[FLD_TOKEN],
+                                msg[FLD_SENDCOUNT], msg[FLD_CLIENTBATCH])
 
 def parse_clientreply(msg):
     src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
@@ -67,15 +70,15 @@ def parse_prepare_reply(msg):
                                msg[FLD_BALLOTNUMBER], msg[FLD_INRESPONSETO],
                                pvalueset)
 def parse_propose(msg):
-    if msg[FLD_BATCH]:
-        proposal = ProposalBatch([])
+    if msg[FLD_SERVERBATCH]:
+        proposal = ProposalServerBatch([])
         for p in msg[FLD_PROPOSAL][0]:
             proposal.proposals.append(Proposal(p[0], p[1], p[2]))
     else:
         proposal = Proposal(msg[FLD_PROPOSAL][0], msg[FLD_PROPOSAL][1], msg[FLD_PROPOSAL][2])
     return ProposeMessage(msg[FLD_ID], msg[FLD_TYPE],
                           msg[FLD_BALLOTNUMBER], msg[FLD_COMMANDNUMBER],
-                          proposal, msg[FLD_BATCH])
+                          proposal, msg[FLD_SERVERBATCH])
 
 
 def parse_propose_reply(msg):
@@ -84,16 +87,20 @@ def parse_propose_reply(msg):
                                msg[FLD_COMMANDNUMBER])
 
 def parse_perform(msg):
-    if msg[FLD_BATCH]:
-        proposal = ProposalBatch([])
+    if msg[FLD_SERVERBATCH]:
+        proposal = ProposalServerBatch([])
         for p in msg[FLD_PROPOSAL][0]:
             pclient = Peer(p[0][0], p[0][1], p[0][2])
             proposal.proposals.append(Proposal(pclient, p[1], p[2]))
+    elif msg[FLD_CLIENTBATCH]:
+        proposalclient = Peer(msg[FLD_PROPOSAL][0][0], msg[FLD_PROPOSAL][0][1], msg[FLD_PROPOSAL][0][2])
+        proposal = ProposalClientBatch(proposalclient, msg[FLD_PROPOSAL][1], msg[FLD_PROPOSAL][2])
     else:
         proposalclient = Peer(msg[FLD_PROPOSAL][0][0], msg[FLD_PROPOSAL][0][1], msg[FLD_PROPOSAL][0][2])
         proposal = Proposal(proposalclient, msg[FLD_PROPOSAL][1], msg[FLD_PROPOSAL][2])
     return PerformMessage(msg[FLD_ID], msg[FLD_TYPE],
-                          msg[FLD_COMMANDNUMBER], proposal, msg[FLD_BATCH])
+                          msg[FLD_COMMANDNUMBER], proposal,
+                          msg[FLD_SERVERBATCH], msg[FLD_CLIENTBATCH])
 
 def parse_response(msg):
     src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
@@ -122,7 +129,6 @@ def parse_message(msg):
 
 parse_functions = [
     parse_clientrequest, # MSG_CLIENTREQUEST
-    parse_clientbatch, # MSG_CLIENTBATCH
     parse_clientreply, # MSG_CLIENTREPLY
     parse_incclientrequest, # MSG_INCCLIENTREQUEST
 

@@ -6,9 +6,13 @@
 from collections import namedtuple
 
 Proposal = namedtuple('Proposal', ['client', 'clientcommandnumber', 'command'])
-ProposalBatch = namedtuple('ProposalBatch', ['proposals'])
+ProposalClientBatch = namedtuple('ProposalClientBatch', ['client', 'clientcommandnumber', 'command'])
+ProposalServerBatch = namedtuple('ProposalServerBatch', ['proposals'])
 
-Peer = namedtuple('Peer', ['addr', 'port', 'type'])
+class Peer(namedtuple('Peer', ['addr', 'port', 'type'])):
+        __slots__ = ()
+        def __str__(self):
+            return str((self.addr, self.port, self.type))
 
 PValue = namedtuple('PValue', ['ballotnumber', 'commandnumber', 'proposal'])
 Message = namedtuple('Message', ['id', 'type', 'source'])
@@ -20,16 +24,17 @@ PrepareReplyMessage = namedtuple('PrepareReplyMessage', ['id', 'type',
                                                          'pvalueset'])
 ProposeMessage = namedtuple('ProposeMessage', ['id', 'type',
                                                'ballotnumber', 'commandnumber',
-                                               'proposal', 'batch'])
+                                               'proposal', 'serverbatch'])
 ProposeReplyMessage = namedtuple('ProposeReplyMessage', ['id', 'type',
                                                          'ballotnumber', 'inresponseto',
                                                          'commandnumber'])
 PerformMessage = namedtuple('PerformMessage', ['id', 'type',
-                                               'commandnumber', 'proposal', 'batch'])
+                                               'commandnumber', 'proposal',
+					       'serverbatch', 'clientbatch'])
 
 ClientRequestMessage = namedtuple('ClientRequestMessage', ['id', 'type', 'source',
                                                            'command', 'token',
-                                                           'sendcount'])
+                                                           'sendcount', 'clientbatch'])
 
 ClientReplyMessage = namedtuple('ClientReplyMessage', ['id', 'type', 'source',
                                                        'reply', 'replycode', 'inresponseto'])

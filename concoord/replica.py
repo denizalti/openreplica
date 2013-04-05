@@ -104,7 +104,11 @@ class Replica(Node):
         for commandnumber, command in self.decisions.iteritems():
             state = ''
             if command in self.executed:
-                state = '\t' + cr_codes[self.executed[command][0]]+ '\t' + str(self.executed[command][1])
+                if isinstance(command, ProposalClientBatch):
+                    state = '\t' + str(self.executed[command])
+                else:
+                    state = '\t' + cr_codes[self.executed[command][0]]+ '\t' + str(self.executed[command][1])
+
             rstr += str(commandnumber) + ":\t" + str(command) + state + '\n'
         if len(self.pendingcommands):
             rstr += "Pending Commands:\n"
@@ -130,7 +134,66 @@ class Replica(Node):
         else:
             return method(*args)
 
-#    @throughput_test
+    def performcore_clientbatch(self, commandbatch, designated=False):
+        '''performs all clientrequests in a clientbatch and returns a batched result.'''
+        if self.debug: self.logger.write("State", "Performing client batch.")
+        clientreplies = []
+        for commandtuple in commandbatch.command:
+            commandname = commandtuple[0]
+            commandargs = commandtuple[1:]
+            # Result triple
+            clientreplycode, givenresult, unblocked = (-1, None, {})
+            try:
+                method = getattr(self.object, commandname)
+                # Watch out for the lock release and acquire!
+                self.lock.release()
+                try:
+                    givenresult = method(*commandargs)
+                    clientreplycode = CR_OK
+                except BlockingReturn as blockingretexp:
+                    if self.debug: self.logger.write("State", "Blocking Client.")
+                    givenresult = blockingretexp.returnvalue
+                    clientreplycode = CR_BLOCK
+                except UnblockingReturn as unblockingretexp:
+                    if self.debug: self.logger.write("State", "Unblocking Client(s).")
+                    # Get the information about the method call
+                    # These will be used to update executed and
+                    # to send reply message to the caller client
+                    givenresult = unblockingretexp.returnvalue
+                    unblocked = unblockingretexp.unblocked
+                    clientreplycode = CR_OK
+                    # If there are clients to be unblocked that have
+                    # been blocked previously, send them unblock messages
+                    for unblockedclientcommand in unblocked.iterkeys():
+                        self.send_reply_to_client(CR_UNBLOCK, None, unblockedclientcommand)
+                except Exception as e:
+                    if self.debug: self.logger.write("Execution Error", "Error during method invocation: %s" % str(e))
+                    givenresult = e
+                    clientreplycode = CR_EXCEPTION
+                    unblocked = {}
+                self.lock.acquire()
+            except (TypeError, AttributeError) as t:
+                if self.debug: self.logger.write("Execution Error", "command not supported: %s" % str(commandname))
+                givenresult = 'Method Does Not Exist: ', commandname
+                clientreplycode = CR_EXCEPTION
+                unblocked = {}
+            clientreplies.append((clientreplycode, givenresult, unblocked))
+        self.add_to_executed(commandbatch, clientreplies)
+
+        if self.isleader and str(commandbatch.client) in self.connectionpool.poolbypeer.keys():
+            self.send_replybatch_to_client(clientreplies, commandbatch)
+
+        if self.nexttoexecute % GARBAGEPERIOD == 0 and self.isleader:
+            mynumber = self.metacommandnumber
+            self.metacommandnumber += 1
+            garbagetuple = ("_garbage_collect", self.nexttoexecute)
+            garbagecommand = Proposal(self.me, mynumber, garbagetuple)
+            if self.leader_initializing:
+                self.handle_client_command(garbagecommand, prepare=True)
+            else:
+                self.handle_client_command(garbagecommand)
+        if self.debug: self.logger.write("State:", "returning from performcore!")
+
     def performcore(self, command, dometaonly=False, designated=False):
         """The core function that performs a given command in a slot number. It 
         executes regular commands as well as META-level commands (commands related
@@ -230,6 +293,18 @@ class Replica(Node):
                 self.handle_client_command(garbagecommand)
         if self.debug: self.logger.write("State:", "returning from performcore!")
 
+    def send_replybatch_to_client(self, givenresult, command):
+        if self.debug: self.logger.write("State", "Sending REPLY to CLIENT")
+        clientreply = create_message(MSG_CLIENTREPLY, self.me,
+                                     {FLD_REPLY: givenresult,
+                                      FLD_REPLYCODE: CR_BATCH,
+                                      FLD_INRESPONSETO: command.clientcommandnumber})
+        clientconn = self.connectionpool.get_connection_by_peer(command.client)
+        if clientconn == None or clientconn.thesocket == None:
+            if self.debug: self.logger.write("State", "Client connection does not exist.")
+            return
+        clientconn.send(clientreply)
+
     def send_reply_to_client(self, clientreplycode, givenresult, command):
         if self.debug: self.logger.write("State", "Sending REPLY to CLIENT")
         clientreply = create_message(MSG_CLIENTREPLY, self.me,
@@ -256,7 +331,7 @@ class Replica(Node):
         
         while self.nexttoexecute in self.decisions:
             requestedcommand = self.decisions[self.nexttoexecute]
-            if isinstance(requestedcommand, ProposalBatch):
+            if isinstance(requestedcommand, ProposalServerBatch):
                 for command in requestedcommand.proposals:
                     self.execute_command(command, msg, designated)
             else:
@@ -292,10 +367,14 @@ class Replica(Node):
             # is very unefficient
             if self.nexttoexecute > WINDOW:
                 if self.debug: self.logger.write("State", "performcore %d" % (self.nexttoexecute-WINDOW))
-                if not isinstance(self.decisions[self.nexttoexecute-WINDOW], ProposalBatch):
+                if not (isinstance(self.decisions[self.nexttoexecute-WINDOW], ProposalServerBatch) or
+                        isinstance(self.decisions[self.nexttoexecute-WINDOW], ProposalClientBatch)):
                     self.performcore(self.decisions[self.nexttoexecute-WINDOW], True, designated=designated)
             if self.debug: self.logger.write("State", "performcore %s" % str(requestedcommand))
-            self.performcore(requestedcommand, designated=designated)
+            if isinstance(requestedcommand, ProposalClientBatch):
+                self.performcore_clientbatch(requestedcommand, designated=designated)
+            else:
+                self.performcore(requestedcommand, designated=designated)
             
     def pick_commandnumber_add_to_pending(self, givenproposal):
         # Add command to pending commands
@@ -603,7 +682,7 @@ class Replica(Node):
 
     def add_to_decisions(self, key, value):
         self.decisions[key] = value
-        if isinstance(value, ProposalBatch):
+        if isinstance(value, ProposalServerBatch):
             for item in value.proposals:
                 self.decisionset.add(item)
         else:
@@ -612,7 +691,7 @@ class Replica(Node):
 
     def add_to_proposals(self, key, value):
         self.proposals[key] = value
-        if isinstance(value, ProposalBatch):
+        if isinstance(value, ProposalServerBatch):
             for item in value.proposals:
                 self.proposalset.add(item)
         else:
@@ -635,7 +714,7 @@ class Replica(Node):
             print "Pending commandset: ", self.pendingcommandset
             print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         self.pendingcommands[key] = value
-        if isinstance(value, ProposalBatch):
+        if isinstance(value, ProposalServerBatch):
             for item in value.proposals:
                 self.pendingcommandset.add(item)
         else:
@@ -646,7 +725,7 @@ class Replica(Node):
 
     def remove_from_decisions(self, key):
         value = self.decisions[key]
-        if isinstance(value, ProposalBatch):
+        if isinstance(value, ProposalServerBatch):
             for item in value.proposals:
                 self.decisionset.remove(item)
         else:
@@ -657,7 +736,7 @@ class Replica(Node):
 
     def remove_from_proposals(self, key):
         value = self.proposals[key]
-        if isinstance(value, ProposalBatch):
+        if isinstance(value, ProposalServerBatch):
             for item in value.proposals:
                 self.proposalset.remove(item)
         else:
@@ -668,7 +747,7 @@ class Replica(Node):
 
     def remove_from_pendingcommands(self, key):
         value = self.pendingcommands[key]
-        if isinstance(value, ProposalBatch):
+        if isinstance(value, ProposalServerBatch):
             for item in value.proposals:
                 self.pendingcommandset.remove(item)
         else:
@@ -784,7 +863,7 @@ class Replica(Node):
         elif len(commandstohandle) == 1:
             self.initiate_command(commandstohandle[0])
         else:
-            self.initiate_command(ProposalBatch(commandstohandle))
+            self.initiate_command(ProposalServerBatch(commandstohandle))
             
     def send_reject_to_client(self, conn, clientcommandnumber):
         conn.send(create_message(MSG_CLIENTREPLY, self.me,
@@ -966,9 +1045,9 @@ class Replica(Node):
                                  {FLD_BALLOTNUMBER: recentballotnumber,
                                   FLD_COMMANDNUMBER: givencommandnumber,
                                   FLD_PROPOSAL: givenproposal,
-                                  FLD_BATCH: isinstance(givenproposal, ProposalBatch)})
+                                  FLD_SERVERBATCH: isinstance(givenproposal, ProposalServerBatch)})
         self.send(propose, group=prc.acceptors)
-                    
+
     def do_command_prepare_from_pending(self, givencommandnumber):
         """Initiates givencommandnumber from pendingcommands list.
         Stage p1a.
@@ -1050,7 +1129,7 @@ class Replica(Node):
                                              {FLD_BALLOTNUMBER: prc.ballotnumber,
                                               FLD_COMMANDNUMBER: chosencommandnumber,
                                               FLD_PROPOSAL: chosenproposal,
-                                              FLD_BATCH: isinstance(chosenproposal, ProposalBatch)})
+                                              FLD_SERVERBATCH: isinstance(chosenproposal, ProposalServerBatch)})
                     self.send(propose, group=newprc.acceptors)
                 # As leader collected all proposals from acceptors its state is up-to-date and it is done initializing
                 self.leader_initializing = False
@@ -1121,7 +1200,8 @@ class Replica(Node):
                     performmessage = create_message(MSG_PERFORM, self.me,
                                                     {FLD_COMMANDNUMBER: prc.commandnumber,
                                                      FLD_PROPOSAL: prc.proposal,
-                                                     FLD_BATCH: isinstance(prc.proposal, ProposalBatch)})
+                                                     FLD_SERVERBATCH: isinstance(prc.proposal, ProposalServerBatch),
+                                                     FLD_CLIENTBATCH: isinstance(prc.proposal, ProposalClientBatch)})
 
                     if self.debug: self.logger.write("Paxos State", "Sending PERFORM!")
                     if len(self.groups[NODE_REPLICA]) > 0:
