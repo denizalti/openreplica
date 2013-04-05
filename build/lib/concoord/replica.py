@@ -293,6 +293,7 @@ class Replica(Node):
         if self.debug: self.logger.write("State:", "returning from performcore!")
 
     def send_replybatch_to_client(self, givenresult, command):
+        print givenresult
         if self.debug: self.logger.write("State", "Sending REPLY to CLIENT")
         clientreply = create_message(MSG_CLIENTREPLY, self.me,
                                      {FLD_REPLY: givenresult,
