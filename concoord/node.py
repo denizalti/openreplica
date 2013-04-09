@@ -3,12 +3,12 @@
 @note: Master class for all nodes
 @copyright: See LICENSE
 '''
+import argparse
 import os, sys
 import random, struct
 import cPickle as pickle
 import time, socket, select
 from Queue import Queue
-from optparse import OptionParser
 from threading import Thread, RLock, Lock, Condition, Timer, Semaphore
 from concoord.enums import *
 from concoord.exception import ConnectionError
@@ -23,19 +23,20 @@ try:
 except:
     print("Install dnspython: http://www.dnspython.org/")
 
-parser = OptionParser()
-parser.add_option("-a", "--addr", action="store", dest="addr", help="addr for the node")
-parser.add_option("-p", "--port", action="store", dest="port", type="int", help="port for the node")
-parser.add_option("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
-parser.add_option("-f", "--objectfilename", action="store", dest="objectfilename", default='', help="client object file name")
-parser.add_option("-c", "--objectname", action="store", dest="objectname", help="object name")
-parser.add_option("-l", "--logger", action="store", dest="logger", default='', help="logger address")
-parser.add_option("-o", "--configpath", action="store", dest="configpath", default='', help="config file path")
-parser.add_option("-n", "--name", action="store", dest="domain", default='', help="domainname that the nameserver will accept queries for")
-parser.add_option("-t", "--type", action="store", dest="type", default='', help="1: Master Nameserver 2: Slave Nameserver (requires a Master) 3:Route53 (requires a Route53 zone)")
-parser.add_option("-m", "--master", action="store", dest="master", default='', help="ipaddr:port for the master nameserver")
-parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
-(options, args) = parser.parse_args()
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-a", "--addr", action="store", dest="addr", help="addr for the node")
+parser.add_argument("-p", "--port", action="store", dest="port", type=int, help="port for the node")
+parser.add_argument("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
+parser.add_argument("-f", "--objectfilename", action="store", dest="objectfilename", default='', help="client object file name")
+parser.add_argument("-c", "--objectname", action="store", dest="objectname", help="object name")
+parser.add_argument("-l", "--logger", action="store", dest="logger", default='', help="logger address")
+parser.add_argument("-o", "--configpath", action="store", dest="configpath", default='', help="config file path")
+parser.add_argument("-n", "--name", action="store", dest="domain", default='', help="domainname that the nameserver will accept queries for")
+parser.add_argument("-t", "--type", action="store", dest="type", default='', help="1: Master Nameserver 2: Slave Nameserver (requires a Master) 3:Route53 (requires a Route53 zone)")
+parser.add_argument("-m", "--master", action="store", dest="master", default='', help="ipaddr:port for the master nameserver")
+parser.add_argument("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
+args = parser.parse_args()
 
 class Node():
     """Node encloses the basic Node behaviour and state that
@@ -43,15 +44,15 @@ class Node():
     """ 
     def __init__(self,
                  nodetype,
-                 addr=options.addr,
-                 port=options.port,
-                 givenbootstraplist=options.bootstrap,
-                 debugoption=options.debug,
-                 objectfilename=options.objectfilename,
-                 objectname=options.objectname,
+                 addr=args.addr,
+                 port=args.port,
+                 givenbootstraplist=args.bootstrap,
+                 debugoption=args.debug,
+                 objectfilename=args.objectfilename,
+                 objectname=args.objectname,
                  instantiateobj=False,
-                 configpath=options.configpath,
-                 logger=options.logger):
+                 configpath=args.configpath,
+                 logger=args.logger):
         self.addr = addr if addr else findOwnIP()
         self.port = port
         self.type = nodetype
