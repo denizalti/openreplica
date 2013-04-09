@@ -4,7 +4,7 @@
 @copyright: See LICENSE
 '''
 import inspect
-import math, time
+import time
 import os, sys
 import signal
 import cPickle as pickle
@@ -29,33 +29,24 @@ class Replica(Node):
         Node.__init__(self, nodetype, instantiateobj=instantiateobj)
         # load and initialize the object to be replicated
         if instantiateobj:
+            import importlib
+            objectloc,a,classname = self.objectname.rpartition('.')
             self.object = None
-            for objectloc in ['concoord.'+self.objectfilename[:-3],
-                              'concoord.object.'+self.objectfilename[:-3],
-                              'concoord.test.'+self.objectfilename[:-3],
-                              self.objectfilename[:-3]]:
-                try:
-                    ip = objectloc.split('.')
-                    mod = __import__(objectloc, {}, {}, [])
-                    for module in ip[1:]:
-                        mod = getattr(mod, module, None)
-                    if hasattr(mod, self.objectname):
-                        self.object = getattr(mod, self.objectname)()
-                        break
+            try:
+                module = importlib.import_module(objectloc)
+                if hasattr(module, classname):
+                    self.object = getattr(module, classname)()
+            except (ValueError, ImportError, AttributeError):
+                self.object = None
 
-                except ImportError as e:
-                    continue
-                except AttributeError as e:
-                    continue
-            if self.object == None:
-                if self.debug: self.logger.write("Object Error", "Object cannot be found.")
+            if not self.object:
+                self.logger.write("Object Error", "Object cannot be found.")
                 self._graceexit(1)
-            else:
-                try:
-                    self.token = getattr(self.object, '_%s__concoord_token' % self.objectname)
-                except AttributeError as e:
-                    if self.debug: self.logger.write("State", "Object initialized without a token.")
-                    self.token = None
+            try:
+                self.token = getattr(self.object, '_%s__concoord_token' % self.objectname)
+            except AttributeError as e:
+                if self.debug: self.logger.write("State", "Object initialized without a token.")
+                self.token = None
         # leadership
         self.leader_initializing = False
         self.isleader = False
@@ -118,6 +109,14 @@ class Replica(Node):
             for commandnumber, command in self.proposals.iteritems():
                 rstr += str(commandnumber) + ":\t" + str(command) + '\n'
         return rstr
+
+    def _import_object(self, name):
+        mod = __import__(name)
+        components = name.split('.')
+        for comp in components[1:]:
+            mod = getattr(mod, comp)
+        print mod
+        return mod
 
     def startservice(self):
         """Start the background services associated with a replica."""
@@ -194,7 +193,7 @@ class Replica(Node):
         if self.debug: self.logger.write("State:", "returning from performcore!")
 
     def performcore(self, command, dometaonly=False, designated=False):
-        """The core function that performs a given command in a slot number. It 
+        """The core function that performs a given command in a slot number. It
         executes regular commands as well as META-level commands (commands related
         to the managements of the Paxos protocol) with a delay of WINDOW commands."""
         commandtuple = command.command
@@ -229,7 +228,7 @@ class Replica(Node):
                 unblocked = {}
                 send_result_to_client = False
             elif not dometaonly and ismeta:
-                # meta command, but the window has not passed yet, 
+                # meta command, but the window has not passed yet,
                 # so just mark it as executed without actually executing it
                 # the real execution will take place when the window has expired
                 self.add_to_executed(command, (CR_META, META, {}))
@@ -275,9 +274,9 @@ class Replica(Node):
             unblocked = {}
             send_result_to_client = True
         self.add_to_executed(command, (clientreplycode,givenresult,unblocked))
-        
+
         if commandname not in METACOMMANDS:
-            # if this client contacted me for this operation, return him the response 
+            # if this client contacted me for this operation, return him the response
             if send_result_to_client and self.isleader and str(command.client) in self.connectionpool.poolbypeer.keys():
                 self.send_reply_to_client(clientreplycode, givenresult, command)
 
@@ -310,7 +309,7 @@ class Replica(Node):
                                      {FLD_REPLY: givenresult,
                                       FLD_REPLYCODE: clientreplycode,
                                       FLD_INRESPONSETO: command.clientcommandnumber})
-        if self.debug: self.logger.write("State", "Clientreply: %s\nAcceptors: %s" 
+        if self.debug: self.logger.write("State", "Clientreply: %s\nAcceptors: %s"
                           % (str(clientreply), str(self.groups[NODE_ACCEPTOR])))
         clientconn = self.connectionpool.get_connection_by_peer(command.client)
         if clientconn == None or clientconn.thesocket == None:
@@ -327,7 +326,7 @@ class Replica(Node):
         # If replica was using this commandnumber for a different proposal, initiate it again
         if msg.commandnumber in self.proposals and msg.proposal != self.proposals[msg.commandnumber]:
             self.initiate_command(self.proposals[msg.commandnumber])
-        
+
         while self.nexttoexecute in self.decisions:
             requestedcommand = self.decisions[self.nexttoexecute]
             if isinstance(requestedcommand, ProposalServerBatch):
@@ -374,7 +373,7 @@ class Replica(Node):
                 self.performcore_clientbatch(requestedcommand, designated=designated)
             else:
                 self.performcore(requestedcommand, designated=designated)
-            
+
     def pick_commandnumber_add_to_pending(self, givenproposal):
         # Add command to pending commands
         givencommandnumber = self.find_commandnumber()
@@ -401,7 +400,7 @@ class Replica(Node):
                 self.do_command_prepare_from_pending(candidatecommandno)
 
     def msg_perform(self, conn, msg):
-        """received a PERFORM message, perform it and send an 
+        """received a PERFORM message, perform it and send an
         UPDATE message to the source if necessary"""
         self.perform(msg)
 
@@ -445,17 +444,17 @@ class Replica(Node):
             else:
                 if self.debug: self.logger.write("State", "Not the leader, sending a HELOREPLY")
                 if self.debug: self.logger.write("State", "Leader is %s" % str(self.find_leader()))
-                heloreplymessage = create_message(MSG_HELOREPLY, self.me, 
+                heloreplymessage = create_message(MSG_HELOREPLY, self.me,
                                                   {FLD_LEADER: self.find_leader()})
                 conn.send(heloreplymessage)
-            
+
     def msg_update(self, conn, msg):
         """a replica needs to be updated on the set of past decisions, send caller's decisions"""
         # This should be done only if it has not been done recently.
         with self.recentlyupdatedpeerslock:
             if msg.source in self.recentlyupdatedpeers:
                 return
-        updatereplymessage = create_message(MSG_UPDATEREPLY, self.me, 
+        updatereplymessage = create_message(MSG_UPDATEREPLY, self.me,
                                             {FLD_DECISIONS: self.decisions})
         conn.send(updatereplymessage)
         with self.recentlyupdatedpeerslock:
@@ -515,7 +514,7 @@ class Replica(Node):
             elif chosenleader != self.me and self.isleader:
                 # unbecome the leader
                 self.unbecome_leader()
-        
+
     def _del_node(self, nodetype, nodename):
         nodetype = int(nodetype)
         if self.debug: self.logger.write("State", "Deleting node: %s %s" % (node_names[nodetype], nodename))
@@ -536,7 +535,7 @@ class Replica(Node):
 
     def _garbage_collect(self, garbagecommandnumber):
         """ garbage collect """
-        if self.debug: self.logger.write("State", 
+        if self.debug: self.logger.write("State",
                           "Initiating garbage collection upto cmd#%d"
                           % garbagecommandnumber)
         snapshot = pickle.dumps(self.object)
@@ -577,7 +576,7 @@ class Replica(Node):
                 else:
                     break
         return True
-    
+
 
 
 # LEADER STATE
@@ -605,15 +604,15 @@ class Replica(Node):
             self.backoff = 0
             self.commandgap = 1
             self.leader_initializing = True
-            
+
             backoff_thread = Thread(target=self.update_backoff)
             backoff_event.clear()
             backoff_thread.start()
             if self.debug: self.logger.write("State", "Becoming LEADER!")
-            
+
     def unbecome_leader(self):
         """drop LEADER state, become a replica"""
-        # fail-stop tolerance, coupled with retries in the client, mean that a 
+        # fail-stop tolerance, coupled with retries in the client, mean that a
         # leader can at any time discard all of its internal state and the protocol
         # will still work correctly.
         if self.debug: self.logger.write("State:", "Unbecoming LEADER!")
@@ -645,7 +644,7 @@ class Replica(Node):
                 self.groups[currentleader.type][currentleader] += 1
                 return False, currentleader
         return True, currentleader
-            
+
     def find_leader(self):
         """returns the minimum peer that is alive as the leader"""
         # sort the replicas first
@@ -656,7 +655,7 @@ class Replica(Node):
                 return replica
         del replicas
         return self.me
-        
+
     def update_ballotnumber(self,seedballotnumber):
         """update the ballotnumber with a higher value than the given ballotnumber"""
         temp = (seedballotnumber[BALLOTNO]+1,self.ballotnumber[BALLOTNODE])
@@ -772,7 +771,7 @@ class Replica(Node):
             else:
                 if self.debug: self.logger.write("Error", "Can't create connection to client")
             return
-        
+
         if sendcount > 0 and (givencommand.client, givencommand.clientcommandnumber) in self.receivedclientrequests:
             if self.debug: self.logger.write("State", "Client request received previously:")
             if self.debug: self.logger.write("State", "Client: %s Commandnumber: %s Acceptors: %s"
@@ -855,7 +854,7 @@ class Replica(Node):
                     if self.debug: self.logger.write("State", "Clientreply: %s\nAcceptors: %s"
                                       % (str(clientreply),str(self.groups[NODE_ACCEPTOR])))
                 conn.send(clientreply)
-        if self.debug: self.logger.write("State", "Initiating a new command. Leader is active: %s" % self.active)    
+        if self.debug: self.logger.write("State", "Initiating a new command. Leader is active: %s" % self.active)
         # Check if batching is still required
         if len(commandstohandle) == 0:
             return
@@ -863,7 +862,7 @@ class Replica(Node):
             self.initiate_command(commandstohandle[0])
         else:
             self.initiate_command(ProposalServerBatch(commandstohandle))
-            
+
     def send_reject_to_client(self, conn, clientcommandnumber):
         conn.send(create_message(MSG_CLIENTREPLY, self.me,
                                  {FLD_REPLY: '',
@@ -917,7 +916,7 @@ class Replica(Node):
                     self.send_reject_to_client(conn, msg.command.clientcommandnumber)
                 else:
                     self.handle_client_command(msg.command, msg.sendcount, prepare=self.leader_initializing)
-                    
+
     def msg_clientrequest_batch(self, msgconnlist):
         """called holding self.lock
         handles clientrequest messages that are batched together"""
@@ -1006,11 +1005,11 @@ class Replica(Node):
             send_result_to_client = True
         if commandname not in METACOMMANDS and send_result_to_client:
             self.send_reply_to_client(clientreplycode, givenresult, command)
-            
+
     def msg_clientreply(self, conn, msg):
         """this only occurs in response to commands initiated by the shell"""
         print "Commandline Debugging:", msg
-        
+
 ## PAXOS METHODS
     def do_command_propose_from_pending(self, givencommandnumber):
         """Initiates givencommandnumber from pendingcommands list.
@@ -1073,7 +1072,7 @@ class Replica(Node):
             self.add_to_pendingcommands(givencommandnumber, givenproposal)
             return
         self.outstandingprepares[newballotnumber] = prc
-        prepare = create_message(MSG_PREPARE, self.me, 
+        prepare = create_message(MSG_PREPARE, self.me,
                                  {FLD_BALLOTNUMBER: newballotnumber})
         self.send(prepare, group=prc.acceptors)
 
@@ -1124,7 +1123,7 @@ class Replica(Node):
                     if self.debug: self.logger.write("Paxos State", "Sending PROPOSE for %d, %s" % (chosencommandnumber, chosenproposal))
                     newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, chosencommandnumber, chosenproposal)
                     self.outstandingproposes[chosencommandnumber] = newprc
-                    propose = create_message(MSG_PROPOSE, self.me, 
+                    propose = create_message(MSG_PROPOSE, self.me,
                                              {FLD_BALLOTNUMBER: prc.ballotnumber,
                                               FLD_COMMANDNUMBER: chosencommandnumber,
                                               FLD_PROPOSAL: chosenproposal,
@@ -1211,7 +1210,7 @@ class Replica(Node):
 
                     self.perform(parse_message(performmessage), designated=True)
             if self.debug: self.logger.write("State", "returning from msg_propose_accept")
-        
+
     def msg_propose_reject(self, conn, msg):
         """MSG_PROPOSE_REJECT is handled only if it belongs to an outstanding MSG_PROPOSE,
         otherwise it is discarded.
@@ -1308,11 +1307,11 @@ class Replica(Node):
             print "command expects only one command: ", str(e)
 
     def cmd_goleader(self, args):
-        """start Leader state""" 
+        """start Leader state"""
         self.become_leader()
 
     def cmd_showobject(self, args):
-        """print replicated object information""" 
+        """print replicated object information"""
         print self.object
 
     def cmd_info(self, args):
@@ -1353,6 +1352,6 @@ def main():
     signal.signal(signal.SIGINT, replicanode.terminate_handler)
     signal.signal(signal.SIGTERM, replicanode.terminate_handler)
     signal.pause()
-    
+
 if __name__=='__main__':
     main()

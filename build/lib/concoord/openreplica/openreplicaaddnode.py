@@ -3,28 +3,26 @@
 @note: Adds nodes to an OpenReplica instance
 @copyright: See LICENSE
 '''
-import subprocess
-import os, sys, time, shutil
-from time import sleep,time
-from optparse import OptionParser
+import argparse
+import os, sys, time
 from concoord.enums import *
 from concoord.utils import *
 from concoord.openreplica.plmanager import *
 from concoord.proxy.nameservercoord import *
 
-parser = OptionParser(usage="usage: %prog -t nodetype -s subdomain -f objectpath -c classname -b bootstrap")
-parser.add_option("-t", "--nodetype", action="store", dest="nodetype", help="node type")
-parser.add_option("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
-parser.add_option("-f", "--objectfilepath", action="store", dest="objectfilepath", help="client object file path")
-parser.add_option("-c", "--classname", action="store", dest="classname", help="main class name")
-parser.add_option("-o", "--configpath", action="store", dest="configpath", default='', help="config file path")
-parser.add_option("-b", "--bootstrap", action="store", dest="bootstrapname", help="bootstrap name")
-(options, args) = parser.parse_args()
+parser = argparse.ArgumentParser()
+parser.add_argument("-t", "--nodetype", action="store", dest="nodetype", help="node type")
+parser.add_argument("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
+parser.add_argument("-f", "--objectfilepath", action="store", dest="objectfilepath", help="client object file path")
+parser.add_argument("-c", "--classname", action="store", dest="classname", help="main class name")
+parser.add_argument("-o", "--configpath", action="store", dest="configpath", default='', help="config file path")
+parser.add_argument("-b", "--bootstrap", action="store", dest="bootstrapname", help="bootstrap name")
+args = parser.parse_args()
 
 STDOUT, STDERR = range(2)
 
 try:
-    CONFIGDICT = load_configdict(options.configpath)
+    CONFIGDICT = load_configdict(args.configpath)
     NPYTHONPATH = CONFIGDICT['NPYTHONPATH']
     CONCOORD_HELPERDIR = CONFIGDICT['CONCOORD_HELPERDIR']
     LOGGERNODE = CONFIGDICT['LOGGERNODE']
@@ -99,8 +97,8 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
     print "Node is started: %s" % nodename
 
 def main():
-    start_node(options.nodetype, options.subdomain, options.objectfilepath,
-               options.classname, options.bootstrapname)
+    start_node(args.nodetype, args.subdomain, args.objectfilepath,
+               args.classname, args.bootstrapname)
     print 'DONE'
     
 if __name__=='__main__':

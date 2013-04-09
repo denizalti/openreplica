@@ -56,7 +56,7 @@ class ReqDesc:
 class ClientProxy():
     def __init__(self, bootstrap, timeout=60, debug=False, token=None):
         self.debug = debug
-        self.timeout = timeout 
+        self.timeout = timeout
         self.domainname = None
         self.token = token
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
