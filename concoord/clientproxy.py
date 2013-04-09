@@ -23,7 +23,7 @@ except:
 class ClientProxy():
     def __init__(self, bootstrap, timeout=60, debug=False, token=None):
         self.debug = debug
-        self.timeout = timeout 
+        self.timeout = timeout
         self.domainname = None
         self.token = token
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -109,8 +109,9 @@ class ClientProxy():
         lastreplycode = -1
         self.commandnumber += 1
         clientmsg = create_message(MSG_CLIENTREQUEST, self.me,
-                                   {FLD_PROPOSAL: Proposal(self.me, self.commandnumber, args), 
-                                    FLD_TOKEN: self.token})
+                                   {FLD_PROPOSAL: Proposal(self.me, self.commandnumber, args),
+                                    FLD_TOKEN: self.token,
+                                    FLD_CLIENTBATCH: False})
         while True:
             sendcount += 1
             clientmsg[FLD_SENDCOUNT] = sendcount
@@ -154,6 +155,6 @@ class ClientProxy():
     def reconfigure(self):
         if not self.trynewbootstrap():
             raise ConnectionError("Cannot connect to any bootstrap")
-            
+
     def _graceexit(self):
         os._exit(0)

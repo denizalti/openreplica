@@ -25,30 +25,38 @@ except:
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("-a", "--addr", action="store", dest="addr", help="addr for the node")
-parser.add_argument("-p", "--port", action="store", dest="port", type=int, help="port for the node")
-parser.add_argument("-b", "--boot", action="store", dest="bootstrap", help="address:port:type triple for the bootstrap peer")
-parser.add_argument("-f", "--objectfilename", action="store", dest="objectfilename", default='', help="client object file name")
-parser.add_argument("-c", "--objectname", action="store", dest="objectname", help="object name")
-parser.add_argument("-l", "--logger", action="store", dest="logger", default='', help="logger address")
-parser.add_argument("-o", "--configpath", action="store", dest="configpath", default='', help="config file path")
-parser.add_argument("-n", "--name", action="store", dest="domain", default='', help="domainname that the nameserver will accept queries for")
-parser.add_argument("-t", "--type", action="store", dest="type", default='', help="1: Master Nameserver 2: Slave Nameserver (requires a Master) 3:Route53 (requires a Route53 zone)")
-parser.add_argument("-m", "--master", action="store", dest="master", default='', help="ipaddr:port for the master nameserver")
-parser.add_argument("-d", "--debug", action="store_true", dest="debug", default=False, help="debug on/off")
+parser.add_argument("-a", "--addr", action="store", dest="addr",
+                    help="addr for the node")
+parser.add_argument("-p", "--port", action="store", dest="port", type=int,
+                    help="port for the node")
+parser.add_argument("-b", "--boot", action="store", dest="bootstrap",
+                    help="address:port:type triple for the bootstrap peer")
+parser.add_argument("-o", "--objectname", action="store", dest="objectname", default='',
+                    help="client object dotted name")
+parser.add_argument("-l", "--logger", action="store", dest="logger", default='',
+                    help="logger address")
+parser.add_argument("-c", "--configpath", action="store", dest="configpath", default='',
+                    help="config file path")
+parser.add_argument("-n", "--name", action="store", dest="domain", default='',
+                    help="domainname that the nameserver will accept queries for")
+parser.add_argument("-t", "--type", action="store", dest="type", default='',
+                    help="1: Master Nameserver 2: Slave Nameserver (requires a Master) 3:Route53 (requires a Route53 zone)")
+parser.add_argument("-m", "--master", action="store", dest="master", default='',
+                    help="ipaddr:port for the master nameserver")
+parser.add_argument("-d", "--debug", action="store_true", dest="debug", default=False,
+                    help="debug on/off")
 args = parser.parse_args()
 
 class Node():
     """Node encloses the basic Node behaviour and state that
     are extended by Leaders, Acceptors or Replicas.
-    """ 
+    """
     def __init__(self,
                  nodetype,
                  addr=args.addr,
                  port=args.port,
                  givenbootstraplist=args.bootstrap,
                  debugoption=args.debug,
-                 objectfilename=args.objectfilename,
                  objectname=args.objectname,
                  instantiateobj=False,
                  configpath=args.configpath,
@@ -58,10 +66,9 @@ class Node():
         self.type = nodetype
         self.debug = debugoption
         if instantiateobj:
-            if objectfilename == '':
+            if objectname == '':
                 parser.print_help()
                 self._graceexit(1)
-            self.objectfilename = objectfilename
             self.objectname = objectname
         ## initialize receive queue
         self.receivedmessages_semaphore = Semaphore(0)
@@ -233,7 +240,7 @@ class Node():
             pending =  "".join("%d: %s" % (cno, proposal) for cno,proposal in self.pendingcommands.iteritems())
             groups = "%s\nPending:\n%s" % (groups, pending)
         return groups
-    
+
     def server_loop(self):
         """Serverloop that listens to multiple connections and accepts new ones.
 
@@ -288,7 +295,7 @@ class Node():
                                                                    [],
                                                                    self.connectionpool.activesockets,
                                                                    1)
-  
+
                 for s in exceptready:
                     if self.debug: self.logger.write("Exception", "%s" % s)
                 for s in inputready:
@@ -303,8 +310,8 @@ class Node():
                     if not success:
                         self.connectionpool.del_connection_by_socket(s)
             except KeyboardInterrupt, EOFError:
-                os._exit(0)        
-        
+                os._exit(0)
+
     def handle_connection(self, clientsock):
         """Receives a message and calls the corresponding message handler"""
         connection = self.connectionpool.get_connection_by_socket(clientsock)
@@ -404,23 +411,23 @@ class Node():
     # shell commands generic to all nodes
     def cmd_help(self, args):
         """prints the commands that are supported
-        by the corresponding Node.""" 
+        by the corresponding Node."""
         print "Commands I support:"
         for attr in dir(self):
             if attr.startswith("cmd_"):
                 print attr.replace("cmd_", "")
 
     def cmd_exit(self, args):
-        """Changes the liveness state and dies""" 
+        """Changes the liveness state and dies"""
         self.alive = False
         os._exit(0)
-                    
+
     def cmd_state(self, args):
         """prints connectivity state of the corresponding Node."""
         if self.debug: self.logger.write("State", "\n%s\n" % (self.statestr()))
 
     def get_user_input_from_shell(self):
-        """Shell loop that accepts inputs from the command prompt and 
+        """Shell loop that accepts inputs from the command prompt and
         calls corresponding command handlers."""
         while self.alive:
             try:
@@ -441,8 +448,8 @@ class Node():
                 os._exit(0)
             except EOFError:
                 return
-        return           
-    
+        return
+
     def send(self, message, peer=None, group=None):
         if peer:
             if peer == self.me:
