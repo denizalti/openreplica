@@ -11,7 +11,7 @@ from batch_test_performance_proxy import Test
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-b", "--boot", action="store", dest="bootstrap",
-                    help="address:port tugple for the bootstrap peer")
+                    help="address:port tuple for the bootstrap peer")
 parser.add_argument("-n", "--num", action="store", dest="setting",
                     help="x,y tuple for the number of replicas and acceptors")
 parser.add_argument("-o", "--op", action="store", dest="operations", type=int,
