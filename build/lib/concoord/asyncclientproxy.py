@@ -26,8 +26,9 @@ class ReqDesc:
         self.commandnumber = clientproxy.commandnumber
         clientproxy.commandnumber += 1
         self.cm = create_message(MSG_CLIENTREQUEST, clientproxy.me,
-                                 {FLD_PROPOSAL: Proposal(clientproxy.me, self.commandnumber, args), 
+                                 {FLD_PROPOSAL: Proposal(clientproxy.me, self.commandnumber, args),
                                   FLD_TOKEN: token,
+                                  FLD_CLIENTBATCH: False,
                                   FLD_SENDCOUNT: 0})
         self.reply = None
         self.replyarrived = False
@@ -40,7 +41,7 @@ class ReqDesc:
 class ClientProxy():
     def __init__(self, bootstrap, timeout=60, debug=False, token=None):
         self.debug = debug
-        self.timeout = timeout 
+        self.timeout = timeout
         self.domainname = None
         self.token = token
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
