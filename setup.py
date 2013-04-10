@@ -53,7 +53,7 @@ setup(
     },
     install_requires=[
         'msgpack-python',
-        'dnspython>=1.9.4',
+        'dnspython',
     ],
 
 )
