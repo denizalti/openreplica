@@ -29,18 +29,17 @@ class Replica(Node):
         Node.__init__(self, nodetype, instantiateobj=instantiateobj)
         # load and initialize the object to be replicated
         if instantiateobj:
-            import imp
+            import importlib
             objectloc,a,classname = self.objectname.rpartition('.')
             self.object = None
             try:
-                ip = objectloc.split('.')
-                mod = __import__(objectloc, {}, {}, [])
-                for module in ip[1:]:
-                    mod = getattr(mod, module, None)
-                    if hasattr(mod, classname):
-                        self.object = getattr(mod, classname)()
-                        break
-            except (ImportError, AttributeError):
+                module = importlib.import_module(objectloc)
+                if hasattr(module, classname):
+                    self.object = getattr(module, classname)()
+            except (ValueError, ImportError, AttributeError):
+                self.object = None
+
+            if not self.object:
                 self.logger.write("Object Error", "Object cannot be found.")
                 self._graceexit(1)
             try:

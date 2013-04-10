@@ -10,11 +10,11 @@ Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
 	replication and synchronization support for large-scale
 	distributed systems. ConCoord employs an object-oriented
 	approach, in which the system actively creates and maintains
-	live replicas for user-provided objects. Through ConCoord, 
+	live replicas for user-provided objects. Through ConCoord,
 	the clients are able to access these replicated objects
-	transparently as if they are local objects. ConCoord uses 
-	these replicated objects to implement coordination and 
-	synchronization constructs in large-scale distributed systems, 
+	transparently as if they are local objects. ConCoord uses
+	these replicated objects to implement coordination and
+	synchronization constructs in large-scale distributed systems,
 	in effect establishing a transparent way of providing a
 	coordination service.
 
@@ -22,12 +22,13 @@ Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
 ----------------
 	The minimum requirements for ConCoord are:
 
-	- python 2.6.6 or later
+	- python 2.7.2 or later
 	- dnspython-1.9.4
+	- msgpack-python
 
 (2) INSTALLATION
 ----------------
-	To build and install ConCoord, type 	
+	To build and install ConCoord, type
 
       	    $ python setup.py install
 
@@ -56,7 +57,7 @@ Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
 
 	    def getvalue(self):
                 return self.value
-    
+
 	    def __str__(self):
             	return "The counter value is %d" % self.value
 
@@ -68,7 +69,7 @@ Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
 
       Usage: concoord object -f objectfilepath -c classname -s safe
 
-      where, 
+      where,
       objectfilepath := path of the object you want to concoordify
       classname      := name of the class that you’ll use to access your object
       safe 	     := boolean flag to include safety checks for the object
@@ -77,7 +78,7 @@ Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
       object resides (i.e. /foo/):
 
       /foo/counter.pyproxy := the proxy that can be used like the original object by the client
-      
+
       Remember to rename the file back to the original filename
       before you import them on the client side. To avoid confusion,
       we will name the file counterproxy.py in this tutorial.
@@ -119,7 +120,7 @@ Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
 	Note that you can specify the port the replica binds to with
 	option -p, if not specified port defaults to the first
 	available port, randomly chosen between 14000 and 15000.
-	
+
 	To start replica nodes to join an active concoord instance,
 	use the following command:
 
@@ -129,9 +130,9 @@ Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
         To start an acceptor node manually, use the following command:
 
 	$ concoord acceptor -b ipaddr:port
-	
+
 (3.2.3) Starting Nameserver Nodes
-	There are three ways you can run a ConCoord Nameserver. 
+	There are three ways you can run a ConCoord Nameserver.
 
 	* Standalone Nameserver Keeps track of the view and responds
           to DNS queries itself. Requires su privileges to bind to
@@ -194,12 +195,12 @@ Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
 
 
 	  $ dig -t a counterdomain                   # returns set of Replicas
-	  
+
 	  $ dig -t srv _concoord._tcp.counterdomain  # returns set of Replicas with ports
 
 	  $ dig -t txt counterdomain                 # returns set of all nodes
 
-	  $ dig -t ns counterdomain                  # returns set of nameservers 
+	  $ dig -t ns counterdomain                  # returns set of nameservers
 
 (3.2.3.3) Amazon Route 53 Nameserver
 	  Before starting a nameserver connected to Amazon Route 53,
@@ -212,7 +213,7 @@ Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
 	  the methods that create connections or edit them in the
 	  configuration file.
 
-	  * AWS_ACCESS_KEY_ID - Your AWS Access Key ID 
+	  * AWS_ACCESS_KEY_ID - Your AWS Access Key ID
 	  * AWS_SECRET_ACCESS_KEY - Your AWS Secret Access Key
 
 	  Once you make sure that your Route53 account is set up and
@@ -301,7 +302,7 @@ Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
 (4.1) Creating Source Bundles
       You can create bundles to use at the server and client sides
       using the Makefile provided under concoord/
-      
+
       Remember to add the objects you have created in these bundles.
 
 (4.1.1) Creating A Server Bundle
@@ -313,12 +314,12 @@ Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
 (4.1.2) Creating A Client Bundle
 	To create a bundle that can run a client and connect to an
 	existing ConCoord instance:
-	
+
 	$ make client
 
 (4.2) Logging
-      We have two kinds of loggers for ConCoord: 
-      * Console Logger 
+      We have two kinds of loggers for ConCoord:
+      * Console Logger
       * Network Logger
 
       Both of these loggers are included under utils.py
