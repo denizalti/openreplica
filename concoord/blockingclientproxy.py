@@ -3,8 +3,8 @@
 @note: ConCoord Client Proxy
 @copyright: See LICENSE
 '''
-import socket, os, sys, time, random, threading, select
-from threading import Thread, Condition, RLock, Lock
+import os, random, select, socket, sys, time, threading
+from threading import Thread, Condition, Lock
 import pickle
 from pack import *
 from concoord.enums import *
