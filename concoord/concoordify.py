@@ -55,6 +55,6 @@ def main():
         if args.verbose:
             print "Error: ", e
         parser.print_help()
-    
+
 if __name__=='__main__':
     main()
