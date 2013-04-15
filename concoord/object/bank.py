@@ -5,7 +5,7 @@
 """
 from metabank import ProxyMeta
 
-class Bank():
+class Bank(type):
     __metaclass__ = ProxyMeta
 
     def __init__(self):
