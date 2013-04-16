@@ -110,11 +110,6 @@ class OpenReplicaNameserver(Nameserver):
                         pass
 
     def should_answer(self, question):
-        print question.name
-        print "ISMYDOMAINNAME: ", self.ismydomainname(question)
-        print "ISMYSUBDOMAINNAME: ", self.ismysubdomainname(question)
-        print "SPECIAL DOMAIN: ", question.name.is_subdomain(self.specialdomain)
-        print "NS NAME: ", self.ismynsname(question)
         formyname = (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV or question.rdtype == dns.rdatatype.MX or question.rdtype == dns.rdatatype.SOA) and self.ismydomainname(question)
         formysubdomainname = (question.rdtype == dns.rdatatype.A or question.rdtype == dns.rdatatype.TXT or question.rdtype == dns.rdatatype.NS or question.rdtype == dns.rdatatype.SRV or question.rdtype == dns.rdatatype.SOA) and self.ismysubdomainname(question)
         myresponsibility_a = question.rdtype == dns.rdatatype.A and (self.ismynsname(question) or question.name.is_subdomain(self.specialdomain))
