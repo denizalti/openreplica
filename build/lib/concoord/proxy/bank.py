@@ -7,7 +7,7 @@ from concoord.clientproxy import ClientProxy
 class Bank:
     def __init__(self, bootstrap):
         self.proxy = ClientProxy(bootstrap)
-        
+
     def __concoordinit__(self):
         return self.proxy.invoke_command('__init__')
 

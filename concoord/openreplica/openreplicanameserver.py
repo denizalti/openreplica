@@ -6,7 +6,7 @@
 from time import strftime, gmtime
 from concoord.nameserver import *
 
-OPENREPLICANS = {'ns1.openreplica.org.':'128.84.154.110', 'ns2.openreplica.org.':'128.84.154.40'} 
+OPENREPLICANS = {'ns1.openreplica.org.':'128.84.154.110', 'ns2.openreplica.org.':'128.84.154.40'}
 OPENREPLICAWEBHOST = '128.84.154.110'
 VIEWCHANGEFUNCTIONS = ['addnodetosubdomain','delnodefromsubdomain','delsubdomain']
 
@@ -33,10 +33,10 @@ class OpenReplicaNameserver(Nameserver):
 
     def perform(self, msg):
         Replica.perform(self, msg)
-            
+
     def msg_perform(self, conn, msg):
         Replica.msg_perform(self, conn, msg)
-        
+
     def ismysubdomainname(self, question):
         for subdomain in self.object.getsubdomains():
             if question.name in [dns.name.Name([subdomain, 'openreplica', 'org', '']), dns.name.Name(['_concoord', '_tcp', subdomain, 'openreplica', 'org', ''])]:
@@ -51,7 +51,7 @@ class OpenReplicaNameserver(Nameserver):
 
     def aresponse(self, question=''):
         yield OPENREPLICAWEBHOST
-    
+
     def aresponse_ipaddr(self, question):
         # Asking for IPADDR.ipaddr.openreplica.org
         # Respond with IPADDR
@@ -128,8 +128,8 @@ class OpenReplicaNameserver(Nameserver):
         query = dns.message.from_wire(data)
         response = dns.message.make_response(query)
         for question in query.question:
-            self.logger.write("DNS State", "Received Query for %s\n" % question.name)
-            self.logger.write("DNS State", "Received Query %s\n" % question)
+            if self.debug: self.logger.write("DNS State", "Received Query for %s\n" % question.name)
+            if self.debug: self.logger.write("DNS State", "Received Query %s\n" % question)
             if self.should_answer(question):
                 flagstr = 'QR AA' # response, authoritative
                 answerstr = ''
@@ -184,7 +184,7 @@ class OpenReplicaNameserver(Nameserver):
                 responsestr = self.create_response(response.id,opcode=dns.opcode.QUERY,rcode=dns.rcode.NOERROR,flags=flagstr,question=question.to_text(),answer=answerstr,authority='',additional='')
                 response = dns.message.from_text(responsestr)
             elif self.should_auth(question):
-                self.logger.write("DNS State", "Query for my subdomain: %s" % str(question))
+                if self.debug: self.logger.write("DNS State", "Query for my subdomain: %s" % str(question))
                 flagstr = 'QR' # response, not authoritative
                 authstr = ''
                 for address in self.nsresponse_subdomain(question):
@@ -193,13 +193,13 @@ class OpenReplicaNameserver(Nameserver):
                 response = dns.message.from_text(responsestr)
             else:
                 # This Query is not something I know how to respond to
-                self.logger.write("DNS State", "UNSUPPORTED QUERY, %s" %str(question))
+                if self.debug: self.logger.write("DNS State", "UNSUPPORTED QUERY, %s" %str(question))
                 return
-        self.logger.write("DNS State", "RESPONSE:\n%s\n---\n" % str(response))
+        if self.debug: self.logger.write("DNS State", "RESPONSE:\n%s\n---\n" % str(response))
         try:
             self.udpsocket.sendto(response.to_wire(), addr)
         except:
-            self.logger.write("DNS Error", "Cannot send RESPONSE:\n%s\n---\n" % str(response))
+            if self.debug: self.logger.write("DNS Error", "Cannot send RESPONSE:\n%s\n---\n" % str(response))
 
 def main():
     nameservernode = OpenReplicaNameserver()

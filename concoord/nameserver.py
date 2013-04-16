@@ -58,7 +58,7 @@ class Nameserver(Replica):
         except dns.name.EmptyLabel:
             if self.debug: self.logger.write("Initialization Error", "A DNS name is required. Use -n option.")
             self._graceexit(1)
-            
+
         if self.servicetype == NS_SLAVE:
             if master:
                 self.master = master
@@ -80,7 +80,7 @@ class Nameserver(Replica):
             # should be added to the zones beforehand
             self.route53_zone_id = concoord.concoordroute53.get_zone_id(self.route53_conn, self.route53_name)
             self.updateroute53()
-        elif self.servicetype == NS_MASTER:            
+        elif self.servicetype == NS_MASTER:
             self.udpport = 53
             self.udpsocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
             try:
@@ -91,10 +91,10 @@ class Nameserver(Replica):
         else:
             if self.debug: self.logger.write("Initialization Error", "Servicetype is required. Use -t option.")
             self._graceexit(1)
-            
+
         # When the nameserver starts the revision number is 00 for that day
         self.revision = strftime("%Y%m%d", gmtime())+str(0).zfill(2)
-    
+
     def startservice(self):
         """Starts the background services associated with a node."""
         Replica.startservice(self)
@@ -102,7 +102,7 @@ class Nameserver(Replica):
             # Start a thread for the UDP server
             UDP_server_thread = Thread(target=self.udp_server_loop, name='UDPServerThread')
             UDP_server_thread.start()
-        
+
     def udp_server_loop(self):
         while self.alive:
             try:
@@ -132,7 +132,7 @@ class Nameserver(Replica):
     def srvresponse(self, question=''):
         for address,port in self.groups[NODE_REPLICA].get_addresses():
             yield address+self.ipconverter,port
-        
+
     def txtresponse(self, question=''):
         txtstr = ''
         for groupname,group in self.groups.iteritems():
@@ -201,11 +201,11 @@ class Nameserver(Replica):
         authoritystr  = ';AUTHORITY\n'  + authority  + '\n' if authority != '' else ''
         additionalstr = ';ADDITIONAL\n' + additional + '\n' if additional != '' else ''
 
-        responsestr = "id %s\nopcode %s\nrcode %s\nflags %s\n;QUESTION\n%s\n%s%s%s" % (str(id), 
-                                                                                       OPCODES[opcode], 
-                                                                                       RCODES[rcode], 
-                                                                                       flags, 
-                                                                                       question, 
+        responsestr = "id %s\nopcode %s\nrcode %s\nflags %s\n;QUESTION\n%s\n%s%s%s" % (str(id),
+                                                                                       OPCODES[opcode],
+                                                                                       RCODES[rcode],
+                                                                                       flags,
+                                                                                       question,
                                                                                        answerstr, authoritystr, additionalstr)
         return responsestr
 
@@ -242,7 +242,7 @@ class Nameserver(Replica):
             resp = str(name)
         answerstr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[question.rdtype]), resp)
         return answerstr
-    
+
     def create_authority_section(self, question, ttl='30', rrclass=1, rrtype=1, nshost=''):
         authoritystr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[rrtype]), str(nshost))
         return authoritystr
@@ -262,7 +262,7 @@ class Nameserver(Replica):
             self.updatemaster(nodepeer, add=True)
         elif self.servicetype == NS_ROUTE53:
             self.updateroute53()
-        
+
     def _del_node(self, nodetype, nodename):
         nodetype = int(nodetype)
         if self.debug: self.logger.write("State", "Deleting node: %s %s" % (node_names[nodetype], nodename))
@@ -274,9 +274,9 @@ class Nameserver(Replica):
             self.updatemaster(nodepeer)
         elif self.servicetype == NS_ROUTE53:
             self.updateroute53()
-    
+
     ########## ROUTE 53 ##########
-            
+
     def route53_a(self):
         values = []
         for address in self.groups[NODE_REPLICA].get_only_addresses():
@@ -337,7 +337,7 @@ class Nameserver(Replica):
                 nodes[nodetype].add(address + ':' + str(port))
         nodes[self.type].add(self.addr + ':' + str(self.port))
         nscoord.updatesubdomain(str(self.mydomain), nodes)
-            
+
     def updaterevision(self):
         if self.debug: self.logger.write("State", "Updating Revision -- from: %s" % self.revision)
         if strftime("%Y%m%d", gmtime()) in self.revision:

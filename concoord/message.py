@@ -138,7 +138,7 @@ parse_functions = [
     parse_propose, # MSG_PROPOSE
     parse_propose_reply, # MSG_PROPOSE_ACCEPT
     parse_propose_reply, # MSG_PROPOSE_REJECT
-    
+
     parse_basic, # MSG_HELO
     parse_heloreply, # MSG_HELOREPLY
     parse_basic, # MSG_PING
