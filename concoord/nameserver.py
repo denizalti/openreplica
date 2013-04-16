@@ -57,7 +57,6 @@ class Nameserver(Replica):
                 self.mydomain = dns.name.Name((domain+'.').split('.'))
             else:
                 self.mydomain = domain
-            print self.mydomain
             self.mysrvdomain = dns.name.Name((SRVNAME+domain+'.').split('.'))
         except dns.name.EmptyLabel:
             if self.debug: self.logger.write("Initialization Error", "A DNS name is required. Use -n option.")
@@ -302,7 +301,6 @@ class Nameserver(Replica):
         if lentxtstr > 253:
             # cut the string in chunks
             for i in range(lentxtstr/253):
-                print i
                 strings.append("\""+txtstr[i*253:(i+1)*253]+"\"")
         return strings
 
@@ -311,16 +309,12 @@ class Nameserver(Replica):
         # type A: update only if added node is a Replica
         rtype = 'A'
         newvalue = self.route53_a()
-        print newvalue
-        print concoord.concoordroute53.change_record_bool(self.route53_conn, self.route53_zone_id, self.route53_name, rtype, newvalue)
         # type SRV: update only if added node is a Replica
         rtype = 'SRV'
         newvalue = self.route53_srv()
-        print concoord.concoordroute53.change_record_bool(self.route53_conn, self.route53_zone_id, self.route53_name, rtype, newvalue)
         # type TXT: All Nodes
         rtype = 'TXT'
         newvalue = ','.join(self.route53_txt())
-        print concoord.concoordroute53.change_record_bool(self.route53_conn, self.route53_zone_id, self.route53_name, rtype, newvalue)
 
     ########## MASTER ##########
     def master_srv(self):
