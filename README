@@ -39,13 +39,13 @@ Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
       object to represent the state you want to replicate. To walk you
       through the ConCoord approach, we will use one of the example
       coordination objects we have provided, namely Counter. In the
-      source distribution wou can locate the Counter object under
+      source distribution you can locate the Counter object under
       concoord/object/counter.py. Once you install ConCoord, you can
       create coordination objects and save them anywhere in your
       filesystem. To demonstrate this, we will save counter.py under
-      /foo/counter.py.
+      ~/foo/counter.py.
 
-	class Counter():
+	class Counter:
 	    def __init__(self):
             	self.value = 0
 
