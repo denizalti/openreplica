@@ -40,8 +40,12 @@ SRVNAME = '_concoord._tcp.'
 class Nameserver(Replica):
     """Nameserver keeps track of the connectivity state of the system and replies to
     QUERY messages from dnsserver."""
-    def __init__(self, domain=options.domain, master=options.master, servicetype=options.type, instantiateobj=False):
-        Replica.__init__(self, nodetype=NODE_NAMESERVER, instantiateobj=instantiateobj, port=5000, bootstrap=options.bootstrap)
+    def __init__(self,
+                 domain=args.domain,
+                 master=args.master,
+                 servicetype=args.type,
+                 instantiateobj=False):
+        Replica.__init__(self, nodetype=NODE_NAMESERVER, instantiateobj=instantiateobj, port=5000, bootstrap=args.bootstrap)
         if servicetype:
             self.servicetype = int(servicetype)
         else:
@@ -67,7 +71,7 @@ class Nameserver(Replica):
                 self._graceexit(1)
         elif self.servicetype == NS_ROUTE53:
             try:
-                CONFIGDICT = load_configdict(options.configpath)
+                CONFIGDICT = load_configdict(args.configpath)
                 AWS_ACCESS_KEY_ID = CONFIGDICT['AWS_ACCESS_KEY_ID']
                 AWS_SECRET_ACCESS_KEY = CONFIGDICT['AWS_SECRET_ACCESS_KEY']
             except:
