@@ -33,14 +33,14 @@ class Acceptor(Node):
         self.objectsnapshot = (0,None)
         if self.debug and False:
             profile_on() # Turn profiling on!
-        
+
     def msg_prepare(self, conn, msg):
         """
         MSG_PREPARE is accepted only if it carries a ballotnumber greater
         than the highest ballotnumber Acceptor has ever received.
 
         Replies:
-        - MSG_PREPARE_ADOPTED carries the ballotnumber that is received and 
+        - MSG_PREPARE_ADOPTED carries the ballotnumber that is received and
         all pvalues accepted thus far.
         - MSG_PREPARE_PREEMPTED carries the highest ballotnumber Acceptor
         has seen and all pvalues accepted thus far.
@@ -104,7 +104,7 @@ class Acceptor(Node):
             if self.debug: self.logger.write("Paxos State",
                               "propose received with non-acceptable ballotnumber %s"
                               % str(msg.ballotnumber))
-            replymsg = create_message(MSG_PROPOSE_REJECT, self.me, 
+            replymsg = create_message(MSG_PROPOSE_REJECT, self.me,
                                       {FLD_BALLOTNUMBER: self.ballotnumber,
                                        FLD_INRESPONSETO: msg.ballotnumber,
                                        FLD_COMMANDNUMBER: msg.commandnumber})
@@ -119,7 +119,7 @@ class Acceptor(Node):
         else:
             if self.debug: self.logger.write("Garbage Collection Error",
                               "Garbege Collection failed.")
-        
+
     def cmd_paxos(self, args):
         """
         Print the paxos state of the Acceptor.
@@ -136,7 +136,7 @@ class Acceptor(Node):
     def _graceexit(self, exitcode=0):
         sys.stdout.flush()
         sys.stderr.flush()
-        self.logger.close()
+        if self.debug: self.logger.close()
         os._exit(exitcode)
 
 def main():

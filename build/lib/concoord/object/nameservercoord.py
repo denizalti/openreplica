@@ -11,7 +11,7 @@ def pairwise(iterable):
 
 class NameserverCoord():
     def __init__(self):
-        self._nodes = {} 
+        self._nodes = {}
 
     def addnodetosubdomain(self, subdomain, nodetype, node):
         nodetype = int(nodetype)
@@ -35,7 +35,7 @@ class NameserverCoord():
         if exists:
             del self._nodes[subdomain]
         return exists
-        
+
     def delnodefromsubdomain(self, subdomain, nodetype, node):
         if subdomain.find('openreplica') == -1:
             subdomain = subdomain+'.openreplica.org.'
@@ -82,7 +82,7 @@ class NameserverCoord():
                         self._nodes[subdomain][typename].add(nodename)
 
     def __str__(self):
-        rstr = ''	
+        rstr = ''
         for domain,nodes in self._nodes.iteritems():
             if domain.find('openreplica') == -1:
                 continue
