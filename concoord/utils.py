@@ -27,6 +27,14 @@ def load_configdict(configpath):
             config_dict[key] = getattr(configmodule, key)
     return config_dict
 
+def get_addressportpairs(group):
+    for peer in group.iterkeys():
+        yield (peer.addr,peer.port)
+
+def get_addresses(group):
+    for peer in group.iterkeys():
+        yield peer.addr
+
 # A logger will always print to the screen. It can also log to a file or to a network log daemon.
 class NoneLogger():
     def write(self, cls, string):

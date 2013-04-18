@@ -40,7 +40,7 @@ class ConnectionPool():
                 self.activesockets.add(conn.thesocket)
                 if conn.thesocket in self.nascentsockets:
                     self.nascentsockets.remove(conn.thesocket)
-            
+
     def del_connection_by_peer(self, peer):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
         peerstr = str(peer)
@@ -56,7 +56,7 @@ class ConnectionPool():
                 conn.close()
             else:
                 print "Trying to delete a non-existent connection from the connection pool."
-        
+
     def del_connection_by_socket(self, thesocket):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
         with self.pool_lock:
@@ -118,7 +118,7 @@ class ConnectionPool():
         socketstr= "\n".join(["%s: %s" % (str(socket), str(conn)) for socket,conn in self.poolbysocket.iteritems()])
         temp = "Connection to Peers:\n%s\nConnection to Sockets:\n%s" %(peerstr, socketstr)
         return temp
-        
+
 class Connection():
     """Connection encloses the socket and send/receive functions for a connection."""
     def __init__(self, socket, peerid=None):
@@ -128,20 +128,20 @@ class Connection():
         self.readlock = Lock()
         self.writelock = Lock()
         self.outgoing = ''
-        # Rethink the size of the bytearray versus the 
+        # Rethink the size of the bytearray versus the
         # number of bytes requested in recv_into
         self.incomingbytearray = bytearray(100000)
         self.incoming = memoryview(self.incomingbytearray)
         self.incomingoffset = 0
         # Busy wait count
         self.busywait = 0
-    
+
     def __str__(self):
         """Return Connection information"""
         if self.thesocket is None:
             return "Connection empty."
         return "Connection to Peer %s" % (self.peerid)
-    
+
     # deprecated
     def receive(self):
         with self.readlock:
@@ -152,7 +152,7 @@ class Connection():
                 msgstr = self.receive_n_bytes(msg_length)
                 msgdict = msgpack.unpackb(msgstr, use_list=False)
                 return parse_message(msgdict)
-            except IOError as inst:           
+            except IOError as inst:
                 return None
 
     # used only while receiving a very large message
@@ -211,7 +211,7 @@ class Connection():
                     yield parse_message(msgdict)
                 else:
                     break
-    
+
     def send(self, msg):
         with self.writelock:
             """pack and send a message on the Connection"""
@@ -239,7 +239,7 @@ class Connection():
             except AttributeError, e:
                 print "Socket deleted."
             return False
-    
+
     def settimeout(self, timeout):
         try:
             self.thesocket.settimeout(timeout)
@@ -251,4 +251,4 @@ class Connection():
     def close(self):
         """Close the Connection"""
         self.thesocket.close()
-        self.thesocket = None        
+        self.thesocket = None
