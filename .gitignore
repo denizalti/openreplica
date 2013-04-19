@@ -1,6 +1,6 @@
-src/build
-src/dist
-src/MANIFEST
+build
+dist
+MANIFEST
 secret
 planetlab_packages
 credentials.py
