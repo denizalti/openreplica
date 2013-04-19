@@ -39,7 +39,7 @@ setup(
     author='Deniz Altinbuken, Emin Gun Sirer',
     author_email='deniz@systems.cs.cornell.edu, egs@systems.cs.cornell.edu',
     packages=find_packages(),
-    data_files=[('/etc/bash_completion.d', ['scripts/bash_completion/concoord'])],
+    data_files=[('/etc/bash_completion.d', ['scripts/concoord.completion']),],
     license='3-Clause BSD',
     url='http://openreplica.org/',
     description='Coordination service for distributed systems.',

@@ -124,16 +124,16 @@ class Nameserver(Replica):
         return
 
     def aresponse(self, question=''):
-        for address in self.groups[NODE_REPLICA].get_only_addresses():
+        for address in get_addresses(self.replicas):
             yield address
 
     def nsresponse(self, question=''):
-        for address in self.groups[NODE_NAMESERVER].get_only_addresses():
+        for address in get_addresses(self.nameservers):
             yield address
         yield self.addr
 
     def srvresponse(self, question=''):
-        for address,port in self.groups[NODE_REPLICA].get_addresses():
+        for address,port in get_addressportpairs(self.replicas):
             yield address+self.ipconverter,port
 
     def txtresponse(self, question=''):
@@ -259,7 +259,7 @@ class Nameserver(Replica):
         if self.debug: self.logger.write("State", "Adding node: %s %s" % (node_names[nodetype], nodename))
         ipaddr,port = nodename.split(":")
         nodepeer = Peer(ipaddr,int(port),nodetype)
-        self.groups[nodetype].add(nodepeer)
+        self.groups[nodetype][nodepeer] = 0
         self.updaterevision()
         if self.servicetype == NS_SLAVE:
             self.updatemaster(nodepeer, add=True)
@@ -271,7 +271,7 @@ class Nameserver(Replica):
         if self.debug: self.logger.write("State", "Deleting node: %s %s" % (node_names[nodetype], nodename))
         ipaddr,port = nodename.split(":")
         nodepeer = Peer(ipaddr,int(port),nodetype)
-        self.groups[nodetype].remove(nodepeer)
+        del self.groups[nodetype][nodepeer]
         self.updaterevision()
         if self.servicetype == NS_SLAVE:
             self.updatemaster(nodepeer)
@@ -282,7 +282,7 @@ class Nameserver(Replica):
 
     def route53_a(self):
         values = []
-        for address in self.groups[NODE_REPLICA].get_only_addresses():
+        for address in get_addresses(self.replicas):
             values.append(address)
         return ','.join(values)
 
@@ -290,7 +290,7 @@ class Nameserver(Replica):
         values = []
         priority=0
         weight=100
-        for address,port in self.groups[NODE_REPLICA].get_addresses():
+        for address,port in get_addressportpairs(self.replicas):
             values.append('%d %d %d %s' % (priority, weight, port, address+self.ipconverter))
         return ','.join(values)
 
@@ -321,7 +321,7 @@ class Nameserver(Replica):
         values = []
         priority = 0
         weight = 100
-        for address,port in self.groups[NODE_REPLICA].get_addresses():
+        for address,port in get_addressportpairs(self.replicas):
             values.append('%d %d %d %s' % (priority, weight, port, address+self.ipconverter))
         return values
 
@@ -331,7 +331,7 @@ class Nameserver(Replica):
         nodes = {}
         for nodetype,group in self.groups.iteritems():
             nodes[nodetype] = set()
-            for address,port in self.groups[nodetype].get_addresses():
+            for address,port in get_addressportpairs(self.groups[nodetype]):
                 nodes[nodetype].add(address + ':' + str(port))
         nodes[self.type].add(self.addr + ':' + str(self.port))
         nscoord.updatesubdomain(str(self.mydomain), nodes)

@@ -104,7 +104,6 @@ class Node():
             # the os doesn't support epoll
             self.connectionpool.epoll = None
         self.alive = True
-        # initialize empty groups
         self.me = Peer(self.addr,self.port,self.type)
         # set id
         self.id = '%s:%d' % (self.addr, self.port)
