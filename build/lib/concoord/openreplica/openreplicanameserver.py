@@ -74,7 +74,7 @@ class OpenReplicaNameserver(Nameserver):
 
     def nsresponse(self, question):
         if question.name == self.mydomain or question.name.is_subdomain(self.specialdomain) or self.ismysubdomainname(question):
-            for address,port in self.groups[NODE_NAMESERVER].get_addresses():
+            for address,port in get_addressportpairs(self.nameservers):
                 yield address+self.ipconverter
             yield self.addr+self.ipconverter
         for nsdomain,nsaddr in OPENREPLICANS.iteritems():

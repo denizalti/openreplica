@@ -133,7 +133,6 @@ class Nameserver(Replica):
         yield self.addr
 
     def srvresponse(self, question=''):
-        print self.groups[NODE_REPLICA]
         for address,port in get_addressportpairs(self.replicas):
             yield address+self.ipconverter,port
 
@@ -260,7 +259,7 @@ class Nameserver(Replica):
         if self.debug: self.logger.write("State", "Adding node: %s %s" % (node_names[nodetype], nodename))
         ipaddr,port = nodename.split(":")
         nodepeer = Peer(ipaddr,int(port),nodetype)
-        self.groups[nodetype].add(nodepeer)
+        self.groups[nodetype][nodepeer] = 0
         self.updaterevision()
         if self.servicetype == NS_SLAVE:
             self.updatemaster(nodepeer, add=True)
@@ -272,7 +271,7 @@ class Nameserver(Replica):
         if self.debug: self.logger.write("State", "Deleting node: %s %s" % (node_names[nodetype], nodename))
         ipaddr,port = nodename.split(":")
         nodepeer = Peer(ipaddr,int(port),nodetype)
-        self.groups[nodetype].remove(nodepeer)
+        del self.groups[nodetype][nodepeer]
         self.updaterevision()
         if self.servicetype == NS_SLAVE:
             self.updatemaster(nodepeer)

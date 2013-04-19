@@ -171,7 +171,10 @@ class Replica(Node):
                     unblocked = {}
                 self.lock.acquire()
             except (TypeError, AttributeError) as t:
-                if self.debug: self.logger.write("Execution Error", "command not supported: %s" % str(commandname))
+                if self.debug: self.logger.write("Execution Error",
+                                                 "command not supported: %s" % str(commandname))
+                if self.debug: self.logger.write("Execution Error", "%s" % str(t))
+
                 givenresult = 'Method Does Not Exist: ', commandname
                 clientreplycode = CR_EXCEPTION
                 unblocked = {}
@@ -268,7 +271,10 @@ class Replica(Node):
                     unblocked = {}
                 self.lock.acquire()
         except (TypeError, AttributeError) as t:
-            if self.debug: self.logger.write("Execution Error", "command not supported: %s" % str(command))
+            if self.debug: self.logger.write("Execution Error",
+                                             "command not supported: %s" % str(command))
+            if self.debug: self.logger.write("Execution Error", "%s" % str(t))
+
             givenresult = 'Method Does Not Exist: ', commandname
             clientreplycode = CR_EXCEPTION
             unblocked = {}
