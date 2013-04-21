@@ -46,7 +46,12 @@ def start_node(nodetype):
     parser.add_argument("-d", "--debug", action="store_true", dest="debug", default=False,
                         help="debug on/off")
     args = parser.parse_args()
-
+    nodename = node_names[nodetype].lower()
+    node = getattr(__import__('concoord.'+nodename, globals(), locals(), -1), nodename.capitalize())()
+    node.startservice()
+    signal.signal(signal.SIGINT, node.terminate_handler)
+    signal.signal(signal.SIGTERM, node.terminate_handler)
+    signal.pause()
 
 def add_node():
     from concoord.openreplica.openreplicaaddnode import parser, args, start_node
