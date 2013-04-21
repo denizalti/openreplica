@@ -40,7 +40,7 @@ class Replica(Node):
                 self.object = None
 
             if not self.object:
-                if self.debug: self.logger.write("Object Error", "Object cannot be found.")
+                self.logger.write("Object Error", "Object cannot be found.")
                 self._graceexit(1)
             try:
                 self.token = getattr(self.object, '_%s__concoord_token' % self.objectname)

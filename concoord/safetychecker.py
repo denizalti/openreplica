@@ -12,7 +12,7 @@ class SafetyVisitor(ast.NodeVisitor):
     def __init__(self):
         self.safe = True
         self.classes = []
-    
+
     def generic_visit(self, node):
         if DEBUG:
             print "---", ast.dump(node)
@@ -29,7 +29,7 @@ class SafetyVisitor(ast.NodeVisitor):
     def visit_Exec(self, node):
         self.safe = False
         print "%d | Exec not allowed --> EXIT" % node.lineno
-        
+
     def visit_Call(self, node):
         if DEBUG:
             print 'Call : '

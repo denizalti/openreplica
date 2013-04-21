@@ -43,7 +43,7 @@ Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
       concoord/object/counter.py. Once you install ConCoord, you can
       create coordination objects and save them anywhere in your
       filesystem. To demonstrate this, we will save counter.py under
-      ~/foo/counter.py.
+      /foo/counter.py.
 
 	class Counter:
 	    def __init__(self):
@@ -65,7 +65,7 @@ Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
       To create concoord objects (to be used by the client and the
       server) you can use:
 
-      $ concoord object -f ~/foo/counter.py -c Counter -s
+      $ concoord object -f /foo/counter.py -c Counter -s
 
       Usage: concoord object -f objectfilepath -c classname -s safe
 
