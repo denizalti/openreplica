@@ -1,2 +1,0 @@
-"""concoord objects"""
-

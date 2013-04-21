@@ -1,2 +1,0 @@
-"""distributed threading objects"""
-

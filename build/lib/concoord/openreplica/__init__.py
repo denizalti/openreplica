@@ -1,2 +1,0 @@
-"""openreplica toolkit"""
-
