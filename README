@@ -77,13 +77,7 @@ Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
       This script will create a proxy file under the directory that the
       object resides (i.e. /foo/):
 
-      /foo/counter.pyproxy := the proxy that can be used like the original object by the client
-
-      Remember to rename the file back to the original filename
-      before you import them on the client side. To avoid confusion,
-      we will name the file counterproxy.py in this tutorial.
-
-      $ mv /foo/counter.pyproxy /foo/counterproxy.py
+      /foo/counterproxy.py := the proxy that can be used like the original object by the client
 
       Once you have created the objects, update your PYTHONPATH
       accordingly, so that the objects can be found and imported:
