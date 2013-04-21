@@ -23,29 +23,6 @@ concoord [initialize] - initializes a concoord instance with given number of nod
 concoord [object $objectfilepath $classname] - concoordifies a python object"
 
 def start_node(nodetype):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("REPLICA")
-    parser.add_argument("-a", "--addr", action="store", dest="addr",
-                        help="addr for the node")
-    parser.add_argument("-p", "--port", action="store", dest="port", type=int,
-                        help="port for the node")
-    parser.add_argument("-b", "--boot", action="store", dest="bootstrap",
-                        help="address:port:type triple for the bootstrap peer")
-    parser.add_argument("-o", "--objectname", action="store", dest="objectname", default='',
-                        help="client object dotted name")
-    parser.add_argument("-l", "--logger", action="store", dest="logger", default='',
-                        help="logger address")
-    parser.add_argument("-c", "--configpath", action="store", dest="configpath", default='',
-                        help="config file path")
-    parser.add_argument("-n", "--name", action="store", dest="domain", default='',
-                        help="domainname that the nameserver will accept queries for")
-    parser.add_argument("-t", "--type", action="store", dest="type", default='',
-                        help="1: Master Nameserver 2: Slave Nameserver (requires a Master) 3:Route53 (requires a Route53 zone)")
-    parser.add_argument("-m", "--master", action="store", dest="master", default='',
-                        help="ipaddr:port for the master nameserver")
-    parser.add_argument("-d", "--debug", action="store_true", dest="debug", default=False,
-                        help="debug on/off")
-    args = parser.parse_args()
     nodename = node_names[nodetype].lower()
     node = getattr(__import__('concoord.'+nodename, globals(), locals(), -1), nodename.capitalize())()
     node.startservice()
@@ -90,7 +67,6 @@ def check_object(clientcode):
 
 def concoordify():
     parser = argparse.ArgumentParser()
-    parser.add_argument("OBJECT")
     parser.add_argument("-f", "--objectfilepath", action="store", dest="objectfilepath",
                         help="client object file path")
     parser.add_argument("-c", "--classname", action="store", dest="classname",
@@ -103,6 +79,9 @@ def concoordify():
                         help="verbose option")
     args = parser.parse_args()
 
+    if not args.objectfilepath or not args.classname:
+        print parser.print_help()
+        return
     with open(args.objectfilepath, 'rU') as fd:
         clientcode = fd.read()
     if args.safe:
@@ -118,7 +97,7 @@ def concoordify():
     clientproxycode = createclientproxy(clientcode, args.classname,
                                         args.securitytoken)
     clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
-    proxyfile = open(args.objectfilepath+"proxy", 'w')
+    proxyfile = open(args.objectfilepath[:-3]+"proxy.py", 'w')
     proxyfile.write(clientproxycode)
     proxyfile.close()
     print "Client proxy file created with name: ", proxyfile.name
@@ -128,19 +107,20 @@ def main():
     if len(sys.argv) < 2:
         print HELPSTR
         sys.exit()
-        
-    sys.argv[1] = sys.argv[1].upper()
-    if sys.argv[1] == node_names[NODE_ACCEPTOR]:
+
+    eventtype = sys.argv[1].upper()
+    sys.argv.pop(1)
+    if eventtype == node_names[NODE_ACCEPTOR]:
         start_node(NODE_ACCEPTOR)
-    elif sys.argv[1] == node_names[NODE_REPLICA]:
+    elif eventtype == node_names[NODE_REPLICA]:
         start_node(NODE_REPLICA)
-    elif sys.argv[1] == node_names[NODE_NAMESERVER]:
+    elif eventtype == node_names[NODE_NAMESERVER]:
         start_node(NODE_NAMESERVER)
-    elif sys.argv[1] == 'ADDNODE':
+    elif eventtype == 'ADDNODE':
         add_node()
-    elif sys.argv[1] == 'INITIALIZE':
+    elif eventtype == 'INITIALIZE':
         initialize()
-    elif sys.argv[1] == 'OBJECT':
+    elif eventtype == 'OBJECT':
         concoordify()
     else:
         print HELPSTR

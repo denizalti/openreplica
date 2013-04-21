@@ -8,8 +8,6 @@ from setuptools import find_packages
 v = open(os.path.join(os.path.dirname(__file__), 'concoord', '__init__.py'), 'r')
 VERSION = re.match(r".*__version__ = '(.*?)'", v.read(), re.S).group(1)
 
-print find_packages()
-
 classifiers = [
     'Development Status :: 3 - Alpha',
     'Intended Audience :: Developers',
