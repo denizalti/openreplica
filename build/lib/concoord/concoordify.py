@@ -29,32 +29,3 @@ def check_object(clientcode):
     v = SafetyVisitor()
     v.visit(astnode)
     return v.safe
-
-def main():
-    try:
-        with open(args.objectfilepath, 'rU') as fd:
-            clientcode = fd.read()
-        if args.safe:
-            if args.verbose:
-                print "Checking object safety"
-            if not check_object(clientcode):
-                print "Object is not safe to execute."
-                os._exit(1)
-            elif args.verbose:
-                print "Object is safe!"
-        if args.verbose:
-            print "Creating clientproxy"
-        clientproxycode = createclientproxy(clientcode, args.classname,
-                                            args.securitytoken)
-        clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
-        proxyfile = open(args.objectfilepath+"proxy", 'w')
-        proxyfile.write(clientproxycode)
-        proxyfile.close()
-        print "Client proxy file created with name: ", proxyfile.name
-    except Exception as e:
-        if args.verbose:
-            print "Error: ", e
-        parser.print_help()
-
-if __name__=='__main__':
-    main()
