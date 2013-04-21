@@ -65,7 +65,7 @@ Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
       To create concoord objects (to be used by the client and the
       server) you can use:
 
-      $ concoord object -f /foo/counter.py -c Counter -s
+      $ concoord object -f ~/foo/counter.py -c Counter -s
 
       Usage: concoord object -f objectfilepath -c classname -s safe
 
