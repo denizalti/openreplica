@@ -36,7 +36,7 @@ class ProxyGen(ast.NodeTransformer):
         if self.classdepth == 1:
             for item in node.body:
                 if type(item) == _ast.FunctionDef and item.name == "__init__":
-                    item.name = "__concoordinit__"
+                    node.body.remove(item)
             # Add the new init method
             initfunc = compile("def __init__(self, bootstrap):\n\tself.proxy = ClientProxy(bootstrap, token=\"%s\")" % self.token,"<string>","exec",_ast.PyCF_ONLY_AST).body[0]
             node.body.insert(0, initfunc)
@@ -49,12 +49,12 @@ class ProxyGen(ast.NodeTransformer):
         if self.classdepth == 1:
             if node.name == "__init__":
                 pass
-            elif node.name == "__concoordinit__":
-                args = ["\'__init__\'"]+[i.id for i in node.args.args[1:]]
-                node.body = compile("return self.proxy.invoke_command(%s)" % ", ".join(args),"<string>","exec",_ast.PyCF_ONLY_AST).body
             else:
                 args = ["\'"+ node.name +"\'"]+[i.id for i in node.args.args[1:]]
-                node.body = compile("return self.proxy.invoke_command(%s)" % ", ".join(args),"<string>","exec",_ast.PyCF_ONLY_AST).body
+                node.body = compile("return self.proxy.invoke_command(%s)" % ", ".join(args),
+                                    "<string>",
+                                    "exec",
+                                    _ast.PyCF_ONLY_AST).body
             return node
         else:
             return self.generic_visit(node)

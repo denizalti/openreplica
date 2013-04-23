@@ -54,9 +54,19 @@ install ConCoord, you can create coordination objects and save them
 anywhere in your filesystem. To demonstrate this, we will save
 counter.py under /foo/counter.py.::
 
+While creationg ConCoord objects, the __init__ should not be used as a
+constructor. Replica nodes instantiate the ConCoord object as soon as
+they go live, before the client makes any calls to the object. So the
+user should specify a constructor method, __concoordinit__ by
+convention, to initialize the object with specific arguments, when
+necessary.
+
   class Counter:
     def __init__(self):
-      self.value = 0
+      pass
+
+    def __concoordinit__(self, value):
+     self.value = value
 
     def decrement(self):
       self.value -= 1
