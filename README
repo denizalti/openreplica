@@ -1,346 +1,261 @@
-%% README for ConCoord
-
-Name:		ConCoord
-Authors:	Deniz Altinbuken (deniz@systems.cs.cornell.edu)
-		Emin Gun Sirer (egs@systems.cs.cornell.edu)
-
-(1) OVERVIEW
-----------------
-	ConCoord is a novel coordination service that provides
-	replication and synchronization support for large-scale
-	distributed systems. ConCoord employs an object-oriented
-	approach, in which the system actively creates and maintains
-	live replicas for user-provided objects. Through ConCoord,
-	the clients are able to access these replicated objects
-	transparently as if they are local objects. ConCoord uses
-	these replicated objects to implement coordination and
-	synchronization constructs in large-scale distributed systems,
-	in effect establishing a transparent way of providing a
-	coordination service.
-
-(2) REQUIREMENTS
-----------------
-	The minimum requirements for ConCoord are:
-
-	- python 2.7.2 or later
-	- dnspython-1.9.4
-	- msgpack-python
+.. -*-restructuredtext-*-
 
-(2) INSTALLATION
-----------------
-	To build and install ConCoord, type
+=========
+ConCoord
+=========
 
-      	    $ python setup.py install
-
-(3) TUTORIAL
-----------------
-(3.0) Getting Started
-      To use ConCoord, first you need to create the local python
-      object to represent the state you want to replicate. To walk you
-      through the ConCoord approach, we will use one of the example
-      coordination objects we have provided, namely Counter. In the
-      source distribution you can locate the Counter object under
-      concoord/object/counter.py. Once you install ConCoord, you can
-      create coordination objects and save them anywhere in your
-      filesystem. To demonstrate this, we will save counter.py under
-      /foo/counter.py.
-
-	class Counter:
-	    def __init__(self):
-            	self.value = 0
-
-    	    def decrement(self):
-                self.value -= 1
+1 Overview
+============
+ConCoord is a novel coordination service that provides replication and synchronization support for large-scale distributed systems. ConCoord employs an object-oriented approach, in which the system actively creates and maintains live replicas for user-provided objects. Through ConCoord, the clients are able to access these replicated objects transparently as if they are local objects. ConCoord uses these replicated objects to implement coordination and synchronization constructs in large-scale distributed systems, in effect establishing a transparent way of providing a coordination service.
 
-    	    def increment(self):
-                self.value += 1
+:Authors:
+    Deniz Altinbuken (deniz@systems.cs.cornell.edu)
+    Emin Gun Sirer (egs@systems.cs.cornell.edu)
+:Version: 1.0.0
+:Date: 2013-04-13
 
-	    def getvalue(self):
-                return self.value
+2 Requirements
+================
+The minimum requirements for ConCoord are::
 
-	    def __str__(self):
-            	return "The counter value is %d" % self.value
+  - python 2.7.2 or later
+  - dnspython-1.9.4
+  - msgpack-python
 
-(3.1) Concoordifying Python Objects
-      To create concoord objects (to be used by the client and the
-      server) you can use:
+3 Installation
+================
+To build and install ConCoord, type::
 
-      $ concoord object -f /foo/counter.py -c Counter -s
+  sudo python setup.py install
 
-      Usage: concoord object -f objectfilepath -c classname -s safe
+4 Tutorial
+============
+4.0 Getting Started
+----------------------
+To use ConCoord, first you need to create the local python object to represent the state you want to replicate. To walk you through the ConCoord approach, we will use one of the example coordination objects we have provided, namely Counter. In the source distribution you can locate the Counter object under concoord/object/counter.py. Once you install ConCoord, you can create coordination objects and save them anywhere in your filesystem. To demonstrate this, we will save counter.py under /foo/counter.py.::
 
-      where,
-      objectfilepath := path of the object you want to concoordify
-      classname      := name of the class that you’ll use to access your object
-      safe 	     := boolean flag to include safety checks for the object
+  class Counter:
+    def __init__(self):
+      self.value = 0
 
-      This script will create a proxy file under the directory that the
-      object resides (i.e. /foo/):
+    def decrement(self):
+      self.value -= 1
 
-      /foo/counterproxy.py := the proxy that can be used like the original object by the client
+    def increment(self):
+      self.value += 1
 
-      Once you have created the objects, update your PYTHONPATH
-      accordingly, so that the objects can be found and imported:
+    def getvalue(self):
+      return self.value
 
-      $ export PYTHONPATH=$PYTHONPATH:/foo/
+    def __str__(self):
+      return "The counter value is %d" % self.value
 
-(3.2) Starting Nodes Manually
-      To start the system you need to start at least one replica and
-      one acceptor. To support bootstrapping through DNS queries, you
-      will also need at least one nameserver node that has the
-      necessary delegation set up for the address to they are
-      responsible for. Once the nameserver node is set up and you can
-      send dig queries to the nameserver and learn the node to
-      bootstrap, current set of nodes and current set of replicas.
+4.1 Concoordifying Python Objects
+---------------------------------
+To create concoord objects (to be used by the client and the server) you can use::
 
+  $ concoord object -f /foo/counter.py -c Counter -s
 
-      * For bootstrapping concoord requires at least one replica
-        node. If a nameserver node is up, bootstrap can be the
-        domainname for the concoord instance as new nodes can retrieve
-        the bootstrap node automatically through DNS queries. If the
-        nameserver is not running, bootstrap is a list of ipaddr:port
-        pairs.
+Usage: concoord object -f objectfilepath -c classname -s safe
 
-      * Note that for the system to be able to add new nodes and
-        accept client requests, there has to be at least one replica
-        and one acceptor node present initially.
+where,
+  objectfilepath := path of the object you want to concoordify
+  classname      := name of the class that you’ll use to access your object
+  safe 	         := boolean flag to include safety checks for the object
 
-(3.2.1) Starting Replica Nodes
-	To start the bootstrap replica node manually, use the
-	following command:
+This script will create a proxy file under the directory that the object resides (i.e. /foo/)::
 
-	$ concoord replica -f counter.py -c Counter
+/foo/counterproxy.py := the proxy that can be used like the original object by the client
 
-	Note that you can specify the port the replica binds to with
-	option -p, if not specified port defaults to the first
-	available port, randomly chosen between 14000 and 15000.
+Once you have created the objects, update your PYTHONPATH accordingly, so that the objects can be found and imported::
 
-	To start replica nodes to join an active concoord instance,
-	use the following command:
+  $ export PYTHONPATH=$PYTHONPATH:/foo/
 
-	$ concoord replica -f counter.py -c Counter -b ipaddr:port
+4.2 Starting Nodes Manually
+-----------------------------
+To start the system you need to start at least one replica and one acceptor. To support bootstrapping through DNS queries, you will also need at least one nameserver node that has the necessary delegation set up for the address to they are responsible for. Once the nameserver node is set up and you can send dig queries to the nameserver and learn the node to bootstrap, current set of nodes and current set of replicas.
 
-(3.2.2) Starting Acceptor Nodes
-        To start an acceptor node manually, use the following command:
+* For bootstrapping concoord requires at least one replica node. If a nameserver node is up, bootstrap can be the domainname for the concoord instance as new nodes can retrieve the bootstrap node automatically through DNS queries. If the nameserver is not running, bootstrap is a list of ipaddr:port pairs.
 
-	$ concoord acceptor -b ipaddr:port
+* Note that for the system to be able to add new nodes and accept client requests, there has to be at least one replica and one acceptor node present initially.
 
-(3.2.3) Starting Nameserver Nodes
-	There are three ways you can run a ConCoord Nameserver.
+4.2.1 Starting Replica Nodes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+To start the bootstrap replica node manually, use the following command::
 
-	* Standalone Nameserver Keeps track of the view and responds
-          to DNS queries itself. Requires su privileges to bind to
-          Port 53.
+  $ concoord replica -f counter.py -c Counter
 
-	* Slave Nameserver Keeps track of the view and updates a
-          master nameserver that answers to DNS queries on behalf of
-          the slave nameserver. Requires an active master nameserver.
+Note that you can specify the port the replica binds to with option -p, if not
+specified port defaults to the first available port, randomly chosen between
+14000 and 15000.
 
-	* Route53 Nameserver Keeps track of the view and updates an
-          Amazon Route53 account. Amazon Route53 answers to DNS
-          queries on behalf of the slave nameserver. Requires a
-          ready-to-use Amazon Route53 account.
+To start replica nodes to join an active concoord instance, use the following
+command::
 
-(3.2.3.1) Standalone Nameserver
-	  Before starting a standalone nameserver node manually, first
-	  make sure that you have at least one replica and one
-	  acceptor running. Once your replica and acceptor nodes are
-	  set up, you can start the nameserver to answer queries for
-	  counterdomain as follows:
+  $ concoord replica -f counter.py -c Counter -b ipaddr:port
 
+4.2.2 Starting Acceptor Nodes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+To start an acceptor node manually, use the following command::
 
-	  $ sudo concoord nameserver -n counterdomain -f counter.py -c Counter -b ipaddr:port -t 1
+  $ concoord acceptor -b ipaddr:port
 
-	  When you set up the nameserver delegations, you can send
-	  queries for counterdomain and see the most current set of
-	  nodes as follows:
+4.2.3 Starting Nameserver Nodes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+There are three ways you can run a ConCoord Nameserver.
 
+* Standalone Nameserver Keeps track of the view and responds to DNS queries itself. Requires su privileges to bind to Port 53.
 
-	  $ dig -t a counterdomain                   # returns set of Replicas
+* Slave Nameserver Keeps track of the view and updates a master nameserver that answers to DNS queries on behalf of the slave nameserver. Requires an active master nameserver.
 
-	  $ dig -t srv _concoord._tcp.counterdomain  # returns set of Replicas with ports
+* Route53 Nameserver Keeps track of the view and updates an Amazon Route53 account. Amazon Route53 answers to DNS queries on behalf of the slave nameserver. Requires a ready-to-use Amazon Route53 account.
 
-	  $ dig -t txt counterdomain                 # returns set of all nodes
+4.2.3.1 Standalone Nameserver
++++++++++++++++++++++++++++++++
+Before starting a standalone nameserver node manually, first make sure that you have at least one replica and one acceptor running. Once your replica and acceptor nodes are set up, you can start the nameserver to answer queries for counterdomain as follows::
 
-	  $ dig -t ns counterdomain                  # returns set of nameservers
+  $ sudo concoord nameserver -n counterdomain -f counter.py -c Counter -b ipaddr:port -t 1
 
-(3.2.3.2) Slave Nameserver
-	  Before starting a slave nameserver node manually, you should
-	  have a master nameserver set up and running. The master
-	  nameserver should be set up to answer the queries for its
-	  slave nameservers. We provide OpenReplica Nameserver as a
-	  ready to deploy master nameserver and a Nameserver
-	  Coordination Object in our example objects set to keep track
-	  of slave nameserver information. Using this coordination
-	  object, the master nameserver can keep track of its slave
-	  nameserver delegations and the slave nameserver can update
-	  the master every time the view of its system changes.
+When you set up the nameserver delegations, you can send queries for counterdomain and see the most current set of nodes as follows::
 
+  $ dig -t a counterdomain                   # returns set of Replicas
 
-	  Once your master nameserver is set up, you can start the
-	  slave nameserver as follows:
+  $ dig -t srv _concoord._tcp.counterdomain  # returns set of Replicas with ports
 
+  $ dig -t txt counterdomain                 # returns set of all nodes
 
-	  $ concoord nameserver -n counterdomain -f counter.py -c Counter -b ipaddr:port -t 2 -m masterdomain
+  $ dig -t ns counterdomain                  # returns set of nameservers
 
-	  When the slave nameserver starts running, you can send
-	  queries for counterdomain and see the most current set of
-	  nodes as follows:
+4.2.3.2 Slave Nameserver
+++++++++++++++++++++++++++
+Before starting a slave nameserver node manually, you should have a master nameserver set up and running. The master nameserver should be set up to answer the queries for its slave nameservers. We provide OpenReplica Nameserver as a ready to deploy master nameserver and a Nameserver Coordination Object in our example objects set to keep track of slave nameserver information. Using this coordination object, the master nameserver can keep track of its slave nameserver delegations and the slave nameserver can update the master every time the view of its system changes.
 
+Once your master nameserver is set up, you can start the slave nameserver as follows::
 
-	  $ dig -t a counterdomain                   # returns set of Replicas
+  $ concoord nameserver -n counterdomain -f counter.py -c Counter -b ipaddr:port -t 2 -m masterdomain
 
-	  $ dig -t srv _concoord._tcp.counterdomain  # returns set of Replicas with ports
+When the slave nameserver starts running, you can send queries for counterdomain and see the most current set of nodes as follows::
 
-	  $ dig -t txt counterdomain                 # returns set of all nodes
+  $ dig -t a counterdomain                   # returns set of Replicas
 
-	  $ dig -t ns counterdomain                  # returns set of nameservers
+  $ dig -t srv _concoord._tcp.counterdomain  # returns set of Replicas with ports
 
-(3.2.3.3) Amazon Route 53 Nameserver
-	  Before starting a nameserver connected to Amazon Route 53,
-	  you should have a Route 53 account set up and ready to
-	  receive requests. After your Route 53 account is ready, the
-	  nameserver can update the master every time the view of its
-	  system changes automatically.
+  $ dig -t txt counterdomain                 # returns set of all nodes
 
-	  To use Amazon Route 53 you can pass your credentials into
-	  the methods that create connections or edit them in the
-	  configuration file.
+  $ dig -t ns counterdomain                  # returns set of nameservers
 
-	  * AWS_ACCESS_KEY_ID - Your AWS Access Key ID
-	  * AWS_SECRET_ACCESS_KEY - Your AWS Secret Access Key
+4.2.3.3 Amazon Route 53 Nameserver
+Before starting a nameserver connected to Amazon Route 53, you should have a Route 53 account set up and ready to receive requests. After your Route 53 account is ready, the nameserver can update the master every time the view of its system changes automatically.
 
-	  Once you make sure that your Route53 account is set up and
-	  your credentials are updated, you can start the nameserver
-	  as follows:
+To use Amazon Route 53 you can pass your credentials into the methods that create connections or edit them in the configuration file.
 
+* AWS_ACCESS_KEY_ID - Your AWS Access Key ID
+* AWS_SECRET_ACCESS_KEY - Your AWS Secret Access Key
 
-	  $ concoord nameserver -n counterdomain -f counter.py -c Counter -b ipaddr:port -t 3 -o configfilepath
+Once you make sure that your Route53 account is set up and your credentials are updated, you can start the nameserver as follows::
 
-(3.3) Starting Nodes Automatically
-      We have a script we use for openreplica.org to start desired
-      number of nodes on PlanetLab servers automatically. This script
-      is included for your reference.
+  $ concoord nameserver -n counterdomain -f counter.py -c Counter -b ipaddr:port -t 3 -o configfilepath
 
-      concoord/openreplica/openreplicainitializer.py
+4.3 Starting Nodes Automatically
+----------------------------------
+We have a script we use for openreplica.org to start desired number of nodes on PlanetLab servers automatically. This script is included for your reference under concoord/openreplica/openreplicainitializer.py
 
-      * Note that the script requires host and user-specific credentials and you will have to edit the script for your own use.
+* Note that the script requires host and user-specific credentials and you will have to edit the script for your own use.
+* Note that the nameserver nodes are started in the slave mode.
 
-      * Note that the nameserver nodes are started in the slave mode.
+You can run the script as follows::
 
-      You can run the script as follows:
+  $ concoord initialize -s counterdomain -f /foo/counter.py -c Counter -r 3 -a 3 -n 3
 
-      $ concoord initialize -s counterdomain -f /foo/counter.py -c
-      Counter -r 3 -a 3 -n 3
+4.4 Adding Nodes Automatically
+--------------------------------
+We also have a script we use for openreplica.org to add nodes on PlanetLab servers automatically. This script is included for your reference under concoord/openreplica/openreplicaaddnode.py
 
-(3.4) Adding Nodes Automatically
-      We also have a script we use for openreplica.org to add nodes on
-      PlanetLab servers automatically. This script is included for
-      your reference.
+Note that the script requires host and user-specific credentials and you will have to edit the script for your own use.
 
-      concoord/openreplica/openreplicaaddnode.py
+You can run the script as follows::
 
-      * Note that the script requires host and user-specific
-        credentials and you will have to edit the script for your own
-        use.
+  $ concoord addnode -t nodetype -s counterdomain -f /foo/counter.py -c Counter -b bootstrap
 
-      You can run the script as follows:
+where,
+  nodetype := 1 for Acceptor, 2 for Replica, 3 for Nameserver
+  bootstrap := ipaddr:port or domainname for an instance that has a nameserver
 
-      $ concoord addnode -t nodetype -s counterdomain -f /foo/counter.py -c Counter -b bootstrap
+4.5 Connecting to ConCoord Objects
+------------------------------------
+Once you have concoord up and running for your object, it is easy to access your object.
 
-      where,
-      nodetype := 1 for Acceptor, 2 for Replica, 3 for Nameserver
-      bootstrap := ipaddr:port or domainname for an instance that has a nameserver
+Now we will use the proxy object we generated at (3.1) and saved under /foo/concoordproxy.py. Now you can import and use this proxy object in your code. Depending on how you set your nameserver node up, you can access your object with the ipaddr:port pair or the domainname.
 
-(3.5) Connecting to ConCoord Objects
-      Once you have concoord up and running for your object, it is
-      easy to access your object.
+  >>> from counterproxy import Counter
+  >>> c = Counter(domainname)
+  >>> c.increment()
+  >>> c.increment()
+  >>> c.getvalue()
+  2
 
-      Now we will use the proxy object we generated at (3.1) and saved
-      under /foo/concoordproxy.py. Now you can import and use this
-      proxy object in your code. Depending on how you set your
-      nameserver node up, you can access your object with the
-      ipaddr:port pair or the domainname.
+  *Note that the objects on the Replica side are initialized without parameters. For you this has two implications:
 
-      >>> from counterproxy import Counter
-      >>> c = Counter(domainname)
-      >>> c.increment()
-      >>> c.increment()
-      >>> c.getvalue()
-      2
+  1) While implementing your objects you should create your __init__ functions to be called without parameters.
 
-      *Note that the objects on the Replica side are initialized
-      without parameters. For you this has two implications:
+  2) Keep in mind that when you initialize an object through the proxy, it only connects to the specified bootstrap, it does not reinitialize the object. This way multiple clients can connect to the same object using their proxies without reinitializing the object.
 
-      1) While implementing your objects you should create your __init__
-      functions to be called without parameters.
+  3) At any point to reinitialize an object after it is deployed on replicas, you should call __concoordinit__ function:
 
-      2) Keep in mind that when you initialize an object through the proxy,
-      it only connects to the specified bootstrap, it does not reinitialize
-      the object. This way multiple clients can connect to the same object
-      using their proxies without reinitializing the object.
+  >>> from counterproxy import Counter
+  >>> c = Counter(domainname)
+  >>> c.increment()
+  >>> c.__concoordinit__()
+  >>> c.increment()
+  >>> c.getvalue()
+  1
 
-      3) At any point to reinitialize an object after it is deployed
-      on replicas, you should call __concoordinit__ function:
+5 ADVANCED TUTORIAL
+=====================
+5.1 Creating Source Bundles
+-----------------------------
+You can create bundles to use at the server and client sides using the Makefile provided under concoord/
 
-      >>> from counterproxy import Counter
-      >>> c = Counter(domainname)
-      >>> c.increment()
-      >>> c.__concoordinit__()
-      >>> c.increment()
-      >>> c.getvalue()
-      1
+Remember to add the objects you have created in these bundles.
 
-(4) ADVANCED TUTORIAL
-----------------
-(4.1) Creating Source Bundles
-      You can create bundles to use at the server and client sides
-      using the Makefile provided under concoord/
+5.1.1 Creating A Server Bundle
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+To create a bundle that can run replica, acceptor and nameserver nodes::
 
-      Remember to add the objects you have created in these bundles.
+  $ make server
 
-(4.1.1) Creating A Server Bundle
-	To create a bundle that can run replica, acceptor and
-	nameserver nodes:
+5.1.2 Creating A Client Bundle
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+To create a bundle that can run a client and connect to an existing ConCoord instance:
 
-	$ make server
+  $ make client
 
-(4.1.2) Creating A Client Bundle
-	To create a bundle that can run a client and connect to an
-	existing ConCoord instance:
+5.2 Logging
+-------------
+We have two kinds of loggers for ConCoord::
+* Console Logger
+* Network Logger
 
-	$ make client
+Both of these loggers are included under utils.py
+To start the NetworkLogger, use the logdaemon.py on the host you want to keep the Logger.
 
-(4.2) Logging
-      We have two kinds of loggers for ConCoord:
-      * Console Logger
-      * Network Logger
+5.3 Synchronization & Threading
+---------------------------------
+ConCoord provides a distributed and fault-tolerant threading library. The library includes:
 
-      Both of these loggers are included under utils.py
-      To start the NetworkLogger, use the logdaemon.py on the host you
-      want to keep the Logger.
+*  Lock
+*  RLock
+*  Semaphore
+*  BoundedSemaphore
+*  Barrier
+*  Condition
 
-(4.3) Synchronization & Threading
-      ConCoord provides a distributed and fault-tolerant threading
-      library. The library includes:
+The implementations of distributed synchronization objects follow the implementations in the Python threading library.
 
-      Lock
-      RLock
-      Semaphore
-      BoundedSemaphore
-      Barrier
-      Condition
+(6) HOMEPAGE
+============
+Visit http://openreplica.org to see concoord in action and to get more information on concoord.
 
-      The implementations of distributed synchronization objects
-      follow the implementations in the Python threading library.
-
-(5) HOMEPAGE
-----------------
-Visit http://openreplica.org to see concoord in action and to get more
-information on concoord.
-
-(6) CONTACT
-----------------
-If you believe you have found a bug or have a problem you need
-assistance with, you can get in touch with us by emailing
-concoord@systems.cs.cornell.edu
+(7) CONTACT
+===========
+If you believe you have found a bug or have a problem you need assistance with, you can get in touch with us by emailing concoord@systems.cs.cornell.edu
