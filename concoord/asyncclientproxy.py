@@ -6,7 +6,7 @@
 import socket, os, sys, time, random, threading, select
 from threading import Thread, Condition, RLock, Lock
 import pickle
-from pack import *
+from concoord.pack import *
 from concoord.enums import *
 from concoord.utils import *
 from concoord.exception import *

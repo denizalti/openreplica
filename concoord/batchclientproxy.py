@@ -5,7 +5,7 @@
 '''
 import os, sys, random, socket, time
 from threading import Thread, Condition, Lock
-from pack import *
+from concoord.pack import *
 from concoord.enums import *
 from concoord.utils import *
 from concoord.exception import *
