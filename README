@@ -73,27 +73,26 @@ counter.py under /foo/counter.py.::
 4.1 Concoordifying Python Objects
 ---------------------------------
 
+Once you have created the object, update your PYTHONPATH accordingly,
+so that the objects can be found and imported::
+
+  $ export PYTHONPATH=$PYTHONPATH:/foo/
+
 To create concoord objects (to be used by the client and the server)
 you can use::
 
-  $ concoord object -f /foo/counter.py -c Counter -s
+  $ concoord object -o counter.Counter -s
 
-Usage: concoord object -f objectfilepath -c classname -s safe
+Usage: concoord object -o objectname -s safe
 
 where,
-  objectfilepath := path of the object you want to concoordify
-  classname      := name of the class that you’ll use to access your object
+  objectname     := dotted of the object you want to concoordify
   safe 	         := boolean flag to include safety checks for the object
 
 This script will create a proxy file under the directory that the
 object resides (i.e. /foo/)::
 
 /foo/counterproxy.py := the proxy that can be used by the client
-
-Once you have created the objects, update your PYTHONPATH accordingly,
-so that the objects can be found and imported::
-
-  $ export PYTHONPATH=$PYTHONPATH:/foo/
 
 4.2 Starting Nodes Manually
 -----------------------------
