@@ -287,7 +287,6 @@ class Node():
         self.connectionpool.epoll.close()
 
     def use_select(self):
-        if self.debug: self.logger.write("State", "Using select..")
         while self.alive:
             try:
                 inputready,outputready,exceptready = select.select(self.connectionpool.activesockets,
