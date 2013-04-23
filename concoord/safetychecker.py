@@ -6,7 +6,7 @@
 import ast, _ast
 DEBUG = False
 
-blacklist = ["open","setattr","getattr","compile","exec","eval","execfile", "globals"]
+blacklist = ["open","setattr","getattr","compile","exec","eval","execfile", "globals", "type"]
 
 class SafetyVisitor(ast.NodeVisitor):
     def __init__(self):

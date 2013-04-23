@@ -67,10 +67,8 @@ def check_object(clientcode):
 
 def concoordify():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--objectfilepath", action="store", dest="objectfilepath",
-                        help="client object file path")
-    parser.add_argument("-c", "--classname", action="store", dest="classname",
-                        help="main class name")
+    parser.add_argument("-o", "--objectname", action="store", dest="objectname", default='',
+                        help="client object dotted name")
     parser.add_argument("-s", "--safe", action="store_true", dest="safe", default=False,
                         help="safety checking on/off")
     parser.add_argument("-t", "--token", action="store", dest="securitytoken", default=None,
@@ -79,10 +77,20 @@ def concoordify():
                         help="verbose option")
     args = parser.parse_args()
 
-    if not args.objectfilepath or not args.classname:
+    if not args.objectname:
         print parser.print_help()
         return
-    with open(args.objectfilepath, 'rU') as fd:
+    import importlib
+    objectloc,a,classname = args.objectname.rpartition('.')
+    object = None
+    try:
+        module = importlib.import_module(objectloc)
+        if hasattr(module, classname):
+            object = getattr(module, classname)()
+    except (ValueError, ImportError, AttributeError):
+        print "Can't find module %s, check your PYTHONPATH." % objectloc
+
+    with open(module.__file__[:-1], 'rU') as fd:
         clientcode = fd.read()
     if args.safe:
         if args.verbose:
@@ -94,10 +102,10 @@ def concoordify():
             print "Object is safe!"
     if args.verbose:
         print "Creating clientproxy"
-    clientproxycode = createclientproxy(clientcode, args.classname,
+    clientproxycode = createclientproxy(clientcode, classname,
                                         args.securitytoken)
     clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
-    proxyfile = open(args.objectfilepath[:-3]+"proxy.py", 'w')
+    proxyfile = open(module.__file__[:-4]+"proxy.py", 'w')
     proxyfile.write(clientproxycode)
     proxyfile.close()
     print "Client proxy file created with name: ", proxyfile.name
