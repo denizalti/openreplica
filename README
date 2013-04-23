@@ -7,20 +7,19 @@ ConCoord
 1 Overview
 ============
 
-ConCoord is a novel coordination service that
-provides replication and synchronization support for large-scale
-distributed systems. ConCoord employs an object-oriented approach, in
-which the system actively creates and maintains live replicas for
-user-provided objects. Through ConCoord, the clients are able to
-access these replicated objects transparently as if they are local
-objects. ConCoord uses these replicated objects to implement
-coordination and synchronization constructs in large-scale distributed
-systems, in effect establishing a transparent way of providing a
-coordination service.
+ConCoord is a novel coordination service that provides replication and
+synchronization support for large-scale distributed systems. ConCoord
+employs an object-oriented approach, in which the system actively
+creates and maintains live replicas for user-provided objects. Through
+ConCoord, the clients are able to access these replicated objects
+transparently as if they are local objects. ConCoord uses these
+replicated objects to implement coordination and synchronization
+constructs in large-scale distributed systems, in effect establishing
+a transparent way of providing a coordination service.
 
 :Authors:
-    Deniz Altinbuken (deniz@systems.cs.cornell.edu)
-    Emin Gun Sirer (egs@systems.cs.cornell.edu)
+    - Deniz Altinbuken (deniz@systems.cs.cornell.edu)
+    - Emin Gun Sirer (egs@systems.cs.cornell.edu)
 :Version: 1.0.0
 :Date: 2013-04-13
 
@@ -122,16 +121,17 @@ current set of replicas.
 
 To start the bootstrap replica node manually, use the following command::
 
-  $ concoord replica -f counter.py -c Counter
+  $ concoord replica -o counter.Counter
 
-Note that you can specify the port the replica binds to with option
--p, if not specified port defaults to the first available port,
-randomly chosen between 14000 and 15000.
+Note that you can specify the port and the address the replica binds
+to with options -p and -a respectively. If not specified port defaults
+to the first available port, randomly chosen between 14000 and 15000
+and the address is determined automatically.
 
 To start replica nodes to join an active concoord instance, use the
 following command::
 
-  $ concoord replica -f counter.py -c Counter -b ipaddr:port
+  $ concoord replica -o counter.Counter -b ipaddr:port
 
 4.2.2 Starting Acceptor Nodes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -165,7 +165,7 @@ that you have at least one replica and one acceptor running. Once your
 replica and acceptor nodes are set up, you can start the nameserver to
 answer queries for counterdomain as follows::
 
-  $ sudo concoord nameserver -n counterdomain -f counter.py -c Counter -b ipaddr:port -t 1
+  $ sudo concoord nameserver -n counterdomain -o counter.Counter -b ipaddr:port -t 1
 
 When you set up the nameserver delegations, you can send queries for
 counterdomain and see the most current set of nodes as follows::
@@ -194,7 +194,7 @@ the view of its system changes.
 Once your master nameserver is set up, you can start the slave
 nameserver as follows::
 
-  $ concoord nameserver -n counterdomain -f counter.py -c Counter -b ipaddr:port -t 2 -m masterdomain
+  $ concoord nameserver -n counterdomain -o counter.Counter -b ipaddr:port -t 2 -m masterdomain
 
 When the slave nameserver starts running, you can send queries for
 counterdomain and see the most current set of nodes as follows::
@@ -224,7 +224,7 @@ that create connections or edit them in the configuration file.
 Once you make sure that your Route53 account is set up and your
 credentials are updated, you can start the nameserver as follows::
 
-  $ concoord nameserver -n counterdomain -f counter.py -c Counter -b ipaddr:port -t 3 -o configfilepath
+  $ concoord nameserver -n counterdomain -o counter.Counter -b ipaddr:port -t 3 -o configfilepath
 
 4.3 Starting Nodes Automatically
 ----------------------------------
