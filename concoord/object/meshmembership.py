@@ -8,9 +8,6 @@ from concoord.exception import *
 from concoord.threadingobject.drlock import DRLock
 
 class MeshMembership():
-    def __init__(self):
-        pass
-
     def __concoordinit__(self):
         self.groups = {}
 

@@ -4,9 +4,6 @@
 @copyright: See LICENSE
 """
 class Stack:
-    def __init__(self):
-        pass
-
     def __concoordinit__(self):
         self.stack = []
 

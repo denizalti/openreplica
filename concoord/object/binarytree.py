@@ -4,9 +4,6 @@
 @copyright: See LICENSE
 """
 class BinaryTree:
-    def __init__(self):
-        pass
-
     def __concoordinit__(self):
         self.root = None
 

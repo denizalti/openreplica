@@ -7,9 +7,6 @@ MSG_PING = 8
 PING_DELAY = 10
 
 class Pinger():
-    def __init__(self):
-        pass
-
     def __concoordinit__(self):
         self.members = set()
         self.membership_condition = DCondition()

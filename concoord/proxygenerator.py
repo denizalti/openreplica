@@ -39,8 +39,7 @@ class ProxyGen(ast.NodeTransformer):
                     node.body.remove(item)
             # Add the new init method
             initfunc = compile("def __init__(self, bootstrap):\n"
-                               "\tself.proxy = ClientProxy(bootstrap, token=\"%s\")\n"
-                               "\treturn self.proxy.invoke_command('__init__')"% self.token,
+                               "\tself.proxy = ClientProxy(bootstrap, token=\"%s\")" % self.token,
                                "<string>",
                                "exec",
                                _ast.PyCF_ONLY_AST).body[0]

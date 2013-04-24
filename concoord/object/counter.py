@@ -4,9 +4,6 @@
 @copyright: See LICENSE
 """
 class Counter
-    def __init__(self):
-        pass
-
     def __concoordinit__(self):
         self.value = 0
 

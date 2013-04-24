@@ -4,9 +4,6 @@
 @copyright: See LICENSE
 """
 class Queue:
-    def __init__(self):
-        pass
-
     def __concoordinit__(self):
         self.queue = []
 
