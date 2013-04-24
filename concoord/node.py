@@ -59,7 +59,7 @@ class Node():
                  port=args.port,
                  givenbootstraplist=args.bootstrap,
                  debugoption=args.debug,
-                 interactiveoption=args.debug,
+                 interactiveoption=args.interactive,
                  objectname=args.objectname,
                  instantiateobj=False,
                  configpath=args.configpath,
