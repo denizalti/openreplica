@@ -10,9 +10,6 @@ def pairwise(iterable):
     return izip(a, a)
 
 class NameserverCoord():
-    def __init__(self):
-        pass
-
     def __concoordinit__(self):
         self._nodes = {}
 

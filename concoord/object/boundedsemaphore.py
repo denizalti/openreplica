@@ -10,9 +10,6 @@ class BoundedSemaphore():
     - acquire: locks the object
     - release: unlocks the object
     """
-    def __init__(self):
-        pass
-
     def __concoordinit__(self, count=1):
         self.semaphore = DBoundedSemaphore(count)
 

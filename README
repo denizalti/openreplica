@@ -61,12 +61,10 @@ the client makes any calls to the object. So, the user should specify
 a constructor method, __concoordinit__ by convention, to initialize
 the object with specific arguments and keep in mind that the __init__
 method will be overwritten by binary rewriting when the proxy is
-created.
+created. In the example Counter object the __init__ method is not used
+following this convention.
 
   class Counter:
-    def __init__(self):
-      pass
-
     def __concoordinit__(self, value):
      self.value = value
 
@@ -289,17 +287,17 @@ access your object with the ipaddr:port pair or the domainname.
   >>> c.getvalue()
   2
 
-Note that the objects on the Replica side are initialized without
-parameters. For you this has two implications:
+Note that the objects on the Replica side are instantiated without
+any arguments. For you this has three implications:
 
-  1) While implementing your objects you should create your __init__
-  functions to be called without parameters.
+  1) While implementing your objects you should omit using the
+  __init__ method and implement a __concoordinit__ method instead.
 
-  2) Keep in mind that when you initialize an object through the
-  proxy, it only connects to the specified bootstrap, it does not
-  reinitialize the object. This way multiple clients can connect to
-  the same object using their proxies without reinitializing the
-  object.
+  2) You should keep in mind that when you initialize an object
+  through the proxy, it only connects to the specified bootstrap, it
+  does not reinitialize the object. This way multiple clients can
+  connect to the same object using their proxies without
+  reinitializing the object.
 
   3) At any point to reinitialize an object after it is deployed on
   replicas, you should call __concoordinit__ function:

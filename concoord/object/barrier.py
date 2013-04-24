@@ -7,9 +7,6 @@ from threading import Lock
 from concoord.threadingobject.dcondition import DCondition
 
 class Barrier():
-    def __init__(self):
-        pass
-
     def __concoordinit__(self, count=1):
         self.count = int(count)
         self.current = 0

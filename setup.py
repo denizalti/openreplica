@@ -36,6 +36,7 @@ setup(
         'console_scripts': ['concoord = concoord.main:main',]
     },
     install_requires=[
+        'python>=2.7',
         'msgpack-python',
         'dnspython',
     ],
