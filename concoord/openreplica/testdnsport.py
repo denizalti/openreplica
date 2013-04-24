@@ -19,6 +19,6 @@ def testdnsport():
         return 1
     thesocket.close()
     return 0
-    
+
 if __name__=='__main__':
     sys.exit(testdnsport())

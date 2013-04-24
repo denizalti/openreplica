@@ -90,7 +90,11 @@ def concoordify():
     except (ValueError, ImportError, AttributeError):
         print "Can't find module %s, check your PYTHONPATH." % objectloc
 
-    with open(module.__file__[:-1], 'rU') as fd:
+    if module.__file__.endswith('pyc'):
+        filename = module.__file__[:-1]
+    else:
+        filename = module.__file__
+    with open(filename, 'rU') as fd:
         clientcode = fd.read()
     if args.safe:
         if args.verbose:
@@ -105,7 +109,7 @@ def concoordify():
     clientproxycode = createclientproxy(clientcode, classname,
                                         args.securitytoken)
     clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
-    proxyfile = open(module.__file__[:-4]+"proxy.py", 'w')
+    proxyfile = open(filename[:-3]+"proxy.py", 'w')
     proxyfile.write(clientproxycode)
     proxyfile.close()
     print "Client proxy file created with name: ", proxyfile.name

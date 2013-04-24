@@ -55,7 +55,7 @@ def check_planetlab_dnsport(plconn, node):
     return success,output
 
 def check_planetlab_pythonversion(plconn, node):
-    pathtopvtester = CONCOORD_HELPERDIR+'testpythonversion.py' 
+    pathtopvtester = CONCOORD_HELPERDIR+'testpythonversion.py'
     plconn.uploadone(node, pathtopvtester)
     terminated, output = plconn.executecommandone(node, NPYTHONPATH + " testpythonversion.py")
     success = terminated and output[STDERR] == ''
@@ -164,7 +164,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             replicaname = replica.getHosts()[0]+':'+str(port)
             processnames.append((NODE_REPLICA, replicaname))
             print "Replica #%d is started: %s" % (i+1, replicaname)
-    
+
     # locate the PlanetLab node for acceptors, check the nodes, upload object and start the nodes
     for i in range(numacceptors):
         success = False
@@ -266,6 +266,6 @@ def main():
     print clientproxycode
     print 'DONE'
     return 0
-    
+
 if __name__=='__main__':
     main()

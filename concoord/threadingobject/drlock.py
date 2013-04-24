@@ -35,7 +35,7 @@ class DRLock():
             if self.__owner != _concoord_command.client:
                 raise RuntimeError("cannot release un-acquired lock")
             self.__count -= 1
-                
+
             if self.__count == 0 and len(self.__queue) > 0:
                 self.__count += 1
                 unblockcommand = self.__queue.pop(0)
@@ -56,4 +56,4 @@ class DRLock():
 
     def __str__(self):
         return "<%s object>" % (self.__class__.__name__)
-    
+

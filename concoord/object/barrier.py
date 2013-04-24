@@ -7,7 +7,10 @@ from threading import Lock
 from concoord.threadingobject.dcondition import DCondition
 
 class Barrier():
-    def __init__(self, count=1):
+    def __init__(self):
+        pass
+
+    def __concoordinit__(self, count=1):
         self.count = int(count)
         self.current = 0
         self.condition = DCondition()
@@ -21,10 +24,10 @@ class Barrier():
             self.current = 0
             self.condition.notifyAll(_concoord_command)
         self.condition.release(_concoord_command)
-        
+
     def __str__(self):
         return "<%s object>" % (self.__class__.__name__)
-        
-    
-        
-        
+
+
+
+

@@ -9,6 +9,9 @@ from concoord.threadingobject.drlock import DRLock
 
 class MeshMembership():
     def __init__(self):
+        pass
+
+    def __concoordinit__(self):
         self.groups = {}
 
     def get_group_members(self, gname):
@@ -86,7 +89,7 @@ class MeshMembership():
                 return (self.groups[gname].get_members(), self.groups[gname].get_epoch())
         else:
             raise KeyError(gname)
-        
+
     def __str__(self):
         return "\n".join([str(n)+': '+str(s) for n,s in self.groups.iteritems()])
 
@@ -101,7 +104,7 @@ class Group():
         # a lock and it doesn't provide synchronization.
         self.__waiters = [] # This will always include self.members.keys() wait commands
         self.__atomic = RLock()
-        
+
     def wait(self, _concoord_command):
         # put the caller on waitinglist and take the lock away
         with self.__atomic:
@@ -145,7 +148,7 @@ class Group():
 
     def inc_epoch(self):
         self._epoch += 1
-        
+
     def __str__(self):
         t = "Epoch: %d " % self._epoch
         t += "Minimum Size: %d " % self._minsize

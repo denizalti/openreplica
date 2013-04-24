@@ -5,8 +5,11 @@
 """
 class BinaryTree:
     def __init__(self):
+        pass
+
+    def __concoordinit__(self):
         self.root = None
-    
+
     def add_node(self, data):
         return Node(data)
 
@@ -19,7 +22,7 @@ class BinaryTree:
             else:
                 root.right = self.insert(root.right, data)
             return root
-        
+
     def find(self, root, target):
         if root == None:
             return False
@@ -43,7 +46,7 @@ class BinaryTree:
                     return self.delete(root.left, target)
                 else:
                     return self.delete(root.right, target)
-        
+
     def get_min(self, root):
         while(root.left != None):
             root = root.left
@@ -61,7 +64,7 @@ class BinaryTree:
             ldepth = self.get_depth(root.left)
             rdepth = self.get_depth(root.right)
             return max(ldepth, rdepth) + 1
-            
+
     def get_size(self, root):
         if root == None:
             return 0
@@ -74,6 +77,6 @@ class Node:
         self.right = None
         self.data = data
 
-    
-        
-        
+
+
+

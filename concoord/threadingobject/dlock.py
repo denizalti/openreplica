@@ -23,7 +23,7 @@ class DLock():
                 self.__queue.append(_concoord_command)
                 raise BlockingReturn()
             else:
-                self.__locked = True          
+                self.__locked = True
                 self.__owner = _concoord_command.client
 
     def release(self, _concoord_command):
@@ -40,7 +40,7 @@ class DLock():
             elif len(self.__queue) == 0:
                 self.__owner = None
                 self.__locked = False
-                
+
     def __str__(self):
         return "<%s object>" % (self.__class__.__name__)
-    
+

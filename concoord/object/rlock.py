@@ -7,6 +7,9 @@ from concoord.threadingobject.drlock import DRLock
 
 class RLock():
     def __init__(self):
+        pass
+
+    def __concoordinit__(self):
         self.rlock = DRLock()
 
     def __repr__(self):
@@ -17,12 +20,12 @@ class RLock():
             return self.rlock.acquire(_concoord_command)
         except Exception as e:
             raise e
-        
+
     def release(self, _concoord_command):
         try:
             self.rlock.release(_concoord_command)
         except Exception as e:
             raise e
-    
+
     def __str__(self):
         return str(self.rlock)

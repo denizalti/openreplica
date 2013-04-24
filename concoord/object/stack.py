@@ -5,11 +5,14 @@
 """
 class Stack:
     def __init__(self):
+        pass
+
+    def __concoordinit__(self):
         self.stack = []
-        
+
     def append(self, item):
         self.stack.append(item)
-        
+
     def pop(self):
         self.stack.pop()
 
@@ -21,7 +24,7 @@ class Stack:
 
     def __str__(self):
         return self.stack
-        
-    
-        
-        
+
+
+
+

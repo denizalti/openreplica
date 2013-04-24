@@ -11,6 +11,9 @@ def pairwise(iterable):
 
 class NameserverCoord():
     def __init__(self):
+        pass
+
+    def __concoordinit__(self):
         self._nodes = {}
 
     def addnodetosubdomain(self, subdomain, nodetype, node):
