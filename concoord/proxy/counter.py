@@ -10,7 +10,7 @@ class Counter:
         self.proxy = ClientProxy(bootstrap)
 
     def __concoordinit__(self):
-        return self.proxy.invoke_command('__init__')
+        return self.proxy.invoke_command('__concoordinit__')
 
     def decrement(self):
         return self.proxy.invoke_command('decrement')

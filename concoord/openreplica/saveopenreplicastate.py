@@ -8,6 +8,6 @@ from concoord.proxy.nameservercoord import NameserverCoord
 def main():
     openreplicacoord = NameserverCoord('openreplica.org')
     print openreplicacoord.__str__()
-    
+
 if __name__=='__main__':
     main()

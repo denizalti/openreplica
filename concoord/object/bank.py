@@ -9,6 +9,9 @@ class Bank(type):
     __metaclass__ = ProxyMeta
 
     def __init__(self):
+        pass
+
+    def __concoordinit__(self):
         self.accounts = {}
 
     def open(self, accntno):

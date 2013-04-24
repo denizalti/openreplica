@@ -13,7 +13,7 @@ class PLConnection():
         if not configdict:
             print "Configuration file is required."
             return
-        
+
         USERNAME = configdict['USERNAME']
         USERKEYFILE = configdict['USERKEYFILE']
         NODESFILE = configdict['NODESFILE']
@@ -48,7 +48,7 @@ class PLConnection():
                         if len(self.nodes) == num:
                             return
             raise ValueError
-        
+
     def __len__(self):
         return len(self.nodes)
 
@@ -128,7 +128,7 @@ class PLConnection():
             pipe = self._issuecommand(cmd)
             pipelist.append(pipe)
         return self._waitforall(pipelist) == 0
-        
+
     def uploadone(self, node, local, remote=""):
         cmd = ["scp", "-i", USERKEYFILE, "-o", "StrictHostKeyChecking=no", local, USERNAME + "@" + node + ":" + remote]
         if os.path.isdir(local):

@@ -8,13 +8,13 @@ from concoord.clientproxy import ClientProxy
 class Test():
     def __init__(self, bootstrap):
         self.proxy = ClientProxy(bootstrap, debug=False)
-        
+
     def __concoordinit__(self):
-        return self.proxy.invoke_command('__init__')
+        return self.proxy.invoke_command('__concoordinit__')
 
     def getvalue(self):
         return self.proxy.invoke_command('getvalue')
-    
+
     def setvalue(self, newvalue):
         return self.proxy.invoke_command('setvalue', newvalue)
 

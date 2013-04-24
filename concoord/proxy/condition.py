@@ -8,9 +8,9 @@ from concoord.clientproxy import ClientProxy
 class Condition:
     def __init__(self, bootstrap):
         self.proxy = ClientProxy(bootstrap)
-        
+
     def __concoordinit__(self, lock=None):
-        return self.proxy.invoke_command('__init__', lock)
+        return self.proxy.invoke_command('__concoordinit__', lock)
 
     def __repr__(self):
         return self.proxy.invoke_command('__repr__')

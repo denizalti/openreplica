@@ -40,7 +40,7 @@ def check_planetlab_dnsport(plconn, node):
     return success,output
 
 def check_planetlab_pythonversion(plconn, node):
-    pathtopvtester = CONCOORD_HELPERDIR+'testpythonversion.py' 
+    pathtopvtester = CONCOORD_HELPERDIR+'testpythonversion.py'
     plconn.uploadone(node, pathtopvtester)
     terminated, output = plconn.executecommandone(node, NPYTHONPATH + " testpythonversion.py")
     success = terminated and output[STDERR] == ''
@@ -56,7 +56,7 @@ def get_startup_cmd(nodetype, subdomain, node, port, clientobjectfilename, class
     elif nodetype == NODE_NAMESERVER:
         startupcmd =  "nohup " + NPYTHONPATH + " " + CONCOORDPATH + "nameserver.py -n %s -a %s -p %d -f %s -c %s -b %s -t %d -m %s -l %s > foo.out 2> foo.err < /dev/null &" % (subdomain+'.openreplica.org', node, port, clientobjectfilename, classname, bootstrapname, servicetype, master, LOGGERNODE)
     return startupcmd
-        
+
 def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapname):
     nodetype = int(nodetype)
     servicetype = NS_SLAVE
@@ -100,6 +100,6 @@ def main():
     start_node(args.nodetype, args.subdomain, args.objectfilepath,
                args.classname, args.bootstrapname)
     print 'DONE'
-    
+
 if __name__=='__main__':
     main()

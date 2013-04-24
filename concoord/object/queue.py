@@ -5,11 +5,14 @@
 """
 class Queue:
     def __init__(self):
+        pass
+
+    def __concoordinit__(self):
         self.queue = []
-        
+
     def append(self, item):
         self.queue.append(item)
-        
+
     def remove(self):
         self.queue.pop(0)
 

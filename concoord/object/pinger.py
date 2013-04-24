@@ -8,6 +8,9 @@ PING_DELAY = 10
 
 class Pinger():
     def __init__(self):
+        pass
+
+    def __concoordinit__(self):
         self.members = set()
         self.membership_condition = DCondition()
 
@@ -20,7 +23,7 @@ class Pinger():
         self.me = "%s:%d", (myaddr,myport)
 
         comm_thread = Thread(target=self.ping_members, name='PingThread')
-        comm_thread.start() 
+        comm_thread.start()
 
     def add(self, member):
         if member not in self.members:
@@ -50,7 +53,7 @@ class Pinger():
                 if success < 0:
                     print "Node not responding, marking."
                     self.liveness[member] += 1
-            
+
             time.sleep(PING_DELAY)
 
     def send(self, msg):

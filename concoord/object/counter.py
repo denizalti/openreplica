@@ -3,10 +3,13 @@
 @note: Example counter
 @copyright: See LICENSE
 """
-class Counter:
+class Counter
     def __init__(self):
+        pass
+
+    def __concoordinit__(self):
         self.value = 0
-        
+
     def decrement(self):
         self.value -= 1
 
@@ -15,6 +18,6 @@ class Counter:
 
     def getvalue(self):
         return self.value
-    
+
     def __str__(self):
         return "The counter value is %d" % self.value
