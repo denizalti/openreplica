@@ -45,6 +45,8 @@ parser.add_argument("-m", "--master", action="store", dest="master", default='',
                     help="ipaddr:port for the master nameserver")
 parser.add_argument("-d", "--debug", action="store_true", dest="debug", default=False,
                     help="debug on/off")
+parser.add_argument("-i", "--interactive", action="store_true", dest="interactive", default=False,
+                    help="interactive shell on/off")
 args = parser.parse_args()
 
 class Node():
@@ -57,6 +59,7 @@ class Node():
                  port=args.port,
                  givenbootstraplist=args.bootstrap,
                  debugoption=args.debug,
+                 interactiveoption=args.debug,
                  objectname=args.objectname,
                  instantiateobj=False,
                  configpath=args.configpath,
@@ -65,6 +68,7 @@ class Node():
         self.port = port
         self.type = nodetype
         self.debug = debugoption
+        self.interactive = interactiveoption
         if instantiateobj:
             if objectname == '':
                 parser.print_help()
@@ -190,8 +194,9 @@ class Node():
         main_thread = Thread(target=self.handle_messages, name='MainThread')
         main_thread.start()
         # Start a thread that waits for inputs
-        input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
-        input_thread.start()
+        if self.interactive:
+            input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
+            input_thread.start()
         # Start a thread that pings all neighbors
         ping_thread = Timer(LIVENESSTIMEOUT, self.ping_neighbor)
         ping_thread.name = 'PingThread'
