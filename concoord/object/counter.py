@@ -3,7 +3,7 @@
 @note: Example counter
 @copyright: See LICENSE
 """
-class Counter
+class Counter:
     def __concoordinit__(self):
         self.value = 0
 
