@@ -42,30 +42,20 @@ To build and install ConCoord, type::
 4 Tutorial
 ============
 
-4.0 Getting Started
-----------------------
+4.0 ConCoordifying Python Objects
+---------------------------------
 
 To use ConCoord, first you need to create the local python object to
 represent the state you want to replicate. To walk you through the
-ConCoord approach, we will use one of the example coordination objects
-we have provided, namely Counter. In the source distribution you can
-locate the Counter object under concoord/object/counter.py. Once you
-install ConCoord, you can create coordination objects and save them
-anywhere in your filesystem. To demonstrate this, we will save
-counter.py under /foo/counter.py.::
-
-While creating ConCoord objects, the __init__ should not be used as a
-constructor. Replica nodes instantiate a given ConCoord object by
-calling __init__ without any arguments as soon as they go live, before
-the client makes any calls to the object. So, the user should specify
-a constructor method, __concoordinit__ by convention, to initialize
-the object with specific arguments and keep in mind that the __init__
-method will be overwritten by binary rewriting when the proxy is
-created. In the example Counter object the __init__ method is not used
-following this convention.
+ConCoord approach, we will use the example Counter coordination object
+we provided. In the source distribution you can locate the Counter
+object under concoord/object/counter.py. Once you install ConCoord,
+you can create coordination objects and save them anywhere in your
+filesystem. To demonstrate this, we will save counter.py under
+/foo/counter.py::
 
   class Counter:
-    def __concoordinit__(self, value):
+    def __init__(self, value=0):
      self.value = value
 
     def decrement(self):
@@ -80,9 +70,6 @@ following this convention.
     def __str__(self):
       return "The counter value is %d" % self.value
 
-4.1 Concoordifying Python Objects
----------------------------------
-
 Once you have created the object, update your PYTHONPATH accordingly,
 so that the objects can be found and imported::
 
@@ -91,20 +78,39 @@ so that the objects can be found and imported::
 To create concoord objects (to be used by the client and the server)
 you can use::
 
-  $ concoord object -o counter.Counter -s
+  $ concoord object -o counter.Counter
 
-Usage: concoord object -o objectname -s safe
+Usage: concoord object [-h] [-o OBJECTNAME] [-s] [-t SECURITYTOKEN] [-v]
 
 where,
-  objectname     := dotted of the object you want to concoordify
-  safe 	         := boolean flag to include safety checks for the object
+  -h, --help					show the help message and exit
+  -o OBJECTNAME, --objectname OBJECTNAME        client object dotted name
+  -s, --safe                  		 	safety checking on/off
+  -t SECURITYTOKEN, --token SECURITYTOKEN	security token
+  -v, --verbose             			verbose option
 
 This script will create a proxy file under the directory that the
 object resides (i.e. /foo/)::
 
 /foo/counterproxy.py := the proxy that can be used by the client
 
-4.2 Starting Nodes Manually
+IMPORTANT NOTE: ConCoord objects treat __init__ functions specially in
+two ways:
+
+1) When Replicas go live, the object is instantiated calling the
+  __init__ without any arguments. Therefore, while implementing
+  coordination objects, the __init__ method should be implemented to
+  be able to run without explicit arguments. You can use defaults to
+  implement an __init__ method that accepts arguments.
+
+2) In the proxy created, the __init__ function is used to initialize
+  the Client-Replica connection. This way, multiple clients can
+  connect to a ConCoord instance without reinitializing the
+  object. During proxy generation, the original __init__ function is
+  renamed as __concoordinit__, to reinitialize the object the user can
+  call __concoordinit__ at any point.
+
+4.1 Starting Nodes Manually
 -----------------------------
 
 To start the system you need to start at least one replica and one
@@ -125,7 +131,7 @@ current set of replicas.
   client requests, there has to be at least one replica and one
   acceptor node present initially.
 
-4.2.1 Starting Replica Nodes
+4.1.1 Starting Replica Nodes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To start the bootstrap replica node manually, use the following command::
@@ -142,14 +148,14 @@ following command::
 
   $ concoord replica -o counter.Counter -b ipaddr:port
 
-4.2.2 Starting Acceptor Nodes
+4.1.2 Starting Acceptor Nodes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To start an acceptor node manually, use the following command::
 
   $ concoord acceptor -b ipaddr:port
 
-4.2.3 Starting Nameserver Nodes
+4.1.3 Starting Nameserver Nodes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are three ways you can run a ConCoord Nameserver.
@@ -166,7 +172,7 @@ There are three ways you can run a ConCoord Nameserver.
   the slave nameserver. Requires a ready-to-use Amazon Route53
   account.
 
-4.2.3.1 Standalone Nameserver
+4.1.3.1 Standalone Nameserver
 +++++++++++++++++++++++++++++++
 
 Before starting a standalone nameserver node manually, first make sure
@@ -187,7 +193,7 @@ counterdomain and see the most current set of nodes as follows::
 
   $ dig -t ns counterdomain                  # returns set of nameservers
 
-4.2.3.2 Slave Nameserver
+4.1.3.2 Slave Nameserver
 ++++++++++++++++++++++++++
 
 Before starting a slave nameserver node manually, you should have a
@@ -216,7 +222,7 @@ counterdomain and see the most current set of nodes as follows::
 
   $ dig -t ns counterdomain                  # returns set of nameservers
 
-4.2.3.3 Amazon Route 53 Nameserver
+4.1.3.3 Amazon Route 53 Nameserver
 ++++++++++++++++++++++++++++++++++
 
 Before starting a nameserver connected to Amazon Route 53, you should
@@ -235,7 +241,7 @@ credentials are updated, you can start the nameserver as follows::
 
   $ concoord nameserver -n counterdomain -o counter.Counter -b ipaddr:port -t 3 -o configfilepath
 
-4.3 Starting Nodes Automatically
+4.2 Starting Nodes Automatically
 ----------------------------------
 
 We have a script we use for openreplica.org to start desired number of
@@ -251,7 +257,7 @@ You can run the script as follows::
 
   $ concoord initialize -s counterdomain -f /foo/counter.py -c Counter -r 3 -a 3 -n 3
 
-4.4 Adding Nodes Automatically
+4.3 Adding Nodes Automatically
 --------------------------------
 
 We also have a script we use for openreplica.org to add nodes on
@@ -269,7 +275,7 @@ where,
   nodetype := 1 for Acceptor, 2 for Replica, 3 for Nameserver
   bootstrap := ipaddr:port or domainname for an instance that has a nameserver
 
-4.5 Connecting to ConCoord Objects
+4.4 Connecting to ConCoord Objects
 ------------------------------------
 
 Once you have concoord up and running for your object, it is easy to
@@ -287,20 +293,8 @@ access your object with the ipaddr:port pair or the domainname.
   >>> c.getvalue()
   2
 
-Note that the objects on the Replica side are instantiated without
-any arguments. For you this has three implications:
-
-  1) While implementing your objects you should omit using the
-  __init__ method and implement a __concoordinit__ method instead.
-
-  2) You should keep in mind that when you initialize an object
-  through the proxy, it only connects to the specified bootstrap, it
-  does not reinitialize the object. This way multiple clients can
-  connect to the same object using their proxies without
-  reinitializing the object.
-
-  3) At any point to reinitialize an object after it is deployed on
-  replicas, you should call __concoordinit__ function:
+At any point to reinitialize an object after it is deployed on
+replicas, you should call __concoordinit__ function:
 
   >>> from counterproxy import Counter
   >>> c = Counter(domainname)
