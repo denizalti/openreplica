@@ -10,7 +10,7 @@ class NameserverCoord:
         self.proxy = ClientProxy(bootstrap)
 
     def __concoordinit__(self):
-        return self.proxy.invoke_command('__concoordinit__')
+        return self.proxy.invoke_command('__init__')
 
     def addnodetosubdomain(self, subdomain, nodetype, node):
         return self.proxy.invoke_command('addnodetosubdomain', subdomain, nodetype, node)

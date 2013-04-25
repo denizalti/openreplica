@@ -10,7 +10,7 @@ class Barrier:
         self.proxy = ClientProxy(bootstrap)
 
     def __concoordinit__(self, count=1):
-        return self.proxy.invoke_command('__concoordinit__', count)
+        return self.proxy.invoke_command('__init__', count)
 
     def wait(self):
         return self.proxy.invoke_command('wait')

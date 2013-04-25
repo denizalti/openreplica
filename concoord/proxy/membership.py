@@ -10,7 +10,7 @@ class Membership:
         self.proxy = ClientProxy(bootstrap)
 
     def __concoordinit__(self):
-        return self.proxy.invoke_command('__concoordinit__')
+        return self.proxy.invoke_command('__init__')
 
     def add(self, member):
         return self.proxy.invoke_command('add', member)

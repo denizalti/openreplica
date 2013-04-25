@@ -10,7 +10,7 @@ class Test():
         self.proxy = ClientProxy(bootstrap, debug=False)
 
     def __concoordinit__(self):
-        return self.proxy.invoke_command('__concoordinit__')
+        return self.proxy.invoke_command('__init__')
 
     def getvalue(self):
         return self.proxy.invoke_command('getvalue')
