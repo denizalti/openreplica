@@ -6,7 +6,7 @@
 from concoord.threadingobject.dsemaphore import DSemaphore
 
 class Semaphore():
-    def __concoordinit__(self, count=1):
+    def __init__(self, count=1):
         self.semaphore = DSemaphore(count)
 
     def __repr__(self):

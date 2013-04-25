@@ -4,7 +4,7 @@
 @copyright: See LICENSE
 """
 class Log():
-    def __concoordinit__(self):
+    def __init__(self):
         self.log = []
 
     def write(self, entry):

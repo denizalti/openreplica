@@ -4,7 +4,7 @@
 @copyright: See LICENSE
 """
 class Membership():
-    def __concoordinit__(self):
+    def __init__(self):
         self.members = set()
 
     def add(self, member):

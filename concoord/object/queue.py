@@ -4,7 +4,7 @@
 @copyright: See LICENSE
 """
 class Queue:
-    def __concoordinit__(self):
+    def __init__(self):
         self.queue = []
 
     def append(self, item):

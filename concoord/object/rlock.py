@@ -6,7 +6,7 @@
 from concoord.threadingobject.drlock import DRLock
 
 class RLock():
-    def __concoordinit__(self):
+    def __init__(self):
         self.rlock = DRLock()
 
     def __repr__(self):
