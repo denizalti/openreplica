@@ -36,7 +36,8 @@ class ProxyGen(ast.NodeTransformer):
         if self.classdepth == 1:
             for item in node.body:
                 if type(item) == _ast.FunctionDef and item.name == "__init__":
-                    node.body.remove(item)
+                    #node.body.remove(item)
+                    item.name = "__concoordinit__"
             # Add the new init method
             initfunc = compile("def __init__(self, bootstrap):\n"
                                "\tself.proxy = ClientProxy(bootstrap, token=\"%s\")" % self.token,
