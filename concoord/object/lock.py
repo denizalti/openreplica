@@ -10,7 +10,7 @@ class Lock():
     - acquire: locks the object
     - release: unlocks the object
     """
-    def __concoordinit__(self):
+    def __init__(self):
         self.lock = DLock()
 
     def __repr__(self):

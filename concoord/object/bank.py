@@ -7,7 +7,7 @@ from proxymeta import ProxyMeta
 
 class Bank(type):
     __metaclass__ = ProxyMeta
-    def __concoordinit__(self):
+    def __init__(self):
         self.accounts = {}
 
     def open(self, accntno):

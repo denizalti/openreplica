@@ -4,7 +4,7 @@
 @copyright: See LICENSE
 """
 class Stack:
-    def __concoordinit__(self):
+    def __init__(self):
         self.stack = []
 
     def append(self, item):

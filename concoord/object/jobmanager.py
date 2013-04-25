@@ -4,7 +4,7 @@
 @copyright: See LICENSE
 """
 class JobManager():
-    def __concoordinit__(self):
+    def __init__(self):
         self.jobs = []
 
     def schedule(self, job):

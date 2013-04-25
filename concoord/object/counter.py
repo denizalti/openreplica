@@ -4,7 +4,7 @@
 @copyright: See LICENSE
 """
 class Counter:
-    def __concoordinit__(self):
+    def __init__(self):
         self.value = 0
 
     def decrement(self):

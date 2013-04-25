@@ -10,7 +10,7 @@ def pairwise(iterable):
     return izip(a, a)
 
 class NameserverCoord():
-    def __concoordinit__(self):
+    def __init__(self):
         self._nodes = {}
 
     def addnodetosubdomain(self, subdomain, nodetype, node):

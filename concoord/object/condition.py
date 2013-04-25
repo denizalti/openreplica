@@ -6,7 +6,7 @@
 from concoord.threadingobject.dcondition import DCondition
 
 class Condition():
-    def __concoordinit__(self, lock=None):
+    def __init__(self, lock=None):
         self.condition = DCondition()
 
     def __repr__(self):

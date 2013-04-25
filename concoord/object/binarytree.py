@@ -4,7 +4,7 @@
 @copyright: See LICENSE
 """
 class BinaryTree:
-    def __concoordinit__(self):
+    def __init__(self):
         self.root = None
 
     def add_node(self, data):
