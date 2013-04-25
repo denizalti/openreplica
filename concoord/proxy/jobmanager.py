@@ -10,7 +10,7 @@ class JobManager:
         self.proxy = ClientProxy(bootstrap)
 
     def __concoordinit__(self):
-        return self.proxy.invoke_command('__concoordinit__')
+        return self.proxy.invoke_command('__init__')
 
     def add_job(self, job):
         return self.proxy.invoke_command('add_job', job)

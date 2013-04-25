@@ -10,7 +10,7 @@ class MeshMembership():
         self.proxy = ClientProxy(bootstrap)
 
     def __concoordinit__(self):
-        return self.proxy.invoke_command('__concoordinit__')
+        return self.proxy.invoke_command('__init__')
 
     def get_group_members(self, gname):
         return self.proxy.invoke_command('get_group_members', gname)
