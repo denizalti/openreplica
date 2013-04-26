@@ -4,8 +4,8 @@
 @copyright: See LICENSE
 """
 class Counter:
-    def __init__(self):
-        self.value = 0
+    def __init__(self, value=0):
+        self.value = value
 
     def decrement(self):
         self.value -= 1
