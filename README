@@ -75,7 +75,7 @@ so that the objects can be found and imported::
 
   $ export PYTHONPATH=$PYTHONPATH:/foo/
 
-To create concoord objects (to be used by the client and the server)
+To create ConCoord objects (to be used by the client and the server)
 you can use::
 
   $ concoord object -o counter.Counter
@@ -110,55 +110,57 @@ two ways:
   renamed as __concoordinit__, to reinitialize the object the user can
   call __concoordinit__ at any point.
 
-4.1 Starting Nodes Manually
+4.1 Starting Nodes
 -----------------------------
 
-To start the system you need to start at least one replica and one
-acceptor. To support bootstrapping through DNS queries, you will also
-need at least one nameserver node that has the necessary delegation
-set up for the address to they are responsible for. Once the
-nameserver node is set up and you can send dig queries to the
-nameserver and learn the node to bootstrap, current set of nodes and
-current set of replicas.
-
-* For bootstrapping concoord requires at least one replica node. If a
-  nameserver node is up, bootstrap can be the domainname for the
-  concoord instance as new nodes can retrieve the bootstrap node
-  automatically through DNS queries. If the nameserver is not running,
-  bootstrap is a list of ipaddr:port pairs.
-
-* Note that for the system to be able to add new nodes and accept
-  client requests, there has to be at least one replica and one
-  acceptor node present initially.
+To distribute your object you should start at least one replica and one
+acceptor.
 
 4.1.1 Starting Replica Nodes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To start the bootstrap replica node manually, use the following command::
+To start the replica node, use the following command::
 
   $ concoord replica -o counter.Counter
 
-Note that you can specify the port and the address the replica binds
-to with options -p and -a respectively. If not specified port defaults
-to the first available port, randomly chosen between 14000 and 15000
-and the address is determined automatically.
-
-To start replica nodes to join an active concoord instance, use the
-following command::
+To start replica nodes to join an active ConCoord instance, use the
+following command to connect to a bootstrap replica with ipaddr:port::
 
   $ concoord replica -o counter.Counter -b ipaddr:port
 
 4.1.2 Starting Acceptor Nodes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To start an acceptor node manually, use the following command::
+To start an acceptor node that connects to the bootrstrap replica at
+ipaddr:port, use the following command::
 
   $ concoord acceptor -b ipaddr:port
+
+Note that you can specify the port and the address of any node with
+options -p and -a respectively. The nodes can also be run in the debug
+and interactive modes or with a logger with the commands shown below::
+
+Usage: concoord [-h] [-a ADDR] [-p PORT] [-b BOOTSTRAP] [-o OBJECTNAME]
+                [-l LOGGER] [-d] [-i]
+where,
+  -h, --help            show this help message and exit
+  -a ADDR, --addr ADDR  addr for the node
+  -p PORT, --port PORT  port for the node
+  -b BOOTSTRAP, --boot BOOTSTRAP
+                        address:port:type triple for the bootstrap peer
+  -o OBJECTNAME, --objectname OBJECTNAME
+                        client object dotted name
+  -l LOGGER, --logger LOGGER
+                        logger address
+  -d, --debug           debug on/off
+  -i, --interactive     interactive shell on/off
 
 4.1.3 Starting Nameserver Nodes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are three ways you can run a ConCoord Nameserver.
+You can dynamically locate nodes in a given ConCoord instance using
+DNS queries if the instance includes nameserver nodes. There are three
+ways you can run a ConCoord Nameserver.
 
 * Standalone Nameserver Keeps track of the view and responds to DNS
   queries itself. Requires su privileges to bind to Port 53.
@@ -192,6 +194,11 @@ counterdomain and see the most current set of nodes as follows::
   $ dig -t txt counterdomain                 # returns set of all nodes
 
   $ dig -t ns counterdomain                  # returns set of nameservers
+
+If you want to run the nameserver without proper delegation setup, you
+can query the nameserver bound to nsipaddr specifically as follows::
+
+  $ dig -t a counterdomain @nsipaddr         # returns set of Replicas
 
 4.1.3.2 Slave Nameserver
 ++++++++++++++++++++++++++
@@ -241,50 +248,16 @@ credentials are updated, you can start the nameserver as follows::
 
   $ concoord nameserver -n counterdomain -o counter.Counter -b ipaddr:port -t 3 -o configfilepath
 
-4.2 Starting Nodes Automatically
-----------------------------------
-
-We have a script we use for openreplica.org to start desired number of
-nodes on PlanetLab servers automatically. This script is included for
-your reference under concoord/openreplica/openreplicainitializer.py
-
-* Note that the script requires host and user-specific credentials and
-  you will have to edit the script for your own use.
-
-* Note that the nameserver nodes are started in the slave mode.
-
-You can run the script as follows::
-
-  $ concoord initialize -s counterdomain -f /foo/counter.py -c Counter -r 3 -a 3 -n 3
-
-4.3 Adding Nodes Automatically
---------------------------------
-
-We also have a script we use for openreplica.org to add nodes on
-PlanetLab servers automatically. This script is included for your
-reference under concoord/openreplica/openreplicaaddnode.py
-
-Note that the script requires host and user-specific credentials and
-you will have to edit the script for your own use.
-
-You can run the script as follows::
-
-  $ concoord addnode -t nodetype -s counterdomain -f /foo/counter.py -c Counter -b bootstrap
-
-where,
-  nodetype := 1 for Acceptor, 2 for Replica, 3 for Nameserver
-  bootstrap := ipaddr:port or domainname for an instance that has a nameserver
-
-4.4 Connecting to ConCoord Objects
+4.2 Connecting to ConCoord Objects
 ------------------------------------
 
-Once you have concoord up and running for your object, it is easy to
-access your object.
+Once you have a ConCoord instance running with your object, it is easy
+to access your object.
 
-Now we will use the proxy object we generated at (3.1) and saved under
-/foo/concoordproxy.py. Now you can import and use this proxy object in
-your code. Depending on how you set your nameserver node up, you can
-access your object with the ipaddr:port pair or the domainname.
+Now we will use the proxy object we generated at (4.0). You can import
+and use this proxy object in your code. Depending on how you set your
+nameserver node up, you can access your object with the ipaddr:port
+pair or the domainname.
 
   >>> from counterproxy import Counter
   >>> c = Counter(domainname)
