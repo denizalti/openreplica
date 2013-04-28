@@ -305,6 +305,7 @@ class Node():
                     if s == self.socket:
                         clientsock,clientaddr = self.socket.accept()
                         if self.debug: self.logger.write("State", "accepted a connection from address %s" % str(clientaddr))
+                        print "Adding to dictionaries..."
                         self.connectionpool.activesockets.add(clientsock)
                         self.connectionpool.nascentsockets.add(clientsock)
                         success = True

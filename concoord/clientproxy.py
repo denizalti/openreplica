@@ -3,9 +3,8 @@
 @note: ConCoord Client Proxy
 @copyright: See LICENSE
 '''
-import socket, os, sys, time, random, threading, select
-from threading import Thread, Condition, RLock, Lock
-import pickle
+import os, random, select, socket, sys, threading, time
+from threading import Lock
 from concoord.pack import *
 from concoord.enums import *
 from concoord.utils import *
@@ -38,7 +37,7 @@ class ClientProxy():
             raise ConnectionError("Cannot connect to any bootstrap")
         myaddr = findOwnIP()
         myport = self.socket.getsockname()[1]
-        self.me = Peer(myaddr,myport,NODE_CLIENT)
+        self.me = Peer(myaddr, myport, NODE_CLIENT)
         self.commandnumber = random.randint(1, sys.maxint)
 
     def _getipportpairs(self, bootaddr, bootport):

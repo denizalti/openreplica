@@ -30,6 +30,9 @@ ERR_NOERROR, ERR_NOTLEADER, ERR_INITIALIZING = range(3)
 # nameserver service types
 NS_MASTER, NS_SLAVE, NS_ROUTE53 = range(1,4)
 
+# proxy types
+PR_BASIC, PR_BLOCK, PR_CBATCH, PR_SBATCH = range(4)
+
 # command result
 META = 'META'
 BLOCK = 'BLOCK'
@@ -73,7 +76,7 @@ UDPMAXLEN = 1024
 # convert a set of enums with a given prefix into a dictionary
 def get_var_mappings(prefix):
     """Returns a dictionary with <enumvalue, enumname> mappings"""
-    return dict([(getattr(enums,varname),varname.replace(prefix, "", 1)) for varname in dir(enums) if varname.startswith(prefix)]) 
+    return dict([(getattr(enums,varname),varname.replace(prefix, "", 1)) for varname in dir(enums) if varname.startswith(prefix)])
 
 # convert a set of enums with a given prefix into a list
 def get_var_list(prefix):
