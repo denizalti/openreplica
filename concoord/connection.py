@@ -32,6 +32,7 @@ class ConnectionPool():
 
     def add_connection_to_peer(self, peer, conn):
         """Adds a Connection to the ConnectionPool by its Peer"""
+        print "added peer ", peer
         if str(peer) not in self.poolbypeer:
             conn.peerid = str(peer)
             with self.pool_lock:
@@ -43,6 +44,7 @@ class ConnectionPool():
 
     def del_connection_by_peer(self, peer):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
+        print "deleting peer ", peer
         peerstr = str(peer)
         with self.pool_lock:
             if self.poolbypeer.has_key(peerstr):
@@ -174,12 +176,16 @@ class Connection():
     def received_bytes(self):
         with self.readlock:
             datalen = 0
-            try:
-                datalen = self.thesocket.recv_into(self.incoming[self.incomingoffset:],
+            print self.thesocket.gettimeout()
+            print self.thesocket.settimeout(10)
+#            try:
+            datalen = self.thesocket.recv_into(self.incoming[self.incomingoffset:],
                                                    100000-self.incomingoffset)
-            except IOError:
-                # [Errno 104] Connection reset by peer
-                raise ConnectionError()
+#            except IOError as inst:
+#                # [Errno 104] Connection reset by peer
+#                print "IOError, connection reset by peer"
+#                print inst
+#                raise ConnectionError()
 
             if datalen == 0:
                 if self.incomingoffset == 100000:
@@ -193,6 +199,7 @@ class Connection():
                         yield parse_message(msgdict)
                     except IOError as inst:
                         self.incomingoffset = 0
+                        print "IOError: ", inst
                         raise ConnectionError()
                 else:
                     raise ConnectionError()

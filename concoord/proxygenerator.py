@@ -7,19 +7,28 @@ import codegen
 import ast, _ast
 import os, shutil
 import inspect, types, string
+from concoord.enums import PR_BASIC, PR_BLOCK, PR_CBATCH, PR_SBATCH
 
 class ProxyGen(ast.NodeTransformer):
-    def __init__(self, objectname, securitytoken=None):
+    def __init__(self, objectname, securitytoken=None, proxytype=0):
         self.objectname = objectname
         self.classdepth = 0
         self.token = securitytoken
+        self.proxytype = proxytype
 
     def generic_visit(self, node):
         ast.NodeTransformer.generic_visit(self, node)
         return node
 
     def visit_Module(self, node):
-        importstmt = compile("from concoord.clientproxy import ClientProxy","<string>","exec",_ast.PyCF_ONLY_AST).body[0]
+        if self.proxytype == PR_BASIC:
+            importstmt = compile("from concoord.clientproxy import ClientProxy","<string>","exec",_ast.PyCF_ONLY_AST).body[0]
+        elif self.proxytype == PR_BLOCK:
+            importstmt = compile("from concoord.blockingclientproxy import ClientProxy","<string>","exec",_ast.PyCF_ONLY_AST).body[0]
+        elif self.proxytype == PR_CBATCH:
+            importstmt = compile("from concoord.batchclientproxy import ClientProxy","<string>","exec",_ast.PyCF_ONLY_AST).body[0]
+        elif self.proxytype == PR_SBATCH:
+            importstmt = compile("from concoord.asyncclientproxy import ClientProxy","<string>","exec",_ast.PyCF_ONLY_AST).body[0]
         node.body.insert(0, importstmt)
         return self.generic_visit(node)
 
@@ -64,9 +73,9 @@ class ProxyGen(ast.NodeTransformer):
         else:
             return self.generic_visit(node)
 
-def createclientproxy(clientcode, objectname, securitytoken, bootstrap=None):
+def createclientproxy(clientcode, objectname, securitytoken, proxytype=PR_BASIC, bootstrap=None):
     # Get the AST tree, transform it, convert back to string
     originalast = compile(clientcode, "<string>", "exec", _ast.PyCF_ONLY_AST)
-    newast = ProxyGen(objectname, securitytoken).visit(originalast)
+    newast = ProxyGen(objectname, securitytoken, proxytype).visit(originalast)
     return codegen.to_source(newast)
 

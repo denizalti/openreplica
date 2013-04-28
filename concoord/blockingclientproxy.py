@@ -3,9 +3,8 @@
 @note: ConCoord Client Proxy
 @copyright: See LICENSE
 '''
-import os, random, select, socket, sys, time, threading
+import os, random, select, socket, sys, threading, time
 from threading import Thread, Condition, Lock
-import pickle
 from concoord.pack import *
 from concoord.enums import *
 from concoord.utils import *
@@ -42,13 +41,14 @@ class ReqDesc:
         return "Request Descriptor for cmd %d\nMessage %s\nReply %s" % (self.commandnumber, str(self.cm), self.reply)
 
 class ClientProxy():
-    def __init__(self, bootstrap, timeout=60, debug=True, token=None):
+    def __init__(self, bootstrap, timeout=60, debug=False, token=None):
         self.debug = debug
         self.timeout = timeout
         self.domainname = None
         self.token = token
-        self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,1)
+        self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.writelock = Lock()
 
         self.bootstraplist = self.discoverbootstrap(bootstrap)
@@ -58,7 +58,7 @@ class ClientProxy():
             raise ConnectionError("Cannot connect to any bootstrap")
         myaddr = findOwnIP()
         myport = self.socket.getsockname()[1]
-        self.me = Peer(myaddr,myport,NODE_CLIENT)
+        self.me = Peer(myaddr, myport, NODE_CLIENT)
         self.commandnumber = random.randint(1, sys.maxint)
 
         # synchronization
@@ -165,28 +165,28 @@ class ClientProxy():
             while True:
                 triedreplicas.add(self.bootstrap)
                 needreconfig = False
-                try:
-                    for reply in self.conn.received_bytes():
-                        if reply and reply.type == MSG_CLIENTREPLY:
-                            with self.lock:
-                                    reqdesc = self.pendingops[reply.inresponseto]
-                                    if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode == CR_UNBLOCK:
-                                        # actionable response, wake up the thread
-                                        if reply.replycode == CR_UNBLOCK:
-                                            assert reqdesc.lastcr == CR_BLOCK, "unblocked thread not previously blocked"
-                                        reqdesc.lastcr = reply.replycode
-                                        reqdesc.reply = reply
-                                        reqdesc.replyvalid = True
-                                        reqdesc.replyarrived.notify()
-                                    elif reply.replycode == CR_INPROGRESS or reply.replycode == CR_BLOCK:
-                                        # the thread is already waiting, no need to do anything
-                                        reqdesc.lastcr = reply.replycode
-                                    elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
-                                        needreconfig = True
-                                    else:
-                                        print "should not happen -- unknown response type"
-                except:
-                    needreconfig = True
+#                try:
+                for reply in self.conn.received_bytes():
+                    if reply and reply.type == MSG_CLIENTREPLY:
+                        with self.lock:
+                            reqdesc = self.pendingops[reply.inresponseto]
+                            if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode == CR_UNBLOCK:
+                                # actionable response, wake up the thread
+                                if reply.replycode == CR_UNBLOCK:
+                                    assert reqdesc.lastcr == CR_BLOCK, "unblocked thread not previously blocked"
+                                reqdesc.lastcr = reply.replycode
+                                reqdesc.reply = reply
+                                reqdesc.replyvalid = True
+                                reqdesc.replyarrived.notify()
+                            elif reply.replycode == CR_INPROGRESS or reply.replycode == CR_BLOCK:
+                                # the thread is already waiting, no need to do anything
+                                reqdesc.lastcr = reply.replycode
+                            elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
+                                needreconfig = True
+                            else:
+                                print "should not happen -- unknown response type"
+#                except:
+#                    needreconfig = True
                 while needreconfig:
                     if not self.trynewbootstrap(triedreplicas):
                         raise ConnectionError("Cannot connect to any bootstrap")

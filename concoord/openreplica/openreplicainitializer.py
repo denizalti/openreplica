@@ -260,7 +260,7 @@ def main():
     start_nodes(args.subdomain, args.objectfilepath, args.classname, configuration, args.token)
     # Create Proxy
     print "Creating proxy..."
-    clientproxycode = createclientproxy(clientcode, args.classname, args.token, None)
+    clientproxycode = createclientproxy(clientcode, args.classname, args.token)
     clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
     print "Proxy Code:"
     print clientproxycode

@@ -1,11 +1,11 @@
 .. -*-restructuredtext-*-
 
-=========
+========
 ConCoord
-=========
+========
 
 1 Overview
-============
+==========
 
 ConCoord is a novel coordination service that provides replication and
 synchronization support for large-scale distributed systems. ConCoord
@@ -24,7 +24,7 @@ a transparent way of providing a coordination service.
 :Date: 2013-04-13
 
 2 Requirements
-================
+==============
 
 The minimum requirements for ConCoord are::
 
@@ -33,26 +33,35 @@ The minimum requirements for ConCoord are::
   - msgpack-python
 
 3 Installation
-================
+==============
 
 To build and install ConCoord, type::
 
   sudo python setup.py install
 
 4 Tutorial
-============
+==========
 
-4.0 ConCoordifying Python Objects
+4.0 Getting Started
+-------------------
+
+To use ConCoord and distribute your Python objects first you need to
+create the local Python object. Once the object is created, ConCoord
+will automatically create a proxy object and you will be able to do
+remote method invocations when your object is distributed. For these
+remote method invocations, a round of Paxos Consensus Protocol is run
+by ConCoord to provide consistency between different copies of the
+object.
+
+4.1 ConCoordifying Python Objects
 ---------------------------------
 
-To use ConCoord, first you need to create the local python object to
-represent the state you want to replicate. To walk you through the
-ConCoord approach, we will use the example Counter coordination object
-we provided. In the source distribution you can locate the Counter
-object under concoord/object/counter.py. Once you install ConCoord,
-you can create coordination objects and save them anywhere in your
-filesystem. To demonstrate this, we will save counter.py under
-/foo/counter.py::
+To walk you through the ConCoord approach, we will use the example
+Counter coordination object we provided. In the source distribution
+you can locate the Counter object under
+concoord/object/counter.py. Once you install ConCoord, you can create
+coordination objects and save them anywhere in your filesystem. To
+demonstrate this, we will save counter.py under /foo/counter.py::
 
   class Counter:
     def __init__(self, value=0):
@@ -75,19 +84,21 @@ so that the objects can be found and imported::
 
   $ export PYTHONPATH=$PYTHONPATH:/foo/
 
-To create ConCoord objects (to be used by the client and the server)
-you can use::
+Clients will use a proxy object to do method calls on the To create a proxy for the ConCoord object, run the following command::
 
   $ concoord object -o counter.Counter
 
-Usage: concoord object [-h] [-o OBJECTNAME] [-s] [-t SECURITYTOKEN] [-v]
+Usage: concoord object [-h] [-o OBJECTNAME] [-t SECURITYTOKEN] [-p PROXYTYPE] [-s] [-v]
 
 where,
-  -h, --help					show the help message and exit
-  -o OBJECTNAME, --objectname OBJECTNAME        client object dotted name
-  -s, --safe                  		 	safety checking on/off
+  -h, --help					show this help message and exit
+  -o OBJECTNAME, --objectname OBJECTNAME	client object dotted name module.Class
   -t SECURITYTOKEN, --token SECURITYTOKEN	security token
-  -v, --verbose             			verbose option
+  -p PROXYTYPE, --proxytype PROXYTYPE		0:BASIC, 1:BLOCKING,
+     			    			2:CLIENT-SIDE BATCHING,
+                            			3:SERVER-SIDE BATCHING
+  -s, --safe            			safety checking on/off
+  -v, --verbose         			verbose mode on/off
 
 This script will create a proxy file under the directory that the
 object resides (i.e. /foo/)::
@@ -110,14 +121,14 @@ two ways:
   renamed as __concoordinit__, to reinitialize the object the user can
   call __concoordinit__ at any point.
 
-4.1 Starting Nodes
------------------------------
+4.2 Starting Nodes
+------------------
 
 To distribute your object you should start at least one replica and one
 acceptor.
 
-4.1.1 Starting Replica Nodes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+4.2.1 Starting Replica Nodes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To start the replica node, use the following command::
 
@@ -128,8 +139,8 @@ following command to connect to a bootstrap replica with ipaddr:port::
 
   $ concoord replica -o counter.Counter -b ipaddr:port
 
-4.1.2 Starting Acceptor Nodes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+4.2.2 Starting Acceptor Nodes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To start an acceptor node that connects to the bootrstrap replica at
 ipaddr:port, use the following command::
@@ -155,8 +166,8 @@ where,
   -d, --debug           debug on/off
   -i, --interactive     interactive shell on/off
 
-4.1.3 Starting Nameserver Nodes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+4.2.3 Starting Nameserver Nodes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can dynamically locate nodes in a given ConCoord instance using
 DNS queries if the instance includes nameserver nodes. There are three
@@ -174,8 +185,8 @@ ways you can run a ConCoord Nameserver.
   the slave nameserver. Requires a ready-to-use Amazon Route53
   account.
 
-4.1.3.1 Standalone Nameserver
-+++++++++++++++++++++++++++++++
+4.2.3.1 Standalone Nameserver
++++++++++++++++++++++++++++++
 
 Before starting a standalone nameserver node manually, first make sure
 that you have at least one replica and one acceptor running. Once your
@@ -200,8 +211,8 @@ can query the nameserver bound to nsipaddr specifically as follows::
 
   $ dig -t a counterdomain @nsipaddr         # returns set of Replicas
 
-4.1.3.2 Slave Nameserver
-++++++++++++++++++++++++++
+4.2.3.2 Slave Nameserver
+++++++++++++++++++++++++
 
 Before starting a slave nameserver node manually, you should have a
 master nameserver set up and running. The master nameserver should be
@@ -229,7 +240,7 @@ counterdomain and see the most current set of nodes as follows::
 
   $ dig -t ns counterdomain                  # returns set of nameservers
 
-4.1.3.3 Amazon Route 53 Nameserver
+4.2.3.3 Amazon Route 53 Nameserver
 ++++++++++++++++++++++++++++++++++
 
 Before starting a nameserver connected to Amazon Route 53, you should
@@ -248,13 +259,13 @@ credentials are updated, you can start the nameserver as follows::
 
   $ concoord nameserver -n counterdomain -o counter.Counter -b ipaddr:port -t 3 -o configfilepath
 
-4.2 Connecting to ConCoord Objects
-------------------------------------
+4.3 Connecting to ConCoord Objects
+----------------------------------
 
 Once you have a ConCoord instance running with your object, it is easy
 to access your object.
 
-Now we will use the proxy object we generated at (4.0). You can import
+Now we will use the proxy object we generated at (4.1). You can import
 and use this proxy object in your code. Depending on how you set your
 nameserver node up, you can access your object with the ipaddr:port
 pair or the domainname.
@@ -278,10 +289,10 @@ replicas, you should call __concoordinit__ function:
   1
 
 5 ADVANCED TUTORIAL
-=====================
+===================
 
 5.1 Creating Source Bundles
------------------------------
+---------------------------
 
 You can create bundles to use at the server and client sides using the
 Makefile provided under concoord/
@@ -297,7 +308,7 @@ nodes::
   $ make server
 
 5.1.2 Creating A Client Bundle
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To create a bundle that can run a client and connect to an existing
 ConCoord instance:
@@ -305,7 +316,7 @@ ConCoord instance:
   $ make client
 
 5.2 Logging
--------------
+-----------
 
 We have two kinds of loggers for ConCoord::
 * Console Logger
@@ -316,7 +327,7 @@ NetworkLogger, use the logdaemon.py on the host you want to keep the
 Logger.
 
 5.3 Synchronization & Threading
----------------------------------
+-------------------------------
 
 ConCoord provides a distributed and fault-tolerant threading
 library. The library includes:
@@ -329,7 +340,39 @@ library. The library includes:
 *  Condition
 
 The implementations of distributed synchronization objects follow the
-implementations in the Python threading library.
+implementations in the Python threading library. We will walk through
+an example below using the Semaphore object under
+concoord/object/semaphore.py
+
+from concoord.threadingobject.dsemaphore import DSemaphore
+
+class Semaphore():
+    def __init__(self, count=1):
+        self.semaphore = DSemaphore(count)
+
+    def __repr__(self):
+        return repr(self.semaphore)
+
+    def acquire(self, _concoord_command):
+        try:
+            return self.semaphore.acquire(_concoord_command)
+        except Exception as e:
+            raise e
+
+    def release(self, _concoord_command):
+        try:
+            return self.semaphore.release(_concoord_command)
+        except Exception as e:
+            raise e
+
+    def __str__(self):
+        return str(self.semaphore)
+
+To create the proxy for this blocking object we will use the following command::
+
+  $ concoord object -o semaphore.Semaphore -p 1
+
+This command creates the proxy that supports blocking operations.
 
 (6) HOMEPAGE
 ============

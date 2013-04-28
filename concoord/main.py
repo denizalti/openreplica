@@ -18,8 +18,6 @@ HELPSTR = "concoord, version 1.0.0-release:\n\
 concoord [acceptor] - starts an acceptor node\n\
 concoord [replica] - starts a replica node\n\
 concoord [nameserver] - starts a nameserver node\n\
-concoord [addnode] - adds nodes to a specified concoord instance\n\
-concoord [initialize] - initializes a concoord instance with given number of nodes\n\
 concoord [object $objectfilepath $classname] - concoordifies a python object"
 
 def start_node(nodetype):
@@ -30,35 +28,6 @@ def start_node(nodetype):
     signal.signal(signal.SIGTERM, node.terminate_handler)
     signal.pause()
 
-def add_node():
-    from concoord.openreplica.openreplicaaddnode import parser, args, start_node
-    try:
-        start_node(args.nodetype, args.subdomain, args.objectfilepath,
-                   args.classname, args.bootstrapname)
-    except Exception as e:
-        parser.print_help()
-
-def initialize():
-    from concoord.openreplica.openreplicainitializer import parser, args, start_nodes, check_object
-    try:
-        with open(args.objectfilepath, 'rU') as fd:
-            clientcode = fd.read()
-        # Check safety
-        if not check_object(clientcode):
-            print "Object is not safe for us to execute."
-            os._exit(1)
-        # Start Nodes
-        configuration = (int(args.replicanum), int(args.acceptornum), int(args.nameservernum))
-        start_nodes(args.subdomain, args.objectfilepath, args.classname, configuration)
-        # Create Proxy
-        print "Creating proxy..."
-        clientproxycode = createclientproxy(clientcode, args.classname, None)
-        clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
-        print "Proxy Code:"
-        print clientproxycode
-    except Exception as e:
-        parser.print_help()
-
 def check_object(clientcode):
     astnode = compile(clientcode,"<string>","exec",_ast.PyCF_ONLY_AST)
     v = SafetyVisitor()
@@ -68,13 +37,15 @@ def check_object(clientcode):
 def concoordify():
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--objectname", action="store", dest="objectname", default='',
-                        help="client object dotted name")
-    parser.add_argument("-s", "--safe", action="store_true", dest="safe", default=False,
-                        help="safety checking on/off")
+                        help="client object dotted name module.Class")
     parser.add_argument("-t", "--token", action="store", dest="securitytoken", default=None,
                         help="security token")
+    parser.add_argument("-p", "--proxytype", action="store", dest="proxytype", type=int, default=0,
+                        help="0:BASIC, 1:BLOCKING, 2:CLIENT-SIDE BATCHING, 3: SERVER-SIDE BATCHING ")
+    parser.add_argument("-s", "--safe", action="store_true", dest="safe", default=False,
+                        help="safety checking on/off")
     parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", default=None,
-                        help="verbose option")
+                        help="verbose mode on/off")
     args = parser.parse_args()
 
     if not args.objectname:
@@ -106,8 +77,7 @@ def concoordify():
             print "Object is safe!"
     if args.verbose:
         print "Creating clientproxy"
-    clientproxycode = createclientproxy(clientcode, classname,
-                                        args.securitytoken)
+    clientproxycode = createclientproxy(clientcode, classname, args.securitytoken, args.proxytype)
     clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
     proxyfile = open(filename[:-3]+"proxy.py", 'w')
     proxyfile.write(clientproxycode)
