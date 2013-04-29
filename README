@@ -379,7 +379,8 @@ To create the proxy for this blocking object we will use the following command::
 
   $ concoord object -o semaphore.Semaphore -p 1
 
-This command creates the proxy that supports blocking operations.
+This command creates the proxy that supports blocking operations. Now you can use blocking
+objects just like basic ConCoord objects.
 
 (6) HOMEPAGE
 ============
