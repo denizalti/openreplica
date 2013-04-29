@@ -30,7 +30,7 @@ parser.add_argument("-a", "--addr", action="store", dest="addr",
 parser.add_argument("-p", "--port", action="store", dest="port", type=int,
                     help="port for the node")
 parser.add_argument("-b", "--boot", action="store", dest="bootstrap",
-                    help="address:port:type triple for the bootstrap peer")
+                    help="address:port tuple for the bootstrap peer")
 parser.add_argument("-o", "--objectname", action="store", dest="objectname", default='',
                     help="client object dotted name")
 parser.add_argument("-l", "--logger", action="store", dest="logger", default='',

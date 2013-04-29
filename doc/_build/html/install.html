@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -15,7 +13,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '0.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -53,30 +51,18 @@
             
   <div class="section" id="installing-concoord">
 <h1>Installing ConCoord<a class="headerlink" href="#installing-concoord" title="Permalink to this headline">¶</a></h1>
-<p>For the purposes of this document, we will need a working copy of
-ConCoord. There are two ways of installing the most recent version of
-the system: from precompiled binaries, or from source.</p>
 <div class="section" id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
 <p>The minimum requirements for ConCoord are:</p>
-<ul class="simple">
-<li>python 2.6.6 or later</li>
-<li>dnspython-1.9.4</li>
-</ul>
+<div class="highlight-python"><pre>- python 2.7.2 or later
+- dnspython-1.9.4
+- msgpack-python</pre>
 </div>
-<div class="section" id="installing-precompiled-binaries">
-<h2>Installing Precompiled Binaries<a class="headerlink" href="#installing-precompiled-binaries" title="Permalink to this headline">¶</a></h2>
-<p>The easiest way to install ConCoord is through the precompiled
-packages. The ConCoord distribution currently supports Debian, Ubuntu
-and Fedora.</p>
-<p>The precompiled binaries have the necessary dependencies built into
-them so installing them should pull in all other required components.</p>
 </div>
-<div class="section" id="installing-from-source">
-<h2>Installing From Source<a class="headerlink" href="#installing-from-source" title="Permalink to this headline">¶</a></h2>
-<p>It is very easy to build ConCoord from source. Once you’ve installed
-all of the prerequisites, you can build and install ConCoord with:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python setup.py install
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>To build and install ConCoord, type:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo python setup.py install
 </pre></div>
 </div>
 </div>
@@ -92,8 +78,7 @@ all of the prerequisites, you can build and install ConCoord with:</p>
   <ul>
 <li><a class="reference internal" href="#">Installing ConCoord</a><ul>
 <li><a class="reference internal" href="#requirements">Requirements</a></li>
-<li><a class="reference internal" href="#installing-precompiled-binaries">Installing Precompiled Binaries</a></li>
-<li><a class="reference internal" href="#installing-from-source">Installing From Source</a></li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
 </ul>
 </li>
 </ul>
@@ -143,7 +128,7 @@ all of the prerequisites, you can build and install ConCoord with:</p>
     </div>
     <div class="footer">
         &copy; Copyright 2012, Deniz Altinbuken, Emin Gun Sirer.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
     </div>
   </body>
 </html>
