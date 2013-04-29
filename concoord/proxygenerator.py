@@ -61,6 +61,9 @@ class ProxyGen(ast.NodeTransformer):
 
     def visit_FunctionDef(self, node):
         if self.classdepth == 1:
+            for i in node.args.args:
+                if i.id == '_concoord_command':
+                    print node.args.args.remove(i)
             if node.name == "__init__":
                 pass
             else:

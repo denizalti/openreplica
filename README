@@ -344,6 +344,13 @@ implementations in the Python threading library. We will walk through
 an example below using the Semaphore object under
 concoord/object/semaphore.py
 
+In the blocking object implementation, the method invocations that use
+an object from the threading library requires an extra argument
+_concoord_command. This argument is used by the calling Replica node
+to relate any blocking/unblocking method invocation to a specific
+client. This way, even if the client disconnects and reconnects, the
+ConCoord instance will remain in a safe state.
+
 from concoord.threadingobject.dsemaphore import DSemaphore
 
 class Semaphore():

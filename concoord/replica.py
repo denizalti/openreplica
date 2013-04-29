@@ -227,7 +227,8 @@ class Replica(Node):
                 if self.debug: self.logger.write("State", "commandname: %s args: %s" % (commandname, str(commandargs)))
                 method = getattr(self, commandname)
                 clientreplycode = CR_META
-                givenresult = method(*commandargs)
+                givenresult = self._apply_args_to_method(method, commandargs, command)
+                #givenresult = method(*commandargs)
                 unblocked = {}
                 send_result_to_client = False
             elif not dometaonly and ismeta:
