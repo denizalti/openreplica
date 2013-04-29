@@ -68,8 +68,12 @@ class ClientProxy():
         self.doneops = {}  # requests that are finalized, indexed by command number
 
         # spawn thread, invoke recv_loop
-        recv_thread = Thread(target=self.recv_loop, name='ReceiveThread')
-        recv_thread.start()
+        try:
+            recv_thread = Thread(target=self.recv_loop, name='ReceiveThread')
+            recv_thread.daemon = True
+            recv_thread.start()
+        except (KeyboardInterrupt, SystemExit):
+            self._graceexit()
 
     def _getipportpairs(self, bootaddr, bootport):
         for node in socket.getaddrinfo(bootaddr, bootport, socket.AF_INET, socket.SOCK_STREAM):
@@ -154,15 +158,13 @@ class ClientProxy():
             print "Unexpected Client Reply Code: %d" % reqdesc.reply.replycode
 
     def recv_loop(self, *args):
-        try:
-            triedreplicas = set()
-            socketset = [self.socket]
-            while True:
+        triedreplicas = set()
+        socketset = [self.socket]
+        while True:
+            try:
                 triedreplicas.add(self.bootstrap)
                 needreconfig = False
-                inputready,outputready,exceptready = select.select(socketset,[],socketset,0)
-                for s in exceptready:
-                    print "EXCEPTION ", s
+                inputready,outputready,exceptready = select.select(socketset, [], socketset, 0)
                 for s in inputready:
                     reply = self.conn.receive()
                     if reply is None:
@@ -199,9 +201,8 @@ class ClientProxy():
                             if not self.conn.send(reqdesc.cm):
                                 needreconfig = True
                             continue
-
-        except KeyboardInterrupt:
-            self._graceexit()
+            except KeyboardInterrupt:
+                self._graceexit()
 
     def _graceexit(self):
         os._exit(0)
