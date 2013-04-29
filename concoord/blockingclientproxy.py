@@ -49,6 +49,7 @@ class ClientProxy():
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,1)
         self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        self.socket.setblocking(1)
         self.writelock = Lock()
 
         self.bootstraplist = self.discoverbootstrap(bootstrap)
@@ -70,8 +71,8 @@ class ClientProxy():
         recv_thread = Thread(target=self.recv_loop, name='ReceiveThread')
         recv_thread.start()
 
-    def getipportpairs(self, bootaddr, bootport):
-        for node in socket.getaddrinfo(bootaddr, bootport):
+    def _getipportpairs(self, bootaddr, bootport):
+        for node in socket.getaddrinfo(bootaddr, bootport, socket.AF_INET, socket.SOCK_STREAM):
             yield (node[4][0],bootport)
 
     def getbootstrapfromdomain(self, domainname):
@@ -79,12 +80,11 @@ class ClientProxy():
         try:
             answers = dns.resolver.query('_concoord._tcp.'+domainname, 'SRV')
             for rdata in answers:
-                for peer in self.getipportpairs(str(rdata.target), rdata.port):
+                for peer in self._getipportpairs(str(rdata.target), rdata.port):
                     if peer not in tmpbootstraplist:
                         tmpbootstraplist.append(peer)
         except (dns.resolver.NXDOMAIN, dns.exception.Timeout):
-            if self.debug:
-                print "Cannot resolve name"
+            if self.debug: print "Cannot resolve name"
         return tmpbootstraplist
 
     def discoverbootstrap(self, givenbootstrap):
@@ -94,15 +94,14 @@ class ClientProxy():
                 # The bootstrap list is read only during initialization
                 if bootstrap.find(":") >= 0:
                     bootaddr,bootport = bootstrap.split(":")
-                    for peer in self.getipportpairs(bootaddr, int(bootport)):
+                    for peer in self._getipportpairs(bootaddr, int(bootport)):
                         if peer not in tmpbootstraplist:
                             tmpbootstraplist.append(peer)
                 else:
                     self.domainname = bootstrap
                     tmpbootstraplist = self.getbootstrapfromdomain(self.domainname)
         except ValueError:
-            if self.debug:
-                print "bootstrap usage: ipaddr1:port1,ipaddr2:port2 or domainname"
+            if self.debug: print "bootstrap usage: ipaddr1:port1,ipaddr2:port2 or domainname"
             self._graceexit()
         return tmpbootstraplist
 
@@ -118,24 +117,19 @@ class ClientProxy():
                 self.conn.settimeout(CLIENTRESENDTIMEOUT)
                 self.bootstrap = boottuple
                 connected = True
-                if self.debug:
-                    print "Connected to new bootstrap: ", boottuple
+                if self.debug: print "Connected to new bootstrap: ", boottuple
                 break
             except socket.error, e:
-                if self.debug:
-                    print e
+                if self.debug: print "Socket.Error: ", e
                 continue
         return connected
 
-    def trynewbootstrap(self, triedreplicas):
+    def trynewbootstrap(self):
         if self.domainname:
             self.bootstraplist = self.getbootstrapfromdomain(self.domainname)
         else:
             oldbootstrap = self.bootstraplist.pop(0)
             self.bootstraplist.append(oldbootstrap)
-        if triedreplicas == set(self.bootstraplist):
-            # If all replicas in the list are tried already, return False
-            return False
         return self.connecttobootstrap()
 
     def invoke_command(self, *args):
@@ -162,14 +156,20 @@ class ClientProxy():
     def recv_loop(self, *args):
         try:
             triedreplicas = set()
+            socketset = [self.socket]
             while True:
                 triedreplicas.add(self.bootstrap)
                 needreconfig = False
-#                try:
-                for reply in self.conn.received_bytes():
-                    if reply and reply.type == MSG_CLIENTREPLY:
+                inputready,outputready,exceptready = select.select(socketset,[],socketset,0)
+                for s in exceptready:
+                    print "EXCEPTION ", s
+                for s in inputready:
+                    reply = self.conn.receive()
+                    if reply is None:
+                        needreconfig = True
+                    elif reply and reply.type == MSG_CLIENTREPLY:
+                        reqdesc = self.pendingops[reply.inresponseto]
                         with self.lock:
-                            reqdesc = self.pendingops[reply.inresponseto]
                             if reply.replycode == CR_OK or reply.replycode == CR_EXCEPTION or reply.replycode == CR_UNBLOCK:
                                 # actionable response, wake up the thread
                                 if reply.replycode == CR_UNBLOCK:
@@ -185,8 +185,7 @@ class ClientProxy():
                                 needreconfig = True
                             else:
                                 print "should not happen -- unknown response type"
-#                except:
-#                    needreconfig = True
+
                 while needreconfig:
                     if not self.trynewbootstrap(triedreplicas):
                         raise ConnectionError("Cannot connect to any bootstrap")
