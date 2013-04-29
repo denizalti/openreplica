@@ -239,11 +239,14 @@ class Node():
         return "%s NODE %s:%d" % (node_names[self.type], self.addr, self.port)
 
     def statestr(self):
-        groups = "".join(str(group) for type,group in self.groups.iteritems())
-        if hasattr(self,'pendingcommands') and len(self.pendingcommands) > 0:
+        returnstr = ""
+        for type,group in self.groups.iteritems():
+            for peer in group.iterkeys():
+                returnstr += node_names[type] + " %s:%d\n" % (peer.addr,peer.port)
+        if hasattr(self, 'pendingcommands') and len(self.pendingcommands) > 0:
             pending =  "".join("%d: %s" % (cno, proposal) for cno,proposal in self.pendingcommands.iteritems())
-            groups = "%s\nPending:\n%s" % (groups, pending)
-        return groups
+            returnstr = "%s\nPending:\n%s" % (returnstr, pending)
+        return returnstr
 
     def server_loop(self):
         """Serverloop that listens to multiple connections and accepts new ones.
@@ -305,7 +308,6 @@ class Node():
                     if s == self.socket:
                         clientsock,clientaddr = self.socket.accept()
                         if self.debug: self.logger.write("State", "accepted a connection from address %s" % str(clientaddr))
-                        print "Adding to dictionaries..."
                         self.connectionpool.activesockets.add(clientsock)
                         self.connectionpool.nascentsockets.add(clientsock)
                         success = True
@@ -428,7 +430,7 @@ class Node():
 
     def cmd_state(self, args):
         """prints connectivity state of the corresponding Node."""
-        if self.debug: self.logger.write("State", "\n%s\n" % (self.statestr()))
+        print "\n%s\n" % (self.statestr())
 
     def get_user_input_from_shell(self):
         """Shell loop that accepts inputs from the command prompt and

@@ -1250,7 +1250,7 @@ class Replica(Node):
                     self.backoff += BACKOFFINCREASE
                 if self.debug: self.logger.write("Paxos State", "There is another leader, backing off.")
                 time.sleep(self.backoff)
-                #XXX This assigns commandnumber == 1
+                #XXX This might assign commandnumber == 1, recheck.
                 self.initiate_command(prc.proposal)
 
     def ping_neighbor(self):
