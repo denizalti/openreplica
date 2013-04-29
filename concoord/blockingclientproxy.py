@@ -158,11 +158,9 @@ class ClientProxy():
             print "Unexpected Client Reply Code: %d" % reqdesc.reply.replycode
 
     def recv_loop(self, *args):
-        triedreplicas = set()
         socketset = [self.socket]
         while True:
             try:
-                triedreplicas.add(self.bootstrap)
                 needreconfig = False
                 inputready,outputready,exceptready = select.select(socketset, [], socketset, 0)
                 for s in inputready:
@@ -189,7 +187,7 @@ class ClientProxy():
                                 print "should not happen -- unknown response type"
 
                 while needreconfig:
-                    if not self.trynewbootstrap(triedreplicas):
+                    if not self.trynewbootstrap():
                         raise ConnectionError("Cannot connect to any bootstrap")
                     needreconfig = False
 
