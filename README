@@ -4,8 +4,8 @@
 ConCoord
 ========
 
-1 Overview
-==========
+Overview
+========
 
 ConCoord is a novel coordination service that provides replication and
 synchronization support for large-scale distributed systems. ConCoord
@@ -23,8 +23,8 @@ a transparent way of providing a coordination service.
 :Version: 1.0.0
 :Date: 2013-04-13
 
-2 Requirements
-==============
+Requirements
+============
 
 The minimum requirements for ConCoord are::
 
@@ -32,18 +32,18 @@ The minimum requirements for ConCoord are::
   - dnspython-1.9.4
   - msgpack-python
 
-3 Installation
-==============
+Installation
+============
 
 To build and install ConCoord, type::
 
   sudo python setup.py install
 
-4 Tutorial
-==========
+Tutorial
+========
 
-4.0 Getting Started
--------------------
+Getting Started
+---------------
 
 To use ConCoord and distribute your Python objects first you need to
 create the local Python object. Once the object is created, ConCoord
@@ -53,8 +53,8 @@ remote method invocations, a round of Paxos Consensus Protocol is run
 by ConCoord to provide consistency between different copies of the
 object.
 
-4.1 ConCoordifying Python Objects
----------------------------------
+ConCoordifying Python Objects
+-----------------------------
 
 To walk you through the ConCoord approach, we will use the example
 Counter coordination object we provided. In the source distribution
@@ -121,14 +121,14 @@ two ways:
   renamed as __concoordinit__, to reinitialize the object the user can
   call __concoordinit__ at any point.
 
-4.2 Starting Nodes
-------------------
+Starting Nodes
+--------------
 
 To distribute your object you should start at least one replica and one
 acceptor.
 
-4.2.1 Starting Replica Nodes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Starting Replica Nodes
+~~~~~~~~~~~~~~~~~~~~~~
 
 To start the replica node, use the following command::
 
@@ -139,8 +139,8 @@ following command to connect to a bootstrap replica with ipaddr:port::
 
   $ concoord replica -o counter.Counter -b ipaddr:port
 
-4.2.2 Starting Acceptor Nodes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Starting Acceptor Nodes
+~~~~~~~~~~~~~~~~~~~~~~~
 
 To start an acceptor node that connects to the bootrstrap replica at
 ipaddr:port, use the following command::
@@ -166,27 +166,27 @@ where,
   -d, --debug           debug on/off
   -i, --interactive     interactive shell on/off
 
-4.2.3 Starting Nameserver Nodes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Starting Nameserver Nodes
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can dynamically locate nodes in a given ConCoord instance using
 DNS queries if the instance includes nameserver nodes. There are three
 ways you can run a ConCoord Nameserver.
 
-* Standalone Nameserver Keeps track of the view and responds to DNS
+* **Standalone Nameserver** Keeps track of the view and responds to DNS
   queries itself. Requires su privileges to bind to Port 53.
 
-* Slave Nameserver Keeps track of the view and updates a master
+* **Slave Nameserver** Keeps track of the view and updates a master
   nameserver that answers to DNS queries on behalf of the slave
   nameserver. Requires an active master nameserver.
 
-* Route53 Nameserver Keeps track of the view and updates an Amazon
+* **Route53 Nameserver** Keeps track of the view and updates an Amazon
   Route53 account. Amazon Route53 answers to DNS queries on behalf of
   the slave nameserver. Requires a ready-to-use Amazon Route53
   account.
 
-4.2.3.1 Standalone Nameserver
-+++++++++++++++++++++++++++++
+Standalone Nameserver
++++++++++++++++++++++
 
 Before starting a standalone nameserver node manually, first make sure
 that you have at least one replica and one acceptor running. Once your
@@ -211,8 +211,8 @@ can query the nameserver bound to nsipaddr specifically as follows::
 
   $ dig -t a counterdomain @nsipaddr         # returns set of Replicas
 
-4.2.3.2 Slave Nameserver
-++++++++++++++++++++++++
+Slave Nameserver
+++++++++++++++++
 
 Before starting a slave nameserver node manually, you should have a
 master nameserver set up and running. The master nameserver should be
@@ -240,8 +240,8 @@ counterdomain and see the most current set of nodes as follows::
 
   $ dig -t ns counterdomain                  # returns set of nameservers
 
-4.2.3.3 Amazon Route 53 Nameserver
-++++++++++++++++++++++++++++++++++
+Amazon Route 53 Nameserver
+++++++++++++++++++++++++++
 
 Before starting a nameserver connected to Amazon Route 53, you should
 have a Route 53 account set up and ready to receive requests. After
@@ -259,8 +259,8 @@ credentials are updated, you can start the nameserver as follows::
 
   $ concoord nameserver -n counterdomain -o counter.Counter -b ipaddr:port -t 3 -o configfilepath
 
-4.3 Connecting to ConCoord Objects
-----------------------------------
+Connecting to ConCoord Objects
+------------------------------
 
 Once you have a ConCoord instance running with your object, it is easy
 to access your object.
@@ -288,35 +288,35 @@ replicas, you should call __concoordinit__ function:
   >>> c.getvalue()
   1
 
-5 ADVANCED TUTORIAL
-===================
+ADVANCED TUTORIAL
+=================
 
-5.1 Creating Source Bundles
----------------------------
+Creating Source Bundles
+-----------------------
 
 You can create bundles to use at the server and client sides using the
 Makefile provided under concoord/
 
 Remember to add the objects you have created in these bundles.
 
-5.1.1 Creating A Server Bundle
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Creating A Server Bundle
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 To create a bundle that can run replica, acceptor and nameserver
 nodes::
 
   $ make server
 
-5.1.2 Creating A Client Bundle
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Creating A Client Bundle
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 To create a bundle that can run a client and connect to an existing
 ConCoord instance:
 
   $ make client
 
-5.2 Logging
------------
+Logging
+-------
 
 We have two kinds of loggers for ConCoord::
 * Console Logger
@@ -326,8 +326,8 @@ Both of these loggers are included under utils.py. To start the
 NetworkLogger, use the logdaemon.py on the host you want to keep the
 Logger.
 
-5.3 Synchronization & Threading
--------------------------------
+Synchronization & Threading
+---------------------------
 
 ConCoord provides a distributed and fault-tolerant threading
 library. The library includes:
@@ -349,47 +349,78 @@ an object from the threading library requires an extra argument
 _concoord_command. This argument is used by the calling Replica node
 to relate any blocking/unblocking method invocation to a specific
 client. This way, even if the client disconnects and reconnects, the
-ConCoord instance will remain in a safe state.
+ConCoord instance will remain in a safe state::
 
-from concoord.threadingobject.dsemaphore import DSemaphore
+  from concoord.threadingobject.dsemaphore import DSemaphore
 
-class Semaphore():
+  class Semaphore:
     def __init__(self, count=1):
-        self.semaphore = DSemaphore(count)
+      self.semaphore = DSemaphore(count)
 
     def __repr__(self):
-        return repr(self.semaphore)
+      return repr(self.semaphore)
 
     def acquire(self, _concoord_command):
-        try:
-            return self.semaphore.acquire(_concoord_command)
-        except Exception as e:
-            raise e
+      try:
+	return self.semaphore.acquire(_concoord_command)
+      except Exception as e:
+        raise e
 
     def release(self, _concoord_command):
-        try:
-            return self.semaphore.release(_concoord_command)
-        except Exception as e:
-            raise e
+      try:
+        return self.semaphore.release(_concoord_command)
+      except Exception as e:
+        raise e
 
     def __str__(self):
-        return str(self.semaphore)
+      return str(self.semaphore)
 
 To create the proxy for this blocking object we will use the following command::
 
   $ concoord object -o semaphore.Semaphore -p 1
 
-This command creates the proxy that supports blocking operations. Now you can use blocking
-objects just like basic ConCoord objects.
+This command creates the proxy that supports blocking operations. Now
+you can use blocking objects just like basic ConCoord objects. First,
+we start the replica, acceptor and nameserver nodes the same way we
+did before as follows:
 
-(6) HOMEPAGE
-============
+.. sourcecode:: console
+
+  $ concoord replica -o semaphore.Semaphore -a 127.0.0.1 -p 14000
+
+.. sourcecode:: console
+
+  $ concoord acceptor -b 127.0.0.1:14000
+
+.. sourcecode:: console
+
+  $ sudo concoord nameserver -n semaphoredomain -o semaphore.Semaphore -b 127.0.0.1:14000 -t 1
+
+To test the functionality, you can use multiple clients or print out the ``Semaphore`` object as follows:
+
+.. sourcecode:: pycon
+
+  >>> from semaphoreproxy import Semaphore
+  >>> s = Semaphore("127.0.0.1:14000")
+  >>> s.acquire()
+  True
+  >>> i = 10
+  >>> i += 5
+  >>> s
+  <DSemaphore count=0>
+  >>> s.release()
+  >>> s
+  <DSemaphore count=1>
+  >>>
+
+HOMEPAGE
+========
 
 Visit http://openreplica.org to see concoord in action and to get more
 information on concoord.
 
-(7) CONTACT
-===========
+CONTACT
+=======
 
 If you believe you have found a bug or have a problem you need
 assistance with, you can get in touch with us by emailing
