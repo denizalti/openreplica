@@ -12,9 +12,6 @@ class Semaphore:
     def __concoordinit__(self, count=1):
         return self.proxy.invoke_command('__init__', count)
 
-    def __repr__(self):
-        return self.proxy.invoke_command('__repr__')
-
     def acquire(self):
         return self.proxy.invoke_command('acquire')
 

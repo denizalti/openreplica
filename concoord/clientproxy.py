@@ -5,6 +5,7 @@
 '''
 import os, random, select, socket, sys, threading, time
 from threading import Lock
+import cPickle as pickle
 from concoord.pack import *
 from concoord.enums import *
 from concoord.utils import *
@@ -132,7 +133,7 @@ class ClientProxy():
                             assert lastreplycode == CR_BLOCK, "unblocked thread not previously blocked"
                             return reply.reply
                         elif reply.replycode == CR_EXCEPTION:
-                            raise Exception(reply.reply)
+                            raise Exception(pickle.loads(reply.reply))
                         elif reply.replycode == CR_INPROGRESS or reply.replycode == CR_BLOCK:
                             # the thread is already waiting, no need to do anything
                             lastreplycode = reply.replycode
