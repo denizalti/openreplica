@@ -439,6 +439,11 @@ class Replica(Node):
             for i in range(WINDOW):
                 noopcommand = self.create_noop_command()
                 self.initiate_command(noopcommand)
+        elif len(self.groups[NODE_ACCEPTOR]) == 0:
+            if self.debug: self.logger.write("State", "There are no acceptors. Can't add new node.")
+            heloreplymessage = create_message(MSG_HELOREPLY, self.me,
+                                              {FLD_LEADER: self.find_leader()})
+            conn.send(heloreplymessage)
         else:
             if self.isleader:
                 if self.debug: self.logger.write("State", "Adding the new node")
@@ -472,9 +477,10 @@ class Replica(Node):
         # If the node is already up-to-date, return.
         if self.stateuptodate:
             return
-        for key,value in self.decisions.iteritems():
-            if key in msg.decisions:
-                assert self.decisions[key] == msg.decisions[key], "Update Error"
+        # XXX Fic the following
+        #for key,value in self.decisions.iteritems():
+        #    if key in msg.decisions:
+        #        assert self.decisions[key] == msg.decisions[key], "Update Error"
         # update decisions cumulatively
         self.decisions.update(msg.decisions)
         self.decisionset = set(self.decisions.values())
@@ -1269,13 +1275,19 @@ class Replica(Node):
                     pingmessage = create_message(MSG_PING, self.me)
                     success = self.send(pingmessage, peer=peer)
                     if success < 0:
-                        if self.debug: self.logger.write("State", "Neighbor not responding, marking the neighbor")
+                        if self.debug: self.logger.write("State",
+                                                         "Neighbor not responding, marking the neighbor")
                         self.groups[peer.type][peer] += 1
                         if self.isleader:
+                            print "Creating delete command.."
                             delcommand = self.create_delete_command(peer)
                             if delcommand not in self.pendingmetacommands:
+                                print "XXXXXXXXXXXXXXXXXXXXXXX"
+                                print self.pendingmetacommands
+                                print "XXXXXXXXXXXXXXXXXXXXXXX"
                                 with self.pendingmetalock:
                                     self.pendingmetacommands.add(delcommand)
+                                print "Adding to pendingcommands: ", delcommand
                                 self.pick_commandnumber_add_to_pending(delcommand)
                                 for i in range(WINDOW):
                                     noopcommand = self.create_noop_command()

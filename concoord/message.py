@@ -115,9 +115,14 @@ def parse_incclientrequest(msg):
 
 def parse_updatereply(msg):
     for commandnumber,command in msg[FLD_DECISIONS].iteritems():
-        msg[FLD_DECISIONS][commandnumber] = Proposal(msg[FLD_DECISIONS][commandnumber][0],
-                                                     msg[FLD_DECISIONS][commandnumber][1],
-                                                     msg[FLD_DECISIONS][commandnumber][2])
+        try:
+            msg[FLD_DECISIONS][commandnumber] = Proposal(msg[FLD_DECISIONS][commandnumber][0],
+                                                         msg[FLD_DECISIONS][commandnumber][1],
+                                                         msg[FLD_DECISIONS][commandnumber][2])
+        except IndexError as i:
+            msg[FLD_DECISIONS][commandnumber] = Proposal(msg[FLD_DECISIONS][commandnumber][0][0][0],
+                                                         msg[FLD_DECISIONS][commandnumber][0][0][1],
+                                                         msg[FLD_DECISIONS][commandnumber][0][0][2])
     return UpdateReplyMessage(msg[FLD_ID], msg[FLD_TYPE], msg[FLD_DECISIONS])
 
 def parse_garbagecollect(msg):

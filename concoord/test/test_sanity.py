@@ -10,12 +10,12 @@ class TestSanity():
 
     def add_10_percent(self):
         self.value *= 1.1
-        self.counter += 1        
+        self.counter += 1
         return self.counter
-        
+
     def subtract_10000(self):
         self.value -= 10**4
-        self.counter += 1        
+        self.counter += 1
         return self.counter
 
     def get_data(self):
