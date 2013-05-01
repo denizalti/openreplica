@@ -4,6 +4,7 @@
 @copyright: See LICENSE
 '''
 import os, random, select, socket, sys, threading, time
+import cPickle as pickle
 from threading import Thread, Condition, Lock
 from concoord.pack import *
 from concoord.enums import *
@@ -153,7 +154,7 @@ class ClientProxy():
         if reqdesc.reply.replycode == CR_OK or reqdesc.reply.replycode == CR_UNBLOCK:
             return reqdesc.reply.reply
         elif reqdesc.reply.replycode == CR_EXCEPTION:
-            raise Exception(reqdesc.reply.reply)
+            raise Exception(pickle.loads(reqdesc.reply.reply))
         else:
             print "Unexpected Client Reply Code: %d" % reqdesc.reply.replycode
 

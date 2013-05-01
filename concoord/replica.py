@@ -166,7 +166,7 @@ class Replica(Node):
                         self.send_reply_to_client(CR_UNBLOCK, None, unblockedclientcommand)
                 except Exception as e:
                     if self.debug: self.logger.write("Execution Error", "Error during method invocation: %s" % str(e))
-                    givenresult = e
+                    givenresult = pickle.dumps(e)
                     clientreplycode = CR_EXCEPTION
                     unblocked = {}
                 self.lock.acquire()
@@ -266,7 +266,7 @@ class Replica(Node):
                         self.send_reply_to_client(CR_UNBLOCK, None, unblockedclientcommand)
                 except Exception as e:
                     if self.debug: self.logger.write("Execution Error", "Error during method invocation: %s" % str(e))
-                    givenresult = e
+                    givenresult = pickle.dumps(e)
                     clientreplycode = CR_EXCEPTION
                     send_result_to_client = True
                     unblocked = {}
@@ -521,6 +521,11 @@ class Replica(Node):
             elif chosenleader != self.me and self.isleader:
                 # unbecome the leader
                 self.unbecome_leader()
+
+    def _get_ft(self):
+        ft_replica = len(self.replicas)-1
+        ft_acceptor = int(math.ceil(len(self.acceptors)/2.0))-1
+        return "The system can tolerate %d replica and %d acceptor failures." % (ft_replica,ft_acceptor)
 
     def _del_node(self, nodetype, nodename):
         nodetype = int(nodetype)
@@ -999,7 +1004,7 @@ class Replica(Node):
                 for unblockedclientcommand in unblocked.iterkeys():
                     self.send_reply_to_client(CR_UNBLOCK, None, unblockedclientcommand)
             except Exception as e:
-                givenresult = e
+                givenresult = pickle.dumps(e)
                 clientreplycode = CR_EXCEPTION
                 send_result_to_client = True
                 unblocked = {}
