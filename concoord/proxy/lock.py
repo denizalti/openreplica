@@ -3,7 +3,7 @@
 @note: Lock proxy
 @copyright: See LICENSE
 '''
-from concoord.clientproxy import ClientProxy
+from concoord.blockingclientproxy import ClientProxy
 
 class Lock:
     def __init__(self, bootstrap):
