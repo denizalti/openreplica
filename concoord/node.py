@@ -401,6 +401,9 @@ class Node():
         if msg.leader:
             if msg.source == msg.leader:
                 if self.debug: self.logger.write("Error", "There are no acceptors yet, waiting.")
+                # If heloreply received, should ping the bootstrap again to try connecting.
+                time.sleep(1)
+                self.connecttobootstrap()
                 return
             elif msg.leader == self.me:
                 if self.debug: self.logger.write("State", "I'm the leader.")
