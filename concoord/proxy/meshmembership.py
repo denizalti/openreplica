@@ -3,7 +3,7 @@
 @note: MeshMembership proxy
 @copyright: See LICENSE
 """
-from concoord.clientproxy import ClientProxy
+from concoord.blockingclientproxy import ClientProxy
 
 class MeshMembership():
     def __init__(self, bootstrap):

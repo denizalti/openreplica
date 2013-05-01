@@ -3,7 +3,7 @@
 @note: Semaphore proxy
 @copyright: See LICENSE
 '''
-from concoord.clientproxy import ClientProxy
+from concoord.blockingclientproxy import ClientProxy
 
 class Semaphore:
     def __init__(self, bootstrap):

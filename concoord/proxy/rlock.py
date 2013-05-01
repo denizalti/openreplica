@@ -3,7 +3,7 @@
 @note: RLock proxy
 @copyright: See LICENSE
 '''
-from concoord.clientproxy import ClientProxy
+from concoord.blockingclientproxy import ClientProxy
 
 class RLock:
     def __init__(self, bootstrap):
