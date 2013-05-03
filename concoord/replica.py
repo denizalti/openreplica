@@ -477,10 +477,9 @@ class Replica(Node):
         # If the node is already up-to-date, return.
         if self.stateuptodate:
             return
-        # XXX Fic the following
-        #for key,value in self.decisions.iteritems():
-        #    if key in msg.decisions:
-        #        assert self.decisions[key] == msg.decisions[key], "Update Error"
+        for key,value in self.decisions.iteritems():
+            if key in msg.decisions:
+                assert self.decisions[key] == msg.decisions[key], "Update Error"
         # update decisions cumulatively
         self.decisions.update(msg.decisions)
         self.decisionset = set(self.decisions.values())
