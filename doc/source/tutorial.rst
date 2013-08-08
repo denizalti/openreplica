@@ -42,8 +42,8 @@ so that the objects can be found and imported:
 
   $ export PYTHONPATH=$PYTHONPATH:/foo/
 
-Clients will use a proxy object to do method calls on the To create a
-proxy for the ConCoord object, run the following command:
+Clients will use a proxy object to do method calls on the ConCoord object.
+To create a proxy for the ConCoord object, run the following command:
 
 .. sourcecode:: console
 
