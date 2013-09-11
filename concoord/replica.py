@@ -332,7 +332,8 @@ class Replica(Node):
             self.add_to_decisions(msg.commandnumber, msg.proposal)
         # If replica was using this commandnumber for a different proposal, initiate it again
         if msg.commandnumber in self.proposals and msg.proposal != self.proposals[msg.commandnumber]:
-            self.initiate_command(self.proposals[msg.commandnumber])
+            self.pick_commandnumber_add_to_pending(self.proposals[msg.commandnumber])
+            self.issue_pending_commands()
 
         while self.nexttoexecute in self.decisions:
             requestedcommand = self.decisions[self.nexttoexecute]
@@ -344,7 +345,7 @@ class Replica(Node):
             self.nexttoexecute += 1
             # the window just got bumped by one
             # check if there are pending commands, and issue one of them
-            self.issue_command(self.nexttoexecute)
+            self.issue_pending_commands()
         if self.debug: self.logger.write("State", "Returning from PERFORM!")
 
     def execute_command(self, requestedcommand, msg, designated):
@@ -382,29 +383,32 @@ class Replica(Node):
                 self.performcore(requestedcommand, designated=designated)
 
     def pick_commandnumber_add_to_pending(self, givenproposal):
-        # Add command to pending commands
         givencommandnumber = self.find_commandnumber()
         self.add_to_pendingcommands(givencommandnumber, givenproposal)
 
-    def initiate_command(self, givenproposal=None):
-        if givenproposal:
-            # Add command to pending commands
-            givencommandnumber = self.find_commandnumber()
-            self.add_to_pendingcommands(givencommandnumber, givenproposal)
-        # Try issuing command
-        # Pick the smallest pendingcommandnumber
-        smallestcommandnumber = sorted(self.pendingcommands.keys())[0]
-        self.issue_command(smallestcommandnumber)
-
-    def issue_command(self, candidatecommandno):
-        """propose a command from the pending commands"""
+    def issue_next_command(self):
         if self.debug: self.logger.write("State", "Pending commands: %s" % str(self.pendingcommands))
         if self.debug: self.logger.write("State", "Pending commandset: %s" % str(self.pendingcommandset))
-        if candidatecommandno in self.pendingcommands:
+        if len(self.pendingcommands) == 0:
+            return
+        smallestcommandnumber = sorted(self.pendingcommands.keys())[0]
+        if smallestcommandnumber in self.pendingcommands:
             if self.active:
-                self.do_command_propose_from_pending(candidatecommandno)
+                self.do_command_propose_from_pending(smallestcommandnumber)
             else:
-                self.do_command_prepare_from_pending(candidatecommandno)
+                self.do_command_prepare_from_pending(smallestcommandnumber)
+
+    def issue_pending_commands(self):
+        if self.debug: self.logger.write("State", "Pending commands: %s" % str(self.pendingcommands))
+        if self.debug: self.logger.write("State", "Pending commandset: %s" % str(self.pendingcommandset))
+        if len(self.pendingcommands) == 0:
+            return
+        sortedcommandnumbers = sorted(self.pendingcommands.keys())
+        for smallestcommandnumber in sortedcommandnumbers:
+            if self.active:
+                self.do_command_propose_from_pending(smallestcommandnumber)
+            else:
+                self.do_command_prepare_from_pending(smallestcommandnumber)
 
     def msg_perform(self, conn, msg):
         """received a PERFORM message, perform it and send an
@@ -425,20 +429,24 @@ class Replica(Node):
         if msg.source.type == NODE_ACCEPTOR and len(self.groups[NODE_ACCEPTOR]) == 0:
             if self.debug: self.logger.write("State", "Adding the first acceptor")
             self.groups[msg.source.type][msg.source] = 0
-            # Agree on adding the first replica and this first acceptor
-            # Add the Acceptor
-            addcommand = self.create_add_command(msg.source)
+            # Agree on adding the first acceptor and self:
             self.become_leader()
-            self.initiate_command(addcommand)
+            # Add acceptor
+            addcommand = self.create_add_command(msg.source)
+            self.pick_commandnumber_add_to_pending(addcommand)
+            self.issue_pending_commands()
             for i in range(WINDOW):
                 noopcommand = self.create_noop_command()
-                self.initiate_command(noopcommand)
+                self.pick_commandnumber_add_to_pending(noopcommand)
+                self.issue_pending_commands()
             # Add self
             addcommand = self.create_add_command(self.me)
-            self.initiate_command(addcommand)
+            self.pick_commandnumber_add_to_pending(addcommand)
+            self.issue_pending_commands()
             for i in range(WINDOW):
                 noopcommand = self.create_noop_command()
-                self.initiate_command(noopcommand)
+                self.pick_commandnumber_add_to_pending(noopcommand)
+                self.issue_pending_commands()
         elif len(self.groups[NODE_ACCEPTOR]) == 0:
             if self.debug: self.logger.write("State", "There are no acceptors. Can't add new node.")
             heloreplymessage = create_message(MSG_HELOREPLY, self.me,
@@ -448,11 +456,12 @@ class Replica(Node):
             if self.isleader:
                 if self.debug: self.logger.write("State", "Adding the new node")
                 addcommand = self.create_add_command(msg.source)
-                self.initiate_command(addcommand)
-                if self.debug: self.logger.write("State", "Add command created: %s" % str(addcommand))
+                self.pick_commandnumber_add_to_pending(addcommand)
+                self.issue_pending_commands()
                 for i in range(WINDOW+3):
                     noopcommand = self.create_noop_command()
-                    self.initiate_command(noopcommand)
+                    self.pick_commandnumber_add_to_pending(noopcommand)
+                    self.issue_pending_commands()
             else:
                 if self.debug: self.logger.write("State", "Not the leader, sending a HELOREPLY")
                 if self.debug: self.logger.write("State", "Leader is %s" % str(self.find_leader()))
@@ -502,7 +511,7 @@ class Replica(Node):
                 self.nexttoexecute += 1
         # the window got bumped
         # check if there are pending commands, and issue one of them
-        self.issue_command(self.nexttoexecute)
+        self.issue_pending_commands()
         if self.debug: self.logger.write("State", "Update is done!")
         self.stateuptodate = True
 
@@ -722,12 +731,6 @@ class Replica(Node):
         # that causes this to happen should be prevented, adding an if
         # case in this function will not fix the logic, will just get rid
         # of the symptom.
-        if value in self.pendingcommands.itervalues():
-            print "This command was added before with a different key!"
-            print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-            print "Pending commands: ", self.pendingcommands
-            print "Pending commandset: ", self.pendingcommandset
-            print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         self.pendingcommands[key] = value
         if isinstance(value, ProposalServerBatch):
             for item in value.proposals:
@@ -775,6 +778,7 @@ class Replica(Node):
         -- if it has been executed send the result
         -- if it has not been executed yet send INPROGRESS
         - if this request has not been received before initiate a Paxos round for the command"""
+        print "SENDCOUNT: ", sendcount
         if not self.isleader:
             if self.debug: self.logger.write("Error", "Shouldn't have come here: Called to handle client command but not Leader.")
             clientreply = create_message(MSG_CLIENTREPLY, self.me,
@@ -823,7 +827,8 @@ class Replica(Node):
             # The caller haven't received this command before
             self.receivedclientrequests[(givencommand.client,givencommand.clientcommandnumber)] = givencommand
             if self.debug: self.logger.write("State", "Initiating a new command. Leader is active: %s" % self.active)
-            self.initiate_command(givencommand)
+            self.pick_commandnumber_add_to_pending(givencommand)
+            self.issue_pending_commands()
 
     def handle_client_command_batch(self, msgconnlist, prepare=False):
         """handle received command
@@ -876,9 +881,11 @@ class Replica(Node):
         if len(commandstohandle) == 0:
             return
         elif len(commandstohandle) == 1:
-            self.initiate_command(commandstohandle[0])
+            self.pick_commandnumber_add_to_pending(commandstohandle[0])
+            self.issue_pending_commands()
         else:
-            self.initiate_command(ProposalServerBatch(commandstohandle))
+            self.pick_commandnumber_add_to_pending(ProposalServerBatch(commandstohandle))
+            self.issue_pending_commands()
 
     def send_reject_to_client(self, conn, clientcommandnumber):
         conn.send(create_message(MSG_CLIENTREPLY, self.me,
@@ -925,9 +932,11 @@ class Replica(Node):
                     with self.pendingmetalock:
                         self.pendingmetacommands.add(delcommand)
                     self.pick_commandnumber_add_to_pending(delcommand)
+                    self.issue_pending_commands()
                     for i in range(WINDOW):
                         noopcommand = self.create_noop_command()
                         self.pick_commandnumber_add_to_pending(noopcommand)
+                        self.issue_pending_commands()
                 if self.token and msg.token != self.token:
                     if self.debug: self.logger.write("Error", "Security Token mismatch.")
                     self.send_reject_to_client(conn, msg.command.clientcommandnumber)
@@ -1061,6 +1070,7 @@ class Replica(Node):
                                   FLD_COMMANDNUMBER: givencommandnumber,
                                   FLD_PROPOSAL: givenproposal,
                                   FLD_SERVERBATCH: isinstance(givenproposal, ProposalServerBatch)})
+        print "Sending: ", propose, " to ", prc.acceptors
         self.send(propose, group=prc.acceptors)
 
     def do_command_prepare_from_pending(self, givencommandnumber):
@@ -1135,7 +1145,8 @@ class Replica(Node):
                 # If the commandnumber we were planning to use is overwritten
                 # we should try proposing with a new commandnumber
                 if self.proposals[prc.commandnumber] != prc.proposal:
-                    self.initiate_command(prc.proposal)
+                    self.pick_commandnumber_add_to_pending(prc.proposal)
+                    self.issue_pending_commands()
                 for chosencommandnumber,chosenproposal in self.proposals.iteritems():
                     if self.debug: self.logger.write("Paxos State", "Sending PROPOSE for %d, %s" % (chosencommandnumber, chosenproposal))
                     newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, chosencommandnumber, chosenproposal)
@@ -1182,7 +1193,8 @@ class Replica(Node):
                 # if caller lost to a replica whose name precedes its, back off more
                 self.backoff += BACKOFFINCREASE
             time.sleep(self.backoff)
-            self.initiate_command(prc.proposal)
+            self.pick_commandnumber_add_to_pending(prc.proposal)
+            self.issue_pending_commands()
 
     def msg_propose_accept(self, conn, msg):
         """MSG_PROPOSE_ACCEPT is handled only if it belongs to an outstanding MSG_PREPARE,
@@ -1261,8 +1273,8 @@ class Replica(Node):
                     self.backoff += BACKOFFINCREASE
                 if self.debug: self.logger.write("Paxos State", "There is another leader, backing off.")
                 time.sleep(self.backoff)
-                #XXX This might assign commandnumber == 1, recheck.
-                self.initiate_command(prc.proposal)
+                self.pick_commandnumber_add_to_pending(prc.proposal)
+                self.issue_pending_commands()
 
     def ping_neighbor(self):
         """used to ping neighbors periodically"""
@@ -1281,9 +1293,6 @@ class Replica(Node):
                             print "Creating delete command.."
                             delcommand = self.create_delete_command(peer)
                             if delcommand not in self.pendingmetacommands:
-                                print "XXXXXXXXXXXXXXXXXXXXXXX"
-                                print self.pendingmetacommands
-                                print "XXXXXXXXXXXXXXXXXXXXXXX"
                                 with self.pendingmetalock:
                                     self.pendingmetacommands.add(delcommand)
                                 print "Adding to pendingcommands: ", delcommand

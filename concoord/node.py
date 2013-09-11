@@ -45,8 +45,6 @@ parser.add_argument("-m", "--master", action="store", dest="master", default='',
                     help="ipaddr:port for the master nameserver")
 parser.add_argument("-d", "--debug", action="store_true", dest="debug", default=False,
                     help="debug on/off")
-parser.add_argument("-i", "--interactive", action="store_true", dest="interactive", default=False,
-                    help="interactive shell on/off")
 args = parser.parse_args()
 
 class Node():
@@ -59,7 +57,6 @@ class Node():
                  port=args.port,
                  givenbootstraplist=args.bootstrap,
                  debugoption=args.debug,
-                 interactiveoption=args.interactive,
                  objectname=args.objectname,
                  instantiateobj=False,
                  configpath=args.configpath,
@@ -68,7 +65,6 @@ class Node():
         self.port = port
         self.type = nodetype
         self.debug = debugoption
-        self.interactive = interactiveoption
         if instantiateobj:
             if objectname == '':
                 parser.print_help()
@@ -194,46 +190,10 @@ class Node():
         main_thread = Thread(target=self.handle_messages, name='MainThread')
         main_thread.start()
         # Start a thread that waits for inputs
-        if self.interactive:
+        if self.debug:
             input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
             input_thread.start()
-        # Start a thread that pings all neighbors
-        ping_thread = Timer(LIVENESSTIMEOUT, self.ping_neighbor)
-        ping_thread.name = 'PingThread'
-        ping_thread.start()
-        # Start a thread that goes through the nascentset and cleans expired ones
-        nascent_thread = Timer(NASCENTTIMEOUT, self.clean_nascent)
-        nascent_thread.name = 'NascentThread'
-        nascent_thread.start()
         return self
-
-    def ping_neighbor(self):
-        """used to ping neighbors periodically"""
-        while True:
-            # Go through all peers in the view
-            for gtype,group in self.groups.iteritems():
-                for peer in group.iterkeys():
-                    if self.debug: self.logger.write("State", "Sending PING to %s" % str(peer))
-                    pingmessage = create_message(MSG_PING, self.me)
-                    success = self.send(pingmessage, peer=peer)
-                    if success < 0:
-                        if self.debug: self.logger.write("State", "Neighbor not responding, marking the neighbor")
-                        self.groups[peer.type][peer] += 1
-                    else:
-                        self.groups[peer.type][peer] = 0
-            time.sleep(LIVENESSTIMEOUT)
-
-    def clean_nascent(self):
-        lastnascentset = set([])
-        while True:
-            for sock in lastnascentset.intersection(self.connectionpool.nascentsockets):
-                # expired -- if it's not already in the set, it should be closed
-                self.connectionpool.activesockets.remove(sock)
-                self.connectionpool.nascentsockets.remove(sock)
-                #sock.close() XXX
-            lastnascentset = self.connectionpool.nascentsockets
-
-            time.sleep(NASCENTTIMEOUT)
 
     def __str__(self):
         return "%s NODE %s:%d" % (node_names[self.type], self.addr, self.port)
@@ -261,7 +221,7 @@ class Node():
             self.connectionpool.epoll.register(self.socket.fileno(), select.EPOLLIN)
             self.use_epoll()
         else:
-            # the os doesn't support epoll
+            # the OS doesn't support epoll
             self.connectionpool.activesockets.add(self.socket)
             self.use_select()
 
@@ -346,11 +306,6 @@ class Node():
     def handle_messages(self):
         while True:
             self.receivedmessages_semaphore.acquire()
-            if self.type == NODE_REPLICA and len(self.pendingmetacommands) > 0:
-                # A node should be removed from the view
-                with self.pendingmetalock:
-                    self.pendingmetacommands = set()
-                self.initiate_command()
             (message_to_process,connection) = self.receivedmessages.pop(0)
             if message_to_process.type == MSG_CLIENTREQUEST:
                 if message_to_process.clientbatch:

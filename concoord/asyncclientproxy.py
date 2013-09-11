@@ -90,6 +90,7 @@ class ClientProxy():
         tmpbootstraplist = []
         try:
             for bootstrap in givenbootstrap.split(","):
+                bootstrap = bootstrap.strip()
                 # The bootstrap list is read only during initialization
                 if bootstrap.find(":") >= 0:
                     bootaddr,bootport = bootstrap.split(":")
