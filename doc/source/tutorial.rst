@@ -85,11 +85,11 @@ To distribute your object you should start at least one replica and one acceptor
 Starting Replica Nodes
 ~~~~~~~~~~~~~~~~~~~~~~
 
-To start the replica node, use the following command:
+To start the bootstrap replica node, use the following command:
 
 .. sourcecode:: console
 
-  $ concoord replica -o counter.Counter
+  $ concoord replica -o counter.Counter -a ipaddr -p port
 
 To start replica nodes to join an active ConCoord instance, use the
 following command to connect to a bootstrap replica with ``ipaddr:port``:
@@ -109,9 +109,9 @@ To start an acceptor node that connects to the bootrstrap replica at
 
 Note that you can specify the port and the address of any node with
 options ``-p`` and ``-a`` respectively. The nodes can also be run in the debug
-and interactive modes or with a logger with the commands shown below:
+mode or with a logger with the commands shown below:
 
-``Usage: concoord [-h] [-a ADDR] [-p PORT] [-b BOOTSTRAP] [-o OBJECTNAME] [-l LOGGER] [-d] [-i]``
+``Usage: concoord [-h] [-a ADDR] [-p PORT] [-b BOOTSTRAP] [-o OBJECTNAME] [-l LOGGER] [-d]``
 where,
   ``-h, --help``				 show this help message and exit
 
@@ -126,8 +126,6 @@ where,
   ``-l LOGGER, --logger LOGGER``		 logger address
 
   ``-d, --debug``           			 debug on/off
-
-  ``-i, --interactive``     			 interactive shell on/off
 
 Starting Nameserver Nodes
 ~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -3,10 +3,7 @@
 @note: Example bank object that keeps track of accounts
 @copyright: See LICENSE
 """
-from proxymeta import ProxyMeta
-
-class Bank(type):
-    __metaclass__ = ProxyMeta
+class Bank():
     def __init__(self):
         self.accounts = {}
 
