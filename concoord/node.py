@@ -189,6 +189,10 @@ class Node():
         # Start a thread with the server which will start a thread for each request
         main_thread = Thread(target=self.handle_messages, name='MainThread')
         main_thread.start()
+        # Start a thread that pings all neighbors
+        ping_thread = Timer(LIVENESSTIMEOUT, self.ping_neighbor)
+        ping_thread.name = 'PingThread'
+        ping_thread.start()
         # Start a thread that waits for inputs
         if self.debug:
             input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
@@ -207,6 +211,22 @@ class Node():
             pending =  "".join("%d: %s" % (cno, proposal) for cno,proposal in self.pendingcommands.iteritems())
             returnstr = "%s\nPending:\n%s" % (returnstr, pending)
         return returnstr
+
+    def ping_neighbor(self):
+        """used to ping neighbors periodically"""
+        while True:
+            # Go through all peers in the view
+            for gtype,group in self.groups.iteritems():
+                for peer in group.iterkeys():
+                    if self.debug: self.logger.write("State", "Sending PING to %s" % str(peer))
+                    pingmessage = create_message(MSG_PING, self.me)
+                    success = self.send(pingmessage, peer=peer)
+                    if success < 0:
+                        if self.debug: self.logger.write("State", "Neighbor not responding, marking the neighbor")
+                        self.groups[peer.type][peer] += 1
+                    else:
+                        self.groups[peer.type][peer] = 0
+            time.sleep(LIVENESSTIMEOUT)
 
     def server_loop(self):
         """Serverloop that listens to multiple connections and accepts new ones.
@@ -376,7 +396,7 @@ class Node():
     def cmd_help(self, args):
         """prints the commands that are supported
         by the corresponding Node."""
-        print "Commands I support:"
+        print "Commands supported:"
         for attr in dir(self):
             if attr.startswith("cmd_"):
                 print attr.replace("cmd_", "")
