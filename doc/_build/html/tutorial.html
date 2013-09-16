@@ -120,8 +120,8 @@ two ways:</p>
 <p>To distribute your object you should start at least one replica and one acceptor.</p>
 <div class="section" id="starting-replica-nodes">
 <h2>Starting Replica Nodes<a class="headerlink" href="#starting-replica-nodes" title="Permalink to this headline">¶</a></h2>
-<p>To start the replica node, use the following command:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord replica -o counter.Counter
+<p>To start the bootstrap replica node, use the following command:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord replica -o counter.Counter -a ipaddr -p port
 </pre></div>
 </div>
 <p>To start replica nodes to join an active ConCoord instance, use the
@@ -139,8 +139,8 @@ following command to connect to a bootstrap replica with <tt class="docutils lit
 </div>
 <p>Note that you can specify the port and the address of any node with
 options <tt class="docutils literal"><span class="pre">-p</span></tt> and <tt class="docutils literal"><span class="pre">-a</span></tt> respectively. The nodes can also be run in the debug
-and interactive modes or with a logger with the commands shown below:</p>
-<p><tt class="docutils literal"><span class="pre">Usage:</span> <span class="pre">concoord</span> <span class="pre">[-h]</span> <span class="pre">[-a</span> <span class="pre">ADDR]</span> <span class="pre">[-p</span> <span class="pre">PORT]</span> <span class="pre">[-b</span> <span class="pre">BOOTSTRAP]</span> <span class="pre">[-o</span> <span class="pre">OBJECTNAME]</span> <span class="pre">[-l</span> <span class="pre">LOGGER]</span> <span class="pre">[-d]</span> <span class="pre">[-i]</span></tt>
+mode or with a logger with the commands shown below:</p>
+<p><tt class="docutils literal"><span class="pre">Usage:</span> <span class="pre">concoord</span> <span class="pre">[-h]</span> <span class="pre">[-a</span> <span class="pre">ADDR]</span> <span class="pre">[-p</span> <span class="pre">PORT]</span> <span class="pre">[-b</span> <span class="pre">BOOTSTRAP]</span> <span class="pre">[-o</span> <span class="pre">OBJECTNAME]</span> <span class="pre">[-l</span> <span class="pre">LOGGER]</span> <span class="pre">[-d]</span></tt>
 where,</p>
 <blockquote>
 <div><p><tt class="docutils literal"><span class="pre">-h,</span> <span class="pre">--help</span></tt>                                 show this help message and exit</p>
@@ -150,7 +150,6 @@ where,</p>
 <p><tt class="docutils literal"><span class="pre">-o</span> <span class="pre">OBJECTNAME,</span> <span class="pre">--objectname</span> <span class="pre">OBJECTNAME</span></tt>     client object dotted name</p>
 <p><tt class="docutils literal"><span class="pre">-l</span> <span class="pre">LOGGER,</span> <span class="pre">--logger</span> <span class="pre">LOGGER</span></tt>                 logger address</p>
 <p><tt class="docutils literal"><span class="pre">-d,</span> <span class="pre">--debug</span></tt>                                debug on/off</p>
-<p><tt class="docutils literal"><span class="pre">-i,</span> <span class="pre">--interactive</span></tt>                          interactive shell on/off</p>
 </div></blockquote>
 </div>
 <div class="section" id="starting-nameserver-nodes">

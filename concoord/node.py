@@ -70,7 +70,7 @@ class Node():
                 parser.print_help()
                 self._graceexit(1)
             self.objectname = objectname
-        ## initialize receive queue
+        # initialize receive queue
         self.receivedmessages_semaphore = Semaphore(0)
         self.receivedmessages = []
         # lock to synchronize message handling
