@@ -95,6 +95,7 @@ class ConnectionPool():
                         self.epollsockets[thesocket.fileno()] = thesocket
                     else:
                         self.activesockets.add(thesocket)
+                        self.nascentsockets.remove(thesocket)
                     return conn
                 except Exception as e:
                     return None
@@ -110,6 +111,8 @@ class ConnectionPool():
             else:
                 conn = Connection(thesocket)
                 self.poolbysocket[thesocket.fileno()] = conn
+                self.activesockets.add(thesocket)
+                self.nascentsockets.remove(thesocket)
                 return conn
 
     def __str__(self):

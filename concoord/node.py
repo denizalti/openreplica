@@ -193,6 +193,10 @@ class Node():
         ping_thread = Timer(LIVENESSTIMEOUT, self.ping_neighbor)
         ping_thread.name = 'PingThread'
         ping_thread.start()
+        # Start a thread that goes through the nascentset and cleans expired ones
+        nascent_thread = Timer(NASCENTTIMEOUT, self.clean_nascent)
+        nascent_thread.name = 'NascentThread'
+        nascent_thread.start()
         # Start a thread that waits for inputs
         if self.debug:
             input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
@@ -227,6 +231,16 @@ class Node():
                     else:
                         self.groups[peer.type][peer] = 0
             time.sleep(LIVENESSTIMEOUT)
+
+    def clean_nascent(self):
+        lastnascentset = set([])
+        while True:
+            for sock in lastnascentset.intersection(self.connectionpool.nascentsockets):
+                # expired -- if it's not already in the set, it should be deleted
+                self.connectionpool.activesockets.remove(sock)
+                self.connectionpool.nascentsockets.remove(sock)
+                lastnascentset = self.connectionpool.nascentsockets
+            time.sleep(NASCENTTIMEOUT)
 
     def server_loop(self):
         """Serverloop that listens to multiple connections and accepts new ones.
