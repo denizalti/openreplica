@@ -95,9 +95,11 @@ class ConnectionPool():
                         self.epollsockets[thesocket.fileno()] = thesocket
                     else:
                         self.activesockets.add(thesocket)
-                        self.nascentsockets.remove(thesocket)
+                        if thesocket in self.nascentsockets:
+                            self.nascentsockets.remove(thesocket)
                     return conn
                 except Exception as e:
+                    print "Exception creating socket: ", e
                     return None
 
     def get_connection_by_socket(self, thesocket):

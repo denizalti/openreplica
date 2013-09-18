@@ -444,7 +444,7 @@ class Replica(Node):
                 self.pick_commandnumber_add_to_pending(noopcommand)
             self.issue_pending_commands()
         elif len(self.groups[NODE_ACCEPTOR]) == 0:
-            if self.debug: self.logger.write("State", "There are no acceptors. Can't add new node.")
+            if self.debug: self.logger.write("State", "There are no acceptors. Cannot add new node.")
             heloreplymessage = create_message(MSG_HELOREPLY, self.me,
                                               {FLD_LEADER: self.find_leader()})
             conn.send(heloreplymessage)
@@ -544,7 +544,7 @@ class Replica(Node):
         try:
             del self.groups[nodetype][nodepeer]
         except KeyError:
-            print "Can't delete node that is not in the view: %s %s" % (node_names[nodetype], nodename)
+            print "Cannot delete node that is not in the view: %s %s" % (node_names[nodetype], nodename)
         # if the deleted node is a Replica, check leadership state
         if nodetype == NODE_REPLICA:
             chosenleader = self.find_leader()
@@ -777,7 +777,7 @@ class Replica(Node):
         -- if it has not been executed yet send INPROGRESS
         - if this request has not been received before initiate a Paxos round for the command"""
         if not self.isleader:
-            if self.debug: self.logger.write("Error", "Shouldn't have come here: Called to handle client command but not Leader.")
+            if self.debug: self.logger.write("Error", "Should not have come here: Called to handle client command but not Leader.")
             clientreply = create_message(MSG_CLIENTREPLY, self.me,
                                          {FLD_REPLY: '',
                                           FLD_REPLYCODE: CR_REJECTED,
@@ -787,7 +787,7 @@ class Replica(Node):
             if conn is not None:
                 conn.send(clientreply)
             else:
-                if self.debug: self.logger.write("Error", "Can't create connection to client")
+                if self.debug: self.logger.write("Error", "Cannot create connection to client")
             return
 
         if sendcount > 0 and (givencommand.client, givencommand.clientcommandnumber) in self.receivedclientrequests:
@@ -819,7 +819,7 @@ class Replica(Node):
             if conn is not None:
                 conn.send(clientreply)
             else:
-                if self.debug: self.logger.write("Error", "Can't create connection to client")
+                if self.debug: self.logger.write("Error", "Cannot create connection to client")
         else:
             # The caller haven't received this command before
             self.receivedclientrequests[(givencommand.client,givencommand.clientcommandnumber)] = givencommand
@@ -835,7 +835,7 @@ class Replica(Node):
         - if this request has not been received before initiate a Paxos round for the command"""
         if not self.isleader:
             if self.debug: self.logger.write("Error",
-                              "Shouldn't have come here: Not Leader.")
+                              "Should not have come here: Not Leader.")
             for (msg,conn) in msgconnlist:
                 clientreply = create_message(MSG_CLIENTREPLY, self.me,
                                              {FLD_REPLY: '',
@@ -1123,7 +1123,7 @@ class Replica(Node):
             prc = self.outstandingprepares[msg.inresponseto]
             prc.receivedcount += 1
             if self.debug: self.logger.write("Paxos State", "got an accept for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, prc.receivedcount, prc.ntotal))
-            assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PREPARE_ADOPTED can't have non-matching ballotnumber" % self
+            assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PREPARE_ADOPTED cannot have non-matching ballotnumber" % self
             # add all the p-values from the response to the possiblepvalueset
             if msg.pvalueset is not None:
                 prc.possiblepvalueset.union(msg.pvalueset)
@@ -1215,7 +1215,7 @@ class Replica(Node):
                     if self.debug: self.logger.write("Paxos State", "Agreed on %s" % str(prc.proposal))
                     # take this response collector out of the outstanding propose set
                     self.add_to_proposals(prc.commandnumber, prc.proposal)
-                    # delete outstanding messages that caller doesn't need to check for anymore
+                    # delete outstanding messages that caller does not need to check for anymore
                     del self.outstandingproposes[msg.commandnumber]
                     # now we can perform this action on the replicas
                     performmessage = create_message(MSG_PERFORM, self.me,
