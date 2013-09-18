@@ -6,7 +6,6 @@
 import signal
 import cPickle as pickle
 from pack import *
-from threading import Thread
 from concoord.node import *
 from concoord.enums import *
 from concoord.utils import *
@@ -26,7 +25,8 @@ class Acceptor(Node):
         - accepted: all pvalues Acceptor has accepted thus far
         """
         Node.__init__(self, NODE_ACCEPTOR)
-        # self.file = open('concoordlog', 'a')
+        if self.durable:
+            self.file = open('concoordlog', 'a')
         self.ballotnumber = (0,0)
         self.last_accept_msg_id = -1
         self.accepted = PValueSet()
@@ -99,7 +99,9 @@ class Acceptor(Node):
                                        FLD_INRESPONSETO: msg.ballotnumber,
                                        FLD_COMMANDNUMBER: msg.commandnumber})
             conn.send(replymsg)
-            # self.file.write(str(newpvalue))
+            if self.durable:
+                self.file.write(str(newpvalue))
+                os.fsync(self.file)
         else:
             if self.debug: self.logger.write("Paxos State",
                               "propose received with non-acceptable ballotnumber %s"

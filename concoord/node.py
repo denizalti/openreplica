@@ -43,6 +43,8 @@ parser.add_argument("-t", "--type", action="store", dest="type", default='',
                     help="1: Master Nameserver 2: Slave Nameserver (requires a Master) 3:Route53 (requires a Route53 zone)")
 parser.add_argument("-m", "--master", action="store", dest="master", default='',
                     help="ipaddr:port for the master nameserver")
+parser.add_argument("-w", "--writetodisk", action="store_true", dest="writetodisk", default=False,
+                    help="writing to disk on/off")
 parser.add_argument("-d", "--debug", action="store_true", dest="debug", default=False,
                     help="debug on/off")
 args = parser.parse_args()
@@ -60,11 +62,13 @@ class Node():
                  objectname=args.objectname,
                  instantiateobj=False,
                  configpath=args.configpath,
-                 logger=args.logger):
+                 logger=args.logger,
+                 writetodisk=args.writetodisk):
         self.addr = addr if addr else findOwnIP()
         self.port = port
         self.type = nodetype
         self.debug = debugoption
+        self.durable = writetodisk
         if instantiateobj:
             if objectname == '':
                 parser.print_help()
@@ -334,7 +338,6 @@ class Node():
                     self.connectionpool.add_connection_to_peer(message.source, connection)
             return True
         except ConnectionError as e:
-            print "Connection Error: ", e
             return False
 
     def handle_messages(self):
