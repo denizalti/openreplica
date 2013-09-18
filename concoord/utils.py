@@ -42,7 +42,7 @@ class NoneLogger():
 
     def close(self):
         return
-    
+
 class Logger():
     def __init__(self, name, filename=None, lognode=None):
         self.prefix = name
@@ -90,7 +90,7 @@ def endtimer(timerkey, timerno):
             timers[index][1] = time.time()
     except:
         print "Can't stop timer %s %s." % (str(timerkey),str(timerno))
-    
+
 def dumptimers(numreplicas, numacceptors, ownertype, outputdict):
     global timers
     if ownertype == NODE_REPLICA:
