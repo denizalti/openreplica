@@ -334,7 +334,7 @@ class Node():
                     self.connectionpool.add_connection_to_peer(message.source, connection)
             return True
         except ConnectionError as e:
-            print e
+            print "Connection Error: ", e
             return False
 
     def handle_messages(self):
