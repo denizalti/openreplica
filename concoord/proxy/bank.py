@@ -5,8 +5,8 @@
 '''
 from concoord.clientproxy import ClientProxy
 class Bank:
-    def __init__(self, bootstrap):
-        self.proxy = ClientProxy(bootstrap, debug=True)
+    def __init__(self, bootstrap, timeout=60, debug=False, token=None):
+        self.proxy = ClientProxy(bootstrap, timeout, debug, token)
 
     def __concoordinit__(self):
         return self.proxy.invoke_command('__init__')

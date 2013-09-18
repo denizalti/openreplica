@@ -84,9 +84,6 @@ class Replica(Node):
         self.throughput_stop = 0
         self.throughput_start = 0
 
-        if self.debug and False:
-            profile_on() # Turn profiling on!
-
     def __str__(self):
         rstr = "%s %s:%d\n" % ("LEADER" if self.isleader else node_names[self.type], self.addr, self.port)
         rstr += "Members:\n%s\n" % "\n".join(str(group) for type,group in self.groups.iteritems())
@@ -1356,9 +1353,6 @@ class Replica(Node):
 
 ## TERMINATION METHODS
     def terminate_handler(self, signal, frame):
-        if self.debug and False:
-            profile_off()
-            print_profile_stats()
         self._graceexit()
 
     def _graceexit(self, exitcode=0):

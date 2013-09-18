@@ -486,6 +486,5 @@ class Node():
     def _graceexit(self, exitcode=0):
         sys.stdout.flush()
         sys.stderr.flush()
-        print get_profile_stats()
         self.logger.close()
         os._exit(exitcode)
