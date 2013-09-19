@@ -1,81 +1,11 @@
 Getting Started
 ---------------
-To use ConCoord and distribute your Python objects first you need to
-create the local Python object. Once the object is created, ConCoord
-will automatically create a proxy object and you will be able to do
-remote method invocations when your object is distributed. For these
-remote method invocations, a round of Paxos Consensus Protocol is run
-by ConCoord to provide consistency between different copies of the
-object.
 
-Concoordifying Python Objects
------------------------------
-To walk you through the ConCoord approach, we will use the example
-Counter coordination object we provided. In the source distribution
-you can locate the Counter object under
-``concoord/object/counter.py``. Once you install ConCoord, you can create
-coordination objects and save them anywhere in your filesystem. To
-demonstrate this, we will save ``counter.py`` under ``/foo/counter.py``.
-
-.. sourcecode:: python
-
-  class Counter:
-    def __init__(self, value=0):
-      self.value = value
-
-    def decrement(self):
-      self.value -= 1
-
-    def increment(self):
-      self.value += 1
-
-    def getvalue(self):
-      return self.value
-
-    def __str__(self):
-      return "The counter value is %d" % self.value
-
-Once you have created the object, update your ``PYTHONPATH`` accordingly,
-so that the objects can be found and imported:
-
-.. sourcecode:: console
-
-  $ export PYTHONPATH=$PYTHONPATH:/foo/
-
-Clients will use a proxy object to do method calls on the To create a
-proxy for the ConCoord object, run the following command:
-
-.. sourcecode:: console
-
-  $ concoord object -o counter.Counter
-
-``Usage: concoord object [-h] [-o OBJECTNAME] [-t SECURITYTOKEN] [-p PROXYTYPE] [-s] [-v]``
-
-where,
-  ``-h, --help``					show this help message and exit
-
-  ``-o OBJECTNAME, --objectname OBJECTNAME``		client object dotted name module.Class
-
-  ``-t SECURITYTOKEN, --token SECURITYTOKEN``		security token
-
-  ``-p PROXYTYPE, --proxytype PROXYTYPE``		0:BASIC, 1:BLOCKING, 2:CLIENT-SIDE BATCHING, 3:SERVER-SIDE BATCHING
-
-  ``-s, --safe``            				safety checking on/off
-
-  ``-v, --verbose``         				verbose mode on/off
-
-This script will create a proxy file under the directory that the
-object resides (i.e. ``/foo/``):
-
-``/foo/counterproxy.py`` := the proxy that can be used by the client
-
-IMPORTANT NOTE: ConCoord objects treat ``__init__`` functions specially in
-two ways:
-
-1) When Replicas go live, the object is instantiated calling the ``__init__`` without any arguments. Therefore, while implementing coordination objects, the ``__init__`` method should be implemented to be able to run without explicit arguments. You can use defaults to implement an ``__init__`` method that accepts arguments.
-
-2) In the proxy created, the ``__init__`` function is used to initialize the Client-Replica connection. This way, multiple clients can connect to a ConCoord instance without reinitializing the object. During proxy generation, the original ``__init__`` function is renamed as ``__concoordinit__``, to reinitialize the object the user can call ``__concoordinit__`` at any point.
-
+To use ConCoord you need a Python object that can be used for the
+coordination of your distributed system. In the ConCoord distribution,
+we offer ready-to-use objects that cover the most common coordination
+needs. So first, let's start a ConCoord instance with an object in
+the distribution, namely Counter under concoord/object/counter.py.
 
 Starting Nodes
 --------------
@@ -85,33 +15,40 @@ To distribute your object you should start at least one replica and one acceptor
 Starting Replica Nodes
 ~~~~~~~~~~~~~~~~~~~~~~
 
-To start the bootstrap replica node, use the following command:
+To start a bootstrap replica node that doesn't need to be connected to another replica, use the following command:
 
 .. sourcecode:: console
 
-  $ concoord replica -o counter.Counter -a ipaddr -p port
+  $ concoord replica -o concoord.object.counter.Counter -a 127.0.0.1 -p 14000
 
-To start replica nodes to join an active ConCoord instance, use the
-following command to connect to a bootstrap replica with ``ipaddr:port``:
+To start replica nodes to join an active ConCoord instance, use the following command to connect to another replica:
 
 .. sourcecode:: console
 
-  $ concoord replica -o counter.Counter -b ipaddr:port
+  $ concoord replica -o concoord.object.counter.Counter -b 127.0.0.1:14000 -a 127.0.0.1 -p 14001
 
 Starting Acceptor Nodes
 ~~~~~~~~~~~~~~~~~~~~~~~
-To start an acceptor node that connects to the bootrstrap replica at
-``ipaddr:port``, use the following command:
+
+To start an acceptor node that connects to the bootstrap replica at
+``127.0.0.1:14000``, use the following command:
 
 .. sourcecode:: console
 
-  $ concoord acceptor -b ipaddr:port
+  $ concoord acceptor -b 127.0.0.1:14000
 
-Note that you can specify the port and the address of any node with
-options ``-p`` and ``-a`` respectively. The nodes can also be run in the debug
+To run ConCoord in durable mode, where acceptors write to disk, you
+can set the ``-w`` option:
+
+.. sourcecode:: console
+
+  $ concoord acceptor -b 127.0.0.1:14000 -w
+
+Note that you can specify the port and the address of any node with options
+``-p`` and ``-a`` respectively. The nodes can also be run in the debug
 mode or with a logger with the commands shown below:
 
-``Usage: concoord [-h] [-a ADDR] [-p PORT] [-b BOOTSTRAP] [-o OBJECTNAME] [-l LOGGER] [-d]``
+``Usage: concoord [-h] [-a ADDR] [-p PORT] [-b BOOTSTRAP] [-o OBJECTNAME] [-l LOGGER] [-w] [-d]``
 where,
   ``-h, --help``				 show this help message and exit
 
@@ -124,6 +61,8 @@ where,
   ``-o OBJECTNAME, --objectname OBJECTNAME``	 client object dotted name
 
   ``-l LOGGER, --logger LOGGER``		 logger address
+
+  ``-w, --writetodisk``           		 writing to disk on/off
 
   ``-d, --debug``           			 debug on/off
 
@@ -152,31 +91,31 @@ Standalone Nameserver
 Before starting a standalone nameserver node manually, first make sure
 that you have at least one replica and one acceptor running. Once your
 replica and acceptor nodes are set up, you can start the nameserver to
-answer queries for ``counterdomain`` as follows:
+answer queries for ``counterdomain.com`` as follows:
 
 .. sourcecode:: console
 
-  $ sudo concoord nameserver -n counterdomain -o counter.Counter -b ipaddr:port -t 1
+  $ sudo concoord nameserver -n counterdomain.com -o concoord.object.counter.Counter -b 127.0.0.1:14000 -t 1
 
 When you set up the nameserver delegations, you can send queries for
-``counterdomain`` and see the most current set of nodes as follows:
+``counterdomain.com`` and see the most current set of nodes as follows:
 
 .. sourcecode:: console
 
-  $ dig -t a counterdomain                   # returns set of Replicas
+  $ dig -t a counterdomain.com                   # returns set of Replicas
 
-  $ dig -t srv _concoord._tcp.counterdomain  # returns set of Replicas with ports
+  $ dig -t srv _concoord._tcp.counterdomain.com  # returns set of Replicas with ports
 
-  $ dig -t txt counterdomain                 # returns set of all nodes
+  $ dig -t txt counterdomain.com                 # returns set of all nodes
 
-  $ dig -t ns counterdomain                  # returns set of nameservers
+  $ dig -t ns counterdomain.com                  # returns set of nameservers
 
 If you want to run the nameserver without proper delegation setup, you
-can query the nameserver bound to ``nsipaddr`` specifically as follows:
+can query the nameserver bound to ``127.0.0.1`` specifically as follows:
 
 .. sourcecode:: console
 
-  $ dig -t a counterdomain @nsipaddr         # returns set of Replicas
+  $ dig -t txt counterdomain.com @127.0.0.1      # returns set of all nodes
 
 Slave Nameserver
 ++++++++++++++++
@@ -184,8 +123,9 @@ Slave Nameserver
 Before starting a slave nameserver node manually, you should have a
 master nameserver set up and running. The master nameserver should be
 set up to answer the queries for its slave nameservers. We provide
-OpenReplica Nameserver as a ready to deploy master nameserver and a
-Nameserver Coordination Object in our example objects set to keep
+OpenReplica Nameserver (``concoord/openreplica/openreplicanameserver.py``)
+as a ready to deploy master nameserver and a Nameserver Coordination Object
+(``concoord/object/nameservercoord.py``) in our example objects to keep
 track of slave nameserver information. Using this coordination object,
 the master nameserver can keep track of its slave nameserver
 delegations and the slave nameserver can update the master every time
@@ -196,20 +136,20 @@ nameserver as follows:
 
 .. sourcecode:: console
 
-  $ concoord nameserver -n counterdomain -o counter.Counter -b ipaddr:port -t 2 -m masterdomain
+  $ concoord nameserver -n counterdomain.com -o concoord.object.counter.Counter -b 127.0.0.1:14000 -t 2 -m masterdomain.com
 
 When the slave nameserver starts running, you can send queries for
-``counterdomain`` and see the most current set of nodes as follows:
+``counterdomain.com`` and see the most current set of nodes as follows:
 
 .. sourcecode:: console
 
-  $ dig -t a counterdomain                   # returns set of Replicas
+  $ dig -t a counterdomain.com                   # returns set of Replicas
 
-  $ dig -t srv _concoord._tcp.counterdomain  # returns set of Replicas with ports
+  $ dig -t srv _concoord._tcp.counterdomain.com  # returns set of Replicas with ports
 
-  $ dig -t txt counterdomain                 # returns set of all nodes
+  $ dig -t txt counterdomain.com                 # returns set of all nodes
 
-  $ dig -t ns counterdomain                  # returns set of nameservers
+  $ dig -t ns counterdomain.com                  # returns set of nameservers
 
 Amazon Route 53 Nameserver
 ++++++++++++++++++++++++++
@@ -230,8 +170,7 @@ credentials are updated, you can start the nameserver as follows:
 
 .. sourcecode:: console
 
-  $ concoord nameserver -n counterdomain -o counter.Counter -b ipaddr:port -t 3 -o configfilepath
-
+  $ concoord nameserver -n counterdomain.com -o concoord.object.counter.Counter -b 127.0.0.1:14000 -t 3 -o configfilepath
 
 Connecting to ConCoord Objects
 ------------------------------
@@ -239,15 +178,18 @@ Connecting to ConCoord Objects
 Once you have a ConCoord instance running with your object, it is easy
 to access your object.
 
-Now we will use the proxy object we generated. You can import and use
-this proxy object in your code. Depending on how you set your
-nameserver node up, you can access your object with the ``ipaddr:port``
-pair or the ``domainname``.
+The proxy for the Counter object is also included in the distribution.
+You can import and use this proxy object in your code. Depending on
+how you set your nameserver node up, you can access your object with
+the ``ipaddr:port`` pair or the domainname. In the example below, the
+``ipaddr:port`` of both replica nodes are used. As a result, the client
+will be able to do method invocations on the object as long as one of
+the replicas is alive:
 
 .. sourcecode:: pycon
 
-  >>> from counterproxy import Counter
-  >>> c = Counter(domainname)
+  >>> from concoord.proxy.counter import Counter
+  >>> c = Counter("127.0.0.1:14000, 127.0.0.1:14001")
   >>> c.increment()
   >>> c.increment()
   >>> c.getvalue()
@@ -258,8 +200,8 @@ replicas, you should call ``__concoordinit__`` function:
 
 .. sourcecode:: pycon
 
-  >>> from counterproxy import Counter
-  >>> c = Counter(domainname)
+  >>> from concoord.proxy.counter import Counter
+  >>> c = Counter("127.0.0.1:14000, 127.0.0.1:14001")
   >>> c.increment()
   >>> c.__concoordinit__()
   >>> c.increment()

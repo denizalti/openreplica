@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="ConCoord 0.2.0 documentation" href="index.html" />
-    <link rel="next" title="Creating Source Bundles" href="tutorial-advanced.html" />
+    <link rel="next" title="ConCoordifying Python Objects" href="tutorial-advanced.html" />
     <link rel="prev" title="Installing ConCoord" href="install.html" /> 
   </head>
   <body>
@@ -35,7 +35,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="tutorial-advanced.html" title="Creating Source Bundles"
+          <a href="tutorial-advanced.html" title="ConCoordifying Python Objects"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="install.html" title="Installing ConCoord"
@@ -51,96 +51,42 @@
             
   <div class="section" id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
-<p>To use ConCoord and distribute your Python objects first you need to
-create the local Python object. Once the object is created, ConCoord
-will automatically create a proxy object and you will be able to do
-remote method invocations when your object is distributed. For these
-remote method invocations, a round of Paxos Consensus Protocol is run
-by ConCoord to provide consistency between different copies of the
-object.</p>
-</div>
-<div class="section" id="concoordifying-python-objects">
-<h1>Concoordifying Python Objects<a class="headerlink" href="#concoordifying-python-objects" title="Permalink to this headline">¶</a></h1>
-<p>To walk you through the ConCoord approach, we will use the example
-Counter coordination object we provided. In the source distribution
-you can locate the Counter object under
-<tt class="docutils literal"><span class="pre">concoord/object/counter.py</span></tt>. Once you install ConCoord, you can create
-coordination objects and save them anywhere in your filesystem. To
-demonstrate this, we will save <tt class="docutils literal"><span class="pre">counter.py</span></tt> under <tt class="docutils literal"><span class="pre">/foo/counter.py</span></tt>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Counter</span><span class="p">:</span>
-  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
-
-  <span class="k">def</span> <span class="nf">decrement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">-=</span> <span class="mi">1</span>
-
-  <span class="k">def</span> <span class="nf">increment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">+=</span> <span class="mi">1</span>
-
-  <span class="k">def</span> <span class="nf">getvalue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
-
-  <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="k">return</span> <span class="s">&quot;The counter value is </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
-</pre></div>
-</div>
-<p>Once you have created the object, update your <tt class="docutils literal"><span class="pre">PYTHONPATH</span></tt> accordingly,
-so that the objects can be found and imported:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> <span class="nb">export </span><span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$PYTHONPATH</span>:/foo/
-</pre></div>
-</div>
-<p>Clients will use a proxy object to do method calls on the To create a
-proxy for the ConCoord object, run the following command:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord object -o counter.Counter
-</pre></div>
-</div>
-<p><tt class="docutils literal"><span class="pre">Usage:</span> <span class="pre">concoord</span> <span class="pre">object</span> <span class="pre">[-h]</span> <span class="pre">[-o</span> <span class="pre">OBJECTNAME]</span> <span class="pre">[-t</span> <span class="pre">SECURITYTOKEN]</span> <span class="pre">[-p</span> <span class="pre">PROXYTYPE]</span> <span class="pre">[-s]</span> <span class="pre">[-v]</span></tt></p>
-<dl class="docutils">
-<dt>where,</dt>
-<dd><p class="first"><tt class="docutils literal"><span class="pre">-h,</span> <span class="pre">--help</span></tt>                                        show this help message and exit</p>
-<p><tt class="docutils literal"><span class="pre">-o</span> <span class="pre">OBJECTNAME,</span> <span class="pre">--objectname</span> <span class="pre">OBJECTNAME</span></tt>            client object dotted name module.Class</p>
-<p><tt class="docutils literal"><span class="pre">-t</span> <span class="pre">SECURITYTOKEN,</span> <span class="pre">--token</span> <span class="pre">SECURITYTOKEN</span></tt>           security token</p>
-<p><tt class="docutils literal"><span class="pre">-p</span> <span class="pre">PROXYTYPE,</span> <span class="pre">--proxytype</span> <span class="pre">PROXYTYPE</span></tt>               0:BASIC, 1:BLOCKING, 2:CLIENT-SIDE BATCHING, 3:SERVER-SIDE BATCHING</p>
-<p><tt class="docutils literal"><span class="pre">-s,</span> <span class="pre">--safe</span></tt>                                        safety checking on/off</p>
-<p class="last"><tt class="docutils literal"><span class="pre">-v,</span> <span class="pre">--verbose</span></tt>                                     verbose mode on/off</p>
-</dd>
-</dl>
-<p>This script will create a proxy file under the directory that the
-object resides (i.e. <tt class="docutils literal"><span class="pre">/foo/</span></tt>):</p>
-<p><tt class="docutils literal"><span class="pre">/foo/counterproxy.py</span></tt> := the proxy that can be used by the client</p>
-<p>IMPORTANT NOTE: ConCoord objects treat <tt class="docutils literal"><span class="pre">__init__</span></tt> functions specially in
-two ways:</p>
-<ol class="arabic simple">
-<li>When Replicas go live, the object is instantiated calling the <tt class="docutils literal"><span class="pre">__init__</span></tt> without any arguments. Therefore, while implementing coordination objects, the <tt class="docutils literal"><span class="pre">__init__</span></tt> method should be implemented to be able to run without explicit arguments. You can use defaults to implement an <tt class="docutils literal"><span class="pre">__init__</span></tt> method that accepts arguments.</li>
-<li>In the proxy created, the <tt class="docutils literal"><span class="pre">__init__</span></tt> function is used to initialize the Client-Replica connection. This way, multiple clients can connect to a ConCoord instance without reinitializing the object. During proxy generation, the original <tt class="docutils literal"><span class="pre">__init__</span></tt> function is renamed as <tt class="docutils literal"><span class="pre">__concoordinit__</span></tt>, to reinitialize the object the user can call <tt class="docutils literal"><span class="pre">__concoordinit__</span></tt> at any point.</li>
-</ol>
+<p>To use ConCoord you need a Python object that can be used for the
+coordination of your distributed system. In the ConCoord distribution,
+we offer ready-to-use objects that cover the most common coordination
+needs. So first, let&#8217;s start a ConCoord instance with an object in
+the distribution, namely Counter under concoord/object/counter.py.</p>
 </div>
 <div class="section" id="starting-nodes">
 <h1>Starting Nodes<a class="headerlink" href="#starting-nodes" title="Permalink to this headline">¶</a></h1>
 <p>To distribute your object you should start at least one replica and one acceptor.</p>
 <div class="section" id="starting-replica-nodes">
 <h2>Starting Replica Nodes<a class="headerlink" href="#starting-replica-nodes" title="Permalink to this headline">¶</a></h2>
-<p>To start the bootstrap replica node, use the following command:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord replica -o counter.Counter -a ipaddr -p port
+<p>To start a bootstrap replica node that doesn&#8217;t need to be connected to another replica, use the following command:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord replica -o concoord.object.counter.Counter -a 127.0.0.1 -p 14000
 </pre></div>
 </div>
-<p>To start replica nodes to join an active ConCoord instance, use the
-following command to connect to a bootstrap replica with <tt class="docutils literal"><span class="pre">ipaddr:port</span></tt>:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord replica -o counter.Counter -b ipaddr:port
+<p>To start replica nodes to join an active ConCoord instance, use the following command to connect to another replica:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord replica -o concoord.object.counter.Counter -b 127.0.0.1:14000 -a 127.0.0.1 -p 14001
 </pre></div>
 </div>
 </div>
 <div class="section" id="starting-acceptor-nodes">
 <h2>Starting Acceptor Nodes<a class="headerlink" href="#starting-acceptor-nodes" title="Permalink to this headline">¶</a></h2>
-<p>To start an acceptor node that connects to the bootrstrap replica at
-<tt class="docutils literal"><span class="pre">ipaddr:port</span></tt>, use the following command:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord acceptor -b ipaddr:port
+<p>To start an acceptor node that connects to the bootstrap replica at
+<tt class="docutils literal"><span class="pre">127.0.0.1:14000</span></tt>, use the following command:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord acceptor -b 127.0.0.1:14000
 </pre></div>
 </div>
-<p>Note that you can specify the port and the address of any node with
-options <tt class="docutils literal"><span class="pre">-p</span></tt> and <tt class="docutils literal"><span class="pre">-a</span></tt> respectively. The nodes can also be run in the debug
+<p>To run ConCoord in durable mode, where acceptors write to disk, you
+can set the <tt class="docutils literal"><span class="pre">-w</span></tt> option:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord acceptor -b 127.0.0.1:14000 -w
+</pre></div>
+</div>
+<p>Note that you can specify the port and the address of any node with options
+<tt class="docutils literal"><span class="pre">-p</span></tt> and <tt class="docutils literal"><span class="pre">-a</span></tt> respectively. The nodes can also be run in the debug
 mode or with a logger with the commands shown below:</p>
-<p><tt class="docutils literal"><span class="pre">Usage:</span> <span class="pre">concoord</span> <span class="pre">[-h]</span> <span class="pre">[-a</span> <span class="pre">ADDR]</span> <span class="pre">[-p</span> <span class="pre">PORT]</span> <span class="pre">[-b</span> <span class="pre">BOOTSTRAP]</span> <span class="pre">[-o</span> <span class="pre">OBJECTNAME]</span> <span class="pre">[-l</span> <span class="pre">LOGGER]</span> <span class="pre">[-d]</span></tt>
+<p><tt class="docutils literal"><span class="pre">Usage:</span> <span class="pre">concoord</span> <span class="pre">[-h]</span> <span class="pre">[-a</span> <span class="pre">ADDR]</span> <span class="pre">[-p</span> <span class="pre">PORT]</span> <span class="pre">[-b</span> <span class="pre">BOOTSTRAP]</span> <span class="pre">[-o</span> <span class="pre">OBJECTNAME]</span> <span class="pre">[-l</span> <span class="pre">LOGGER]</span> <span class="pre">[-w]</span> <span class="pre">[-d]</span></tt>
 where,</p>
 <blockquote>
 <div><p><tt class="docutils literal"><span class="pre">-h,</span> <span class="pre">--help</span></tt>                                 show this help message and exit</p>
@@ -149,6 +95,7 @@ where,</p>
 <p><tt class="docutils literal"><span class="pre">-b</span> <span class="pre">BOOTSTRAP,</span> <span class="pre">--boot</span> <span class="pre">BOOTSTRAP</span></tt>             address:port tuple for the bootstrap peer</p>
 <p><tt class="docutils literal"><span class="pre">-o</span> <span class="pre">OBJECTNAME,</span> <span class="pre">--objectname</span> <span class="pre">OBJECTNAME</span></tt>     client object dotted name</p>
 <p><tt class="docutils literal"><span class="pre">-l</span> <span class="pre">LOGGER,</span> <span class="pre">--logger</span> <span class="pre">LOGGER</span></tt>                 logger address</p>
+<p><tt class="docutils literal"><span class="pre">-w,</span> <span class="pre">--writetodisk</span></tt>                          writing to disk on/off</p>
 <p><tt class="docutils literal"><span class="pre">-d,</span> <span class="pre">--debug</span></tt>                                debug on/off</p>
 </div></blockquote>
 </div>
@@ -173,24 +120,24 @@ account.</li>
 <p>Before starting a standalone nameserver node manually, first make sure
 that you have at least one replica and one acceptor running. Once your
 replica and acceptor nodes are set up, you can start the nameserver to
-answer queries for <tt class="docutils literal"><span class="pre">counterdomain</span></tt> as follows:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo concoord nameserver -n counterdomain -o counter.Counter -b ipaddr:port -t 1
+answer queries for <tt class="docutils literal"><span class="pre">counterdomain.com</span></tt> as follows:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo concoord nameserver -n counterdomain.com -o concoord.object.counter.Counter -b 127.0.0.1:14000 -t 1
 </pre></div>
 </div>
 <p>When you set up the nameserver delegations, you can send queries for
-<tt class="docutils literal"><span class="pre">counterdomain</span></tt> and see the most current set of nodes as follows:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> dig -t a counterdomain                   <span class="c"># returns set of Replicas</span>
+<tt class="docutils literal"><span class="pre">counterdomain.com</span></tt> and see the most current set of nodes as follows:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> dig -t a counterdomain.com                   <span class="c"># returns set of Replicas</span>
 
-<span class="gp">$</span> dig -t srv _concoord._tcp.counterdomain  <span class="c"># returns set of Replicas with ports</span>
+<span class="gp">$</span> dig -t srv _concoord._tcp.counterdomain.com  <span class="c"># returns set of Replicas with ports</span>
 
-<span class="gp">$</span> dig -t txt counterdomain                 <span class="c"># returns set of all nodes</span>
+<span class="gp">$</span> dig -t txt counterdomain.com                 <span class="c"># returns set of all nodes</span>
 
-<span class="gp">$</span> dig -t ns counterdomain                  <span class="c"># returns set of nameservers</span>
+<span class="gp">$</span> dig -t ns counterdomain.com                  <span class="c"># returns set of nameservers</span>
 </pre></div>
 </div>
 <p>If you want to run the nameserver without proper delegation setup, you
-can query the nameserver bound to <tt class="docutils literal"><span class="pre">nsipaddr</span></tt> specifically as follows:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> dig -t a counterdomain @nsipaddr         <span class="c"># returns set of Replicas</span>
+can query the nameserver bound to <tt class="docutils literal"><span class="pre">127.0.0.1</span></tt> specifically as follows:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> dig -t txt counterdomain.com @127.0.0.1      <span class="c"># returns set of all nodes</span>
 </pre></div>
 </div>
 </div>
@@ -199,26 +146,27 @@ can query the nameserver bound to <tt class="docutils literal"><span class="pre"
 <p>Before starting a slave nameserver node manually, you should have a
 master nameserver set up and running. The master nameserver should be
 set up to answer the queries for its slave nameservers. We provide
-OpenReplica Nameserver as a ready to deploy master nameserver and a
-Nameserver Coordination Object in our example objects set to keep
+OpenReplica Nameserver (<tt class="docutils literal"><span class="pre">concoord/openreplica/openreplicanameserver.py</span></tt>)
+as a ready to deploy master nameserver and a Nameserver Coordination Object
+(<tt class="docutils literal"><span class="pre">concoord/object/nameservercoord.py</span></tt>) in our example objects to keep
 track of slave nameserver information. Using this coordination object,
 the master nameserver can keep track of its slave nameserver
 delegations and the slave nameserver can update the master every time
 the view of its system changes.</p>
 <p>Once your master nameserver is set up, you can start the slave
 nameserver as follows:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord nameserver -n counterdomain -o counter.Counter -b ipaddr:port -t 2 -m masterdomain
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord nameserver -n counterdomain.com -o concoord.object.counter.Counter -b 127.0.0.1:14000 -t 2 -m masterdomain.com
 </pre></div>
 </div>
 <p>When the slave nameserver starts running, you can send queries for
-<tt class="docutils literal"><span class="pre">counterdomain</span></tt> and see the most current set of nodes as follows:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> dig -t a counterdomain                   <span class="c"># returns set of Replicas</span>
+<tt class="docutils literal"><span class="pre">counterdomain.com</span></tt> and see the most current set of nodes as follows:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> dig -t a counterdomain.com                   <span class="c"># returns set of Replicas</span>
 
-<span class="gp">$</span> dig -t srv _concoord._tcp.counterdomain  <span class="c"># returns set of Replicas with ports</span>
+<span class="gp">$</span> dig -t srv _concoord._tcp.counterdomain.com  <span class="c"># returns set of Replicas with ports</span>
 
-<span class="gp">$</span> dig -t txt counterdomain                 <span class="c"># returns set of all nodes</span>
+<span class="gp">$</span> dig -t txt counterdomain.com                 <span class="c"># returns set of all nodes</span>
 
-<span class="gp">$</span> dig -t ns counterdomain                  <span class="c"># returns set of nameservers</span>
+<span class="gp">$</span> dig -t ns counterdomain.com                  <span class="c"># returns set of nameservers</span>
 </pre></div>
 </div>
 </div>
@@ -235,7 +183,7 @@ that create connections or edit them in the configuration file.</p>
 AWS_SECRET_ACCESS_KEY - Your AWS Secret Access Key</div></blockquote>
 <p>Once you make sure that your Route53 account is set up and your
 credentials are updated, you can start the nameserver as follows:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord nameserver -n counterdomain -o counter.Counter -b ipaddr:port -t 3 -o configfilepath
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord nameserver -n counterdomain.com -o concoord.object.counter.Counter -b 127.0.0.1:14000 -t 3 -o configfilepath
 </pre></div>
 </div>
 </div>
@@ -245,12 +193,15 @@ credentials are updated, you can start the nameserver as follows:</p>
 <h1>Connecting to ConCoord Objects<a class="headerlink" href="#connecting-to-concoord-objects" title="Permalink to this headline">¶</a></h1>
 <p>Once you have a ConCoord instance running with your object, it is easy
 to access your object.</p>
-<p>Now we will use the proxy object we generated. You can import and use
-this proxy object in your code. Depending on how you set your
-nameserver node up, you can access your object with the <tt class="docutils literal"><span class="pre">ipaddr:port</span></tt>
-pair or the <tt class="docutils literal"><span class="pre">domainname</span></tt>.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">counterproxy</span> <span class="kn">import</span> <span class="n">Counter</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">domainname</span><span class="p">)</span>
+<p>The proxy for the Counter object is also included in the distribution.
+You can import and use this proxy object in your code. Depending on
+how you set your nameserver node up, you can access your object with
+the <tt class="docutils literal"><span class="pre">ipaddr:port</span></tt> pair or the domainname. In the example below, the
+<tt class="docutils literal"><span class="pre">ipaddr:port</span></tt> of both replica nodes are used. As a result, the client
+will be able to do method invocations on the object as long as one of
+the replicas is alive:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">concoord.proxy.counter</span> <span class="kn">import</span> <span class="n">Counter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="s">&quot;127.0.0.1:14000, 127.0.0.1:14001&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">increment</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">increment</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
@@ -259,8 +210,8 @@ pair or the <tt class="docutils literal"><span class="pre">domainname</span></tt
 </div>
 <p>At any point to reinitialize an object after it is deployed on
 replicas, you should call <tt class="docutils literal"><span class="pre">__concoordinit__</span></tt> function:</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">counterproxy</span> <span class="kn">import</span> <span class="n">Counter</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">domainname</span><span class="p">)</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">concoord.proxy.counter</span> <span class="kn">import</span> <span class="n">Counter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="s">&quot;127.0.0.1:14000, 127.0.0.1:14001&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">increment</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">__concoordinit__</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">increment</span><span class="p">()</span>
@@ -279,7 +230,6 @@ replicas, you should call <tt class="docutils literal"><span class="pre">__conco
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Getting Started</a></li>
-<li><a class="reference internal" href="#concoordifying-python-objects">Concoordifying Python Objects</a></li>
 <li><a class="reference internal" href="#starting-nodes">Starting Nodes</a><ul>
 <li><a class="reference internal" href="#starting-replica-nodes">Starting Replica Nodes</a></li>
 <li><a class="reference internal" href="#starting-acceptor-nodes">Starting Acceptor Nodes</a></li>
@@ -299,7 +249,7 @@ replicas, you should call <tt class="docutils literal"><span class="pre">__conco
                         title="previous chapter">Installing ConCoord</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="tutorial-advanced.html"
-                        title="next chapter">Creating Source Bundles</a></p>
+                        title="next chapter">ConCoordifying Python Objects</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/tutorial.txt"
@@ -329,7 +279,7 @@ replicas, you should call <tt class="docutils literal"><span class="pre">__conco
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="tutorial-advanced.html" title="Creating Source Bundles"
+          <a href="tutorial-advanced.html" title="ConCoordifying Python Objects"
              >next</a> |</li>
         <li class="right" >
           <a href="install.html" title="Installing ConCoord"

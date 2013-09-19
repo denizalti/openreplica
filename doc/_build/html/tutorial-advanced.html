@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Creating Source Bundles &mdash; ConCoord 0.2.0 documentation</title>
+    <title>ConCoordifying Python Objects &mdash; ConCoord 0.2.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="ConCoord 0.2.0 documentation" href="index.html" />
-    <link rel="prev" title="Tutorial" href="tutorial.html" /> 
+    <link rel="prev" title="Getting Started" href="tutorial.html" /> 
   </head>
   <body>
     <div class="related">
@@ -34,7 +34,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="tutorial.html" title="Tutorial"
+          <a href="tutorial.html" title="Getting Started"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">ConCoord 0.2.0 documentation</a> &raquo;</li> 
       </ul>
@@ -45,7 +45,80 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="creating-source-bundles">
+  <div class="section" id="concoordifying-python-objects">
+<h1>ConCoordifying Python Objects<a class="headerlink" href="#concoordifying-python-objects" title="Permalink to this headline">¶</a></h1>
+<p>For cases when the objects included in the ConCoord distribution do
+not meet your coordination needs, ConCoord lets you convert your
+local Python objects into distributable objects very easily.</p>
+<p>To walk through the ConCoord approach, you will use a different
+Counter object that increments and decrements by ten, namely
+tencounter.py. Once you install ConCoord, you can create coordination
+objects and save them anywhere in your filesystem. After you create
+<tt class="docutils literal"><span class="pre">tencounter.py</span></tt>, you can save it under <tt class="docutils literal"><span class="pre">/foo/tencounter.py</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">TenCounter</span><span class="p">:</span>
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+   <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+
+  <span class="k">def</span> <span class="nf">decrement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">-=</span> <span class="mi">10</span>
+
+  <span class="k">def</span> <span class="nf">increment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">+=</span> <span class="mi">10</span>
+
+  <span class="k">def</span> <span class="nf">getvalue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+
+  <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s">&quot;The counter value is </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+</pre></div>
+</div>
+<p>Once you have created the object, update your <tt class="docutils literal"><span class="pre">PYTHONPATH</span></tt> accordingly,
+so that the objects can be found and imported:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> <span class="nb">export </span><span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$PYTHONPATH</span>:/foo/
+</pre></div>
+</div>
+<p>Clients will use a proxy object to do method calls on the object.
+To create the proxy object automatically, you can use the following
+command:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord object -o tencounter.TenCounter
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">Usage:</span> <span class="pre">concoord</span> <span class="pre">object</span> <span class="pre">[-h]</span> <span class="pre">[-o</span> <span class="pre">OBJECTNAME]</span> <span class="pre">[-t</span> <span class="pre">SECURITYTOKEN]</span> <span class="pre">[-p</span> <span class="pre">PROXYTYPE]</span> <span class="pre">[-s]</span> <span class="pre">[-v]</span></tt></p>
+<dl class="docutils">
+<dt>where,</dt>
+<dd><p class="first"><tt class="docutils literal"><span class="pre">-h,</span> <span class="pre">--help</span></tt>                                show this help message and exit</p>
+<p><tt class="docutils literal"><span class="pre">-o</span> <span class="pre">OBJECTNAME,</span> <span class="pre">--objectname</span> <span class="pre">OBJECTNAME</span></tt>    client object dotted name module.Class</p>
+<p><tt class="docutils literal"><span class="pre">-t</span> <span class="pre">SECURITYTOKEN,</span> <span class="pre">--token</span> <span class="pre">SECURITYTOKEN</span></tt>   security token</p>
+<p><tt class="docutils literal"><span class="pre">-p</span> <span class="pre">PROXYTYPE,</span> <span class="pre">--proxytype</span> <span class="pre">PROXYTYPE</span></tt>       0: basic, 1: blocking, 2: client-side batching, 3: server-side batching</p>
+<p><tt class="docutils literal"><span class="pre">-s,</span> <span class="pre">--safe</span></tt>                                safety checking on/off</p>
+<p class="last"><tt class="docutils literal"><span class="pre">-v,</span> <span class="pre">--verbose</span></tt>                             verbose mode on/off</p>
+</dd>
+</dl>
+<p>This script will create a proxy file under the directory that the
+object resides (i.e. <tt class="docutils literal"><span class="pre">/foo/</span></tt>):</p>
+<p><tt class="docutils literal"><span class="pre">/foo/tencounterproxy.py</span></tt> := the proxy that can be used by the client</p>
+<p>IMPORTANT NOTE: ConCoord objects treat <tt class="docutils literal"><span class="pre">__init__</span></tt> functions specially in
+two ways:</p>
+<ol class="arabic simple">
+<li>When Replicas go live, the object is instantiated calling the</li>
+</ol>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">__init__</span></tt> without any arguments. Therefore, while implementing
+coordination objects, the <tt class="docutils literal"><span class="pre">__init__</span></tt> method should be implemented to
+be able to run without explicit arguments. You can use defaults to
+implement an <tt class="docutils literal"><span class="pre">__init__</span></tt> method that accepts arguments.</div></blockquote>
+<ol class="arabic simple" start="2">
+<li>In the proxy created, the <tt class="docutils literal"><span class="pre">__init__</span></tt> function is used to initialize</li>
+</ol>
+<blockquote>
+<div>the Client-Replica connection. This way, multiple clients can
+connect to a ConCoord instance without reinitializing the
+object. During proxy generation, the original <tt class="docutils literal"><span class="pre">__init__</span></tt> function is
+renamed as <tt class="docutils literal"><span class="pre">__concoordinit__</span></tt>, to reinitialize the object the user can
+call <tt class="docutils literal"><span class="pre">__concoordinit__</span></tt> at any point.</div></blockquote>
+<p>After this point on, you can use TenCounter just like we use Counter before.</p>
+</div>
+<div class="section" id="creating-source-bundles">
 <h1>Creating Source Bundles<a class="headerlink" href="#creating-source-bundles" title="Permalink to this headline">¶</a></h1>
 <p>You can create bundles to use at the server and client sides using the
 <tt class="docutils literal"><span class="pre">Makefile</span></tt> provided under <tt class="docutils literal"><span class="pre">concoord/</span></tt></p>
@@ -167,7 +240,8 @@ did before as follows:</p>
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Creating Source Bundles</a><ul>
+<li><a class="reference internal" href="#">ConCoordifying Python Objects</a></li>
+<li><a class="reference internal" href="#creating-source-bundles">Creating Source Bundles</a><ul>
 <li><a class="reference internal" href="#creating-a-server-bundle">Creating A Server Bundle</a></li>
 <li><a class="reference internal" href="#creating-a-client-bundle">Creating A Client Bundle</a></li>
 </ul>
@@ -178,7 +252,7 @@ did before as follows:</p>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="tutorial.html"
-                        title="previous chapter">Tutorial</a></p>
+                        title="previous chapter">Getting Started</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/tutorial-advanced.txt"
@@ -208,7 +282,7 @@ did before as follows:</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="tutorial.html" title="Tutorial"
+          <a href="tutorial.html" title="Getting Started"
              >previous</a> |</li>
         <li><a href="index.html">ConCoord 0.2.0 documentation</a> &raquo;</li> 
       </ul>
