@@ -1,3 +1,86 @@
+ConCoordifying Python Objects
+-----------------------------
+For cases when the objects included in the ConCoord distribution do
+not meet your coordination needs, ConCoord lets you convert your
+local Python objects into distributable objects very easily.
+
+To walk through the ConCoord approach, you will use a different
+Counter object that increments and decrements by ten, namely
+tencounter.py. Once you install ConCoord, you can create coordination
+objects and save them anywhere in your filesystem. After you create
+``tencounter.py``, you can save it under ``/foo/tencounter.py``:
+
+.. sourcecode:: python
+
+  class TenCounter:
+    def __init__(self, value=0):
+     self.value = value
+
+    def decrement(self):
+      self.value -= 10
+
+    def increment(self):
+      self.value += 10
+
+    def getvalue(self):
+      return self.value
+
+    def __str__(self):
+      return "The counter value is %d" % self.value
+
+Once you have created the object, update your ``PYTHONPATH`` accordingly,
+so that the objects can be found and imported:
+
+.. sourcecode:: console
+
+  $ export PYTHONPATH=$PYTHONPATH:/foo/
+
+Clients will use a proxy object to do method calls on the object.
+To create the proxy object automatically, you can use the following
+command:
+
+.. sourcecode:: console
+
+  $ concoord object -o tencounter.TenCounter
+
+``Usage: concoord object [-h] [-o OBJECTNAME] [-t SECURITYTOKEN] [-p PROXYTYPE] [-s] [-v]``
+
+where,
+  ``-h, --help``				show this help message and exit
+
+  ``-o OBJECTNAME, --objectname OBJECTNAME``	client object dotted name module.Class
+
+  ``-t SECURITYTOKEN, --token SECURITYTOKEN``	security token
+
+  ``-p PROXYTYPE, --proxytype PROXYTYPE``	0: basic, 1: blocking, 2: client-side batching, 3: server-side batching
+
+  ``-s, --safe``            			safety checking on/off
+
+  ``-v, --verbose``         			verbose mode on/off
+
+This script will create a proxy file under the directory that the
+object resides (i.e. ``/foo/``):
+
+``/foo/tencounterproxy.py`` := the proxy that can be used by the client
+
+IMPORTANT NOTE: ConCoord objects treat ``__init__`` functions specially in
+two ways:
+
+1) When Replicas go live, the object is instantiated calling the
+  ``__init__`` without any arguments. Therefore, while implementing
+  coordination objects, the ``__init__`` method should be implemented to
+  be able to run without explicit arguments. You can use defaults to
+  implement an ``__init__`` method that accepts arguments.
+
+2) In the proxy created, the ``__init__`` function is used to initialize
+  the Client-Replica connection. This way, multiple clients can
+  connect to a ConCoord instance without reinitializing the
+  object. During proxy generation, the original ``__init__`` function is
+  renamed as ``__concoordinit__``, to reinitialize the object the user can
+  call ``__concoordinit__`` at any point.
+
+After this point on, you can use TenCounter just like we use Counter before.
+
 Creating Source Bundles
 -----------------------
 
