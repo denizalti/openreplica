@@ -155,6 +155,7 @@ parse_functions = [
     parse_response, # MSG_RESPONSE
 
     parse_garbagecollect,  # MSG_GARBAGECOLLECT
-    parse_basic           # MSG_STATUS
+    parse_basic,           # MSG_STATUS
+    parse_basic            # MSG_ISSUE
     ]
 

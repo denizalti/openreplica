@@ -418,6 +418,9 @@ class Replica(Node):
             updatemessage = create_message(MSG_UPDATE, self.me)
             conn.send(updatemessage)
 
+    def msg_issue(self, conn, msg):
+        self.issue_pending_commands()
+
     def msg_helo(self, conn, msg):
         if self.debug: self.logger.write("State", "Received HELO")
         # This is the first acceptor, it has to be added by this replica
@@ -1026,7 +1029,7 @@ class Replica(Node):
 
     def msg_clientreply(self, conn, msg):
         """this only occurs in response to commands initiated by the shell"""
-        print "Commandline Debugging:", msg
+        return
 
 ## PAXOS METHODS
     def do_command_propose_from_pending(self, givencommandnumber):
@@ -1290,7 +1293,8 @@ class Replica(Node):
                                 for i in range(WINDOW):
                                     noopcommand = self.create_noop_command()
                                     self.pick_commandnumber_add_to_pending(noopcommand)
-                                self.issue_pending_commands()
+                                issuemsg = create_message(MSG_ISSUE, self.me)
+                                self.send(issuemsg, peer=self.me)
                     else:
                         self.groups[peer.type][peer] = 0
             with self.recentlyupdatedpeerslock:
