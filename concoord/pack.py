@@ -16,6 +16,7 @@ class Peer(namedtuple('Peer', ['addr', 'port', 'type'])):
 
 PValue = namedtuple('PValue', ['ballotnumber', 'commandnumber', 'proposal'])
 Message = namedtuple('Message', ['id', 'type', 'source'])
+IssueMessage = namedtuple('IssueMessage', ['id', 'type', 'source'])
 StatusMessage = namedtuple('StatusMessage', ['id', 'type', 'source'])
 HeloReplyMessage = namedtuple('HeloReplyMessage', ['id', 'type', 'source', 'leader'])
 UpdateReplyMessage = namedtuple('UpdateReplyMessage', ['id', 'type', 'decisions'])

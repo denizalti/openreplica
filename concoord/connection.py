@@ -99,7 +99,7 @@ class ConnectionPool():
                             self.nascentsockets.remove(thesocket)
                     return conn
                 except Exception as e:
-                    print "Exception creating socket: ", e
+                    print "Cannot reach peer. Socket cannot be created."
                     return None
 
     def get_connection_by_socket(self, thesocket):

@@ -453,8 +453,6 @@ class Node():
 
     def send(self, message, peer=None, group=None):
         if peer:
-            if peer == self.me:
-                return 0
             connection = self.connectionpool.get_connection_by_peer(peer)
             if connection == None:
                 if self.debug: self.logger.write("Connection Error",
