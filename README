@@ -88,9 +88,11 @@ Note that you can specify the port and the address of any node with
 options -p and -a respectively. The nodes can also be run in the debug
 mode or with a logger with the commands shown below::
 
-Usage: concoord [-h] [-a ADDR] [-p PORT] [-b BOOTSTRAP] [-o OBJECTNAME] [-l LOGGER] [-w] [-d]
+    Usage: concoord [-h] [-a ADDR] [-p PORT] [-b BOOTSTRAP] [-o OBJECTNAME] 
+                    [-l LOGGER] [-w] [-d]
 
 where,
+
   -h, --help            show this help message and exit
   -a ADDR, --addr ADDR  addr for the node
   -p PORT, --port PORT  port for the node
@@ -271,15 +273,16 @@ command::
 
   $ concoord object -o tencounter.TenCounter
 
-Usage: concoord object [-h] [-o OBJECTNAME] [-t SECURITYTOKEN] [-p PROXYTYPE] [-s] [-v]
+
+  Usage: concoord object [-h] [-o OBJECTNAME] [-t SECURITYTOKEN] [-p PROXYTYPE] 
+                         [-s] [-v]
 
 where,
   -h, --help					show this help message and exit
   -o OBJECTNAME, --objectname OBJECTNAME	client object dotted name module.Class
   -t SECURITYTOKEN, --token SECURITYTOKEN	security token
   -p PROXYTYPE, --proxytype PROXYTYPE		0:BASIC, 1:BLOCKING,
-     			    			2:CLIENT-SIDE BATCHING,
-                            			3:SERVER-SIDE BATCHING
+     			    			2:CLIENT-SIDE BATCHING, 3:SERVER-SIDE BATCHING
   -s, --safe            			safety checking on/off
   -v, --verbose         			verbose mode on/off
 
@@ -397,23 +400,15 @@ To create the proxy for this blocking object we will use the following command::
 This command creates the proxy that supports blocking operations. Now
 you can use blocking objects just like basic ConCoord objects. First,
 we start the replica, acceptor and nameserver nodes the same way we
-did before as follows:
-
-.. sourcecode:: console
+did before as follows::
 
   $ concoord replica -o semaphore.Semaphore -a 127.0.0.1 -p 14000
 
-.. sourcecode:: console
-
   $ concoord acceptor -b 127.0.0.1:14000
-
-.. sourcecode:: console
 
   $ sudo concoord nameserver -n semaphoredomain -o semaphore.Semaphore -b 127.0.0.1:14000 -t 1
 
-To test the functionality, you can use multiple clients or print out the ``Semaphore`` object as follows:
-
-.. sourcecode:: pycon
+To test the functionality, you can use multiple clients or print out the ``Semaphore`` object as follows::
 
   >>> from semaphoreproxy import Semaphore
   >>> s = Semaphore("127.0.0.1:14000")
