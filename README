@@ -36,9 +36,13 @@ The minimum requirements for ConCoord are::
 Installation
 ============
 
-To build and install ConCoord, type::
+ConCoord can be installed from source with::
 
-  sudo python setup.py install
+python setup.py install
+
+ConCoord is also available for install through PyPI::
+
+pip install concoord
 
 Tutorial
 ========
@@ -88,7 +92,7 @@ Note that you can specify the port and the address of any node with
 options -p and -a respectively. The nodes can also be run in the debug
 mode or with a logger with the commands shown below::
 
-    Usage: concoord [-h] [-a ADDR] [-p PORT] [-b BOOTSTRAP] [-o OBJECTNAME] 
+    Usage: concoord [-h] [-a ADDR] [-p PORT] [-b BOOTSTRAP] [-o OBJECTNAME]
                     [-l LOGGER] [-w] [-d]
 
 where,
@@ -274,7 +278,7 @@ command::
   $ concoord object -o tencounter.TenCounter
 
 
-  Usage: concoord object [-h] [-o OBJECTNAME] [-t SECURITYTOKEN] [-p PROXYTYPE] 
+  Usage: concoord object [-h] [-o OBJECTNAME] [-t SECURITYTOKEN] [-p PROXYTYPE]
                          [-s] [-v]
 
 where,
