@@ -88,8 +88,8 @@ Note that you can specify the port and the address of any node with
 options -p and -a respectively. The nodes can also be run in the debug
 mode or with a logger with the commands shown below::
 
-Usage: concoord [-h] [-a ADDR] [-p PORT] [-b BOOTSTRAP] [-o OBJECTNAME]
-                [-l LOGGER] [-w] [-d]
+Usage: concoord [-h] [-a ADDR] [-p PORT] [-b BOOTSTRAP] [-o OBJECTNAME] [-l LOGGER] [-w] [-d]
+
 where,
   -h, --help            show this help message and exit
   -a ADDR, --addr ADDR  addr for the node
@@ -292,17 +292,17 @@ IMPORTANT NOTE: ConCoord objects treat __init__ functions specially in
 two ways:
 
 1) When Replicas go live, the object is instantiated calling the
-  __init__ without any arguments. Therefore, while implementing
-  coordination objects, the __init__ method should be implemented to
-  be able to run without explicit arguments. You can use defaults to
-  implement an __init__ method that accepts arguments.
+__init__ without any arguments. Therefore, while implementing
+coordination objects, the __init__ method should be implemented to be
+able to run without explicit arguments. You can use defaults to
+implement an __init__ method that accepts arguments.
 
 2) In the proxy created, the __init__ function is used to initialize
-  the Client-Replica connection. This way, multiple clients can
-  connect to a ConCoord instance without reinitializing the
-  object. During proxy generation, the original __init__ function is
-  renamed as __concoordinit__, to reinitialize the object the user can
-  call __concoordinit__ at any point.
+the Client-Replica connection. This way, multiple clients can connect
+to a ConCoord instance without reinitializing the object. During proxy
+generation, the original __init__ function is renamed as
+__concoordinit__, to reinitialize the object the user can call
+__concoordinit__ at any point.
 
 After this point on, you can use TenCounter just like we use Counter before.
 
