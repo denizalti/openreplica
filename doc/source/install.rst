@@ -11,8 +11,15 @@ The minimum requirements for ConCoord are::
 
 Installation
 ------------------------
-To build and install ConCoord, type:
+ConCoord can be installed from source with:
 
 .. sourcecode:: console
 
-   $ sudo python setup.py install
+  $ python setup.py install
+
+ConCoord is also available for install through PyPI:
+
+.. sourcecode:: console
+
+  $ pip install concoord
+

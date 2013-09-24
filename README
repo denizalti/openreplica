@@ -22,7 +22,7 @@ a transparent way of providing a coordination service.
     - Deniz Altinbuken (deniz@systems.cs.cornell.edu)
     - Emin Gun Sirer (egs@systems.cs.cornell.edu)
 :Version: 1.0.0
-:Date: 2013-04-13
+:Date: 2013-09-20
 
 Requirements
 ============
@@ -38,11 +38,11 @@ Installation
 
 ConCoord can be installed from source with::
 
-python setup.py install
+  $ python setup.py install
 
 ConCoord is also available for install through PyPI::
 
-pip install concoord
+  $ pip install concoord
 
 Tutorial
 ========
@@ -225,7 +225,7 @@ the replicas is alive::
   2
 
 At any point to reinitialize an object after it is deployed on
-replicas, you should call __concoordinit__ function:
+replicas, you should call __concoordinit__ function::
 
   >>> from concoord.proxy.counter import Counter
   >>> c = Counter("127.0.0.1:14000, 127.0.0.1:14001")
