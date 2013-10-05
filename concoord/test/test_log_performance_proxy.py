@@ -1,7 +1,5 @@
 """
 @author: Deniz Altinbuken, Emin Gun Sirer
-@note: Value object proxy to test concoord implementation
-@copyright: See LICENSE
 """
 from concoord.clientproxy import ClientProxy
 
@@ -12,11 +10,14 @@ class Test():
     def __concoordinit__(self):
         return self.proxy.invoke_command('__init__')
 
-    def getvalue(self):
-        return self.proxy.invoke_command('getvalue')
+    def write(self, entry):
+        return self.proxy.invoke_command('write', entry)
 
-    def setvalue(self, newvalue):
-        return self.proxy.invoke_command('setvalue', newvalue)
+    def append(self, entry):
+        return self.proxy.invoke_command('append', entry)
+
+    def write(self):
+        return self.proxy.invoke_command('read')
 
     def __str__(self):
         return self.proxy.invoke_command('__str__')

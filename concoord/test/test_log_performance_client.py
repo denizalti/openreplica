@@ -6,7 +6,7 @@
 import argparse
 import os, sys
 import time
-from test_performance_proxy import *
+from test_log_performance_proxy import *
 
 parser = argparse.ArgumentParser()
 
@@ -21,10 +21,10 @@ args = parser.parse_args()
 def test_loop():
   proxy = Test(args.bootstrap)
   for i in range(args.operations/10):
-    proxy.getvalue()
+    proxy.append("00000000000000000")
   starttime = time.time()
   for i in range(args.operations):
-    proxy.getvalue()
+    proxy.append("00000000000000000")
   stoptime = time.time()
   latency = float(stoptime-starttime)/(args.operations)
   print "*****************************************"
