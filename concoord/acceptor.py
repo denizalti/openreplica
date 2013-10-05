@@ -133,7 +133,7 @@ class Acceptor(Node):
     def _graceexit(self, exitcode=0):
         sys.stdout.flush()
         sys.stderr.flush()
-        if self.debug: self.logger.close()
+        if hasattr(self, 'logger'): self.logger.close()
         os._exit(exitcode)
 
 def main():
