@@ -484,5 +484,5 @@ class Node():
     def _graceexit(self, exitcode=0):
         sys.stdout.flush()
         sys.stderr.flush()
-        self.logger.close()
+        if hasattr(self, 'logger'): self.logger.close()
         os._exit(exitcode)
