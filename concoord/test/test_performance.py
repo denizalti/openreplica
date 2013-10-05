@@ -12,6 +12,6 @@ class TestPerformance():
 
     def setvalue(self, newvalue):
         self.value = newvalue
-    
+
     def __str__(self):
         return "The value is %s" % str(self.value)

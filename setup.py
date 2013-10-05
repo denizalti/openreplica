@@ -39,5 +39,4 @@ setup(
         'msgpack-python',
         'dnspython',
     ],
-
 )
