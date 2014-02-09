@@ -4,6 +4,7 @@
        ConnectionPools organize collections of connections.
 @copyright: See LICENSE
 '''
+from __future__ import print_function
 import sys
 import socket, errno, select
 import struct
@@ -15,6 +16,7 @@ from threading import Lock
 from concoord.pack import *
 from concoord.message import *
 from concoord.exception import ConnectionError
+
 
 class ConnectionPool():
     """ConnectionPool keeps the connections that a certain Node knows of.
@@ -55,7 +57,7 @@ class ConnectionPool():
                     self.nascentsockets.remove(conn.thesocket)
                 conn.close()
             else:
-                print "Trying to delete a non-existent connection from the connection pool."
+                print ("Trying to delete a non-existent connection from the connection pool.")
 
     def del_connection_by_socket(self, thesocket):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
@@ -73,7 +75,7 @@ class ConnectionPool():
                     self.nascentsockets.remove(thesocket)
                 connindict.close()
             else:
-                print "Trying to delete a non-existent socket from the connection pool."
+                print ("Trying to delete a non-existent socket from the connection pool.")
 
     def get_connection_by_peer(self, peer):
         """Returns a Connection given corresponding Peer triple"""
@@ -236,11 +238,11 @@ class Connection():
                                 raise e
                 return True
             except socket.error, e:
-                 if isinstance(e.args, tuple):
-                     if e[0] == errno.EPIPE:
-                         return False
+                if isinstance(e.args, tuple):
+                    if e[0] == errno.EPIPE:
+                        return False
             except IOError, e:
-                print "Send Error: ", e
+                print ("Send Error: ", e)
             except AttributeError, e:
                 pass
             return False
@@ -251,7 +253,7 @@ class Connection():
         except socket.error, e:
             if isinstance(e.args, tuple):
                 if e[0] == errno.EBADF:
-                    print "Socket closed."
+                    print ("Socket closed.")
 
     def close(self):
         """Close the Connection"""

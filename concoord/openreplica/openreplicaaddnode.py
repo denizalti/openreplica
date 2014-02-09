@@ -3,12 +3,14 @@
 @note: Adds nodes to an OpenReplica instance
 @copyright: See LICENSE
 '''
+from __future__ import print_function
 import argparse
 import os, sys, time
 from concoord.enums import *
 from concoord.utils import *
 from concoord.openreplica.plmanager import *
 from concoord.proxy.nameservercoord import *
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--nodetype", action="store", dest="nodetype", help="node type")
@@ -61,15 +63,15 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
     nodetype = int(nodetype)
     servicetype = NS_SLAVE
     master = 'openreplica.org'
-    print "\n==== Adding %s ====" % node_names[nodetype]
+    print ("\n==== Adding %s ====" % node_names[nodetype])
     clientobjectfilename = os.path.basename(clientobjectfilepath)
-    print "Picking node..."
+    print( "Picking node...")
     if nodetype == NODE_NAMESERVER:
         nodeconn = PLConnection(1, [check_planetlab_dnsport, check_planetlab_pythonversion], configdict=CONFIGDICT)
     else:
         nodeconn = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
     node = nodeconn.getHosts()[0]
-    print "Picked Node: %s" % node
+    print( "Picked Node: %s" % node)
 
     terminated = True
     numtries = 0
@@ -87,19 +89,19 @@ def start_node(nodetype, subdomain, clientobjectfilepath, classname, bootstrapna
         numtries += 1
 
     if terminated:
-        print "Adding node FAILED. Please try again."
+        print( "Adding node FAILED. Please try again.")
         return
 
     # Add it to the object if it is a nameserver
     nameservercoordobj = NameserverCoord('openreplica.org')
     nameservercoordobj.addnodetosubdomain(subdomain, nodetype, nodename)
     # node is started
-    print "Node is started: %s" % nodename
+    print( "Node is started: %s" % nodename)
 
 def main():
     start_node(args.nodetype, args.subdomain, args.objectfilepath,
                args.classname, args.bootstrapname)
-    print 'DONE'
+    print( 'DONE')
 
 if __name__=='__main__':
     main()

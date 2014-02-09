@@ -3,6 +3,7 @@
 @note: The Acceptor keeps track of past Paxos ballots. It is the log for the Paxos state.
 @copyright: See LICENSE
 """
+from __future__ import print_function
 import signal
 import cPickle as pickle
 from pack import *
@@ -12,6 +13,7 @@ from concoord.utils import *
 from concoord.pack import *
 from concoord.pvalue import PValueSet
 from concoord.message import *
+
 
 class Acceptor(Node):
     """
@@ -125,7 +127,7 @@ class Acceptor(Node):
         Print the paxos state of the Acceptor.
         """
         keytuples = self.accepted.pvalues.keys()
-        print sorted(keytuples, key=lambda keytuple: keytuple[0])
+        print (sorted(keytuples, key=lambda keytuple: keytuple[0]))
 
     def terminate_handler(self, signal, frame):
         self._graceexit()

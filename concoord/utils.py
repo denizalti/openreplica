@@ -3,12 +3,14 @@
 @note: Utility functions for the runtime. Includes a timer module for collecting measurements.
 @copyright: See LICENSE
 '''
+from __future__ import print_function
 import socket
 import os, sys
 import time
 import string
 import threading
 from concoord.enums import *
+
 
 def findOwnIP():
     """Retrieves the hostname of the caller"""
@@ -61,9 +63,9 @@ class Logger():
                 return
 
     def write(self, cls, string):
-        print "[%s] %s %s: %s" % (self.prefix + '_' + threading.current_thread().name,
+        print ("[%s] %s %s: %s" % (self.prefix + '_' + threading.current_thread().name,
                                   time.time(), # time.asctime(time.localtime(time.time())),
-                                  cls, string)
+                                  cls, string))
         if self.log is not None:
             self.log.write("[%s] %s %s: %s" % (self.prefix + '_' + threading.current_thread().name,
                                                time.time(), # time.asctime(time.localtime(time.time())),
@@ -89,7 +91,7 @@ def endtimer(timerkey, timerno):
         if timers[index][1] == 0:
             timers[index][1] = time.time()
     except:
-        print "Can't stop timer %s %s." % (str(timerkey),str(timerno))
+        print ("Can't stop timer %s %s." % (str(timerkey),str(timerno)))
 
 def dumptimers(numreplicas, numacceptors, ownertype, outputdict):
     global timers
@@ -156,7 +158,7 @@ def endtiming(fn):
             profilerdict = get_profile_stats()
             for key, value in sorted(profilerdict.iteritems(),
                                      key=lambda (k,v): (v[2],k)):
-                print "%s: %s" % (key, value)
+                print ("%s: %s" % (key, value))
             time.sleep(10)
             sys.stdout.flush()
             os._exit(0)
@@ -176,10 +178,10 @@ def throughput_test(fn):
         elif obj.throughput_runs == 1100:
             obj.throughput_stop = time.time()
             totaltime = obj.throughput_stop - obj.throughput_start
-            print "********************************************"
-            print "TOTAL: ", totaltime
-            print "TPUT: ", 1000/totaltime, "req/s"
-            print "********************************************"
+            print( "********************************************")
+            print( "TOTAL: ", totaltime)
+            print( "TPUT: ", 1000/totaltime, "req/s")
+            print( "********************************************")
             obj._graceexit(1)
         return ret
     return new

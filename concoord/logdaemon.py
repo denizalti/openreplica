@@ -3,8 +3,10 @@
 @note: The Logger Daemon. Receives log messages and prints them.
 @copyright: See LICENSE
 """
+from __future__ import print_function
 import socket, time, os, sys, select
 from concoord.utils import *
+
 
 def collect_input(s):
     msg = ''
@@ -17,7 +19,7 @@ def collect_input(s):
     return True
 
 def print_event(event):
-    print "%s: %s" % (time.asctime(time.localtime(time.time())), event.strip())
+    print ("%s: %s" % (time.asctime(time.localtime(time.time())), event.strip()))
     
 def main():
     addr = findOwnIP()

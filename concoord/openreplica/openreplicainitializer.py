@@ -3,6 +3,7 @@
 @note: Initializes an OpenReplica instance
 @copyright: See LICENSE
 '''
+from __future__ import print_function
 import argparse
 import ast, _ast
 import os, sys
@@ -12,6 +13,7 @@ from concoord.safetychecker import *
 from concoord.proxygenerator import *
 from concoord.openreplica.plmanager import *
 from concoord.proxy.nameservercoord import *
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-s", "--subdomain", action="store", dest="subdomain", help="name for the subdomain to reach openreplica")
@@ -35,7 +37,7 @@ try:
     CONCOORDPATH = CONFIGDICT['CONCOORDPATH']
     LOGGERNODE = CONFIGDICT['LOGGERNODE']
 except:
-    print "You need to set ssh credentials to use this script. Use -o option to provide configuration file path."
+    print( "You need to set ssh credentials to use this script. Use -o option to provide configuration file path.")
     NPYTHONPATH = 'python'
 
 def check_object(clientcode):
@@ -89,9 +91,9 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
     clientobjectfilename = os.path.basename(clientobjectfilepath)
     numreplicas, numacceptors, numnameservers = configuration
     if numreplicas < 1 or numacceptors < 1 or numnameservers < 1:
-        print "Invalid configuration:"
-        print "The configuration requires at least 1 Replica, 1 Acceptor and 1 Nameserver"
-        print "Please try again."
+        print( "Invalid configuration:")
+        print( "The configuration requires at least 1 Replica, 1 Acceptor and 1 Nameserver")
+        print( "Please try again.")
         os._exit()
     processnames = []
 
@@ -100,7 +102,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
     while not success:
         try:
             bootstrap = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
-            print "Trying node: %s" % bootstrap.getHosts()[0]
+            print( "Trying node: %s" % bootstrap.getHosts()[0])
             success = bootstrap.uploadall(clientobjectfilepath, CONCOORDPATH + clientobjectfilename)
         except:
             success = False
@@ -115,7 +117,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
         bootstrap.executecommandone(node, 'rm foo*')
         numtries = 0
         while terminated and numtries < 5:
-            print "Failed to start node, trying again.."
+            print( "Failed to start node, trying again..")
             port = random.randint(14000, 15000)
             p = bootstrap.executecommandone(node, get_startup_cmd(NODE_BOOTSTRAP, node, port, clientobjectfilename, classname), False)
             terminated, output = bootstrap.executecommandone(node, 'cat foo.out')
@@ -128,7 +130,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
         # Bootstrap is started
         bootstrapname = bootstrap.getHosts()[0]+':'+str(port)
         processnames.append((NODE_REPLICA, bootstrapname))
-        print "Replica #0 is started: %s" % bootstrapname
+        print( "Replica #0 is started: %s" % bootstrapname)
 
     # locate the PlanetLab node for replicas, check the nodes, upload object and start the nodes
     for i in range(numreplicas-1):
@@ -136,7 +138,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
         while not success:
             try:
                 replica = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
-                print "Trying node: %s" % replica.getHosts()[0]
+                print( "Trying node: %s" % replica.getHosts()[0])
                 success = replica.uploadall(clientobjectfilepath, CONCOORDPATH + clientobjectfilename)
             except:
                 success = False
@@ -163,7 +165,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             # Replica is started
             replicaname = replica.getHosts()[0]+':'+str(port)
             processnames.append((NODE_REPLICA, replicaname))
-            print "Replica #%d is started: %s" % (i+1, replicaname)
+            print( "Replica #%d is started: %s" % (i+1, replicaname))
 
     # locate the PlanetLab node for acceptors, check the nodes, upload object and start the nodes
     for i in range(numacceptors):
@@ -171,7 +173,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
         while not success:
             try:
                 acceptor = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
-                print "Trying node: %s"% acceptor.getHosts()[0]
+                print( "Trying node: %s"% acceptor.getHosts()[0])
                 success = acceptor.uploadall(clientobjectfilepath, CONCOORDPATH + clientobjectfilename)
             except:
                 success = False
@@ -198,7 +200,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             # Acceptor is started
             acceptorname = acceptor.getHosts()[0]+':'+str(port)
             processnames.append((NODE_ACCEPTOR, acceptorname))
-            print "Acceptor #%d is started: %s" % (i, acceptorname)
+            print( "Acceptor #%d is started: %s" % (i, acceptorname))
 
     servicetype = NS_SLAVE
     master = 'openreplica.org'
@@ -208,7 +210,7 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
         while not success:
             try:
                 nameserver = PLConnection(1, [check_planetlab_pythonversion], configdict=CONFIGDICT)
-                print "Trying node: %s"% nameserver.getHosts()[0]
+                print( "Trying node: %s"% nameserver.getHosts()[0])
                 success = nameserver.uploadall(clientobjectfilepath, CONCOORDPATH + clientobjectfilename)
             except:
                 success = False
@@ -235,14 +237,14 @@ def start_nodes(subdomain, clientobjectfilepath, classname, configuration, token
             # Nameserver is started
             nameservername = nameserver.getHosts()[0]+':'+str(port)
             processnames.append((NODE_NAMESERVER, nameservername))
-            print "Nameserver #%d is started: %s" % (i, nameservername)
+            print( "Nameserver #%d is started: %s" % (i, nameservername))
 
     ## add nodes to OpenReplica coordinator object
     nameservercoordobj = NameserverCoord('openreplica.org')
     for nodetype,node in processnames:
         nameservercoordobj.addnodetosubdomain(subdomain, nodetype, node)
     # All nodes are started
-    print "All nodes have been started!"
+    print( "All nodes have been started!")
     return bootstrapname
 
 def main():
@@ -250,21 +252,21 @@ def main():
         clientcode = fd.read()
         # Check safety
     if not check_object(clientcode):
-        print "Object is not safe for us to execute."
-        print "If you would like to use this object, use ConCoord to deploy it."
+        print( "Object is not safe for us to execute.")
+        print( "If you would like to use this object, use ConCoord to deploy it.")
         os._exit(1)
         # Start Nodes
-    print " [PASSED]"
+    print( " [PASSED]")
     configuration = (int(args.replicanum), int(args.acceptornum), int(args.nameservernum))
-    print "Starting nodes..."
+    print( "Starting nodes...")
     start_nodes(args.subdomain, args.objectfilepath, args.classname, configuration, args.token)
     # Create Proxy
-    print "Creating proxy..."
+    print( "Creating proxy...")
     clientproxycode = createclientproxy(clientcode, args.classname, args.token)
     clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
-    print "Proxy Code:"
-    print clientproxycode
-    print 'DONE'
+    print( "Proxy Code:")
+    print( clientproxycode)
+    print( 'DONE')
     return 0
 
 if __name__=='__main__':

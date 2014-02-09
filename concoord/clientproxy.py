@@ -3,6 +3,7 @@
 @note: ConCoord Client Proxy
 @copyright: See LICENSE
 '''
+from __future__ import print_function
 import os, random, select, socket, sys, threading, time
 from threading import Lock
 import cPickle as pickle
@@ -13,6 +14,7 @@ from concoord.exception import *
 from concoord.connection import ConnectionPool, Connection
 from concoord.message import *
 from concoord.pvalue import PValueSet
+
 try:
     import dns
     import dns.resolver
@@ -54,7 +56,7 @@ class ClientProxy():
                     if peer not in tmpbootstraplist:
                         tmpbootstraplist.append(peer)
         except (dns.resolver.NXDOMAIN, dns.exception.Timeout):
-            if self.debug: print "Cannot resolve name"
+            if self.debug: print ("Cannot resolve name")
         return tmpbootstraplist
 
     def discoverbootstrap(self, givenbootstrap):
@@ -72,7 +74,7 @@ class ClientProxy():
                     self.domainname = bootstrap
                     tmpbootstraplist = self.getbootstrapfromdomain(self.domainname)
         except ValueError:
-            if self.debug: print "bootstrap usage: ipaddr1:port1,ipaddr2:port2 or domainname"
+            if self.debug: print ("bootstrap usage: ipaddr1:port1,ipaddr2:port2 or domainname")
             self._graceexit()
         return tmpbootstraplist
 
@@ -88,10 +90,10 @@ class ClientProxy():
                 self.conn.settimeout(CLIENTRESENDTIMEOUT)
                 self.bootstrap = boottuple
                 connected = True
-                if self.debug: print "Connected to new bootstrap: ", boottuple
+                if self.debug: print ("Connected to new bootstrap: ", boottuple)
                 break
             except socket.error, e:
-                if self.debug: print "Socket.Error: ", e
+                if self.debug: print ("Socket.Error: ", e)
                 continue
         return connected
 
@@ -145,7 +147,7 @@ class ClientProxy():
                             self.reconfigure()
                             continue
                         else:
-                            print "Unknown Client Reply Code."
+                            print ("Unknown Client Reply Code.")
             except ConnectionError:
                 resend = True
                 self.reconfigure()

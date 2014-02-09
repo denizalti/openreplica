@@ -3,6 +3,7 @@
 @note: ConCoord Client Proxy
 @copyright: See LICENSE
 '''
+from __future__ import print_function
 import os, sys, random, socket, time
 from threading import Thread, Condition, Lock
 from concoord.pack import *
@@ -11,6 +12,7 @@ from concoord.utils import *
 from concoord.exception import *
 from concoord.connection import Connection
 from concoord.message import *
+
 try:
     import dns
     import dns.resolver
@@ -100,7 +102,7 @@ class ClientProxy():
                         tmpbootstraplist.append(peer)
         except (dns.resolver.NXDOMAIN, dns.exception.Timeout):
             if self.debug:
-                print "Cannot resolve name"
+                print ("Cannot resolve name")
         return tmpbootstraplist
 
     def discoverbootstrap(self, givenbootstrap):
@@ -119,7 +121,7 @@ class ClientProxy():
                     tmpbootstraplist = self.getbootstrapfromdomain(self.domainname)
         except ValueError:
             if self.debug:
-                print "bootstrap usage: ipaddr1:port1,ipaddr2:port2 or domainname"
+                print ("bootstrap usage: ipaddr1:port1,ipaddr2:port2 or domainname")
             self._graceexit()
         return tmpbootstraplist
 
@@ -136,11 +138,11 @@ class ClientProxy():
                 self.bootstrap = boottuple
                 connected = True
                 if self.debug:
-                    print "Connected to new bootstrap: ", boottuple
+                    print ("Connected to new bootstrap: ", boottuple)
                 break
             except socket.error, e:
                 if self.debug:
-                    print "Socket Error: ", e
+                    print ("Socket Error: ", e)
                 continue
         return connected
 
@@ -224,7 +226,7 @@ class ClientProxy():
                                 self.outstanding.append(reqdesc)
                                 self.needreconfig = True
                         else:
-                            print "Unknown Client Reply Code"
+                            print ("Unknown Client Reply Code")
             except ConnectionError:
                 self.needreconfig = True
             except KeyboardInterrupt:
