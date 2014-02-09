@@ -20,6 +20,23 @@ classifiers = [
     'Programming Language :: Python :: 2.7',
 ]
 
+extra = {}
+
+install_requires=[
+    'python>=2.7',
+    'msgpack-python',
+    'dnspython',
+]
+
+if sys.version_info >= (3,):
+    extra['use_2to3'] = True
+    #extra['convert_2to3_doctests'] = ['src/your/module/README.txt']
+    #extra['use_2to3_fixers'] = ['lib2to3.print']
+    install_requires = ['msgpack-python',
+                        'dnspython3',
+                    ]
+    print ("install_requires is %r extra is %r" %(install_requires, extra))
+
 setup(
     name='concoord',
     version=VERSION,
@@ -34,9 +51,6 @@ setup(
     entry_points={
         'console_scripts': ['concoord = concoord.main:main',]
     },
-    install_requires=[
-        'python>=2.7',
-        'msgpack-python',
-        'dnspython',
-    ],
+    install_requires = install_requires,
+    **extra
 )
