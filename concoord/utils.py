@@ -10,23 +10,17 @@ import time
 import string
 import threading
 from concoord.enums import *
-
+from six import exec_
 
 def findOwnIP():
     """Retrieves the hostname of the caller"""
     return socket.gethostbyname(socket.gethostname())
 
 def load_configdict(configpath):
-    configfile = os.path.basename(configpath)
-    configdir = os.path.dirname(configpath)
-    sys.path.append(configdir)
-    configmodule = __import__(configfile[:-3], globals(), locals(), [], -1)
+    if not configpath:
+        return {}
     config_dict = {}
-    for key in dir(configmodule):
-        if key.startswith('__'):
-            continue
-        else:
-            config_dict[key] = getattr(configmodule, key)
+    exec_(configpath, config_dict)
     return config_dict
 
 def get_addressportpairs(group):
