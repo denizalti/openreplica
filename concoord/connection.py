@@ -5,13 +5,9 @@
 @copyright: See LICENSE
 '''
 from __future__ import print_function
-import sys
 import socket, errno, select
 import struct
-import StringIO
-import time
 import msgpack
-import random
 from threading import Lock
 from concoord.pack import *
 from concoord.message import *
@@ -206,7 +202,7 @@ class Connection():
 
             self.incomingoffset += datalen
             while self.incomingoffset >= 4:
-                msg_length = (ord(self.incoming[3]) << 24) | (ord(self.incoming[2]) << 16) | (ord(self.incoming[1]) << 8) | ord(self.incoming[0])
+                msg_length = struct.unpack("I", self.incoming[0:4].tobytes())[0]
                 # check if there is a complete msg, if so return the msg
                 # otherwise return None
                 if self.incomingoffset >= msg_length+4:
