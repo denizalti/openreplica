@@ -4,7 +4,6 @@
        Because it imports itself, this module MUST NOT HAVE ANY SIDE EFFECTS!!!!
 @copyright: See LICENSE
 '''
-import enums
 
 # message types
 MSG_CLIENTREQUEST, MSG_CLIENTREPLY, MSG_INCCLIENTREQUEST, \
@@ -75,13 +74,13 @@ UDPMAXLEN = 1024
 
 # convert a set of enums with a given prefix into a dictionary
 def get_var_mappings(prefix):
-    """Returns a dictionary with <enumvalue, enumname> mappings"""
-    return dict([(getattr(enums,varname),varname.replace(prefix, "", 1)) for varname in dir(enums) if varname.startswith(prefix)])
+    ret = { value:key.replace(prefix, "", 1) for key, value in globals().items() if key.startswith(prefix) }
+    return ret
 
 # convert a set of enums with a given prefix into a list
 def get_var_list(prefix):
     """Returns a list of enumnames"""
-    return [name for (value,name) in sorted(get_var_mappings(prefix).iteritems())]
+    return [name for (value,name) in sorted(get_var_mappings(prefix).items())]
 
 msg_names = get_var_list("MSG_")
 node_names = get_var_list("NODE_")
