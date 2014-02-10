@@ -26,6 +26,7 @@ install_requires=[
     'python>=2.7',
     'msgpack-python',
     'dnspython',
+    'six',
 ]
 
 if sys.version_info >= (3,):
@@ -34,6 +35,7 @@ if sys.version_info >= (3,):
     #extra['use_2to3_fixers'] = ['lib2to3.print']
     install_requires = ['msgpack-python',
                         'dnspython3',
+                        'six',
                     ]
     print ("install_requires is %r extra is %r" %(install_requires, extra))
 
