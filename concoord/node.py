@@ -3,20 +3,20 @@
 @note: Master class for all nodes
 @copyright: See LICENSE
 '''
+from __future__ import print_function
 import argparse
 import os, sys
 import random, struct
 import cPickle as pickle
 import time, socket, select
-from Queue import Queue
-from threading import Thread, RLock, Lock, Condition, Timer, Semaphore
+#from Queue import Queue
+from threading import Thread, Lock, Timer, Semaphore 
 from concoord.enums import *
 from concoord.exception import ConnectionError
 from concoord.utils import *
 from concoord.message import *
 from concoord.pack import *
-from concoord.pvalue import PValueSet
-from concoord.connection import ConnectionPool,Connection
+from concoord.connection import ConnectionPool 
 
 try:
     import dns.resolver, dns.exception
@@ -461,19 +461,19 @@ class Node():
         calls corresponding command handlers."""
         while self.alive:
             try:
-                input = raw_input(">")
-                if len(input) == 0:
+                user_input = raw_input(">")
+                if len(user_input) == 0:
                     continue
                 else:
-                    input = input.split()
-                    mname = "cmd_%s" % input[0].lower()
+                    user_input = user_input.split()
+                    mname = "cmd_%s" % user_input[0].lower()
                     try:
                         method = getattr(self, mname)
                     except AttributeError as e:
                         print "Command not supported: ", str(e)
                         continue
                     with self.lock:
-                        method(input)
+                        method(user_input)
             except KeyboardInterrupt:
                 os._exit(0)
             except EOFError:
