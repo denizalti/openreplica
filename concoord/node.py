@@ -3,7 +3,6 @@
 @note: Master class for all nodes
 @copyright: See LICENSE
 '''
-from __future__ import print_function
 import argparse
 import os, sys
 import random, struct
