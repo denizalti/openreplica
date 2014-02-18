@@ -5,8 +5,8 @@
 '''
 from __future__ import print_function
 import argparse
-import ast, _ast
-import os, sys
+import _ast
+import os
 from concoord.enums import *
 from concoord.utils import *
 from concoord.safetychecker import *
