@@ -15,29 +15,18 @@ class Bank():
             return True
 
     def close(self, accntno):
-        if self.accounts.has_key(accntno):
-            del self.accounts[accntno]
-            return True
-        else:
-            raise KeyError
+        del self.accounts[accntno]
+        return True
 
     def debit(self, accntno, amount):
-        if self.accounts.has_key(accntno):
-            return self.accounts[accntno].debit(amount)
-        else:
-            raise KeyError
+        return self.accounts[accntno].debit(amount)
 
     def deposit(self, accntno, amount):
-        if self.accounts.has_key(accntno):
-            return self.accounts[accntno].deposit(amount)
-        else:
-            raise KeyError
+        return self.accounts[accntno].deposit(amount)
 
     def balance(self, accntno):
-        if self.accounts.has_key(accntno):
-            return self.accounts[accntno].balance
-        else:
-            raise KeyError
+        return self.accounts[accntno].balance
+
 
     def __str__(self):
         return "\n".join(["%s" % (str(account)) for account in self.accounts.values()])
@@ -52,7 +41,7 @@ class Account():
 
     def debit(self, amount):
         amount = float(amount)
-        if amount >= self.balance:
+        if amount <= self.balance:
             self.balance = self.balance - amount
             return self.balance
         else:
