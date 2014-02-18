@@ -14,6 +14,7 @@ from concoord.exception import *
 from concoord.connection import ConnectionPool, Connection
 from concoord.message import *
 from concoord.pvalue import PValueSet
+import six
 
 try:
     import dns
@@ -144,8 +145,12 @@ class ClientProxy():
                             assert lastreplycode == CR_BLOCK, "unblocked thread not previously blocked"
                             return reply.reply
                         elif reply.replycode == CR_EXCEPTION:
-                            if self.debug: print ("reply received: MSG_CLIENTRPLY, replycode is CR_EXCEPTION")
-                            raise Exception(pickle.loads(reply.reply))
+                            if self.debug: print ("reply received: MSG_CLIENTRPLY, replycode is CR_EXCEPTION reply is %r" %(reply.reply,))
+                            if six.PY2:
+                                raise Exception(pickle.loads(reply.reply))
+                            else:
+                                exc_reply = bytes(reply.reply, 'latin1')
+                                raise pickle.loads(exc_reply)
                         elif reply.replycode == CR_INPROGRESS or reply.replycode == CR_BLOCK:
                             if self.debug: print ("reply received: MSG_CLIENTRPLY, replycode is CR_BLOCK or CR_INPROGRESS", reply.replycode)
                             # the thread is already waiting, no need to do anything
