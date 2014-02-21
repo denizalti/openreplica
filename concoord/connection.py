@@ -242,7 +242,7 @@ class Connection():
             except IOError, e:
                 print "Send Error: ", e
             except AttributeError, e:
-                print "Socket deleted."
+                pass
             return False
 
     def settimeout(self, timeout):

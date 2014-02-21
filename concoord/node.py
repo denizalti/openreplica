@@ -322,6 +322,8 @@ class Node():
         try:
             for message in connection.received_bytes():
                 if self.debug: self.logger.write("State", "received %s" % str(message))
+                if message.type == MSG_PING:
+                    return True
                 if message.type == MSG_STATUS:
                     if self.type == NODE_REPLICA:
                         if self.debug: self.logger.write("State", "Answering status message %s" % self.__str__())

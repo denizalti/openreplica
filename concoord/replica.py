@@ -1122,7 +1122,10 @@ class Replica(Node):
         if msg.inresponseto in self.outstandingprepares:
             prc = self.outstandingprepares[msg.inresponseto]
             prc.receivedcount += 1
-            if self.debug: self.logger.write("Paxos State", "got an accept for ballotno %s commandno %s proposal %s with %d out of %d" % (prc.ballotnumber, prc.commandnumber, prc.proposal, prc.receivedcount, prc.ntotal))
+            prc.receivedfrom.add(conn.peerid)
+            if self.debug: self.logger.write("Paxos State",
+                                             "got an accept for ballotno %s commandno %s proposal %s with %d out of %d"
+                                             % (prc.ballotnumber, prc.commandnumber, prc.proposal, prc.receivedcount, prc.ntotal))
             assert msg.ballotnumber == prc.ballotnumber, "[%s] MSG_PREPARE_ADOPTED cannot have non-matching ballotnumber" % self
             # add all the p-values from the response to the possiblepvalueset
             if msg.pvalueset is not None:
@@ -1142,6 +1145,7 @@ class Replica(Node):
                     self.pick_commandnumber_add_to_pending(prc.proposal)
                     self.issue_pending_commands()
                 for chosencommandnumber,chosenproposal in self.proposals.iteritems():
+                    # send proposals for every outstanding proposal that is collected
                     if self.debug: self.logger.write("Paxos State", "Sending PROPOSE for %d, %s" % (chosencommandnumber, chosenproposal))
                     newprc = ResponseCollector(prc.acceptors, prc.ballotnumber, chosencommandnumber, chosenproposal)
                     self.outstandingproposes[chosencommandnumber] = newprc
@@ -1208,6 +1212,7 @@ class Replica(Node):
             prc = self.outstandingproposes[msg.commandnumber]
             if msg.inresponseto == prc.ballotnumber:
                 prc.receivedcount += 1
+                prc.receivedfrom.add(conn.peerid)
                 if self.debug: self.logger.write("Paxos State",
                                   "got an accept for proposal ballotno %s commandno %s proposal %s making %d out of %d accepts"
                                   % (prc.ballotnumber, prc.commandnumber, prc.proposal, prc.receivedcount, prc.ntotal))
