@@ -59,14 +59,14 @@ class Nameserver(Replica):
                 self.mydomain = domain
             self.mysrvdomain = dns.name.Name((SRVNAME+domain+'.').split('.'))
         except dns.name.EmptyLabel:
-            if self.debug: self.logger.write("Initialization Error", "A DNS name is required. Use -n option.")
+            self.logger.write("Initialization Error", "A DNS name is required. Use -n option.")
             self._graceexit(1)
 
         if self.servicetype == NS_SLAVE:
             if master:
                 self.master = master
             else:
-                if self.debug: self.logger.write("Initialization Error", "A master is required. Use -m option.")
+                self.logger.write("Initialization Error", "A master is required. Use -m option.")
                 self._graceexit(1)
         elif self.servicetype == NS_ROUTE53:
             try:

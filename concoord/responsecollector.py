@@ -27,6 +27,7 @@ class ResponseCollector():
         self.proposal = proposal
         self.acceptors = acceptors
         self.receivedcount = 0
+        self.receivedfrom = set()
         self.ntotal = len(self.acceptors)
         self.nquorum = self.ntotal/2+1
         self.possiblepvalueset = PValueSet()

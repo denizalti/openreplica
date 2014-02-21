@@ -34,7 +34,7 @@ class DCondition():
         # Notify the next client on the wait list
         with self.__atomic:
             if not self.__lock._is_owned(_concoord_command.client):
-                raise RuntimeError("cannot wait on un-acquired lock")
+                raise RuntimeError("cannot notify on un-acquired lock")
             if not self.__waiters:
                 return
             waitcommand = self.__waiters.pop(0)
@@ -45,7 +45,7 @@ class DCondition():
         # Notify every client on the wait list
         with self.__atomic:
             if not self.__lock._is_owned(_concoord_command.client):
-                raise RuntimeError("cannot wait on un-acquired lock")
+                raise RuntimeError("cannot notify on un-acquired lock")
             if not self.__waiters:
                 return
             for waitcommand in self.__waiters:

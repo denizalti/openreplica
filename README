@@ -75,6 +75,25 @@ following command to connect to another replica::
 
   $ concoord replica -o concoord.object.counter.Counter -b 127.0.0.1:14000 -a 127.0.0.1 -p 14001
 
+You can specify the port and the address of any replica with options -p and -a
+respectively. The replicas can also be run in the debug mode or with a logger
+with the commands shown below::
+
+    Usage: concoord replica [-h] [-a ADDR] [-p PORT] [-b BOOTSTRAP]
+                       	    [-o OBJECTNAME] [-l LOGGER] [-d]
+
+where,
+  -h, --help            show this help message and exit
+  -a ADDR, --addr ADDR  addr for the node
+  -p PORT, --port PORT  port for the node
+  -b BOOTSTRAP, --boot BOOTSTRAP
+                        address:port tuple for the bootstrap peer
+  -o OBJECTNAME, --objectname OBJECTNAME
+                        client object dotted name
+  -l LOGGER, --logger LOGGER
+                        logger address
+  -d, --debug           debug on/off
+
 Starting Acceptor Nodes
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -88,20 +107,19 @@ can set the -w option::
 
   $ concoord acceptor -b 127.0.0.1:14000 -w
 
-Note that you can specify the port and the address of any node with
-options -p and -a respectively. The nodes can also be run in the debug
+Similar to replicas, you can specify the port and the address of any acceptor
+with options -p and -a respectively. The acceptors can also be run in the debug
 mode or with a logger with the commands shown below::
 
-    Usage: concoord [-h] [-a ADDR] [-p PORT] [-b BOOTSTRAP] [-o OBJECTNAME]
-                    [-l LOGGER] [-w] [-d]
+    Usage: concoord acceptor [-h] [-a ADDR] [-p PORT] [-b BOOTSTRAP]
+                       	     [-l LOGGER] [-w] [-d]
 
 where,
-
   -h, --help            show this help message and exit
   -a ADDR, --addr ADDR  addr for the node
   -p PORT, --port PORT  port for the node
   -b BOOTSTRAP, --boot BOOTSTRAP
-                        address:port:type triple for the bootstrap peer
+                        address:port tuple for the bootstrap peer
   -o OBJECTNAME, --objectname OBJECTNAME
                         client object dotted name
   -l LOGGER, --logger LOGGER
