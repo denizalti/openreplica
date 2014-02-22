@@ -1,5 +1,5 @@
 # Cuts the connection to the leader and tests liveness
-
+import sys,os
 import signal, time
 import subprocess
 import time
@@ -38,46 +38,26 @@ def connect_to_leader():
     print "Client Made Progress: Counter value: %d" % c_minority.getvalue()
     return True
 
-def test_partition():
-    # get ip
-    # subprocess.check_output("/sbin/ifconfig eth0 | awk '/inet/ { print $2 } ' | sed -e s/addr://", shell=True).split()[0]
-
+def test_timeout():
     numreplicas = 3
     numacceptors = 3
-    replicas = []
-    acceptors = []
+    processes = []
 
     print "Running replica 0"
-    replicas.append(subprocess.Popen(['concoord', 'replica',
+    processes.append(subprocess.Popen(['concoord', 'replica',
                                       '-o', 'concoord.object.counter.Counter',
                                       '-a', '127.0.0.1', '-p', '14000']))
 
-    print "Running replica 1"
-    replicas.append(subprocess.Popen(['concoord', 'replica',
-                                      '-o', 'concoord.object.counter.Counter',
-                                      '-a', '127.0.0.1', '-p', '14001',
-                                      '-b', '127.0.0.1:14000']))
+    for i in range(numacceptors):
+        print "Running acceptor %d" %i
+        processes.append(subprocess.Popen(['concoord', 'acceptor', '-b', '127.0.0.1:14000']))
 
-    print "Running acceptor 0"
-    acceptors.append(subprocess.Popen(['concoord', 'acceptor',
-                                       '-a', '127.0.0.1', '-p', '15000',
-                                       '-b', '127.0.0.1:14000']))
-
-    print "Running replica 2"
-    replicas.append(subprocess.Popen(['concoord', 'replica',
-                                      '-o', 'concoord.object.counter.Counter',
-                                      '-a', '127.0.0.1', '-p', '14002',
-                                      '-b', '127.0.0.1:14000']))
-
-    print "Running acceptor 1"
-    acceptors.append(subprocess.Popen(['concoord', 'acceptor',
-                                       '-a', '127.0.0.1', '-p', '15001',
-                                       '-b', '127.0.0.1:14000']))
-
-    print "Running acceptor 2"
-    acceptors.append(subprocess.Popen(['concoord', 'acceptor',
-                                       '-a', '127.0.0.1', '-p', '15002',
-                                       '-b', '127.0.0.1:14000']))
+    for i in range(1, numreplicas):
+        print "Running replica %d" %i
+        processes.append(subprocess.Popen(['concoord', 'replica',
+                                           '-o', 'concoord.object.counter.Counter',
+                                           '-a', '127.0.0.1', '-p', '1400%d'%i,
+                                           '-b', '127.0.0.1:14000']))
 
     # Give the system some time to initialize
     time.sleep(10)
@@ -95,17 +75,12 @@ def test_partition():
     with open('test.iptables.rules', 'w') as output:
         subprocess.Popen(['sudo', 'iptables-save'], stdout=output)
 
-    # Start partition
-    iptablerules = []
-    p1_ports = [14000, 14001, 15000]
-    p2_ports = [14002, 15001, 15002]
-
     # Block all incoming traffic to leader
-    iptablerules.append(subprocess.Popen(['sudo', 'iptables',
+    iptablerule = subprocess.Popen(['sudo', 'iptables',
                                           '-I', 'INPUT',
                                           '-p', 'tcp',
                                           '--dport', '14000',
-                                          '-j', 'DROP']))
+                                          '-j', 'DROP'])
 
     print "Cutting the connections to the leader. Waiting for system to stabilize."
     time.sleep(10)
@@ -126,12 +101,15 @@ def test_partition():
         subprocess.Popen(['sudo', 'iptables-restore'], stdin=input)
     subprocess.Popen(['sudo', 'rm', 'test.iptables.rules'])
 
-    for p in (replicas+acceptors):
+    for p in (processes):
         p.kill()
     return True
 
 def main():
-    test_partition()
+    if not os.geteuid() == 0:
+        sys.exit('Script must be run as root')
+
+    test_timeout()
 
 if __name__ == '__main__':
     main()

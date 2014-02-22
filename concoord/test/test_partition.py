@@ -1,13 +1,12 @@
 # Creates a partition and tests ConCoords behavior.
-# Create 3 replicas and 3 acceptors
+# Create 2 replicas and 3 acceptors
 # Create 2 partitions P1 and P2 as follows:
-# P1: 2 Replicas 1 Acceptor : Minority
+# P1: 1 Replica 1 Acceptor : Minority
 # P2: 1 Replica 2 Acceptors : Majority
 # Since P2 has majority of the acceptors, P2 should make progress
-
+import sys, os
 import signal, time
 import subprocess
-import time
 from concoord.proxy.counter import Counter
 from concoord.exception import ConnectionError
 
@@ -35,66 +34,68 @@ def timeout(timeout):
 
 @timeout(30)
 def connect_to_minority():
-    c_minority = Counter('127.0.1.1:14000')
+    c_minority = Counter('127.0.0.1:14000')
     print "Connecting to minority"
-    for i in range(100):
+    for i in range(50):
         c_minority.increment()
     # This method will timeout before it reaches here.
     print "P2 Client Made Progress: Counter value: %d" % c_minority.getvalue()
     return True
 
 def test_partition():
-    # get ip
-    # subprocess.check_output("/sbin/ifconfig eth0 | awk '/inet/ { print $2 } ' | sed -e s/addr://", shell=True).split()[0]
+    processes = []
+    p1_pids = []
+    p2_pids = []
 
-    numreplicas = 3
-    numacceptors = 3
-    replicas = []
-    acceptors = []
-
+    # P1 Nodes
     print "Running replica 0"
-    replicas.append(subprocess.Popen(['concoord', 'replica',
-                                      '-o', 'concoord.object.counter.Counter',
-                                      '-a', '127.0.1.1', '-p', '14000']))
-
-    print "Running replica 1"
-    replicas.append(subprocess.Popen(['concoord', 'replica',
-                                      '-o', 'concoord.object.counter.Counter',
-                                      '-a', '127.0.1.1', '-p', '14001',
-                                      '-b', '127.0.1.1:14000']))
+    p = subprocess.Popen(['concoord', 'replica',
+                          '-o', 'concoord.object.counter.Counter',
+                          '-a', '127.0.0.1', '-p', '14000'])
+    processes.append(p)
+    p1_pids.append(p.pid)
 
     print "Running acceptor 0"
-    acceptors.append(subprocess.Popen(['concoord', 'acceptor',
-                                       '-a', '127.0.1.1', '-p', '15000',
-                                       '-b', '127.0.1.1:14000']))
+    p = subprocess.Popen(['concoord', 'acceptor',
+                          '-a', '127.0.0.1', '-p', '15000',
+                          '-b', '127.0.0.1:14000'])
+    processes.append(p)
+    p1_pids.append(p.pid)
 
-    print "Running replica 2"
-    replicas.append(subprocess.Popen(['concoord', 'replica',
-                                      '-o', 'concoord.object.counter.Counter',
-                                      '-a', '127.0.0.1', '-p', '14002',
-                                      '-b', '127.0.1.1:14000']))
+    # P2 Nodes
+    print "Running replica 1"
+    p = subprocess.Popen(['concoord', 'replica',
+                          '-o', 'concoord.object.counter.Counter',
+                          '-a', '127.0.0.1', '-p', '14001',
+                          '-b', '127.0.0.1:14000'])
+    processes.append(p)
+    p2_pids.append(p.pid)
 
     print "Running acceptor 1"
-    acceptors.append(subprocess.Popen(['concoord', 'acceptor',
-                                       '-a', '127.0.0.1', '-p', '15001',
-                                       '-b', '127.1.0.1:14000']))
+    p = subprocess.Popen(['concoord', 'acceptor',
+                          '-a', '127.0.0.1', '-p', '15001',
+                          '-b', '127.0.0.1:14000'])
+    processes.append(p)
+    p2_pids.append(p.pid)
 
     print "Running acceptor 2"
-    acceptors.append(subprocess.Popen(['concoord', 'acceptor',
-                                       '-a', '127.0.0.1', '-p', '15002',
-                                       '-b', '127.0.1.1:14000']))
+    p = subprocess.Popen(['concoord', 'acceptor',
+                          '-a', '127.0.0.1', '-p', '15002',
+                          '-b', '127.0.0.1:14000'])
+    processes.append(p)
+    p2_pids.append(p.pid)
 
     # Give the system some time to initialize
     time.sleep(10)
 
     # This client can only connect to the replicas in this partition
-    c_P1 = Counter('127.0.1.1:14000', debug = True)
-    c_P2 = Counter('127.0.0.1:14001, 127.0.0.1:14002')
+    c_P1 = Counter('127.0.0.1:14000', debug = True)
+    c_P2 = Counter('127.0.0.1:14001')
     # The client should work
     print "Sending requests to the leader"
-    for i in range(100):
+    for i in range(50):
         c_P1.increment()
-    print "Counter value after 100 increments: %d" % c_P1.getvalue()
+    print "Counter value after 50 increments: %d" % c_P1.getvalue()
 
     # Save iptables settings for later recovery
     with open('test.iptables.rules', 'w') as output:
@@ -102,24 +103,55 @@ def test_partition():
 
     # Start partition
     iptablerules = []
-    p1_ports = [14000, 14001, 15000]
-    p2_ports = [14002, 15001, 15002]
+    p1_ports = [14000, 15000]
+    p2_ports = [14001, 15001, 15002]
+    connectedports = []
 
-    # Block all incoming traffic to leader
-    iptablerules.append(subprocess.Popen(['sudo', 'iptables',
-                                          '-I', 'INPUT',
-                                          '-p', 'tcp',
-                                          '--dport', '14000',
-                                          '-j', 'DROP']))
+    # Find all ports that R1, A1 and A2 and have connecting to R0 and A0
+    for port in p1_ports:
+        for pid in p2_pids:
+            p1 = subprocess.Popen(['lsof', '-w', '-a', '-p%d'%pid, '-i4'], stdout=subprocess.PIPE)
+            p2 = subprocess.Popen(['grep', ':%d'%port], stdin=p1.stdout, stdout=subprocess.PIPE)
+            output = p2.communicate()[0]
+            if output:
+                connectedports.append(output.split()[8].split('->')[0].split(':')[1])
+
+    # Block all traffic to/from R0 and A0 from other nodes but each other
+    for porttoblock in connectedports:
+        iptablerules.append(subprocess.Popen(['sudo', 'iptables',
+                                              '-I', 'INPUT',
+                                              '-p', 'tcp',
+                                              '--dport', '14000',
+                                              '--sport', porttoblock,
+                                              '-j', 'DROP']))
+        iptablerules.append(subprocess.Popen(['sudo', 'iptables',
+                                              '-I', 'INPUT',
+                                              '-p', 'tcp',
+                                              '--dport', '15000',
+                                              '--sport', porttoblock,
+                                              '-j', 'DROP']))
+    for porttoblock in p2_ports:
+        iptablerules.append(subprocess.Popen(['sudo', 'iptables',
+                                              '-I', 'INPUT',
+                                              '-p', 'tcp',
+                                              '--dport', '%d'%porttoblock,
+                                              '--sport', '14000',
+                                              '-j', 'DROP']))
+        iptablerules.append(subprocess.Popen(['sudo', 'iptables',
+                                              '-I', 'INPUT',
+                                              '-p', 'tcp',
+                                              '--dport', '%d'%porttoblock,
+                                              '--sport', '15000',
+                                              '-j', 'DROP']))
 
     print "Created the partition. Waiting for system to stabilize."
     time.sleep(20)
     
     # c_P2 should make progress
     print "Connecting to the majority, which should have a new leader."
-    for i in range(100):
+    for i in range(50):
         c_P2.increment()
-    print "Counter value after 100 increments: %d" % c_P2.getvalue()
+    print "Counter value after 50 more increments: %d" % c_P2.getvalue()
 
     print "Connecting to the minority, which should not make progress."
     if not connect_to_minority():
@@ -133,12 +165,14 @@ def test_partition():
         subprocess.Popen(['sudo', 'iptables-restore'], stdin=input)
     subprocess.Popen(['sudo', 'rm', 'test.iptables.rules'])
 
-
-    for p in (replicas+acceptors):
+    for p in (processes):
         p.kill()
     return True
 
 def main():
+    if not os.geteuid() == 0:
+        sys.exit('Script must be run as root')
+
     test_partition()
 
 if __name__ == '__main__':
