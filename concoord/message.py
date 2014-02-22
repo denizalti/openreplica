@@ -58,35 +58,41 @@ def parse_clientreply(msg):
                               msg[FLD_INRESPONSETO])
 
 def parse_prepare(msg):
-    return PrepareMessage(msg[FLD_ID], msg[FLD_TYPE], msg[FLD_BALLOTNUMBER])
+    src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
+    return PrepareMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+                          msg[FLD_BALLOTNUMBER])
 
 def parse_prepare_reply(msg):
+    src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
     pvalueset = PValueSet()
     for index,pvalue in msg[FLD_PVALUESET].iteritems():
         pvalueset.pvalues[Proposal(index[1][0],
                                    index[1][1],
                                    index[1][2])] = PValue(pvalue[0], pvalue[1], pvalue[2])
-    return PrepareReplyMessage(msg[FLD_ID], msg[FLD_TYPE],
+    return PrepareReplyMessage(msg[FLD_ID], msg[FLD_TYPE], src,
                                msg[FLD_BALLOTNUMBER], msg[FLD_INRESPONSETO],
                                pvalueset)
 def parse_propose(msg):
+    src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
     if msg[FLD_SERVERBATCH]:
         proposal = ProposalServerBatch([])
         for p in msg[FLD_PROPOSAL][0]:
             proposal.proposals.append(Proposal(p[0], p[1], p[2]))
     else:
         proposal = Proposal(msg[FLD_PROPOSAL][0], msg[FLD_PROPOSAL][1], msg[FLD_PROPOSAL][2])
-    return ProposeMessage(msg[FLD_ID], msg[FLD_TYPE],
+    return ProposeMessage(msg[FLD_ID], msg[FLD_TYPE], src,
                           msg[FLD_BALLOTNUMBER], msg[FLD_COMMANDNUMBER],
                           proposal, msg[FLD_SERVERBATCH])
 
 
 def parse_propose_reply(msg):
-    return ProposeReplyMessage(msg[FLD_ID], msg[FLD_TYPE],
+    src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
+    return ProposeReplyMessage(msg[FLD_ID], msg[FLD_TYPE], src,
                                msg[FLD_BALLOTNUMBER], msg[FLD_INRESPONSETO],
                                msg[FLD_COMMANDNUMBER])
 
 def parse_perform(msg):
+    src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
     if msg[FLD_SERVERBATCH]:
         proposal = ProposalServerBatch([])
         for p in msg[FLD_PROPOSAL][0]:
@@ -98,7 +104,7 @@ def parse_perform(msg):
     else:
         proposalclient = Peer(msg[FLD_PROPOSAL][0][0], msg[FLD_PROPOSAL][0][1], msg[FLD_PROPOSAL][0][2])
         proposal = Proposal(proposalclient, msg[FLD_PROPOSAL][1], msg[FLD_PROPOSAL][2])
-    return PerformMessage(msg[FLD_ID], msg[FLD_TYPE],
+    return PerformMessage(msg[FLD_ID], msg[FLD_TYPE], src,
                           msg[FLD_COMMANDNUMBER], proposal,
                           msg[FLD_SERVERBATCH], msg[FLD_CLIENTBATCH])
 
@@ -114,6 +120,7 @@ def parse_incclientrequest(msg):
                                 proposal, msg[FLD_TOKEN])
 
 def parse_updatereply(msg):
+    src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
     for commandnumber,command in msg[FLD_DECISIONS].iteritems():
         try:
             msg[FLD_DECISIONS][commandnumber] = Proposal(msg[FLD_DECISIONS][commandnumber][0],
@@ -123,10 +130,12 @@ def parse_updatereply(msg):
             msg[FLD_DECISIONS][commandnumber] = Proposal(msg[FLD_DECISIONS][commandnumber][0][0][0],
                                                          msg[FLD_DECISIONS][commandnumber][0][0][1],
                                                          msg[FLD_DECISIONS][commandnumber][0][0][2])
-    return UpdateReplyMessage(msg[FLD_ID], msg[FLD_TYPE], msg[FLD_DECISIONS])
+    return UpdateReplyMessage(msg[FLD_ID], msg[FLD_TYPE], src,
+                              msg[FLD_DECISIONS])
 
 def parse_garbagecollect(msg):
-    return GarbageCollectMessage(msg[FLD_ID], msg[FLD_TYPE],
+    src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
+    return GarbageCollectMessage(msg[FLD_ID], msg[FLD_TYPE], src,
                                  msg[FLD_COMMANDNUMBER], msg[FLD_SNAPSHOT])
 
 def parse_message(msg):
@@ -147,6 +156,7 @@ parse_functions = [
     parse_basic, # MSG_HELO
     parse_heloreply, # MSG_HELOREPLY
     parse_basic, # MSG_PING
+    parse_basic, # MSG_PINGREPLY
 
     parse_basic, # MSG_UPDATE
     parse_updatereply, # MSG_UPDATEREPLY

@@ -37,16 +37,22 @@ def test_failure(numacceptors):
     for i in range(numacceptors):
         print "Running acceptor %d" %i
         acceptors.append(subprocess.Popen(['concoord', 'acceptor', '-b', '127.0.0.1:14000']))
-        time.sleep(3)
 
-    for i in range(numacceptors/2):
+    # Give system time to stabilize
+    time.sleep(10)
+
+    c = Counter("127.0.0.1:14000", debug = True)
+    for i in range(100):
+        c.increment()
+    print "Counter value after 100 increments: %d" % c.getvalue()
+
+    for i in range((numacceptors-1)/2):
         print "Killing acceptor %d" %i
         acceptors[i].kill()
 
-    c = Counter("127.0.0.1:14000", debug = True)
-    for i in range(1000):
+    for i in range(100):
         c.increment()
-    print "Counter value after 1000 increments: %d" % c.getvalue()
+    print "Counter value after 100 more increments: %d" % c.getvalue()
 
     replica.kill()
     for a in (acceptors):

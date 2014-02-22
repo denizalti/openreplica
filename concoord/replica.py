@@ -347,7 +347,13 @@ class Replica(Node):
     def execute_command(self, requestedcommand, msg, designated):
         # commands are executed one by one here.
         if requestedcommand in self.executed:
-            if self.debug: self.logger.write("State", "Previously executed command %d." % self.nexttoexecute)
+            if self.debug: self.logger.write("State", "Previously executed command %d."
+                                             % self.nexttoexecute)
+            # XXX Why do we need this?
+            # Execute the metacommand associated with this command
+            if self.nexttoexecute > WINDOW:
+                if self.debug: self.logger.write("State", "performcore %d" % (self.nexttoexecute-WINDOW))
+                self.performcore(self.decisions[self.nexttoexecute-WINDOW], True)
             # If we are a leader, we should send a reply to the client for this command
             # in case the client didn't receive the reply from the previous leader
             if self.isleader:
@@ -359,8 +365,14 @@ class Replica(Node):
                             # This client has been UNBLOCKED
                             prevresult = None
                             prevrcode = CR_UNBLOCK
-                if self.debug: self.logger.write("State", "Sending reply to client.")
-                self.send_reply_to_client(prevrcode, prevresult, requestedcommand)
+                # Send a reply to the client only if there was a client
+                if type(requestedcommand.command) == str:
+                    commandname = requestedcommand.command
+                else:
+                    commandname = requestedcommand.command[0]
+                if (commandname not in METACOMMANDS) and (commandname != 'noop'):
+                    if self.debug: self.logger.write("State", "Sending reply to client.")
+                    self.send_reply_to_client(prevrcode, prevresult, requestedcommand)
         elif requestedcommand not in self.executed:
             if self.debug: self.logger.write("State", "executing command %s." % str(requestedcommand))
             # check to see if there was a metacommand precisely WINDOW commands ago
@@ -493,11 +505,14 @@ class Replica(Node):
             requestedcommand = self.decisions[self.nexttoexecute]
             if requestedcommand in self.executed:
                 if self.debug: self.logger.write("State", "Previously executed command %d." % self.nexttoexecute)
+                # XXX Why do we need this?
+                if self.nexttoexecute > WINDOW:
+                    if self.debug: self.logger.write("State", "performcore %d" % (self.nexttoexecute-WINDOW))
+                    self.performcore(self.decisions[self.nexttoexecute-WINDOW], True)
                 self.nexttoexecute += 1
             elif requestedcommand not in self.executed:
                 if self.debug: self.logger.write("State", "executing command %d." % self.nexttoexecute)
-                # check to see if there was a meta command precisely WINDOW commands ago that should now take effect
-                # We are calling performcore 2 times, the timing gets screwed plus this is very unefficient
+
                 if self.nexttoexecute > WINDOW:
                     if self.debug: self.logger.write("State", "performcore %d" % (self.nexttoexecute-WINDOW))
                     self.performcore(self.decisions[self.nexttoexecute-WINDOW], True)
@@ -519,8 +534,10 @@ class Replica(Node):
         ipaddr,port = nodename.split(":")
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype][nodepeer] = 0
-        # if the added node is a Replica, check leadership state
-        if nodetype == NODE_REPLICA:
+
+        # if added node is a replica and this replica is uptodate
+        # check leadership state
+        if nodetype == NODE_REPLICA and self.stateuptodate:
             chosenleader = self.find_leader()
             if chosenleader == self.me and not self.isleader:
                 # become the leader
@@ -544,9 +561,12 @@ class Replica(Node):
         try:
             del self.groups[nodetype][nodepeer]
         except KeyError:
-            print "Cannot delete node that is not in the view: %s %s" % (node_names[nodetype], nodename)
-        # if the deleted node is a Replica, check leadership state
-        if nodetype == NODE_REPLICA:
+            if self.debug: self.logger.write("State", 
+                                             "Cannot delete node that is not in the view: %s %s" 
+                                             % (node_names[nodetype], nodename))
+        # if deleted node is a replica and this replica is uptodate
+        # check leadership state
+        if nodetype == NODE_REPLICA and self.uptodate:
             chosenleader = self.find_leader()
             if chosenleader == self.me and not self.isleader:
                 # become the leader
@@ -600,8 +620,6 @@ class Replica(Node):
                 else:
                     break
         return True
-
-
 
 # LEADER STATE
     def become_leader(self):
@@ -657,14 +675,13 @@ class Replica(Node):
         return otherleader
 
     def leader_is_alive(self):
+        """returns a tuple if the leader is alive and the currentleader"""
         currentleader = self.find_leader()
         if currentleader != self.me:
             if self.debug: self.logger.write("State", "Sending PING to %s" % str(currentleader))
             pingmessage = create_message(MSG_PING, self.me)
-            success = self.send(pingmessage, peer=currentleader)
-            if success < 0:
-                if self.debug: self.logger.write("State",
-                                  "Leader not responding, marking the leader unreachable.")
+            successid = self.send(pingmessage, peer=currentleader)
+            if successid < 0:
                 self.groups[currentleader.type][currentleader] += 1
                 return False, currentleader
         return True, currentleader
@@ -673,11 +690,14 @@ class Replica(Node):
         """returns the minimum peer that is alive as the leader"""
         # sort the replicas first
         replicas = sorted(self.replicas.items(), key=lambda t: t[0])
+        if self.debug: self.logger.write("State", "All Replicas in my view:%s" %str(replicas))
         for (replica,liveness) in replicas:
             if liveness == 0:
                 del replicas
+                if self.debug: self.logger.write("State", "Leader is %s" %str(replica))
                 return replica
         del replicas
+        if self.debug: self.logger.write("State", "Leader is me")
         return self.me
 
     def update_ballotnumber(self,seedballotnumber):
@@ -896,6 +916,8 @@ class Replica(Node):
         handles clientrequest message received according to replica's state
         - if not leader: reject
         - if leader: add connection to client connections and handle request"""
+        if not self.stateuptodate:
+            return
         if self.isleader:
             # if leader, handle the clientrequest
             if self.token and msg.token != self.token:
@@ -903,7 +925,8 @@ class Replica(Node):
                 self.send_reject_to_client(conn, msg.command.clientcommandnumber)
             else:
                 if self.debug: self.logger.write("State", "I'm the leader, handling the request.")
-                self.handle_client_command(msg.command, msg.sendcount, prepare=self.leader_initializing)
+                self.handle_client_command(msg.command, msg.sendcount,
+                                           prepare=self.leader_initializing)
         else:
             leaderalive, leader = self.leader_is_alive()
             if leaderalive and leader != self.me:
@@ -1155,7 +1178,8 @@ class Replica(Node):
                                               FLD_PROPOSAL: chosenproposal,
                                               FLD_SERVERBATCH: isinstance(chosenproposal, ProposalServerBatch)})
                     self.send(propose, group=newprc.acceptors)
-                # As leader collected all proposals from acceptors its state is up-to-date and it is done initializing
+                # As leader collected all proposals from acceptors its state is up-to-date
+                # and it is done initializing
                 self.leader_initializing = False
                 self.stateuptodate = True
                 # become active
@@ -1235,7 +1259,6 @@ class Replica(Node):
                         self.send(performmessage, group=self.groups[NODE_REPLICA])
                     if len(self.groups[NODE_NAMESERVER]) > 0:
                         self.send(performmessage, group=self.groups[NODE_NAMESERVER])
-
                     self.perform(parse_message(performmessage), designated=True)
             if self.debug: self.logger.write("State", "returning from msg_propose_accept")
 
@@ -1281,13 +1304,30 @@ class Replica(Node):
             # Go through all peers in the view
             for gtype,group in self.groups.iteritems():
                 for peer in group:
-                    if self.debug: self.logger.write("State", "Sending PING to %s" % str(peer))
-                    pingmessage = create_message(MSG_PING, self.me)
-                    success = self.send(pingmessage, peer=peer)
-                    if success < 0:
+                    successid = 0
+                    if peer == self.me:
+                        continue
+                    # Check nodeliveness
+                    if peer in self.nodeliveness:
+                        nosound = time.time() - self.nodeliveness[peer]
+                    else:
+                        nosound = (3*LIVENESSTIMEOUT)
+
+                    if nosound <= LIVENESSTIMEOUT:
+                        self.groups[peer.type][peer] = 0
+                        continue
+                    if (4*LIVENESSTIMEOUT) > nosound and nosound > LIVENESSTIMEOUT:
+                        # Send PING to neighbor
+                        if self.debug: self.logger.write("State", "Sending PING to %s" % str(peer))
+                        pingmessage = create_message(MSG_PING, self.me)
+                        successid = self.send(pingmessage, peer=peer)
+                    if successid < 0 or nosound > (4*LIVENESSTIMEOUT):
+                        # The neighbor is not responding
                         if self.debug: self.logger.write("State",
-                                                         "Neighbor not responding, marking the neighbor")
+                                                         "Neighbor not responding")
+                        # Mark the neighbor
                         self.groups[peer.type][peer] += 1
+                        # Check if you should delete a node as leader
                         if self.isleader:
                             if self.debug: self.logger.write("State", "Deleting node %s" % str(peer))
                             delcommand = self.create_delete_command(peer)
@@ -1300,8 +1340,22 @@ class Replica(Node):
                                     self.pick_commandnumber_add_to_pending(noopcommand)
                                 issuemsg = create_message(MSG_ISSUE, self.me)
                                 self.send(issuemsg, peer=self.me)
-                    else:
-                        self.groups[peer.type][peer] = 0
+                        elif self.find_leader() == self.me:
+                            if self.debug: self.logger.write("State",
+                                                             "Becoming leader")
+                            self.become_leader()
+                            if self.debug: self.logger.write("State", "Deleting node %s" % str(peer))
+                            delcommand = self.create_delete_command(peer)
+                            if delcommand not in self.pendingmetacommands:
+                                with self.pendingmetalock:
+                                    self.pendingmetacommands.add(delcommand)
+                                self.pick_commandnumber_add_to_pending(delcommand)
+                                for i in range(WINDOW):
+                                    noopcommand = self.create_noop_command()
+                                    self.pick_commandnumber_add_to_pending(noopcommand)
+                                issuemsg = create_message(MSG_ISSUE, self.me)
+                                self.send(issuemsg, peer=self.me)
+                        
             with self.recentlyupdatedpeerslock:
                 self.recentlyupdatedpeers = []
             time.sleep(LIVENESSTIMEOUT)

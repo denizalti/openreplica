@@ -133,6 +133,9 @@ class Node():
                        NODE_ACCEPTOR: self.acceptors,
                        NODE_NAMESERVER: self.nameservers}
         self.groups[self.me.type][self.me] = 0
+
+        # Keeps the liveness of the nodes
+        self.nodeliveness = {}
         # connect to the bootstrap node
         if givenbootstraplist:
             self.bootstraplist = []
@@ -173,8 +176,8 @@ class Node():
                     if self.debug: self.logger.write("State",
                                                      "trying to connect to bootstrap: %s" % str(bootpeer))
                     helomessage = create_message(MSG_HELO, self.me)
-                    success = self.send(helomessage, peer=bootpeer)
-                    if success < 0:
+                    successid = self.send(helomessage, peer=bootpeer)
+                    if successid < 0:
                         tries += 1
                         continue
                     keeptrying = False
@@ -222,18 +225,33 @@ class Node():
 
     def ping_neighbor(self):
         """used to ping neighbors periodically"""
+        # Only ping neighbors that didn't send a message in less than
+        # LIVENESSTIMEOUT
         while True:
-            # Go through all peers in the view
+            # Check nodeliveness
             for gtype,group in self.groups.iteritems():
-                for peer in group.iterkeys():
-                    if self.debug: self.logger.write("State", "Sending PING to %s" % str(peer))
-                    pingmessage = create_message(MSG_PING, self.me)
-                    success = self.send(pingmessage, peer=peer)
-                    if success < 0:
-                        if self.debug: self.logger.write("State", "Neighbor not responding, marking the neighbor")
-                        self.groups[peer.type][peer] += 1
+                for peer in group:
+                    if peer == self.me:
+                        continue
+                    if peer in self.nodeliveness:
+                        nosound = time.time() - self.nodeliveness[peer]
                     else:
-                        self.groups[peer.type][peer] = 0
+                        # This node never sent a message, we should ping it
+                        if self.debug: self.logger.write("State", "Sending PING to %s" % str(peer))
+                        pingmessage = create_message(MSG_PING, self.me)
+                        self.send(pingmessage, peer=peer)
+                        continue
+
+                    if (4*LIVENESSTIMEOUT) > nosound and nosound > LIVENESSTIMEOUT:
+                        # Send PING to node
+                        if self.debug: self.logger.write("State", "Sending PING to %s" % str(peer))
+                        pingmessage = create_message(MSG_PING, self.me)
+                        self.send(pingmessage, peer=peer)
+                    elif nosound > (4*LIVENESSTIMEOUT):
+                        # Neighbor not responding, mark the neighbor
+                        if self.debug: self.logger.write("State",
+                                                         "Neighbor not responding")
+                        self.groups[peer.type][peer] += 1
             time.sleep(LIVENESSTIMEOUT)
 
     def clean_nascent(self):
@@ -305,7 +323,9 @@ class Node():
                 for s in inputready:
                     if s == self.socket:
                         clientsock,clientaddr = self.socket.accept()
-                        if self.debug: self.logger.write("State", "accepted a connection from address %s" % str(clientaddr))
+                        if self.debug: self.logger.write("State",
+                                                         "accepted a connection from address %s" 
+                                                         % str(clientaddr))
                         self.connectionpool.activesockets.add(clientsock)
                         self.connectionpool.nascentsockets.add(clientsock)
                         success = True
@@ -322,11 +342,13 @@ class Node():
         try:
             for message in connection.received_bytes():
                 if self.debug: self.logger.write("State", "received %s" % str(message))
-                if message.type == MSG_PING:
-                    return True
+                # Update self.nodeliveness
+                self.nodeliveness[message.source] = time.time()
                 if message.type == MSG_STATUS:
                     if self.type == NODE_REPLICA:
-                        if self.debug: self.logger.write("State", "Answering status message %s" % self.__str__())
+                        if self.debug: self.logger.write("State",
+                                                         "Answering status message %s" 
+                                                         % self.__str__())
                         messagestr = pickle.dumps(self.__str__())
                         message = struct.pack("I", len(messagestr)) + messagestr
                         clientsock.send(message)
@@ -409,6 +431,11 @@ class Node():
                 self.connecttobootstrap()
 
     def msg_ping(self, conn, msg):
+        if self.debug: self.logger.write("State", "Replying to PING.")
+        pingreplymessage = create_message(MSG_PINGREPLY, self.me)
+        conn.send(pingreplymessage)
+
+    def msg_pingreply(self, conn, msg):
         return
 
     # shell commands generic to all nodes
