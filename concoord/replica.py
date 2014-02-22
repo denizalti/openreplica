@@ -349,7 +349,6 @@ class Replica(Node):
         if requestedcommand in self.executed:
             if self.debug: self.logger.write("State", "Previously executed command %d."
                                              % self.nexttoexecute)
-            # XXX Why do we need this?
             # Execute the metacommand associated with this command
             if self.nexttoexecute > WINDOW:
                 if self.debug: self.logger.write("State", "performcore %d" % (self.nexttoexecute-WINDOW))
@@ -505,7 +504,7 @@ class Replica(Node):
             requestedcommand = self.decisions[self.nexttoexecute]
             if requestedcommand in self.executed:
                 if self.debug: self.logger.write("State", "Previously executed command %d." % self.nexttoexecute)
-                # XXX Why do we need this?
+                # Execute the metacommand associated with this command
                 if self.nexttoexecute > WINDOW:
                     if self.debug: self.logger.write("State", "performcore %d" % (self.nexttoexecute-WINDOW))
                     self.performcore(self.decisions[self.nexttoexecute-WINDOW], True)
@@ -561,8 +560,8 @@ class Replica(Node):
         try:
             del self.groups[nodetype][nodepeer]
         except KeyError:
-            if self.debug: self.logger.write("State", 
-                                             "Cannot delete node that is not in the view: %s %s" 
+            if self.debug: self.logger.write("State",
+                                             "Cannot delete node that is not in the view: %s %s"
                                              % (node_names[nodetype], nodename))
         # if deleted node is a replica and this replica is uptodate
         # check leadership state
@@ -1355,7 +1354,7 @@ class Replica(Node):
                                     self.pick_commandnumber_add_to_pending(noopcommand)
                                 issuemsg = create_message(MSG_ISSUE, self.me)
                                 self.send(issuemsg, peer=self.me)
-                        
+
             with self.recentlyupdatedpeerslock:
                 self.recentlyupdatedpeers = []
             time.sleep(LIVENESSTIMEOUT)
