@@ -19,18 +19,18 @@ Message = namedtuple('Message', ['id', 'type', 'source'])
 IssueMessage = namedtuple('IssueMessage', ['id', 'type', 'source'])
 StatusMessage = namedtuple('StatusMessage', ['id', 'type', 'source'])
 HeloReplyMessage = namedtuple('HeloReplyMessage', ['id', 'type', 'source', 'leader'])
-UpdateReplyMessage = namedtuple('UpdateReplyMessage', ['id', 'type', 'decisions'])
-PrepareMessage = namedtuple('PrepareMessage', ['id', 'type', 'ballotnumber'])
-PrepareReplyMessage = namedtuple('PrepareReplyMessage', ['id', 'type',
+UpdateReplyMessage = namedtuple('UpdateReplyMessage', ['id', 'type', 'source', 'decisions'])
+PrepareMessage = namedtuple('PrepareMessage', ['id', 'type', 'source', 'ballotnumber'])
+PrepareReplyMessage = namedtuple('PrepareReplyMessage', ['id', 'type','source', 
                                                          'ballotnumber', 'inresponseto',
                                                          'pvalueset'])
-ProposeMessage = namedtuple('ProposeMessage', ['id', 'type',
+ProposeMessage = namedtuple('ProposeMessage', ['id', 'type','source', 
                                                'ballotnumber', 'commandnumber',
                                                'proposal', 'serverbatch'])
-ProposeReplyMessage = namedtuple('ProposeReplyMessage', ['id', 'type',
+ProposeReplyMessage = namedtuple('ProposeReplyMessage', ['id', 'type','source', 
                                                          'ballotnumber', 'inresponseto',
                                                          'commandnumber'])
-PerformMessage = namedtuple('PerformMessage', ['id', 'type',
+PerformMessage = namedtuple('PerformMessage', ['id', 'type','source', 
                                                'commandnumber', 'proposal',
 					       'serverbatch', 'clientbatch'])
 
@@ -41,5 +41,5 @@ ClientRequestMessage = namedtuple('ClientRequestMessage', ['id', 'type', 'source
 ClientReplyMessage = namedtuple('ClientReplyMessage', ['id', 'type', 'source',
                                                        'reply', 'replycode', 'inresponseto'])
 
-GarbageCollectMessage = namedtuple('GarbageCollectMessage', ['id', 'type',
+GarbageCollectMessage = namedtuple('GarbageCollectMessage', ['id', 'type', 'source',
                                                              'commandnumber', 'snapshot'])

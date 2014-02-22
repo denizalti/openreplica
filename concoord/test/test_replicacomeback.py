@@ -43,36 +43,36 @@ def test_failure(numreplicas):
     for i in range(3):
         print "Running acceptor %d" %i
         acceptors.append(subprocess.Popen(['concoord', 'acceptor', '-b', '127.0.0.1:14000']))
-        time.sleep(3)
 
     for i in range(1, numreplicas):
         print "Running replica %d" %i
         replicas.append(subprocess.Popen(['concoord', 'replica',
                                       '-o', 'concoord.object.counter.Counter',
                                       '-a', '127.0.0.1', '-p', '1400%d'%i,
-                                      '-b' '127.0.0.1:14000']))
+                                      '-b', '127.0.0.1:14000']))
         replicanames.append("127.0.0.1:1400%d"%i)
-        time.sleep(3)
 
     # Give the system sometime to initialize
     time.sleep(10)
 
     replicastring = ','.join(replicanames)
     # Test Clientproxy operations
-    c = Counter(replicastring, debug = True)
-    for i in range(100):
+    c = Counter(replicastring)
+    for i in range(50):
         c.increment()
-    print "Counter value after 100 increments: %d" % c.getvalue()
+    print "Counter value after 50 increments: %d" % c.getvalue()
 
     # Start kiling replicas
+    print "Killing replicas one by one."
     for i in range(numreplicas-1):
         print "Killing replica %d" %i
         replicas[i].kill()
 
         # Clientproxy operations should still work
-        for i in range(100):
+        c = Counter('127.0.0.1:1400%d'%(i+1))
+        for i in range(50):
             c.increment()
-        print "Counter value after 100 more increments: %d" % c.getvalue()
+        print "Counter value after 50 more increments: %d" % c.getvalue()
 
     # Start bringing replicas back
     for i in reversed(xrange(numreplicas-1)):
@@ -80,11 +80,20 @@ def test_failure(numreplicas):
         replicas.append(subprocess.Popen(['concoord', 'replica',
                                       '-o', 'concoord.object.counter.Counter',
                                       '-a', '127.0.0.1', '-p', '1400%d'%i,
-                                      '-b' '127.0.0.1:14004']))
+                                      '-b', '127.0.0.1:1400%d' %(i+1)]))
+        time.sleep(10)
         # Clientproxy operations should still work
-        for i in range(100):
+        connected = False
+        while(not connected):
+            try:
+                c = Counter('127.0.0.1:1400%d'%i)
+            except:
+                continue
+            connected = True
+
+        for i in range(50):
             c.increment()
-        print "Counter value after 100 more increments: %d" % c.getvalue()
+        print "Counter value after 50 more increments: %d" % c.getvalue()
 
     for p in (replicas+acceptors):
         p.kill()
