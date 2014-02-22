@@ -32,6 +32,22 @@ def timeout(timeout):
         return f2
     return timeout_function
 
+def which(program):
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            path = path.strip('"')
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+    return None
+
 @timeout(30)
 def connect_to_minority():
     c_minority = Counter('127.0.0.1:14000')
@@ -146,7 +162,7 @@ def test_partition():
 
     print "Created the partition. Waiting for system to stabilize."
     time.sleep(20)
-    
+
     # c_P2 should make progress
     print "Connecting to the majority, which should have a new leader."
     for i in range(50):
@@ -170,8 +186,11 @@ def test_partition():
     return True
 
 def main():
+    if not which('iptables'):
+        sys.exit('Test requires iptables to run')
+
     if not os.geteuid() == 0:
-        sys.exit('Script must be run as root')
+        sys.exit('Test must be run as root')
 
     test_partition()
 
