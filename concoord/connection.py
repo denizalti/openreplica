@@ -164,7 +164,7 @@ class Connection():
         while len(msgstr) != msg_length:
             try:
                 chunk = self.thesocket.recv(min(1024, msg_length-len(msgstr)))
-            except IOError, e:
+            except IOError as e:
                 if isinstance(e.args, tuple):
                     if e[0] == errno.EAGAIN:
                         continue
@@ -225,7 +225,7 @@ class Connection():
                     try:
                         bytesent = self.thesocket.send(message)
                         message = message[bytesent:]
-                    except IOError, e:
+                    except IOError as e:
                         if isinstance(e.args, tuple):
                             if e[0] == errno.EAGAIN:
                                 self.busywait += 1
@@ -233,20 +233,20 @@ class Connection():
                             else:
                                 raise e
                 return True
-            except socket.error, e:
+            except socket.error as e:
                 if isinstance(e.args, tuple):
                     if e[0] == errno.EPIPE:
                         return False
-            except IOError, e:
+            except IOError as e:
                 print ("Send Error: ", e)
-            except AttributeError, e:
+            except AttributeError as e:
                 pass
             return False
 
     def settimeout(self, timeout):
         try:
             self.thesocket.settimeout(timeout)
-        except socket.error, e:
+        except socket.error as e:
             if isinstance(e.args, tuple):
                 if e[0] == errno.EBADF:
                     print ("Socket closed.")
