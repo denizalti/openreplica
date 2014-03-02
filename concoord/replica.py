@@ -1207,7 +1207,11 @@ class Replica(Node):
             # update the ballot number
             self.update_ballotnumber(msg.ballotnumber)
             self.remove_from_proposals(prc.commandnumber)
-            self.add_to_pendingcommands(prc.commandnumber, prc.proposal)
+            if not prc.proposal.command[0] in METACOMMANDS:
+                self.add_to_pendingcommands(prc.commandnumber, prc.proposal)
+            # clear pendingmetacommands
+            with self.pendingmetalock:
+                self.pendingmetacommands = set()
             # backoff -- we're holding the node lock, so no other state machine code can make progress
             leader_causing_reject = self.detect_colliding_leader(msg.ballotnumber)
             if leader_causing_reject < self.me:
@@ -1287,7 +1291,12 @@ class Replica(Node):
                 self.update_ballotnumber(msg.ballotnumber)
                 # remove the proposal from proposal
                 self.remove_from_proposals(prc.commandnumber)
-                self.add_to_pendingcommands(prc.commandnumber, prc.proposal)
+                if not prc.proposal.command[0] in METACOMMANDS:
+                    self.add_to_pendingcommands(prc.commandnumber, prc.proposal)
+                # clear pendingmetacommands
+                with self.pendingmetalock:
+                    self.pendingmetacommands = set()
+                print self.pendingcommands
                 leader_causing_reject = self.detect_colliding_leader(msg.ballotnumber)
                 if leader_causing_reject < self.me:
                     # if caller lost to a replica whose name precedes its, back off more
