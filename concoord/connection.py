@@ -12,7 +12,9 @@ from threading import Lock
 from concoord.pack import *
 from concoord.message import *
 from concoord.exception import ConnectionError
+import six
 
+msgpack_str_encoding = None if six.PY2 else 'latin1'
 
 class ConnectionPool():
     """ConnectionPool keeps the connections that a certain Node knows of.
@@ -153,7 +155,7 @@ class Connection():
                 lstr = self.receive_n_bytes(4)
                 msg_length = struct.unpack("I", lstr[0:4])[0]
                 msgstr = self.receive_n_bytes(msg_length)
-                msgdict = msgpack.unpackb(msgstr, use_list=False)
+                msgdict = msgpack.unpackb(msgstr, encoding = msgpack_str_encoding, use_list=False)
                 return parse_message(msgdict)
             except IOError as inst:
                 return None
@@ -191,7 +193,7 @@ class Connection():
                     msgstr = self.incoming[4:].tobytes()
                     try:
                         msgstr += self.receive_n_bytes(msg_length-(len(self.incoming)-4))
-                        msgdict = msgpack.unpackb(msgstr, use_list=False)
+                        msgdict = msgpack.unpackb(msgstr, use_list=False, encoding = msgpack_str_encoding)
                         self.incomingoffset = 0
                         yield parse_message(msgdict)
                     except IOError as inst:
@@ -206,7 +208,7 @@ class Connection():
                 # check if there is a complete msg, if so return the msg
                 # otherwise return None
                 if self.incomingoffset >= msg_length+4:
-                    msgdict = msgpack.unpackb(self.incoming[4:msg_length+4].tobytes(), use_list=False)
+                    msgdict = msgpack.unpackb(self.incoming[4:msg_length+4].tobytes(), use_list=False, encoding = msgpack_str_encoding)
                     # this operation cuts the incoming buffer
                     if self.incomingoffset > msg_length+4:
                         self.incoming[:self.incomingoffset-(msg_length+4)] = self.incoming[msg_length+4:self.incomingoffset]
