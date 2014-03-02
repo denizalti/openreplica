@@ -4,17 +4,17 @@
        ConnectionPools organize collections of connections.
 @copyright: See LICENSE
 '''
-import sys
+from __future__ import print_function
 import socket, errno, select
 import struct
-import StringIO
-import time
 import msgpack
-import random
 from threading import Lock
 from concoord.pack import *
 from concoord.message import *
 from concoord.exception import ConnectionError
+import six
+
+msgpack_str_encoding = None if six.PY2 else 'latin1'
 
 class ConnectionPool():
     """ConnectionPool keeps the connections that a certain Node knows of.
@@ -55,7 +55,7 @@ class ConnectionPool():
                     self.nascentsockets.remove(conn.thesocket)
                 conn.close()
             else:
-                print "Trying to delete a non-existent connection from the connection pool."
+                print ("Trying to delete a non-existent connection from the connection pool.")
 
     def del_connection_by_socket(self, thesocket):
         """ Deletes a Connection from the ConnectionPool by its Peer"""
@@ -73,7 +73,7 @@ class ConnectionPool():
                     self.nascentsockets.remove(thesocket)
                 connindict.close()
             else:
-                print "Trying to delete a non-existent socket from the connection pool."
+                print ("Trying to delete a non-existent socket from the connection pool.")
 
     def get_connection_by_peer(self, peer):
         """Returns a Connection given corresponding Peer triple"""
@@ -155,7 +155,7 @@ class Connection():
                 lstr = self.receive_n_bytes(4)
                 msg_length = struct.unpack("I", lstr[0:4])[0]
                 msgstr = self.receive_n_bytes(msg_length)
-                msgdict = msgpack.unpackb(msgstr, use_list=False)
+                msgdict = msgpack.unpackb(msgstr, encoding = msgpack_str_encoding, use_list=False)
                 return parse_message(msgdict)
             except IOError as inst:
                 return None
@@ -166,7 +166,7 @@ class Connection():
         while len(msgstr) != msg_length:
             try:
                 chunk = self.thesocket.recv(min(1024, msg_length-len(msgstr)))
-            except IOError, e:
+            except IOError as e:
                 if isinstance(e.args, tuple):
                     if e[0] == errno.EAGAIN:
                         continue
@@ -193,7 +193,7 @@ class Connection():
                     msgstr = self.incoming[4:].tobytes()
                     try:
                         msgstr += self.receive_n_bytes(msg_length-(len(self.incoming)-4))
-                        msgdict = msgpack.unpackb(msgstr, use_list=False)
+                        msgdict = msgpack.unpackb(msgstr, use_list=False, encoding = msgpack_str_encoding)
                         self.incomingoffset = 0
                         yield parse_message(msgdict)
                     except IOError as inst:
@@ -204,11 +204,11 @@ class Connection():
 
             self.incomingoffset += datalen
             while self.incomingoffset >= 4:
-                msg_length = (ord(self.incoming[3]) << 24) | (ord(self.incoming[2]) << 16) | (ord(self.incoming[1]) << 8) | ord(self.incoming[0])
+                msg_length = struct.unpack("I", self.incoming[0:4].tobytes())[0]
                 # check if there is a complete msg, if so return the msg
                 # otherwise return None
                 if self.incomingoffset >= msg_length+4:
-                    msgdict = msgpack.unpackb(self.incoming[4:msg_length+4].tobytes(), use_list=False)
+                    msgdict = msgpack.unpackb(self.incoming[4:msg_length+4].tobytes(), use_list=False, encoding = msgpack_str_encoding)
                     # this operation cuts the incoming buffer
                     if self.incomingoffset > msg_length+4:
                         self.incoming[:self.incomingoffset-(msg_length+4)] = self.incoming[msg_length+4:self.incomingoffset]
@@ -227,7 +227,7 @@ class Connection():
                     try:
                         bytesent = self.thesocket.send(message)
                         message = message[bytesent:]
-                    except IOError, e:
+                    except IOError as e:
                         if isinstance(e.args, tuple):
                             if e[0] == errno.EAGAIN:
                                 self.busywait += 1
@@ -235,23 +235,23 @@ class Connection():
                             else:
                                 raise e
                 return True
-            except socket.error, e:
-                 if isinstance(e.args, tuple):
-                     if e[0] == errno.EPIPE:
-                         return False
-            except IOError, e:
-                print "Send Error: ", e
-            except AttributeError, e:
+            except socket.error as e:
+                if isinstance(e.args, tuple):
+                    if e[0] == errno.EPIPE:
+                        return False
+            except IOError as e:
+                print ("Send Error: ", e)
+            except AttributeError as e:
                 pass
             return False
 
     def settimeout(self, timeout):
         try:
             self.thesocket.settimeout(timeout)
-        except socket.error, e:
+        except socket.error as e:
             if isinstance(e.args, tuple):
                 if e[0] == errno.EBADF:
-                    print "Socket closed."
+                    print ("Socket closed.")
 
     def close(self):
         """Close the Connection"""

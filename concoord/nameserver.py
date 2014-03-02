@@ -3,6 +3,7 @@
 @note: The Nameserver keeps track of the view by being involved in Paxos rounds and replies to DNS queries with the latest view.
 @copyright: See LICENSE
 """
+from __future__ import print_function
 import socket, select, signal
 from time import strftime, gmtime
 from threading import Thread, Timer
@@ -14,6 +15,7 @@ from concoord.pack import *
 from concoord.proxy.nameservercoord import NameserverCoord
 import concoord.concoordroute53
 import concoord.route53
+
 try:
     import dns.exception
     import dns.message
@@ -23,12 +25,12 @@ try:
     import dns.name
     from dns.flags import *
 except:
-    print "To use the nameserver stand-alone, install dnspython: http://www.dnspython.org/"
+    print( "To use the nameserver stand-alone, install dnspython: http://www.dnspython.org/")
 try:
     from boto.route53.connection import Route53Connection
     import boto
 except:
-    print "To use Amazon Route 53, install boto: http://github.com/boto/boto/"
+    print( "To use Amazon Route 53, install boto: http://github.com/boto/boto/")
 
 RRTYPE = ['','A','NS','MD','MF','CNAME','SOA', 'MB', 'MG', 'MR', 'NULL', 'WKS', 'PTR', 'HINFO', 'MINFO', 'MX', 'TXT', 'RP', 'AFSDB', 'X25', 'ISDN', 'RT', 'NSAP', 'NSAP_PTR', 'SIG', 'KEY', 'PX', 'GPOS', 'AAAA', 'LOC', 'NXT', '', '', 'SRV']
 RRCLASS = ['','IN','CS','CH','HS']
@@ -74,7 +76,7 @@ class Nameserver(Replica):
                 AWS_ACCESS_KEY_ID = CONFIGDICT['AWS_ACCESS_KEY_ID']
                 AWS_SECRET_ACCESS_KEY = CONFIGDICT['AWS_SECRET_ACCESS_KEY']
             except:
-                print "To use Amazon Route 53, set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY in the configfile and use -o option for configpath."
+                print( "To use Amazon Route 53, set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY in the configfile and use -o option for configpath.")
                 self._graceexit(1)
             # initialize Route 53 connection
             self.route53_name = domain+'.'

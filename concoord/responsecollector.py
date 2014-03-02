@@ -29,5 +29,5 @@ class ResponseCollector():
         self.receivedcount = 0
         self.receivedfrom = set()
         self.ntotal = len(self.acceptors)
-        self.nquorum = self.ntotal/2+1
+        self.nquorum = self.ntotal//2 + 1
         self.possiblepvalueset = PValueSet()

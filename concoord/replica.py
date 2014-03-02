@@ -3,6 +3,7 @@
 @note: The Replica keeps an object and responds to Perform messages received from the Leader.
 @copyright: See LICENSE
 '''
+from __future__ import print_function
 import inspect
 import time
 import os, sys
@@ -18,6 +19,7 @@ from concoord.node import *
 from concoord.enums import *
 from concoord.utils import *
 from concoord.message import *
+
 
 backoff_event = Event()
 class Replica(Node):
@@ -1389,7 +1391,7 @@ class Replica(Node):
             cmdproposal = Proposal(self.me, random.randint(1,10000000), args[1:])
             self.handle_client_command(cmdproposal)
         except IndexError as e:
-            print "command expects only one command: ", str(e)
+            print ("command expects only one command: ", str(e))
 
     def cmd_goleader(self, args):
         """start Leader state"""
@@ -1397,21 +1399,21 @@ class Replica(Node):
 
     def cmd_showobject(self, args):
         """print replicated object information"""
-        print self.object
+        print( self.object)
 
     def cmd_info(self, args):
         """print next commandnumber to execute and executed commands"""
-        print str(self)
+        print( str(self))
 
     def cmd_proposals(self,args):
         """prints proposals"""
         for cmdnum,command in self.proposals.iteritems():
-            print "%d: %s" % (cmdnum,str(command))
+            print( "%d: %s" % (cmdnum,str(command)))
 
     def cmd_pending(self,args):
         """prints pending commands"""
         for cmdnum,command in self.pendingcommands.iteritems():
-            print "%d: %s" % (cmdnum,str(command))
+            print( "%d: %s" % (cmdnum,str(command)))
 
 ## TERMINATION METHODS
     def terminate_handler(self, signal, frame):

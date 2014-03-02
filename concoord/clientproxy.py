@@ -3,6 +3,7 @@
 @note: ConCoord Client Proxy
 @copyright: See LICENSE
 '''
+from __future__ import print_function
 import os, random, select, socket, sys, threading, time
 from threading import Lock
 import cPickle as pickle
@@ -13,6 +14,8 @@ from concoord.exception import *
 from concoord.connection import ConnectionPool, Connection
 from concoord.message import *
 from concoord.pvalue import PValueSet
+import six
+
 try:
     import dns
     import dns.resolver
@@ -54,7 +57,7 @@ class ClientProxy():
                     if peer not in tmpbootstraplist:
                         tmpbootstraplist.append(peer)
         except (dns.resolver.NXDOMAIN, dns.exception.Timeout):
-            if self.debug: print "Cannot resolve name"
+            if self.debug: print ("Cannot resolve name")
         return tmpbootstraplist
 
     def discoverbootstrap(self, givenbootstrap):
@@ -72,12 +75,13 @@ class ClientProxy():
                     self.domainname = bootstrap
                     tmpbootstraplist = self.getbootstrapfromdomain(self.domainname)
         except ValueError:
-            if self.debug: print "bootstrap usage: ipaddr1:port1,ipaddr2:port2 or domainname"
+            if self.debug: print ("bootstrap usage: ipaddr1:port1,ipaddr2:port2 or domainname")
             self._graceexit()
         return tmpbootstraplist
 
     def connecttobootstrap(self):
         connected = False
+        if self.debug: print ("connecttobootstrap called.")
         for boottuple in self.bootstraplist:
             try:
                 self.socket.close()
@@ -88,10 +92,10 @@ class ClientProxy():
                 self.conn.settimeout(CLIENTRESENDTIMEOUT)
                 self.bootstrap = boottuple
                 connected = True
-                if self.debug: print "Connected to new bootstrap: ", boottuple
+                if self.debug: print ("Connected to new bootstrap: ", boottuple)
                 break
             except socket.error, e:
-                if self.debug: print "Socket.Error: ", e
+                if self.debug: print ("Socket.Error: ", e)
                 continue
         return connected
 
@@ -113,40 +117,55 @@ class ClientProxy():
                                    {FLD_PROPOSAL: Proposal(self.me, self.commandnumber, args),
                                     FLD_TOKEN: self.token,
                                     FLD_CLIENTBATCH: False})
+        if self.debug: print ("In invoke command. clientmessage is : ", clientmsg)
         while True:
             sendcount += 1
             clientmsg[FLD_SENDCOUNT] = sendcount
             # send the clientrequest
             if resend:
                 success = self.conn.send(clientmsg)
+                if self.debug: print ("Sent msg to bootstrap. success is : ", success)
                 if not success:
+                    if self.debug: print ("Sent msg to bootstrap failed, reconfiguring")
                     self.reconfigure()
                     continue
                 resend = False
         # Receive reply
             try:
                 for reply in self.conn.received_bytes():
+                    if self.debug: print ("reply received: ", reply, reply.type)
                     if reply and reply.type == MSG_CLIENTREPLY:
+                        if self.debug: print ("reply received: MSG_CLIENTRPLY")
                         if reply.replycode == CR_OK:
+                            if self.debug: print ("reply received: MSG_CLIENTRPLY, replycode is CR_OK")
                             return reply.reply
                         elif reply.replycode == CR_UNBLOCK:
+                            if self.debug: print ("reply received: MSG_CLIENTRPLY, replycode is CR_UNBLOCK")
                             # actionable response, wake up the thread
                             assert lastreplycode == CR_BLOCK, "unblocked thread not previously blocked"
                             return reply.reply
                         elif reply.replycode == CR_EXCEPTION:
-                            raise Exception(pickle.loads(reply.reply))
+                            if self.debug: print ("reply received: MSG_CLIENTRPLY, replycode is CR_EXCEPTION reply is %r" %(reply.reply,))
+                            if six.PY2:
+                                raise Exception(pickle.loads(reply.reply))
+                            else:
+                                exc_reply = bytes(reply.reply, 'latin1')
+                                raise pickle.loads(exc_reply)
                         elif reply.replycode == CR_INPROGRESS or reply.replycode == CR_BLOCK:
+                            if self.debug: print ("reply received: MSG_CLIENTRPLY, replycode is CR_BLOCK or CR_INPROGRESS", reply.replycode)
                             # the thread is already waiting, no need to do anything
                             lastreplycode = reply.replycode
                             # go wait for another message
                             continue
                         elif reply.replycode == CR_REJECTED or reply.replycode == CR_LEADERNOTREADY:
+                            if self.debug: print ("reply received: MSG_CLIENTRPLY, replycode is CR_REJECTED or CR_LEADERNOTREADY")
                             resend = True
                             self.reconfigure()
                             continue
                         else:
-                            print "Unknown Client Reply Code."
-            except ConnectionError:
+                            print ("Unknown Client Reply Code.")
+            except ConnectionError as e:
+                if self.debug: print ("CAUGHT ConnectionError, will reconfigure and try again. exception: %r %r" %(e,str(e) ) )
                 resend = True
                 self.reconfigure()
                 continue
@@ -154,6 +173,7 @@ class ClientProxy():
                 self._graceexit()
 
     def reconfigure(self):
+        if self.debug: print ("reconfigure called.")
         if not self.trynewbootstrap():
             raise ConnectionError("Cannot connect to any bootstrap")
 

@@ -5,6 +5,7 @@
 @date: January 20, 2012
 @copyright: See LICENSE
 '''
+from __future__ import print_function
 import argparse
 import signal
 from time import sleep,time
@@ -13,6 +14,7 @@ import ast, _ast
 from concoord.enums import *
 from concoord.safetychecker import *
 from concoord.proxygenerator import *
+
 
 HELPSTR = "concoord, version 1.0.0-release:\n\
 concoord [acceptor] - starts an acceptor node\n\
@@ -47,9 +49,9 @@ def concoordify():
     parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", default=None,
                         help="verbose mode on/off")
     args = parser.parse_args()
-
+    
     if not args.objectname:
-        print parser.print_help()
+        print (parser.print_help())
         return
     import importlib
     objectloc,a,classname = args.objectname.rpartition('.')
@@ -59,8 +61,8 @@ def concoordify():
         if hasattr(module, classname):
             object = getattr(module, classname)()
     except (ValueError, ImportError, AttributeError):
-        print "Can't find module %s, check your PYTHONPATH." % objectloc
-
+        print ("Can't find module %s, check your PYTHONPATH." % objectloc)
+    
     if module.__file__.endswith('pyc'):
         filename = module.__file__[:-1]
     else:
@@ -69,25 +71,25 @@ def concoordify():
         clientcode = fd.read()
     if args.safe:
         if args.verbose:
-            print "Checking object safety"
+            print ("Checking object safety")
         if not check_object(clientcode):
-            print "Object is not safe to execute."
+            print ("Object is not safe to execute.")
             os._exit(1)
         elif args.verbose:
-            print "Object is safe!"
+            print ("Object is safe!")
     if args.verbose:
-        print "Creating clientproxy"
+        print ("Creating clientproxy")
     clientproxycode = createclientproxy(clientcode, classname, args.securitytoken, args.proxytype)
     clientproxycode = clientproxycode.replace('\n\n\n', '\n\n')
     proxyfile = open(filename[:-3]+"proxy.py", 'w')
     proxyfile.write(clientproxycode)
     proxyfile.close()
-    print "Client proxy file created with name: ", proxyfile.name
+    print ("Client proxy file created with name: ", proxyfile.name)
 
 
 def main():
     if len(sys.argv) < 2:
-        print HELPSTR
+        print (HELPSTR)
         sys.exit()
 
     eventtype = sys.argv[1].upper()
@@ -105,7 +107,7 @@ def main():
     elif eventtype == 'OBJECT':
         concoordify()
     else:
-        print HELPSTR
+        print (HELPSTR)
 
 if __name__=='__main__':
     main()
