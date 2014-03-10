@@ -67,7 +67,7 @@ def test_partition():
     print "Running replica 0"
     p = subprocess.Popen(['concoord', 'replica',
                           '-o', 'concoord.object.counter.Counter',
-                          '-a', '127.0.0.1', '-p', '14000'])
+                          '-a', '127.0.0.1', '-p', '14000', '-d'])
     processes.append(p)
     p1_pids.append(p.pid)
 

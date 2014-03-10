@@ -218,7 +218,7 @@ class Replica(Node):
                 unblocked = {}
                 send_result_to_client = False
             elif dometaonly and ismeta:
-
+                
                 # execute a metacommand when the window has expired
                 if self.debug: self.logger.write("State",
                                                  "commandname: %s args: %s" % (commandname, str(commandargs)))
@@ -324,35 +324,6 @@ class Replica(Node):
         """Take a given PERFORM message, add it to the set of decided commands,
         and call performcore to execute."""
         if self.debug: self.logger.write("State:", "Performing msg %s" % str(msg))
-        # -------------------
-#        if type(msg.proposal.command) == str:
-#            commandname = msg.proposal.command
-#        else:
-#            commandname = msg.proposal.command[0]
-#        if commandname == '_del_node':
-#            # Check if the ballotnumbers match
-#            if msg.proposal.command[3][1] != msg.decisionballotnumber[1]:
-#                print str(self)
-#                print msg.proposal.command[3][1]
-#                print msg.decisionballotnumber[1]
-#                # Change the metacommand to a noop command
-#                if self.debug: self.logger.write("State",
-#                                                 "DELNODE decided with a different ballotnumber")
-#                newproposal = Proposal(msg.proposal.client, msg.proposal.clientcommandnumber, ('noop')#)
-#                # msg namedtuple is immutable, create a new one with the new proposal
-#                newmsg = PerformMessage(msg.id, msg.type, msg.source,
-#                                        msg.commandnumber,
-#                                        newproposal,
-#                                        msg.serverbatch,
-#                                        msg.clientbatch,
-#                                        msg.decisionballotnumber)
-#                # remove the node from nodesbeingdeleted
-#                ipaddr,port = msg.proposal.command[2].split(":")
-#                nodepeer = Peer(ipaddr,int(port),msg.proposal.command[1])
-#                if nodepeer in self.nodesbeingdeleted:
-#                    self.nodesbeingdeleted.remove(nodepeer)
-#                msg = newmsg
-        # -------------------
         if msg.commandnumber not in self.decisions:
             self.add_to_decisions(msg.commandnumber, msg.proposal)
         # If replica was using this commandnumber for a different proposal, initiate it again
@@ -463,7 +434,7 @@ class Replica(Node):
 
     def msg_issue(self, conn, msg):
         self.issue_pending_commands()
-
+    
     def msg_ping(self, conn, msg):
         if self.debug: self.logger.write("State", "Received PING")
         # if this node is in the view
@@ -645,7 +616,7 @@ class Replica(Node):
             elif chosenleader != self.me and self.isleader:
                 # unbecome the leader
                 self.unbecome_leader()
-
+        
         # if deleted node is self
         if nodepeer == self.me:
             if self.debug: self.logger.write("State", "I have been deleted from the view.")
@@ -1309,7 +1280,7 @@ class Replica(Node):
             prc = self.outstandingprepares[msg.inresponseto]
             if self.debug: self.logger.write("Paxos State",
                                              "got a reject for ballotno %s commandno %s proposal %s with %d out of %d"
-                                             % (prc.ballotnumber, prc.commandnumber,
+                                             % (prc.ballotnumber, prc.commandnumber, 
                                                 prc.proposal, prc.receivedcount, prc.ntotal))
             # take this response collector out of the outstanding prepare set
             del self.outstandingprepares[msg.inresponseto]
