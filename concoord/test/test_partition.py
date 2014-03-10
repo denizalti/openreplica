@@ -146,6 +146,7 @@ def test_partition():
                                               '--dport', '15000',
                                               '--sport', porttoblock,
                                               '-j', 'DROP']))
+
     for porttoblock in p2_ports:
         iptablerules.append(subprocess.Popen(['sudo', 'iptables',
                                               '-I', 'INPUT',
@@ -168,18 +169,30 @@ def test_partition():
     for i in range(50):
         c_P2.increment()
     print "Counter value after 50 more increments: %d" % c_P2.getvalue()
+    if c_P2.getvalue() == 100:
+        print "SUCCESS: Majority made progress."
 
     print "Connecting to the minority, which should not make progress."
-    if not connect_to_minority():
-        print "===== TEST PASSED ====="
-    else:
+    if connect_to_minority():
         print "===== TEST FAILED ====="
+        sys.exit('Minority made progress.')
+    print "SUCCESS: Minority did not make progress."
 
-    print "Ending partition and cleaning up."
+    print "Ending partition."
     # End partition
     with open('test.iptables.rules', 'r') as input:
         subprocess.Popen(['sudo', 'iptables-restore'], stdin=input)
     subprocess.Popen(['sudo', 'rm', 'test.iptables.rules'])
+
+    time.sleep(40)
+    # c_P1 should make progress
+    print "Connecting to the old leader."
+    for i in range(50):
+        c_P1.increment()
+    print "Counter value after 50 more increments: " , c_P1.getvalue()
+    if c_P1.getvalue() == 150:
+        print "SUCCESS: Old leader recovered."
+    print "===== TEST PASSED ====="
 
     for p in (processes):
         p.kill()
