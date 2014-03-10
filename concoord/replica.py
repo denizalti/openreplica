@@ -323,35 +323,6 @@ class Replica(Node):
         """Take a given PERFORM message, add it to the set of decided commands,
         and call performcore to execute."""
         if self.debug: self.logger.write("State:", "Performing msg %s" % str(msg))
-        # -------------------
-#        if type(msg.proposal.command) == str:
-#            commandname = msg.proposal.command
-#        else:
-#            commandname = msg.proposal.command[0]
-#        if commandname == '_del_node':
-#            # Check if the ballotnumbers match
-#            if msg.proposal.command[3][1] != msg.decisionballotnumber[1]:
-#                print str(self)
-#                print msg.proposal.command[3][1]
-#                print msg.decisionballotnumber[1]
-#                # Change the metacommand to a noop command
-#                if self.debug: self.logger.write("State",
-#                                                 "DELNODE decided with a different ballotnumber")
-#                newproposal = Proposal(msg.proposal.client, msg.proposal.clientcommandnumber, ('noop')#)
-#                # msg namedtuple is immutable, create a new one with the new proposal
-#                newmsg = PerformMessage(msg.id, msg.type, msg.source,
-#                                        msg.commandnumber,
-#                                        newproposal,
-#                                        msg.serverbatch,
-#                                        msg.clientbatch,
-#                                        msg.decisionballotnumber)
-#                # remove the node from nodesbeingdeleted
-#                ipaddr,port = msg.proposal.command[2].split(":")
-#                nodepeer = Peer(ipaddr,int(port),msg.proposal.command[1])
-#                if nodepeer in self.nodesbeingdeleted:
-#                    self.nodesbeingdeleted.remove(nodepeer)
-#                msg = newmsg
-        # -------------------
         if msg.commandnumber not in self.decisions:
             self.add_to_decisions(msg.commandnumber, msg.proposal)
         # If replica was using this commandnumber for a different proposal, initiate it again
@@ -644,30 +615,6 @@ class Replica(Node):
             elif chosenleader != self.me and self.isleader:
                 # unbecome the leader
                 self.unbecome_leader()
-
-        # if deleted node is self
-        if nodepeer == self.me:
-            if self.debug: self.logger.write("State", "I have been deleted from the view.")
-            currentleader = self.find_leader()
-            if not self.isleader and currentleader == self.me:
-                if self.debug: self.logger.write("State", "Becoming leader")
-                self.become_leader()
-            if self.isleader:
-                # add yourself
-                if self.debug: self.logger.write("State",
-                                                 "Adding self %s" % str(nodepeer))
-
-                addcommand = self.create_add_command(self.me)
-                self.pick_commandnumber_add_to_pending(addcommand)
-                for i in range(WINDOW):
-                    noopcommand = self.create_noop_command()
-                    self.pick_commandnumber_add_to_pending(noopcommand)
-                self.issue_pending_commands()
-            else:
-                # send a ping to the leader
-                if self.debug: self.logger.write("State", "Sending PING to %s" % str(currentleader))
-                pingmessage = create_message(MSG_PING, self.me)
-                successid = self.send(pingmessage, peer=currentleader)
 
         # if deleted node is self
         if nodepeer == self.me:
