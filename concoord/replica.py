@@ -218,7 +218,6 @@ class Replica(Node):
                 unblocked = {}
                 send_result_to_client = False
             elif dometaonly and ismeta:
-
                 # execute a metacommand when the window has expired
                 if self.debug: self.logger.write("State",
                                                  "commandname: %s args: %s" % (commandname, str(commandargs)))
@@ -645,6 +644,30 @@ class Replica(Node):
             elif chosenleader != self.me and self.isleader:
                 # unbecome the leader
                 self.unbecome_leader()
+
+        # if deleted node is self
+        if nodepeer == self.me:
+            if self.debug: self.logger.write("State", "I have been deleted from the view.")
+            currentleader = self.find_leader()
+            if not self.isleader and currentleader == self.me:
+                if self.debug: self.logger.write("State", "Becoming leader")
+                self.become_leader()
+            if self.isleader:
+                # add yourself
+                if self.debug: self.logger.write("State",
+                                                 "Adding self %s" % str(nodepeer))
+
+                addcommand = self.create_add_command(self.me)
+                self.pick_commandnumber_add_to_pending(addcommand)
+                for i in range(WINDOW):
+                    noopcommand = self.create_noop_command()
+                    self.pick_commandnumber_add_to_pending(noopcommand)
+                self.issue_pending_commands()
+            else:
+                # send a ping to the leader
+                if self.debug: self.logger.write("State", "Sending PING to %s" % str(currentleader))
+                pingmessage = create_message(MSG_PING, self.me)
+                successid = self.send(pingmessage, peer=currentleader)
 
         # if deleted node is self
         if nodepeer == self.me:
