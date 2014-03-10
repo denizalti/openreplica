@@ -78,7 +78,8 @@ class ClientProxy():
         try:
             answers = dns.resolver.query('_concoord._tcp.'+domainname, 'SRV')
             for rdata in answers:
-                for peer in self._getipportpairs(str(rdata.target), rdata.port):
+                for peer in self._getipportpairs('.'.join(str(rdata.target).split('.')[0:4]),
+                                                 rdata.port):
                     if peer not in tmpbootstraplist:
                         tmpbootstraplist.append(peer)
         except (dns.resolver.NXDOMAIN, dns.exception.Timeout):
