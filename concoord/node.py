@@ -40,7 +40,9 @@ parser.add_argument("-c", "--configpath", action="store", dest="configpath", def
 parser.add_argument("-n", "--name", action="store", dest="domain", default='',
                     help="domainname that the nameserver will accept queries for")
 parser.add_argument("-t", "--type", action="store", dest="type", default='',
-                    help="1: Master Nameserver 2: Slave Nameserver (requires a Master) 3:Route53 (requires a Route53 zone)")
+                    help="1: Master Nameserver "\
+                         "2: Slave Nameserver (requires a Master) " \
+                         "3:Route53 (requires a Route53 zone)")
 parser.add_argument("-m", "--master", action="store", dest="master", default='',
                     help="ipaddr:port for the master nameserver")
 parser.add_argument("-w", "--writetodisk", action="store_true", dest="writetodisk", default=False,
@@ -225,8 +227,7 @@ class Node():
 
     def ping_neighbor(self):
         """used to ping neighbors periodically"""
-        # Only ping neighbors that didn't send a message in less than
-        # LIVENESSTIMEOUT
+        # Only ping neighbors that didn't send a message recently
         while True:
             # Check nodeliveness
             for gtype,group in self.groups.iteritems():
@@ -236,18 +237,18 @@ class Node():
                     if peer in self.nodeliveness:
                         nosound = time.time() - self.nodeliveness[peer]
                     else:
-                        # This node never sent a message, we should ping it
-                        if self.debug: self.logger.write("State", "Sending PING to %s" % str(peer))
-                        pingmessage = create_message(MSG_PING, self.me)
-                        self.send(pingmessage, peer=peer)
-                        continue
+                        nosound = LIVENESSTIMEOUT + 1
 
-                    if (4*LIVENESSTIMEOUT) > nosound and nosound > LIVENESSTIMEOUT:
+                    if nosound <= LIVENESSTIMEOUT:
+                        # Peer is alive
+                        self.groups[peer.type][peer] = 0
+                        continue
+                    if nosound > LIVENESSTIMEOUT:
                         # Send PING to node
                         if self.debug: self.logger.write("State", "Sending PING to %s" % str(peer))
                         pingmessage = create_message(MSG_PING, self.me)
-                        self.send(pingmessage, peer=peer)
-                    elif nosound > (4*LIVENESSTIMEOUT):
+                        successid = self.send(pingmessage, peer=peer)
+                    if successid < 0 or nosound > (2*LIVENESSTIMEOUT):
                         # Neighbor not responding, mark the neighbor
                         if self.debug: self.logger.write("State",
                                                          "Neighbor not responding")
@@ -426,7 +427,8 @@ class Node():
                 return
             else:
                 if self.debug: self.logger.write("State", "Adding new bootstrap.")
-                self.bootstraplist.remove(msg.source)
+                if msg.source in self.bootstraplist:
+                    self.bootstraplist.remove(msg.source)
                 self.bootstraplist.append(msg.leader)
                 self.connecttobootstrap()
 

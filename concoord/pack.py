@@ -21,18 +21,19 @@ StatusMessage = namedtuple('StatusMessage', ['id', 'type', 'source'])
 HeloReplyMessage = namedtuple('HeloReplyMessage', ['id', 'type', 'source', 'leader'])
 UpdateReplyMessage = namedtuple('UpdateReplyMessage', ['id', 'type', 'source', 'decisions'])
 PrepareMessage = namedtuple('PrepareMessage', ['id', 'type', 'source', 'ballotnumber'])
-PrepareReplyMessage = namedtuple('PrepareReplyMessage', ['id', 'type','source', 
+PrepareReplyMessage = namedtuple('PrepareReplyMessage', ['id', 'type','source',
                                                          'ballotnumber', 'inresponseto',
                                                          'pvalueset'])
-ProposeMessage = namedtuple('ProposeMessage', ['id', 'type','source', 
+ProposeMessage = namedtuple('ProposeMessage', ['id', 'type','source',
                                                'ballotnumber', 'commandnumber',
                                                'proposal', 'serverbatch'])
-ProposeReplyMessage = namedtuple('ProposeReplyMessage', ['id', 'type','source', 
+ProposeReplyMessage = namedtuple('ProposeReplyMessage', ['id', 'type','source',
                                                          'ballotnumber', 'inresponseto',
                                                          'commandnumber'])
-PerformMessage = namedtuple('PerformMessage', ['id', 'type','source', 
+PerformMessage = namedtuple('PerformMessage', ['id', 'type','source',
                                                'commandnumber', 'proposal',
-					       'serverbatch', 'clientbatch'])
+					       'serverbatch', 'clientbatch',
+					       'decisionballotnumber'])
 
 ClientRequestMessage = namedtuple('ClientRequestMessage', ['id', 'type', 'source',
                                                            'command', 'token',

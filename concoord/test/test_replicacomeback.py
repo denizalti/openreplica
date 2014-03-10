@@ -80,7 +80,7 @@ def test_failure(numreplicas):
         replicas.append(subprocess.Popen(['concoord', 'replica',
                                       '-o', 'concoord.object.counter.Counter',
                                       '-a', '127.0.0.1', '-p', '1400%d'%i,
-                                      '-b', '127.0.0.1:1400%d' %(i+1)]))
+                                      '-b', '127.0.0.1:1400%d'%(i+1)]))
         time.sleep(10)
         # Clientproxy operations should still work
         connected = False

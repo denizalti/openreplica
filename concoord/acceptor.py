@@ -27,7 +27,7 @@ class Acceptor(Node):
         Node.__init__(self, NODE_ACCEPTOR)
         if self.durable:
             self.file = open('concoordlog', 'a')
-        self.ballotnumber = (0,0)
+        self.ballotnumber = (0,'')
         self.last_accept_msg_id = -1
         self.accepted = PValueSet()
         self.objectsnapshot = (0,None)
@@ -87,8 +87,8 @@ class Acceptor(Node):
         """
         if msg.ballotnumber >= self.ballotnumber:
             if self.debug: self.logger.write("Paxos State",
-                              "propose received with acceptable ballotnumber %s"
-                              % str(msg.ballotnumber))
+                                             "propose received with acceptable ballotnumber %s"
+                                             % str(msg.ballotnumber))
             self.ballotnumber = msg.ballotnumber
             newpvalue = PValue(msg.ballotnumber,msg.commandnumber,msg.proposal)
             self.accepted.add(newpvalue)
@@ -102,8 +102,8 @@ class Acceptor(Node):
                 os.fsync(self.file)
         else:
             if self.debug: self.logger.write("Paxos State",
-                              "propose received with non-acceptable ballotnumber %s"
-                              % str(msg.ballotnumber))
+                                             "propose received with non-acceptable ballotnumber %s"
+                                             % str(msg.ballotnumber))
             replymsg = create_message(MSG_PROPOSE_REJECT, self.me,
                                       {FLD_BALLOTNUMBER: self.ballotnumber,
                                        FLD_INRESPONSETO: msg.ballotnumber,
