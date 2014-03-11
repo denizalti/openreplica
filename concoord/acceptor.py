@@ -27,7 +27,7 @@ class Acceptor(Node):
         Node.__init__(self, NODE_ACCEPTOR)
         if self.durable:
             self.file = open('concoordlog', 'a')
-        self.ballotnumber = (0,'')
+        self.ballotnumber = (0, 0, '')
         self.last_accept_msg_id = -1
         self.accepted = PValueSet()
         self.objectsnapshot = (0,None)
