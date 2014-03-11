@@ -51,6 +51,7 @@ class Replica(Node):
         self.leader_initializing = False
         self.isleader = False
         self.nexttoexecute = 1
+        self.ballotnumber = (0, 0, self.id)
         # decided commands: <commandnumber:command>
         self.decisions = {}
         self.decisionset = set()
@@ -434,33 +435,33 @@ class Replica(Node):
     def msg_issue(self, conn, msg):
         self.issue_pending_commands()
 
-    def msg_ping(self, conn, msg):
-        if self.debug: self.logger.write("State", "Received PING")
-        # if this node is in the view
-        if msg.source in self.groups[msg.source.type]:
-            # just reply to ping
-            if self.debug: self.logger.write("State", "Replying to PING.")
-            pingreplymessage = create_message(MSG_PINGREPLY, self.me)
-            conn.send(pingreplymessage)
-            return
-        # if not, add it or reply with a heloreply to initiate addition
-        if self.isleader:
-            if self.debug: self.logger.write("State", "Adding the node: %s" % str(msg.source))
-            addcommand = self.create_add_command(msg.source)
-            self.pick_commandnumber_add_to_pending(addcommand)
-            for i in range(WINDOW+3):
-                noopcommand = self.create_noop_command()
-                self.pick_commandnumber_add_to_pending(noopcommand)
-            self.issue_pending_commands()
-        else:
-            if self.debug: self.logger.write("State", "Not the leader, sending a HELOREPLY")
-            heloreplymessage = create_message(MSG_HELOREPLY, self.me,
-                                              {FLD_LEADER: self.find_leader()})
-            conn.send(heloreplymessage)
-
-        if self.debug: self.logger.write("State", "Replying to PING.")
-        pingreplymessage = create_message(MSG_PINGREPLY, self.me)
-        conn.send(pingreplymessage)
+#    def msg_ping(self, conn, msg):
+#        if self.debug: self.logger.write("State", "Received PING")
+#        # if this node is in the view
+#        if msg.source in self.groups[msg.source.type]:
+#            # just reply to ping
+#            if self.debug: self.logger.write("State", "Replying to PING.")
+#            pingreplymessage = create_message(MSG_PINGREPLY, self.me)
+#            conn.send(pingreplymessage)
+#            return
+#        # if not, add it or reply with a heloreply to initiate addition
+#        if self.isleader:
+#            if self.debug: self.logger.write("State", "Adding the node: %s" % str(msg.source))
+#            addcommand = self.create_add_command(msg.source)
+#            self.pick_commandnumber_add_to_pending(addcommand)
+#            for i in range(WINDOW+3):
+#                noopcommand = self.create_noop_command()
+#                self.pick_commandnumber_add_to_pending(noopcommand)
+#            self.issue_pending_commands()
+#        else:
+#            if self.debug: self.logger.write("State", "Not the leader, sending a HELOREPLY")
+#            heloreplymessage = create_message(MSG_HELOREPLY, self.me,
+#                                              {FLD_LEADER: self.find_leader()})
+#            conn.send(heloreplymessage)
+#
+#        if self.debug: self.logger.write("State", "Replying to PING.")
+#        pingreplymessage = create_message(MSG_PINGREPLY, self.me)
+#        conn.send(pingreplymessage)
 
     def msg_helo(self, conn, msg):
         if self.debug: self.logger.write("State", "Received HELO")
@@ -569,6 +570,13 @@ class Replica(Node):
         nodepeer = Peer(ipaddr,int(port),nodetype)
         self.groups[nodetype][nodepeer] = 0
 
+        # if leader, increment epoch in the ballotnumber
+        temp = (self.ballotnumber[BALLOTEPOCH]+1,
+                self.ballotnumber[BALLOTNO],
+                self.ballotnumber[BALLOTNODE])
+        if self.debug: self.logger.write("State:", "Incremented EPOCH" % str(temp))
+        self.ballotnumber = temp
+
         # if added node is a replica and this replica is uptodate
         # check leadership state
         if nodetype == NODE_REPLICA and self.stateuptodate:
@@ -603,6 +611,14 @@ class Replica(Node):
         # remove the node from nodesbeingdeleted
         if nodepeer in self.nodesbeingdeleted:
             self.nodesbeingdeleted.remove(nodepeer)
+
+        # if leader, increment epoch in the ballotnumber
+        temp = (self.ballotnumber[BALLOTEPOCH]+1,
+                self.ballotnumber[BALLOTNO],
+                self.ballotnumber[BALLOTNODE])
+        if self.debug: self.logger.write("State:", "Incremented EPOCH" % str(temp))
+        self.ballotnumber = temp
+
         # if deleted node is a replica and this replica is uptodate
         # check leadership state
         if nodetype == NODE_REPLICA and self.stateuptodate:
@@ -616,29 +632,29 @@ class Replica(Node):
                 # unbecome the leader
                 self.unbecome_leader()
 
-        # if deleted node is self
-        if nodepeer == self.me:
-            if self.debug: self.logger.write("State", "I have been deleted from the view.")
-            currentleader = self.find_leader()
-            if not self.isleader and currentleader == self.me:
-                if self.debug: self.logger.write("State", "Becoming leader")
-                self.become_leader()
-            if self.isleader:
-                # add yourself
-                if self.debug: self.logger.write("State",
-                                                 "Adding self %s" % str(nodepeer))
-
-                addcommand = self.create_add_command(self.me)
-                self.pick_commandnumber_add_to_pending(addcommand)
-                for i in range(WINDOW):
-                    noopcommand = self.create_noop_command()
-                    self.pick_commandnumber_add_to_pending(noopcommand)
-                self.issue_pending_commands()
-            else:
-                # send a ping to the leader
-                if self.debug: self.logger.write("State", "Sending PING to %s" % str(currentleader))
-                pingmessage = create_message(MSG_PING, self.me)
-                successid = self.send(pingmessage, peer=currentleader)
+#        # if deleted node is self
+#        if nodepeer == self.me:
+#            if self.debug: self.logger.write("State", "I have been deleted from the view.")
+#            currentleader = self.find_leader()
+#            if not self.isleader and currentleader == self.me:
+#                if self.debug: self.logger.write("State", "Becoming leader")
+#                self.become_leader()
+#            if self.isleader:
+#                # add yourself
+#                if self.debug: self.logger.write("State",
+#                                                 "Adding self %s" % str(nodepeer))
+#
+#                addcommand = self.create_add_command(self.me)
+#                self.pick_commandnumber_add_to_pending(addcommand)
+#                for i in range(WINDOW):
+#                    noopcommand = self.create_noop_command()
+#                    self.pick_commandnumber_add_to_pending(noopcommand)
+#                self.issue_pending_commands()
+#            else:
+#                # send a ping to the leader
+#                if self.debug: self.logger.write("State", "Sending PING to %s" % str(currentleader))
+#                pingmessage = create_message(MSG_PING, self.me)
+#                successid = self.send(pingmessage, peer=currentleader)
 
     def _garbage_collect(self, garbagecommandnumber, epoch):
         """ garbage collect """
@@ -702,7 +718,6 @@ class Replica(Node):
         if not self.isleader:
             self.isleader = True
             self.active = False
-            self.ballotnumber = (0,self.id)
             self.outstandingprepares = {}
             self.outstandingproposes = {}
             self.receivedclientrequests = {}
@@ -765,9 +780,16 @@ class Replica(Node):
 
     def update_ballotnumber(self,seedballotnumber):
         """update the ballotnumber with a higher value than the given ballotnumber"""
+        assert seedballotnumber[BALLOTEPOCH] == self.ballotnumber[BALLOTEPOCH], "The Leader is in another epoch %s" % str(self)
         temp = (seedballotnumber[BALLOTNO]+1,self.ballotnumber[BALLOTNODE])
         if self.debug: self.logger.write("State:", "Updated ballotnumber to %s" % str(temp))
         self.ballotnumber = temp
+
+        # if leader increment epoch in the ballotnumber
+        if self.isleader:
+
+            if self.debug: self.logger.write("State:", "Incremented EPOCH" % str(temp))
+            self.ballotnumber = temp
 
     def find_commandnumber(self):
         """returns the first gap in proposals and decisions combined"""
