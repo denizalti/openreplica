@@ -138,11 +138,12 @@ class Node():
 
         # Keeps the liveness of the nodes
         self.nodeliveness = {}
+        self.bootstrapset = set()
         # connect to the bootstrap node
         if givenbootstraplist:
-            self.bootstraplist = []
             self.discoverbootstrap(givenbootstraplist)
             self.connecttobootstrap()
+            
         if self.type == NODE_REPLICA or self.type == NODE_NAMESERVER:
             self.stateuptodate = False
 
@@ -157,7 +158,7 @@ class Node():
             if bootstrap.find(":") >= 0:
                 bootaddr,bootport = bootstrap.split(":")
                 for peer in self._getipportpairs(bootaddr, int(bootport)):
-                    self.bootstraplist.append(peer)
+                    self.bootstrapset.add(peer)
             #dnsname given as bootstrap
             else:
                 answers = []
@@ -167,13 +168,13 @@ class Node():
                     if self.debug: self.logger.write("DNS Error", "Cannot resolve %s" % str(bootstrap))
                 for rdata in answers:
                     for peer in self._getipportpairs(str(rdata.target), rdata.port):
-                        self.bootstraplist.append(peer)
+                        self.bootstrapset.append(peer)
 
     def connecttobootstrap(self):
         tries = 0
         keeptrying = True
         while tries < BOOTSTRAPCONNECTTIMEOUT and keeptrying:
-            for bootpeer in self.bootstraplist:
+            for bootpeer in self.bootstrapset:
                 try:
                     if self.debug: self.logger.write("State",
                                                      "trying to connect to bootstrap: %s" % str(bootpeer))
@@ -427,9 +428,9 @@ class Node():
                 return
             else:
                 if self.debug: self.logger.write("State", "Adding new bootstrap.")
-                if msg.source in self.bootstraplist:
-                    self.bootstraplist.remove(msg.source)
-                self.bootstraplist.append(msg.leader)
+                if msg.source in self.bootstrapset:
+                    self.bootstrapset.remove(msg.source)
+                self.bootstrapset.add(msg.leader)
                 self.connecttobootstrap()
 
     def msg_ping(self, conn, msg):
