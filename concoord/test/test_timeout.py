@@ -56,17 +56,12 @@ def connect_to_leader():
 
 def test_timeout():
     numreplicas = 3
-    numacceptors = 3
     processes = []
 
     print "Running replica 0"
     processes.append(subprocess.Popen(['concoord', 'replica',
                                       '-o', 'concoord.object.counter.Counter',
                                       '-a', '127.0.0.1', '-p', '14000']))
-
-    for i in range(numacceptors):
-        print "Running acceptor %d" %i
-        processes.append(subprocess.Popen(['concoord', 'acceptor', '-b', '127.0.0.1:14000']))
 
     for i in range(1, numreplicas):
         print "Running replica %d" %i

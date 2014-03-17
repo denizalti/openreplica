@@ -1114,7 +1114,7 @@ class Replica(Node):
         """Initiates givencommandnumber from pendingcommands list.
         Stage p2a.
         - Remove command from pending and transfer it to proposals
-        - If no Acceptors, retreat and return
+        - If no Replicas, retreat and return
         - Else start from the PROPOSE STAGE:
         -- create MSG_PROPOSE: message carries ballotnumber, commandnumber, proposal
         -- create ResponseCollector object for PROPOSE STAGE:
@@ -1149,7 +1149,7 @@ class Replica(Node):
         """Initiates givencommandnumber from pendingcommands list.
         Stage p1a.
         - Remove command from pending and transfer it to proposals
-        - If no Acceptors, retreat and return
+        - If no Replicas, retreat and return
         - Else start from the PREPARE STAGE:
         -- create MSG_PREPARE: message carries the corresponding ballotnumber
         -- create ResponseCollector object for PREPARE STAGE:
@@ -1327,7 +1327,7 @@ class Replica(Node):
                                               FLD_SERVERBATCH: isinstance(chosenproposal,
                                                                           ProposalServerBatch)})
                     self.send(propose, group=newprc.quorum)
-                # As leader collected all proposals from acceptors its state is up-to-date
+                # As leader collected all proposals its state is up-to-date
                 # and it is done initializing
                 self.leader_initializing = False
                 self.stateuptodate = True

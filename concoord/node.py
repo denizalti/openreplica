@@ -53,7 +53,7 @@ args = parser.parse_args()
 
 class Node():
     """Node encloses the basic Node behaviour and state that
-    are extended by Leaders, Acceptors or Replicas.
+    are extended by Replicas and Nameservers.
     """
     def __init__(self,
                  nodetype,
@@ -145,7 +145,7 @@ class Node():
         if givenbootstraplist:
             self.discoverbootstrap(givenbootstraplist)
             self.connecttobootstrap()
-            
+
         if self.type == NODE_REPLICA or self.type == NODE_NAMESERVER:
             self.stateuptodate = False
 
@@ -329,7 +329,7 @@ class Node():
                     if s == self.socket:
                         clientsock,clientaddr = self.socket.accept()
                         if self.debug: self.logger.write("State",
-                                                         "accepted a connection from address %s" 
+                                                         "accepted a connection from address %s"
                                                          % str(clientaddr))
                         self.connectionpool.activesockets.add(clientsock)
                         self.connectionpool.nascentsockets.add(clientsock)
@@ -350,7 +350,7 @@ class Node():
                 if message.type == MSG_STATUS:
                     if self.type == NODE_REPLICA:
                         if self.debug: self.logger.write("State",
-                                                         "Answering status message %s" 
+                                                         "Answering status message %s"
                                                          % self.__str__())
                         messagestr = pickle.dumps(self.__str__())
                         message = struct.pack("I", len(messagestr)) + messagestr
@@ -425,13 +425,7 @@ class Node():
 
     def msg_heloreply(self, conn, msg):
         if msg.leader:
-            if msg.source == msg.leader:
-                if self.debug: self.logger.write("Error", "There are no acceptors yet, waiting.")
-                # If heloreply received, should ping the bootstrap again to try connecting.
-                time.sleep(1)
-                self.connecttobootstrap()
-                return
-            elif msg.leader == self.me:
+            if msg.leader == self.me:
                 if self.debug: self.logger.write("State", "I'm the leader.")
                 return
             else:
