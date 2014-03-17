@@ -91,12 +91,9 @@ def endtimer(timerkey, timerno):
     except:
         print "Can't stop timer %s %s." % (str(timerkey),str(timerno))
 
-def dumptimers(numreplicas, numacceptors, ownertype, outputdict):
+def dumptimers(numreplicas, ownertype, outputdict):
     global timers
-    if ownertype == NODE_REPLICA:
-        filename = "output/replica/%s-%s" % (str(numreplicas), str(numacceptors))
-    elif ownertype == NODE_ACCEPTOR:
-        filename = "output/acceptor/%s-%s" % (str(numreplicas), str(numacceptors))
+    filename = "output/replica/%s" % str(numreplicas)
     try:
         outputfile = open(outputdict+filename, "w")
     except:
@@ -104,9 +101,8 @@ def dumptimers(numreplicas, numacceptors, ownertype, outputdict):
     for index,numbers in timers.iteritems():
         timerkey, timerno = index.rsplit("-")
         if not numbers[1]-numbers[0] < 0:
-            outputfile.write("%s:\t%s\t%s\t%s\n"  % (str(timerno),
+            outputfile.write("%s:\t%s\t%s\n"  % (str(timerno),
                                                      str(numreplicas),
-                                                     str(numacceptors),
                                                      str(numbers[1]-numbers[0])))
     outputfile.close()
 
@@ -142,12 +138,10 @@ def endtiming(fn):
             now = time.time()
             total = now - obj.secondstarttime
             perrequest = total/NITER
-            filename = "output/%s-%s" % (str(len(obj.groups[NODE_REPLICA])+1),
-                                         str(len(obj.groups[NODE_ACCEPTOR])))
+            filename = "output/%s" % (str(len(obj.groups[NODE_REPLICA])+1))
             outputfile = open("./"+filename, "a")
-            # numreplicas #numacceptors #perrequest #total
-            outputfile.write("%s\t%s\t%s\t%s\n" % (str(len(obj.groups[NODE_REPLICA])+1),
-                                                   str(len(obj.groups[NODE_ACCEPTOR])),
+            # numreplicas #perrequest #total
+            outputfile.write("%s\t%s\t%s\n" % (str(len(obj.groups[NODE_REPLICA])+1),
                                                    str(perrequest), str(total)))
             outputfile.close()
             obj.count += 1

@@ -12,7 +12,7 @@ class PValueSet():
     """
     def __init__(self):
         self.pvalues = {} # indexed by (commandnumber,proposal): pvalue
-        
+
     def add(self, pvalue):
         """Adds given PValue to the PValueSet overwriting matching
         (commandnumber,proposal) if it exists and has a smaller ballotnumber
@@ -58,7 +58,7 @@ class PValueSet():
             if cmdno < commandnumber:
                 del self.pvalues[(cmdno,proposal)]
         return True
-    
+
     def union(self, otherpvalueset):
         """Unionizes the pvalues of givenPValueSet with the pvalues of the
         PValueSet overwriting the (commandnumber,proposal) pairs with lower

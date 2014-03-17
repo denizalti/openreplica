@@ -29,6 +29,9 @@ def parse_basic(msg):
     src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
     return Message(msg[FLD_ID], msg[FLD_TYPE], src)
 
+def parse_status(msg):
+    return Message(msg[FLD_ID], msg[FLD_TYPE], msg[FLD_SRC])
+
 def parse_heloreply(msg):
     src = Peer(msg[FLD_SRC][0], msg[FLD_SRC][1], msg[FLD_SRC][2])
     return HeloReplyMessage(msg[FLD_ID], msg[FLD_TYPE],
@@ -170,7 +173,7 @@ parse_functions = [
     parse_response, # MSG_RESPONSE
 
     parse_garbagecollect,  # MSG_GARBAGECOLLECT
-    parse_basic,           # MSG_STATUS
+    parse_status,           # MSG_STATUS
     parse_basic            # MSG_ISSUE
     ]
 

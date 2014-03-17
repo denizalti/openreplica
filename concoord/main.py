@@ -14,8 +14,7 @@ from concoord.enums import *
 from concoord.safetychecker import *
 from concoord.proxygenerator import *
 
-HELPSTR = "concoord, version 1.0.0-release:\n\
-concoord [acceptor] - starts an acceptor node\n\
+HELPSTR = "concoord, version 1.0.4-release:\n\
 concoord [replica] - starts a replica node\n\
 concoord [nameserver] - starts a nameserver node\n\
 concoord [object $objectfilepath $classname] - concoordifies a python object"
@@ -92,9 +91,7 @@ def main():
 
     eventtype = sys.argv[1].upper()
     sys.argv.pop(1)
-    if eventtype == node_names[NODE_ACCEPTOR]:
-        start_node(NODE_ACCEPTOR)
-    elif eventtype == node_names[NODE_REPLICA]:
+    if eventtype == node_names[NODE_REPLICA]:
         start_node(NODE_REPLICA)
     elif eventtype == node_names[NODE_NAMESERVER]:
         start_node(NODE_NAMESERVER)

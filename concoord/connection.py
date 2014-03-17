@@ -30,12 +30,16 @@ class ConnectionPool():
         # Sockets that we didn't receive a msg on yet
         self.nascentsockets = set([])
 
+    def add_connection_to_self(self, peer, conn):
+        """Adds a SelfConnection to the ConnectionPool by its Peer"""
+        if str(peer) not in self.poolbypeer:
+            conn.peerid = str(peer)
+
     def add_connection_to_peer(self, peer, conn):
         """Adds a Connection to the ConnectionPool by its Peer"""
         if str(peer) not in self.poolbypeer:
             conn.peerid = str(peer)
             with self.pool_lock:
-                conn.peerid = str(peer)
                 self.poolbypeer[conn.peerid] = conn
                 self.activesockets.add(conn.thesocket)
                 if conn.thesocket in self.nascentsockets:
@@ -257,3 +261,21 @@ class Connection():
         """Close the Connection"""
         self.thesocket.close()
         self.thesocket = None
+
+class SelfConnection():
+    """Connection of a node to itself"""
+    def __init__(self, receivedmessageslist, receivedmessages_semaphore, peerid=""):
+        """Initialize Connection"""
+        self.peerid = peerid
+        self.receivedmessages_semaphore = receivedmessages_semaphore
+        self.receivedmessageslist = receivedmessageslist
+
+    def __str__(self):
+        """Return Connection information"""
+        return "SelfConnection of Peer %s" % (self.peerid)
+
+    def send(self, msg):
+        """Gets a msgdict and parses it and adds it to the received queue"""
+        self.receivedmessages.append((parse_message(msg), self))
+        self.receivedmessages_semaphore.release()
+        return True

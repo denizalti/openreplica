@@ -16,7 +16,7 @@ from concoord.utils import *
 from concoord.message import *
 from concoord.pack import *
 from concoord.pvalue import PValueSet
-from concoord.connection import ConnectionPool,Connection
+from concoord.connection import ConnectionPool, Connection, SelfConnection
 
 try:
     import dns.resolver, dns.exception
@@ -42,7 +42,7 @@ parser.add_argument("-n", "--name", action="store", dest="domain", default='',
 parser.add_argument("-t", "--type", action="store", dest="type", default='',
                     help="1: Master Nameserver "\
                          "2: Slave Nameserver (requires a Master) " \
-                         "3:Route53 (requires a Route53 zone)")
+                         "3: Route53 (requires a Route53 zone)")
 parser.add_argument("-m", "--master", action="store", dest="master", default='',
                     help="ipaddr:port for the master nameserver")
 parser.add_argument("-w", "--writetodisk", action="store_true", dest="writetodisk", default=False,
@@ -101,9 +101,9 @@ class Node():
                     break
                 except socket.error as e:
                     print "Socket Error: ", e
-                    pass
         self.socket.listen(10)
         self.connectionpool = ConnectionPool()
+
         try:
             self.connectionpool.epoll = select.epoll()
         except AttributeError as e:
@@ -113,6 +113,10 @@ class Node():
         self.me = Peer(self.addr,self.port,self.type)
         # set id
         self.id = '%s:%d' % (self.addr, self.port)
+        # add self to connectionpool
+        self.connectionpool.add_connection_to_self(self.me,
+                                                   SelfConnection(self.receivedmessages,
+                                                                  self.receivedmessages_semaphore))
 
         # set path for additional configuration data
         self.configpath = configpath
@@ -129,12 +133,10 @@ class Node():
         # Initialize groups
         # Keeps {peer:outofreachcount}
         self.replicas = {}
-        self.acceptors = {}
         self.nameservers = {}
         self.groups = {NODE_REPLICA: self.replicas,
-                       NODE_ACCEPTOR: self.acceptors,
                        NODE_NAMESERVER: self.nameservers}
-        self.groups[self.me.type][self.me] = 0
+#        self.groups[self.me.type][self.me] = 0
 
         # Keeps the liveness of the nodes
         self.nodeliveness = {}
@@ -222,7 +224,8 @@ class Node():
             for peer in group.iterkeys():
                 returnstr += node_names[type] + " %s:%d\n" % (peer.addr,peer.port)
         if hasattr(self, 'pendingcommands') and len(self.pendingcommands) > 0:
-            pending =  "".join("%d: %s" % (cno, proposal) for cno,proposal in self.pendingcommands.iteritems())
+            pending =  "".join("%d: %s" % (cno, proposal) for cno,proposal \
+                                   in self.pendingcommands.iteritems())
             returnstr = "%s\nPending:\n%s" % (returnstr, pending)
         return returnstr
 
@@ -344,8 +347,6 @@ class Node():
         try:
             for message in connection.received_bytes():
                 if self.debug: self.logger.write("State", "received %s" % str(message))
-                # Update self.nodeliveness
-                self.nodeliveness[message.source] = time.time()
                 if message.type == MSG_STATUS:
                     if self.type == NODE_REPLICA:
                         if self.debug: self.logger.write("State",
@@ -355,6 +356,13 @@ class Node():
                         message = struct.pack("I", len(messagestr)) + messagestr
                         clientsock.send(message)
                         return False
+                # Update nodeliveness
+                if message.source.type == NODE_REPLICA or \
+                        message.source.type == NODE_NAMESERVER:
+                    self.nodeliveness[message.source] = time.time()
+                    if message.source in self.groups[message.source.type]:
+                        self.groups[message.source.type][message.source] = 0
+
                 # add to receivedmessages
                 self.receivedmessages.append((message,connection))
                 self.receivedmessages_semaphore.release()
@@ -495,15 +503,14 @@ class Node():
         elif group:
             ids = []
             for peer,liveness in group.iteritems():
-                if peer != self.me and liveness == 0:
-                    connection = self.connectionpool.get_connection_by_peer(peer)
-                    if connection == None:
-                        if self.debug: self.logger.write("Connection Error",
-                                                         "Connection for %s cannot be found." % str(peer))
-                        continue
-                    connection.send(message)
-                    ids.append(message[FLD_ID])
-                    message[FLD_ID] = assignuniqueid()
+                connection = self.connectionpool.get_connection_by_peer(peer)
+                if connection == None:
+                    if self.debug: self.logger.write("Connection Error",
+                                                     "Connection for %s cannot be found." % str(peer))
+                    continue
+                connection.send(message)
+                ids.append(message[FLD_ID])
+                message[FLD_ID] = assignuniqueid()
             return ids
 
     def terminate_handler(self, signal, frame):
