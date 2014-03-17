@@ -1,7 +1,7 @@
 """
 @author: Deniz Altinbuken
 @note: Tuples used by ConCoord
-@copyright: See LICENSE
+i@copyright: See LICENSE
 """
 from collections import namedtuple
 
