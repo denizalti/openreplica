@@ -5,9 +5,6 @@ import sys
 from setuptools import setup
 from setuptools import find_packages
 
-v = open(os.path.join(os.path.dirname(__file__), 'concoord', '__init__.py'), 'r')
-VERSION = re.match(r".*__version__ = '(.*?)'", v.read(), re.S).group(1)
-
 classifiers = [
     'Development Status :: 3 - Alpha',
     'Intended Audience :: Developers',
@@ -22,7 +19,7 @@ classifiers = [
 
 setup(
     name='concoord',
-    version=VERSION,
+    version='1.1.0',
     author='Deniz Altinbuken, Emin Gun Sirer',
     author_email='deniz@systems.cs.cornell.edu, egs@systems.cs.cornell.edu',
     packages=find_packages(),
@@ -32,7 +29,8 @@ setup(
     long_description=open('README').read(),
     classifiers=classifiers,
     entry_points={
-        'console_scripts': ['concoord = concoord.main:main',]
+        'console_scripts': ['concoord = concoord.main:main',
+                            'openreplica = concoord.openreplica.main:main',]
     },
     install_requires=[
         'python>=2.7',

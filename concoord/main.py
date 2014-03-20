@@ -10,6 +10,7 @@ import signal
 from time import sleep,time
 import os, sys, time, shutil
 import ast, _ast
+import concoord
 from concoord.enums import *
 from concoord.safetychecker import *
 from concoord.proxygenerator import *
