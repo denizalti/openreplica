@@ -76,7 +76,8 @@ are set up, you can start the nameserver to answer queries for
 
 .. sourcecode:: console
 
-  $ sudo concoord nameserver -n counterdomain.com -o concoord.object.counter.Counter -b 127.0.0.1:14000 -t 1
+  $ sudo concoord nameserver -n counterdomain.com -o concoord.object.counter.Counter
+  -b 127.0.0.1:14000 -t 1
 
 When you set up the nameserver delegations, you can send queries for
 ``counterdomain.com`` and see the most current set of nodes as follows:

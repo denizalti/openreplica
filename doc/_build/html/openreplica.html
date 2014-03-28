@@ -1,0 +1,259 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Using OpenReplica &mdash; ConCoord 1.0.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="ConCoord 1.0.2 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="index.html">ConCoord 1.0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="using-openreplica">
+<h1>Using OpenReplica<a class="headerlink" href="#using-openreplica" title="Permalink to this headline">¶</a></h1>
+<p>OpenReplica provides easily launch for concoord on remote machines,
+and it is especially built to launch concoord instances on Amazon EC2
+servers easily. In this section we cover how you can setup a set of
+machines and launch concoord remotely using OpenReplica.</p>
+<div class="section" id="how-to-start-using-amazon-ec2">
+<h2>How to start using Amazon EC2<a class="headerlink" href="#how-to-start-using-amazon-ec2" title="Permalink to this headline">¶</a></h2>
+<p>You can easily launch your EC2 instances using the web interface
+provided by Amazon AWS. In this example we launch an instance running
+64-bit Amazon Linux. Before you launch your instance, you will have to
+create a keypair to login to your instances, make sure to keep your
+private key safe. The best way is to move your key-pair to the .ssh
+directory once you download the [my-key-pair].pem file:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> mv <span class="o">[</span>my-key-pair<span class="o">]</span>.pem ~/.ssh/
+<span class="gp">$</span> ssh-add ~/.ssh/<span class="o">[</span>my-key-pair<span class="o">]</span>.pem
+</pre></div>
+</div>
+<p>Once you did these, now is the time to connect to your instance:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> ssh -i <span class="o">[</span>my-key-pair<span class="o">]</span>.pem ec2-user@<span class="o">[</span>public_dns_name<span class="o">]</span>
+</pre></div>
+</div>
+<p>After this point on, you should be able to connect to your instance
+without explicitly passing the key as a parameter, as follows:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> ssh ec2-user@<span class="o">[</span>public_dns_name<span class="o">]</span>
+</pre></div>
+</div>
+<p>To enable execution of remote sudo commands SSH into your instance and run:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo visudo
+</pre></div>
+</div>
+<p>In the file that opens find the line <tt class="docutils literal"><span class="pre">Defaults</span> <span class="pre">requiretty</span></tt> and add
+line <tt class="docutils literal"><span class="pre">Defaults:ec2-user</span> <span class="pre">!requiretty</span></tt> below it. Save the file and
+exit. The file opens with the vi editor. If you are not familiar with
+vi commands, to insert new text press i to go into insert mode and add
+the new line. After you are done, press ESC and ZZ to save and exit.</p>
+<p>At this point, your EC2 instance should be easily accessible.</p>
+</div>
+</div>
+<div class="section" id="id1">
+<h1>Using OpenReplica<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<p>Using OpenReplica developers can configure and remotely launch
+ConCoord instances on remote machines easily. Firstly, OpenReplica
+keeps the configuration information of machines that will be running
+the ConCoord instance. Secondly, using ConCoord developers can easily
+start replica and nameserver nodes on the machines that are added to
+the configuration.  And lastly, using OpenReplica developers can
+easily manage EC2 instances.</p>
+<p>Like ConCoord, OpenReplica can be used as a commandline script. It
+supports the following commands:</p>
+<p>openreplica config - prints config file
+openreplica addsshkey [sshkeyfilename] - adds sshkey filename to config
+openreplica addusername [ssh username] - adds ssh username to config
+openreplica addnode [publicdns] - adds public dns for node to config
+openreplica setup [publicdns] - downloads and sets up concoord on the given node
+openreplica replica [concoord arguments] - starts a replica node on EC2
+openreplica nameserver [concoord arguments] - starts a nameserver node on EC2</p>
+<div class="section" id="setting-up-the-configuration">
+<h2>Setting up the Configuration<a class="headerlink" href="#setting-up-the-configuration" title="Permalink to this headline">¶</a></h2>
+<p>To use OpenReplica, you should first register the nodes you want to
+use. To register nodes, you will need the filename of the sshkey you
+use to ssh into these nodes, as well as the username.</p>
+<p>To add the sshkey:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> openreplica addsshkey <span class="o">[</span>my-key-pair<span class="o">]</span>.pem
+</pre></div>
+</div>
+<p>To add the username:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> openreplica addusername ec2-user
+</pre></div>
+</div>
+<p>To add a node:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> openreplica addnode <span class="o">[</span>public_dns_name<span class="o">]</span>
+</pre></div>
+</div>
+<p>When adding nodes to OpenReplica, it automatically checks the nodes
+for eligibility to run ConCoord and warns the user if an update or
+change is required. Similarly, if ConCoord cannot connect to the node,
+it lets the user know.</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> openreplica addsshkey concoord.pem
+<span class="go">Adding SSHKEY to CONFIG: concoord.pem</span>
+<span class="gp">$</span> openreplica addusername ec2-user
+<span class="go">Adding USERNAME to CONFIG: ec2-user</span>
+<span class="gp">$</span> openreplica addnode ec2-54-186-26-155.us-west-2.compute.amazonaws.com
+<span class="go">Adding NODE to CONFIG: ec2-54-186-26-155.us-west-2.compute.amazonaws.com</span>
+<span class="go">Cannot connect to node, check if it is up and running.</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="starting-concoord-instances">
+<h2>Starting ConCoord Instances<a class="headerlink" href="#starting-concoord-instances" title="Permalink to this headline">¶</a></h2>
+<p>Once OpenReplica is set up, nodes can be started as if they are being
+started on the local machine.</p>
+<div class="section" id="starting-replica-nodes">
+<h3>Starting Replica Nodes<a class="headerlink" href="#starting-replica-nodes" title="Permalink to this headline">¶</a></h3>
+<p>To start a bootstrap replica node that doesn&#8217;t need to be connected to
+another replica:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> openreplica replica -o concoord.object.counter.Counter -a 127.0.0.1 -p 14000
+</pre></div>
+</div>
+<p>To start replica nodes to join an active ConCoord instance:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> openreplica replica -o concoord.object.counter.Counter -b 127.0.0.1:14000 -a 127.0.0.1 -p 14001
+</pre></div>
+</div>
+<p>The nodes can also be run in the debug mode or with a logger with the
+commands shown below:</p>
+<p><tt class="docutils literal"><span class="pre">Usage:</span> <span class="pre">openreplica</span> <span class="pre">replica</span> <span class="pre">[-h]</span> <span class="pre">[-a</span> <span class="pre">ADDR]</span> <span class="pre">[-p</span> <span class="pre">PORT]</span> <span class="pre">[-b</span> <span class="pre">BOOTSTRAP]</span> <span class="pre">[-o</span> <span class="pre">OBJECTNAME]</span> <span class="pre">[-l</span> <span class="pre">LOGGER]</span> <span class="pre">[-w]</span> <span class="pre">[-d]</span></tt>
+where,</p>
+<blockquote>
+<div><p><tt class="docutils literal"><span class="pre">-h,</span> <span class="pre">--help</span></tt>                                 show this help message and exit</p>
+<p><tt class="docutils literal"><span class="pre">-a</span> <span class="pre">ADDR,</span> <span class="pre">--addr</span> <span class="pre">ADDR</span></tt>                       addr for the node</p>
+<p><tt class="docutils literal"><span class="pre">-p</span> <span class="pre">PORT,</span> <span class="pre">--port</span> <span class="pre">PORT</span></tt>                       port for the node</p>
+<p><tt class="docutils literal"><span class="pre">-b</span> <span class="pre">BOOTSTRAP,</span> <span class="pre">--boot</span> <span class="pre">BOOTSTRAP</span></tt>             address:port tuple for the bootstrap peer</p>
+<p><tt class="docutils literal"><span class="pre">-o</span> <span class="pre">OBJECTNAME,</span> <span class="pre">--objectname</span> <span class="pre">OBJECTNAME</span></tt>     client object dotted name</p>
+<p><tt class="docutils literal"><span class="pre">-l</span> <span class="pre">LOGGER,</span> <span class="pre">--logger</span> <span class="pre">LOGGER</span></tt>                 logger address</p>
+<p><tt class="docutils literal"><span class="pre">-w,</span> <span class="pre">--writetodisk</span></tt>                          writing to disk on/off</p>
+<p><tt class="docutils literal"><span class="pre">-d,</span> <span class="pre">--debug</span></tt>                                debug on/off</p>
+</div></blockquote>
+</div>
+<div class="section" id="starting-nameserver-nodes">
+<h3>Starting Nameserver Nodes<a class="headerlink" href="#starting-nameserver-nodes" title="Permalink to this headline">¶</a></h3>
+<p>Before starting a standalone nameserver node, first make sure
+that you have at least one replica running. Once your replica nodes
+are set up, you can start the nameserver to answer queries.</p>
+<div class="section" id="starting-a-standalone-nameserver">
+<h4>Starting a Standalone Nameserver<a class="headerlink" href="#starting-a-standalone-nameserver" title="Permalink to this headline">¶</a></h4>
+<p>You can start the nameserver to answer queries for
+<tt class="docutils literal"><span class="pre">counterdomain.com</span></tt> as follows:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo openreplica nameserver -n counterdomain.com -o concoord.object.counter.Counter -b 127.0.0.1:14000 -t 1
+</pre></div>
+</div>
+</div>
+<div class="section" id="amazon-route-53-nameserver">
+<h4>Amazon Route 53 Nameserver<a class="headerlink" href="#amazon-route-53-nameserver" title="Permalink to this headline">¶</a></h4>
+<p>Before starting a nameserver connected to Amazon Route 53, you should
+have a Route 53 account set up and ready to receive requests. After
+your Route 53 account is ready, the nameserver can update the master
+every time the view of its system changes automatically.</p>
+<p>To use Amazon Route 53 you can pass your credentials into the methods
+that create connections or edit them in the configuration file.</p>
+<blockquote>
+<div>AWS_ACCESS_KEY_ID - Your AWS Access Key ID
+AWS_SECRET_ACCESS_KEY - Your AWS Secret Access Key</div></blockquote>
+<p>Once you make sure that your Route53 account is set up and your
+credentials are updated, you can start the nameserver as follows:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> openreplica nameserver -n counterdomain.com -o concoord.object.counter.Counter -b 127.0.0.1:14000 -t 3 -c configfilepath
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Using OpenReplica</a><ul>
+<li><a class="reference internal" href="#how-to-start-using-amazon-ec2">How to start using Amazon EC2</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id1">Using OpenReplica</a><ul>
+<li><a class="reference internal" href="#setting-up-the-configuration">Setting up the Configuration</a></li>
+<li><a class="reference internal" href="#starting-concoord-instances">Starting ConCoord Instances</a><ul>
+<li><a class="reference internal" href="#starting-replica-nodes">Starting Replica Nodes</a></li>
+<li><a class="reference internal" href="#starting-nameserver-nodes">Starting Nameserver Nodes</a><ul>
+<li><a class="reference internal" href="#starting-a-standalone-nameserver">Starting a Standalone Nameserver</a></li>
+<li><a class="reference internal" href="#amazon-route-53-nameserver">Amazon Route 53 Nameserver</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/openreplica.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="index.html">ConCoord 1.0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Deniz Altinbuken, Emin Gun Sirer.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

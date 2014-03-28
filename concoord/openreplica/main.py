@@ -14,16 +14,16 @@ import ConfigParser
 from concoord.enums import *
 from concoord.safetychecker import *
 from concoord.proxygenerator import *
-from concoord.openreplica.ec2manager import *
+from concoord.openreplica.nodemanager import *
 
 HELPSTR = "openreplica, version 1.1.0-release:\n\
 openreplica config - prints config file\n\
-openreplica sshkey [sshkeyfilename] - adds sshkey filename to config\n\
-openreplica username [ssh username] - adds ssh username to config\n\
-openreplica node [publicdns] - adds public dns for node to config\n\
-openreplica replica [concoord arguments] - starts a replica node on EC2\n\
-openreplica nameserver [concoord arguments] - starts a nameserver node on EC2\n\
-openreplica ec2 - starts the EC2 Manager"
+openreplica addsshkey [sshkeyfilename] - adds sshkey filename to config\n\
+openreplica addusername [ssh username] - adds ssh username to config\n\
+openreplica addnode [publicdns] - adds public dns for node to config\n\
+openreplica setup [publicdns] - downloads and sets up concoord on the given node\n\
+openreplica replica [concoord arguments] - starts a replica node remotely\n\
+openreplica nameserver [concoord arguments] - starts a nameserver node remotely"
 
 OPENREPLICACONFIGFILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'openreplica.cfg')
 config = ConfigParser.RawConfigParser()
@@ -60,19 +60,23 @@ def print_config_file():
 
 def add_node_to_config(node):
     nodes,sshkeyfile,username = read_config_file()
-    ec2manager = EC2Manager(nodes, sshkeyfile, username)
-    if not ec2manager.username:
+    nodemanager = NodeManager(nodes, sshkeyfile, username)
+    if not nodemanager.username:
         print "Add a username to connect to the nodes"
         return
     # First check if the node is eligible
-    cmd = ["ssh", ec2manager.username+'@'+node, 'python -V']
+    cmd = ["ssh", nodemanager.username+'@'+node, 'python -V']
     ssh = subprocess.Popen(cmd, shell=False,
                      stdout=subprocess.PIPE,
                      stderr=subprocess.PIPE)
-    ec2manager._waitforall([ssh])
+    nodemanager._waitforall([ssh])
     result = ssh.stdout.readlines()
     output = ssh.stderr.readlines()[0]
-    versionmajor, versionminor, versionmicro = output.strip().split()[1].split('.')
+    try:
+        versionmajor, versionminor, versionmicro = output.strip().split()[1].split('.')
+    except IndexError:
+        print "Cannot connect to node, check if it is up and running."
+        return
     version = int(versionmajor)*100 + int(versionminor) * 10 + int(versionmicro)
     if version < 266:
         print "Python should be updated to 2.7 or later on this machine. Attempting update."
@@ -89,14 +93,14 @@ def add_node_to_config(node):
         cmds.append("sudo /usr/bin/easy_install-2.7 pip")
         cmds.append("sudo pip install virtualenv")
         for cmd in cmds:
-            p = ec2manager._issuecommand(cmd)
+            p = nodemanager._issuecommand(cmd)
 
         # Check the version on node again
-        cmd = ["ssh", ec2manager.username+'@'+node, 'python -V']
+        cmd = ["ssh", nodemanager.username+'@'+node, 'python -V']
         ssh = subprocess.Popen(cmd, shell=False,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
-        ec2manager._waitforall([ssh])
+        nodemanager._waitforall([ssh])
         result = ssh.stdout.readlines()
         output = ssh.stderr.readlines()[0]
         versionmajor, versionminor, versionmicro = output.strip().split()[1].split('.')
@@ -160,54 +164,63 @@ def add_sshkeyfile_to_config(newsshkeyfile):
     with open(OPENREPLICACONFIGFILE, 'wb') as configfile:
         config.write(configfile)
 
-def start_node(nodetype):
-    ec2manager = EC2Manager(*read_config_file())
+def setup_concoord(instance):
+    nodes,sshkeyfile,username = read_config_file()
+    nodemanager = NodeManager(nodes, sshkeyfile, username)
 
-    i = random.choice(ec2manager.instances)
+    if instance not in nodemanager.instances:
+        print "This instance is not in the configuration. Add and try again."
+        return
+    print "Downloading concoord.."
+    cmd = ['ssh', nodemanager.username+'@'+instance, 'wget http://openreplica.org/src/concoord-'+VERSION+'.tar.gz']
+    nodemanager._waitforall([nodemanager._issuecommand(cmd)])
+    print "Installing concoord.."
+    cmd = ['ssh', nodemanager.username+'@'+instance, 'tar xvzf concoord-'+VERSION+'.tar.gz']
+    nodemanager._waitforall([nodemanager._issuecommand(cmd)])
+    cmd = ['ssh', nodemanager.username+'@'+instance, 'cd concoord-'+VERSION+' && python setup.py install']
+    nodemanager._waitforall([nodemanager._issuecommand(cmd)])
+
+def start_node(nodetype):
+    nodemanager = NodeManager(*read_config_file())
+
+    i = random.choice(nodemanager.instances)
     if nodetype == NODE_REPLICA:
         print "Starting replica on %s" % str(i)
-        cmd = ["ssh", ec2manager.username+'@'+i, 'concoord replica ' + ' '.join(sys.argv[1:])]
-        p = ec2manager._issuecommand(cmd)
+        cmd = ["ssh", nodemanager.username+'@'+i, 'concoord replica ' + ' '.join(sys.argv[1:])]
+        p = nodemanager._issuecommand(cmd)
     elif nodetype == NODE_NAMESERVER:
         # Check if nameserver can connect to port 53
-        cmd = ["ssh", "-t", ec2manager.username+'@'+i,
+        cmd = ["ssh", "-t", nodemanager.username+'@'+i,
                "sudo python -c \"exec(\\\"import socket\\nsocket.socket(socket.AF_INET,socket.SOCK_STREAM).bind(('localhost', 53))\\\")\""]
 
         ssh = subprocess.Popen(cmd, shell=False,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
-        ec2manager._waitforall([ssh])
+        nodemanager._waitforall([ssh])
         result = ssh.stdout.readlines()
         output = ssh.stderr.readlines()
         if result:
             print "The Nameserver cannot bind to socket 53. Try another instance."
             return
 
-        cmd = ["ssh", "-t", ec2manager.username+'@'+i,
+        cmd = ["ssh", "-t", nodemanager.username+'@'+i,
                "sudo python -c \"exec(\\\"import boto\\\")\""]
 
         ssh = subprocess.Popen(cmd, shell=False,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
-        ec2manager._waitforall([ssh])
+        nodemanager._waitforall([ssh])
         result = ssh.stdout.readlines()
         output = ssh.stderr.readlines()
         if result:
-            cmd = ["ssh", "-t", ec2manager.username+'@'+i,
+            cmd = ["ssh", "-t", nodemanager.username+'@'+i,
                    "sudo pip install -U boto"]
 
             ssh = subprocess.Popen(cmd)
-            ec2manager._waitforall([ssh])
+            nodemanager._waitforall([ssh])
         print "Starting nameserver on %s" % str(i)
-        cmd = ["ssh", ec2manager.username+'@'+i, 'concoord nameserver ' + ' '.join(sys.argv[1:])]
-        p = ec2manager._issuecommand(cmd)
-
-def start_ec2manager():
-    ec2manager = EC2Manager(*read_config_file())
-    ec2manager.startservice()
-    signal.signal(signal.SIGINT, ec2manager.terminate_handler)
-    signal.signal(signal.SIGTERM, ec2manager.terminate_handler)
-    signal.pause()
+        cmd = ["ssh", nodemanager.username+'@'+i, 'concoord nameserver ' + ' '.join(sys.argv[1:])]
+        p = nodemanager._issuecommand(cmd)
 
 def main():
     touch_config_file()
@@ -223,21 +236,18 @@ def main():
 
     if eventtype == 'CONFIG':
         print_config_file()
-    elif eventtype == 'SSHKEY':
-        print "Adding SSHKEY to CONFIG"
+    elif eventtype == 'ADDSSHKEY':
+        print "Adding SSHKEY to CONFIG:", sys.argv[1]
         add_sshkeyfile_to_config(sys.argv[1])
-        print_config_file()
-    elif eventtype == 'USERNAME':
-        print "Adding USERNAME to CONFIG"
+    elif eventtype == 'ADDUSERNAME':
+        print "Adding USERNAME to CONFIG:", sys.argv[1]
         add_username_to_config(sys.argv[1])
-        print_config_file()
-    elif eventtype == 'NODE':
-        print "Adding NODE to CONFIG"
+    elif eventtype == 'ADDNODE':
+        print "Adding NODE to CONFIG:", sys.argv[1]
         add_node_to_config(sys.argv[1])
-        print_config_file()
-    elif eventtype == 'EC2':
-        print "Starting EC2 Manager"
-        start_ec2manager()
+    elif eventtype == 'SETUP':
+        print "Setting up ConCoord on", sys.argv[1]
+        setup_concoord(sys.argv[1])
     elif eventtype == node_names[NODE_REPLICA]:
         start_node(NODE_REPLICA)
     elif eventtype == node_names[NODE_NAMESERVER]:

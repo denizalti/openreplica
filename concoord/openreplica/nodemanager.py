@@ -1,6 +1,6 @@
 '''
 @author: Deniz Altinbuken, Emin Gun Sirer
-@note: EC2 Manager that handles operations on EC2.
+@note: NodeManager that handles remote operations.
 @copyright: See LICENSE
 '''
 from threading import Thread
@@ -10,7 +10,7 @@ import subprocess, signal
 
 VERSION = '1.0.2'
 
-class EC2Manager():
+class NodeManager():
     def __init__(self, nodes, sshkey, username):
         self.username = username
         # username
@@ -22,7 +22,6 @@ class EC2Manager():
             self.instances = nodes.split(',')
         else:
             self.instances = []
-            print "There are no instances listed. Add instances."
             return
         # key-pair filename
         self.sshkey = sshkey
@@ -106,76 +105,3 @@ class EC2Manager():
         rstr += "Instances:\n"
         rstr += '\n'.join(self.instances)
         return rstr
-
-# SHELL COMMANDS
-    def cmd_help(self, args):
-        """prints the commands that are supported
-        by the corresponding Node."""
-        print "Commands supported:"
-        for attr in dir(self):
-            if attr.startswith("cmd_"):
-                print attr.replace("cmd_", "")
-
-    def cmd_exit(self, args):
-        """Changes the liveness state and dies"""
-        self.alive = False
-        self._graceexit()
-
-    def cmd_info(self, args):
-        """prints state of the EC2 instance."""
-        print str(self)
-
-    def cmd_install(self, args):
-        """downloads and installs concoord to given instance"""
-        if len(args) < 2:
-            print "Instance public dns is required to install concoord."
-            return
-        instance = args[1]
-        if instance not in self.instances:
-            print "This instance is not in the configuration. Add and try again."
-            return
-        print "Downloading concoord.."
-        cmd = ['ssh', self.username+'@'+instance, 'wget http://openreplica.org/src/concoord-'+VERSION+'.tar.gz']
-        self._waitforall([self._issuecommand(cmd)])
-        print "Installing concoord.."
-        cmd = ['ssh', self.username+'@'+instance, 'tar xvzf concoord-'+VERSION+'.tar.gz']
-        self._waitforall([self._issuecommand(cmd)])
-        cmd = ['ssh', self.username+'@'+instance, 'cd concoord-'+VERSION'+ && python setup.py install']
-        self._waitforall([self._issuecommand(cmd)])
-
-    def get_user_input_from_shell(self):
-        """Shell loop that accepts inputs from the command prompt and
-        calls corresponding command handlers."""
-        while self.alive:
-            try:
-                input = raw_input(">")
-                if len(input) == 0:
-                    continue
-                else:
-                    input = input.split()
-                    mname = "cmd_%s" % input[0].lower()
-                    try:
-                        method = getattr(self, mname)
-                    except AttributeError as e:
-                        print "Command not supported: ", str(e)
-                        continue
-                    method(input)
-            except KeyboardInterrupt:
-                os._exit(0)
-            except EOFError:
-                return
-        return
-
-    def startservice(self):
-        print "Type help to see all available commands"
-        input_thread = Thread(target=self.get_user_input_from_shell, name='InputThread')
-        input_thread.start()
-
-## TERMINATION METHODS
-    def terminate_handler(self, signal, frame):
-        self._graceexit()
-
-    def _graceexit(self, exitcode=0):
-        sys.stdout.flush()
-        sys.stderr.flush()
-        os._exit(exitcode)

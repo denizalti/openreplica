@@ -15,10 +15,11 @@ from concoord.enums import *
 from concoord.safetychecker import *
 from concoord.proxygenerator import *
 
-HELPSTR = "concoord, version 1.0.4-release:\n\
-concoord [replica] - starts a replica node\n\
-concoord [nameserver] - starts a nameserver node\n\
-concoord [object $objectfilepath $classname] - concoordifies a python object"
+HELPSTR = "concoord, version 1.1.0-release:\n\
+concoord replica [-a address -p port -o objectname -b bootstrap -l loggeraddress -w writetodisk -d debug] - starts a replica node\n\
+concoord nameserver [-a address -p port -o objectname -b bootstrap -n domainname -t nameservertype -m nameservermaster -l loggeraddress -d debug] - starts a nameserver node\n\
+concoord object [objectfilepath classname] - concoordifies a python object"
+
 
 def start_node(nodetype):
     nodename = node_names[nodetype].lower()

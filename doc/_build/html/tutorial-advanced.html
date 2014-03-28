@@ -125,8 +125,7 @@ call <tt class="docutils literal"><span class="pre">__concoordinit__</span></tt>
 <p>Remember to add the objects you have created in these bundles.</p>
 <div class="section" id="creating-a-server-bundle">
 <h2>Creating A Server Bundle<a class="headerlink" href="#creating-a-server-bundle" title="Permalink to this headline">¶</a></h2>
-<p>To create a bundle that can run replica, acceptor and nameserver
-nodes:</p>
+<p>To create a bundle that can run replica and nameserver nodes:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> make server
 </pre></div>
 </div>
@@ -199,20 +198,17 @@ ConCoord instance will remain in a safe state.</p>
 </pre></div>
 </div>
 <p>To create the proxy for this blocking object we will use the following command:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord object -o semaphore.Semaphore -p 1
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord object -o concoord.object.semaphore.Semaphore -p 1
 </pre></div>
 </div>
 <p>This command creates the proxy that supports blocking operations. Now
 you can use blocking objects just like basic ConCoord objects. First,
-we start the replica, acceptor and nameserver nodes the same way we
-did before as follows:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord replica -o semaphore.Semaphore -a 127.0.0.1 -p 14000
+we start the replica and nameserver nodes the same way we did before
+as follows:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord replica -o concoord.object.semaphore.Semaphore -a 127.0.0.1 -p 14000
 </pre></div>
 </div>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord acceptor -b 127.0.0.1:14000
-</pre></div>
-</div>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo concoord nameserver -n semaphoredomain -o semaphore.Semaphore -b 127.0.0.1:14000 -t 1
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo concoord nameserver -n semaphoredomain -o concoord.object.semaphore.Semaphore -b 127.0.0.1:14000 -t 1
 </pre></div>
 </div>
 <p>To test the functionality, you can use multiple clients or print out the <tt class="docutils literal"><span class="pre">Semaphore</span></tt> object as follows:</p>

@@ -92,8 +92,7 @@ Remember to add the objects you have created in these bundles.
 Creating A Server Bundle
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-To create a bundle that can run replica, acceptor and nameserver
-nodes:
+To create a bundle that can run replica and nameserver nodes:
 
 .. sourcecode:: console
 
@@ -176,24 +175,20 @@ To create the proxy for this blocking object we will use the following command:
 
 .. sourcecode:: console
 
-  $ concoord object -o semaphore.Semaphore -p 1
+  $ concoord object -o concoord.object.semaphore.Semaphore -p 1
 
 This command creates the proxy that supports blocking operations. Now
 you can use blocking objects just like basic ConCoord objects. First,
-we start the replica, acceptor and nameserver nodes the same way we
-did before as follows:
+we start the replica and nameserver nodes the same way we did before
+as follows:
 
 .. sourcecode:: console
 
-  $ concoord replica -o semaphore.Semaphore -a 127.0.0.1 -p 14000
+  $ concoord replica -o concoord.object.semaphore.Semaphore -a 127.0.0.1 -p 14000
 
 .. sourcecode:: console
 
-  $ concoord acceptor -b 127.0.0.1:14000
-
-.. sourcecode:: console
-
-  $ sudo concoord nameserver -n semaphoredomain -o semaphore.Semaphore -b 127.0.0.1:14000 -t 1
+  $ sudo concoord nameserver -n semaphoredomain -o concoord.object.semaphore.Semaphore -b 127.0.0.1:14000 -t 1
 
 To test the functionality, you can use multiple clients or print out the ``Semaphore`` object as follows:
 
