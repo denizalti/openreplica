@@ -62,7 +62,7 @@ Starting Nodes
 To distribute the local object you should start at least one replica.
 
 Starting Replicas
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 To start a bootstrap replica node that doesn't need to be connected to
 another replica, use the following command::
@@ -99,7 +99,7 @@ where,
   -d, --debug           debug on/off
 
 Starting Replicas as Name Servers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can dynamically locate nodes in a given ConCoord instance using
 DNS queries if the instance includes replicas that can act as name
@@ -168,7 +168,7 @@ Route53 records every time the view of the system changes.
 
 To use the Name Server to update Amazon Route53, you should provide
 your AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY. You can retrieve
-these from the AWS Console (http://console.aws.amazon.com/iam/), by
+these from the AWS Console (http://console.aws.amazon.com/iam), by
 looking under the security credentials of the username that you used
 while creating the Hosted Zone for your domain name. Once you have the
 information, you can set up ConCoord configuration easily as follows::
@@ -224,7 +224,6 @@ replicas, you should call __concoordinit__ function::
   >>> c.increment()
   >>> c.getvalue()
   1
-**************************************************
 
 OpenReplica
 ===========
@@ -642,8 +641,7 @@ the Semaphore object as follows::
 HOMEPAGE
 ========
 
-Visit http://openreplica.org to see concoord in action and to get more
-information on concoord.
+Visit http://openreplica.org to get more information on ConCoord.
 
 CONTACT
 =======
