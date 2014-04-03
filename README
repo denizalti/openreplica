@@ -115,14 +115,14 @@ server.
   account.
 
 Master Name Server
-+++++++++++++++++++++
++++++++++++++++++++
 
 To use a replica node as a master name server first you have to setup
 the name server delegations (you can do this by updating the domain
 name server information of any domain name you own from the domain
 registrar you use (godaddy, namecheap etc.)). Once all the delegations
 are setup for the ip address the replica uses, you can start a replica
-node as a name server for counterdomain.com as follows:
+node as a name server for counterdomain.com as follows::
 
   $ sudo concoord replica -o concoord.object.counter.Counter -a 127.0.0.1 -n counterdomain.com
 
@@ -312,7 +312,7 @@ To add a node::
 When adding nodes to OpenReplica, it automatically checks the nodes
 for eligibility to run ConCoord and warns the user if an update or
 change is required. Similarly, if ConCoord cannot connect to the node,
-it lets the user know.
+it lets the user know::
 
   $ openreplica addsshkey concoord.pem
   Adding SSHKEY to CONFIG: concoord.pem
@@ -548,7 +548,7 @@ Creating A Client Bundle
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 To create a bundle that can run a client and connect to an existing
-ConCoord instance:
+ConCoord instance::
 
   $ make client
 
