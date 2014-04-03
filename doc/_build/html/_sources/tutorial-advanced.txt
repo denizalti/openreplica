@@ -89,16 +89,16 @@ You can create bundles to use at the server and client sides using the
 
 Remember to add the objects you have created in these bundles.
 
-Creating A Server Bundle
+Creating a Server Bundle
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-To create a bundle that can run replica and nameserver nodes:
+To create a bundle that can run replicas:
 
 .. sourcecode:: console
 
   $ make server
 
-Creating A Client Bundle
+Creating a Client Bundle
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 To create a bundle that can run a client and connect to an existing
@@ -179,16 +179,11 @@ To create the proxy for this blocking object we will use the following command:
 
 This command creates the proxy that supports blocking operations. Now
 you can use blocking objects just like basic ConCoord objects. First,
-we start the replica and nameserver nodes the same way we did before
-as follows:
+we start the replica nodes the same way we did before as follows:
 
 .. sourcecode:: console
 
   $ concoord replica -o concoord.object.semaphore.Semaphore -a 127.0.0.1 -p 14000
-
-.. sourcecode:: console
-
-  $ sudo concoord nameserver -n semaphoredomain -o concoord.object.semaphore.Semaphore -b 127.0.0.1:14000 -t 1
 
 To test the functionality, you can use multiple clients or print out the ``Semaphore`` object as follows:
 

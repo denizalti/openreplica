@@ -18,12 +18,12 @@ from concoord.openreplica.nodemanager import *
 
 HELPSTR = "openreplica, version 1.1.0-release:\n\
 openreplica config - prints config file\n\
-openreplica addsshkey [sshkeyfilename] - adds sshkey filename to config\n\
-openreplica addusername [ssh username] - adds ssh username to config\n\
-openreplica addnode [publicdns] - adds public dns for node to config\n\
-openreplica setup [publicdns] - downloads and sets up concoord on the given node\n\
-openreplica replica [concoord arguments] - starts a replica node remotely\n\
-openreplica nameserver [concoord arguments] - starts a nameserver node remotely"
+openreplica addsshkey [sshkey_filename] - adds sshkey filename to config\n\
+openreplica addusername [ssh_username] - adds ssh username to config\n\
+openreplica addnode [public_dns] - adds public dns for node to config\n\
+openreplica setup [public_dns] - downloads and sets up concoord on the given node\n\
+openreplica route53 [public_dns aws_access_key_id aws_secret_access_key] - sets up route53 credentials on the given node\n\
+openreplica replica [concoord arguments] - starts a replica remotely"
 
 OPENREPLICACONFIGFILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'openreplica.cfg')
 config = ConfigParser.RawConfigParser()
@@ -77,6 +77,11 @@ def add_node_to_config(node):
     except IndexError:
         print "Cannot connect to node, check if it is up and running."
         return
+    except ValueError:
+        print "Could not check Python version:", output
+        print "Try again!"
+        return
+
     version = int(versionmajor)*100 + int(versionminor) * 10 + int(versionmicro)
     if version < 266:
         print "Python should be updated to 2.7 or later on this machine. Attempting update."
@@ -164,6 +169,18 @@ def add_sshkeyfile_to_config(newsshkeyfile):
     with open(OPENREPLICACONFIGFILE, 'wb') as configfile:
         config.write(configfile)
 
+def setup_route53(instance, awsid, awskey):
+    nodes,sshkeyfile,username = read_config_file()
+    nodemanager = NodeManager(nodes, sshkeyfile, username)
+
+    if instance not in nodemanager.instances:
+        print "This instance is not in the configuration. Add and try again."
+        return
+    cmd = ['ssh', nodemanager.username+'@'+instance, 'concoord route53id '+awsid]
+    nodemanager._waitforall([nodemanager._issuecommand(cmd)])
+    cmd = ['ssh', nodemanager.username+'@'+instance, 'concoord route53key '+awskey]
+    nodemanager._waitforall([nodemanager._issuecommand(cmd)])
+
 def setup_concoord(instance):
     nodes,sshkeyfile,username = read_config_file()
     nodemanager = NodeManager(nodes, sshkeyfile, username)
@@ -180,47 +197,44 @@ def setup_concoord(instance):
     cmd = ['ssh', nodemanager.username+'@'+instance, 'cd concoord-'+VERSION+' && python setup.py install']
     nodemanager._waitforall([nodemanager._issuecommand(cmd)])
 
-def start_node(nodetype):
+def start_replica():
     nodemanager = NodeManager(*read_config_file())
-
     i = random.choice(nodemanager.instances)
-    if nodetype == NODE_REPLICA:
-        print "Starting replica on %s" % str(i)
-        cmd = ["ssh", nodemanager.username+'@'+i, 'concoord replica ' + ' '.join(sys.argv[1:])]
-        p = nodemanager._issuecommand(cmd)
-    elif nodetype == NODE_NAMESERVER:
-        # Check if nameserver can connect to port 53
-        cmd = ["ssh", "-t", nodemanager.username+'@'+i,
-               "sudo python -c \"exec(\\\"import socket\\nsocket.socket(socket.AF_INET,socket.SOCK_STREAM).bind(('localhost', 53))\\\")\""]
-
-        ssh = subprocess.Popen(cmd, shell=False,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
-        nodemanager._waitforall([ssh])
-        result = ssh.stdout.readlines()
-        output = ssh.stderr.readlines()
-        if result:
-            print "The Nameserver cannot bind to socket 53. Try another instance."
-            return
-
-        cmd = ["ssh", "-t", nodemanager.username+'@'+i,
-               "sudo python -c \"exec(\\\"import boto\\\")\""]
-
-        ssh = subprocess.Popen(cmd, shell=False,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
-        nodemanager._waitforall([ssh])
-        result = ssh.stdout.readlines()
-        output = ssh.stderr.readlines()
-        if result:
+    if '-n' in sys.argv[1:] or '--domainname' in sys.argv[1:]:
+        if '-r' in sys.argv[1:] or '--route53' in sys.argv[1:]:
             cmd = ["ssh", "-t", nodemanager.username+'@'+i,
-                   "sudo pip install -U boto"]
+                   "sudo python -c \"exec(\\\"import boto\\\")\""]
 
-            ssh = subprocess.Popen(cmd)
+            ssh = subprocess.Popen(cmd, shell=False,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
             nodemanager._waitforall([ssh])
-        print "Starting nameserver on %s" % str(i)
-        cmd = ["ssh", nodemanager.username+'@'+i, 'concoord nameserver ' + ' '.join(sys.argv[1:])]
-        p = nodemanager._issuecommand(cmd)
+            result = ssh.stdout.readlines()
+            output = ssh.stderr.readlines()
+            # Try and install boto automatically
+            if result:
+                cmd = ["ssh", "-t", nodemanager.username+'@'+i,
+                       "sudo pip install -U boto"]
+                ssh = subprocess.Popen(cmd)
+                nodemanager._waitforall([ssh])
+        else:
+            # Check if nameserver can connect to port 53
+            cmd = ["ssh", "-t", nodemanager.username+'@'+i,
+                   "sudo python -c \"exec(\\\"import socket\\nsocket.socket(socket.AF_INET,socket.SOCK_STREAM).bind(('localhost', 53))\\\")\""]
+
+            ssh = subprocess.Popen(cmd, shell=False,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+            nodemanager._waitforall([ssh])
+            result = ssh.stdout.readlines()
+            output = ssh.stderr.readlines()
+            if result:
+                print "The Nameserver cannot bind to socket 53. Try another instance."
+                return
+
+    print "Starting replica on %s" % str(i)
+    cmd = ["ssh", nodemanager.username+'@'+i, 'concoord replica ' + ' '.join(sys.argv[1:])]
+    p = nodemanager._issuecommand(cmd)
 
 def main():
     touch_config_file()
@@ -248,10 +262,14 @@ def main():
     elif eventtype == 'SETUP':
         print "Setting up ConCoord on", sys.argv[1]
         setup_concoord(sys.argv[1])
-    elif eventtype == node_names[NODE_REPLICA]:
-        start_node(NODE_REPLICA)
-    elif eventtype == node_names[NODE_NAMESERVER]:
-        start_node(NODE_NAMESERVER)
+    elif eventtype == 'ROUTE53':
+        if len(sys.argv) < 4:
+            print HELPSTR
+            sys.exit()
+        print "Adding Route53 Credentials on :", sys.argv[1]
+        setup_route53(sys.argv[1], sys.argv[2], sys.argv[3])
+    elif eventtype == 'REPLICA':
+        start_replica()
     else:
         print HELPSTR
 

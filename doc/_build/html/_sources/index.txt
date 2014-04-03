@@ -14,6 +14,7 @@ Contents:
    overview
    install
    tutorial
+   openreplica
    tutorial-advanced
 
 Indices and tables

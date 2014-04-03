@@ -146,7 +146,7 @@ def change_alias(conn, hosted_zone_id, name, type, new_alias_hosted_zone_id, new
             continue
         if response.identifier != identifier or response.weight != weight:
             continue
-        change1 = changes.add_change("DELETE", name, type, 
+        change1 = changes.add_change("DELETE", name, type,
                                      identifier=response.identifier,
                                      weight=response.weight)
         change1.set_alias(response.alias_hosted_zone_id, response.alias_dns_name)

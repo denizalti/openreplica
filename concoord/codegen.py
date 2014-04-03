@@ -208,8 +208,8 @@ class SourceGenerator(NodeVisitor):
         for base in node.bases:
             paren_or_comma()
             self.visit(base)
-        # XXX: the if here is used to keep this module compatible
-        #      with python 2.6.
+        # the if here is used to keep this module compatible
+        # with python 2.6.
         if hasattr(node, 'keywords'):
             for keyword in node.keywords:
                 paren_or_comma()
@@ -278,7 +278,7 @@ class SourceGenerator(NodeVisitor):
         self.write('pass')
 
     def visit_Print(self, node):
-        # XXX: python 2.6 only
+        # python 2.6 only
         self.newline(node)
         self.write('print ')
         want_comma = False
@@ -345,7 +345,7 @@ class SourceGenerator(NodeVisitor):
         self.write('continue')
 
     def visit_Raise(self, node):
-        # XXX: Python 2.6 / 3.0 compatibility
+        # Python 2.6 / 3.0 compatibility
         self.newline(node)
         self.write('raise')
         if hasattr(node, 'exc') and node.exc is not None:
@@ -542,7 +542,7 @@ class SourceGenerator(NodeVisitor):
         self.visit(node.value)
 
     def visit_Repr(self, node):
-        # XXX: python 2.6 only
+        # python 2.6 only
         self.write('`')
         self.visit(node.value)
         self.write('`')

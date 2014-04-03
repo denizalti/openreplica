@@ -8,7 +8,7 @@ import sys, os, socket, os.path
 import random, time
 import subprocess, signal
 
-VERSION = '1.0.2'
+VERSION = '1.1.0'
 
 class NodeManager():
     def __init__(self, nodes, sshkey, username):

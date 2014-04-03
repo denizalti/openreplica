@@ -1,5 +1,5 @@
 SERVERFILES := *.py
-CLIENTFILES := connection.py blockingclientproxy.py batchclientproxy.py asyncclientproxy.py clientproxy.py pvalue.py message.py enums.py utils.py exception.py
+CLIENTFILES := connection.py blockingclientproxy.py batchclientproxy.py asyncclientproxy.py clientproxy.py pvalue.py message.py enums.py utils.py exception.py pack.py
 ALL := concoordserver.tar.gz
 
 all:	$(ALL)

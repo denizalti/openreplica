@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>ConCoordifying Python Objects &mdash; ConCoord 1.0.2 documentation</title>
+    <title>ConCoordifying Python Objects &mdash; ConCoord 1.1.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.0.2',
+        VERSION:     '1.1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,8 +23,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="ConCoord 1.0.2 documentation" href="index.html" />
-    <link rel="prev" title="Getting Started" href="tutorial.html" /> 
+    <link rel="top" title="ConCoord 1.1.0 documentation" href="index.html" />
+    <link rel="prev" title="OpenReplica" href="openreplica.html" /> 
   </head>
   <body>
     <div class="related">
@@ -34,9 +34,9 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="tutorial.html" title="Getting Started"
+          <a href="openreplica.html" title="OpenReplica"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">ConCoord 1.0.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">ConCoord 1.1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -124,14 +124,14 @@ call <tt class="docutils literal"><span class="pre">__concoordinit__</span></tt>
 <tt class="docutils literal"><span class="pre">Makefile</span></tt> provided under <tt class="docutils literal"><span class="pre">concoord/</span></tt></p>
 <p>Remember to add the objects you have created in these bundles.</p>
 <div class="section" id="creating-a-server-bundle">
-<h2>Creating A Server Bundle<a class="headerlink" href="#creating-a-server-bundle" title="Permalink to this headline">¶</a></h2>
-<p>To create a bundle that can run replica and nameserver nodes:</p>
+<h2>Creating a Server Bundle<a class="headerlink" href="#creating-a-server-bundle" title="Permalink to this headline">¶</a></h2>
+<p>To create a bundle that can run replicas:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> make server
 </pre></div>
 </div>
 </div>
 <div class="section" id="creating-a-client-bundle">
-<h2>Creating A Client Bundle<a class="headerlink" href="#creating-a-client-bundle" title="Permalink to this headline">¶</a></h2>
+<h2>Creating a Client Bundle<a class="headerlink" href="#creating-a-client-bundle" title="Permalink to this headline">¶</a></h2>
 <p>To create a bundle that can run a client and connect to an existing
 ConCoord instance:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> make client
@@ -203,12 +203,8 @@ ConCoord instance will remain in a safe state.</p>
 </div>
 <p>This command creates the proxy that supports blocking operations. Now
 you can use blocking objects just like basic ConCoord objects. First,
-we start the replica and nameserver nodes the same way we did before
-as follows:</p>
+we start the replica nodes the same way we did before as follows:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> concoord replica -o concoord.object.semaphore.Semaphore -a 127.0.0.1 -p 14000
-</pre></div>
-</div>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo concoord nameserver -n semaphoredomain -o concoord.object.semaphore.Semaphore -b 127.0.0.1:14000 -t 1
 </pre></div>
 </div>
 <p>To test the functionality, you can use multiple clients or print out the <tt class="docutils literal"><span class="pre">Semaphore</span></tt> object as follows:</p>
@@ -238,8 +234,8 @@ as follows:</p>
   <ul>
 <li><a class="reference internal" href="#">ConCoordifying Python Objects</a></li>
 <li><a class="reference internal" href="#creating-source-bundles">Creating Source Bundles</a><ul>
-<li><a class="reference internal" href="#creating-a-server-bundle">Creating A Server Bundle</a></li>
-<li><a class="reference internal" href="#creating-a-client-bundle">Creating A Client Bundle</a></li>
+<li><a class="reference internal" href="#creating-a-server-bundle">Creating a Server Bundle</a></li>
+<li><a class="reference internal" href="#creating-a-client-bundle">Creating a Client Bundle</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#logging">Logging</a></li>
@@ -247,8 +243,8 @@ as follows:</p>
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="tutorial.html"
-                        title="previous chapter">Getting Started</a></p>
+  <p class="topless"><a href="openreplica.html"
+                        title="previous chapter">OpenReplica</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/tutorial-advanced.txt"
@@ -278,9 +274,9 @@ as follows:</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="tutorial.html" title="Getting Started"
+          <a href="openreplica.html" title="OpenReplica"
              >previous</a> |</li>
-        <li><a href="index.html">ConCoord 1.0.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">ConCoord 1.1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

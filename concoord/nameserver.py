@@ -5,15 +5,10 @@
 """
 import socket, select, signal
 from time import strftime, gmtime
-from threading import Thread, Timer
-from concoord.node import *
 from concoord.utils import *
 from concoord.enums import *
-from concoord.replica import *
 from concoord.pack import *
-from concoord.proxy.nameservercoord import NameserverCoord
-import concoord.concoordroute53
-import concoord.route53
+from concoord.route53 import *
 try:
     import dns.exception
     import dns.message
@@ -23,34 +18,28 @@ try:
     import dns.name
     from dns.flags import *
 except:
-    print "To use the nameserver stand-alone, install dnspython: http://www.dnspython.org/"
+    print "To use the nameserver install dnspython: http://www.dnspython.org/"
+
 try:
     from boto.route53.connection import Route53Connection
-    import boto
+    from boto.route53.exception import DNSServerError
 except:
-    print "To use Amazon Route 53, install boto: http://github.com/boto/boto/"
+    pass
 
-RRTYPE = ['','A','NS','MD','MF','CNAME','SOA', 'MB', 'MG', 'MR', 'NULL', 'WKS', 'PTR', 'HINFO', 'MINFO', 'MX', 'TXT', 'RP', 'AFSDB', 'X25', 'ISDN', 'RT', 'NSAP', 'NSAP_PTR', 'SIG', 'KEY', 'PX', 'GPOS', 'AAAA', 'LOC', 'NXT', '', '', 'SRV']
+RRTYPE = ['','A','NS','MD','MF','CNAME','SOA', 'MB', 'MG', 'MR', 'NULL',
+          'WKS', 'PTR', 'HINFO', 'MINFO', 'MX', 'TXT', 'RP', 'AFSDB',
+          'X25', 'ISDN', 'RT', 'NSAP', 'NSAP_PTR', 'SIG', 'KEY', 'PX',
+          'GPOS', 'AAAA', 'LOC', 'NXT', '', '', 'SRV']
 RRCLASS = ['','IN','CS','CH','HS']
 OPCODES = ['QUERY','IQUERY','STATUS']
 RCODES = ['NOERROR','FORMERR','SERVFAIL','NXDOMAIN','NOTIMP','REFUSED']
 
 SRVNAME = '_concoord._tcp.'
 
-class Nameserver(Replica):
+class Nameserver():
     """Nameserver keeps track of the connectivity state of the system and replies to
     QUERY messages from dnsserver."""
-    def __init__(self,
-                 domain=args.domain,
-                 master=args.master,
-                 servicetype=args.type,
-                 instantiateobj=False):
-        Replica.__init__(self, nodetype=NODE_NAMESERVER, instantiateobj=instantiateobj, port=5000, bootstrap=args.bootstrap)
-        if servicetype:
-            self.servicetype = int(servicetype)
-        else:
-            if self.debug: self.logger.write("Initialization Error", "Service type of the nameserver is required. Use -t option.")
-            self._graceexit(1)
+    def __init__(self, addr, domain, route53, replicas, debug):
         self.ipconverter = '.ipaddr.'+domain+'.'
         try:
             if domain.find('.') > 0:
@@ -58,56 +47,68 @@ class Nameserver(Replica):
             else:
                 self.mydomain = domain
             self.mysrvdomain = dns.name.Name((SRVNAME+domain+'.').split('.'))
-        except dns.name.EmptyLabel:
-            self.logger.write("Initialization Error", "A DNS name is required. Use -n option.")
-            self._graceexit(1)
+        except dns.name.EmptyLabel as e:
+            print "A DNS name is required. Use -n option."
+            raise e
 
-        if self.servicetype == NS_SLAVE:
-            if master:
-                self.master = master
-            else:
-                self.logger.write("Initialization Error", "A master is required. Use -m option.")
-                self._graceexit(1)
-        elif self.servicetype == NS_ROUTE53:
+        # Replicas of the Replica
+        self.replicas = replicas
+        self.debug = debug
+
+        self.route53 = route53
+        if self.route53:
             try:
-                CONFIGDICT = load_configdict(args.configpath)
-                AWS_ACCESS_KEY_ID = CONFIGDICT['AWS_ACCESS_KEY_ID']
-                AWS_SECRET_ACCESS_KEY = CONFIGDICT['AWS_SECRET_ACCESS_KEY']
-            except:
-                print "To use Amazon Route 53, set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY in the configfile and use -o option for configpath."
-                self._graceexit(1)
+                from boto.route53.connection import Route53Connection
+                from boto.route53.exception import DNSServerError
+            except Exception as e:
+                print "To use Amazon Route 53, install boto: http://github.com/boto/boto/"
+                raise e
+
+            # Check if AWS CONFIG data is present
+            ROUTE53CONFIGFILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'route53.cfg')
+            # Touching the CONFIG file
+            with open(ROUTE53CONFIGFILE, 'a'):
+                os.utime(ROUTE53CONFIGFILE, None)
+
+            import ConfigParser
+            config = ConfigParser.RawConfigParser()
+            config.read(ROUTE53CONFIGFILE)
+
+            try:
+                AWS_ACCESS_KEY_ID = config.get('ENVIRONMENT', 'AWS_ACCESS_KEY_ID')
+                AWS_SECRET_ACCESS_KEY = config.get('ENVIRONMENT', 'AWS_SECRET_ACCESS_KEY')
+            except Exception as e:
+                print "To use Route53 set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY as follows:"
+                print "$ concoord route53id [AWS_ACCESS_KEY_ID]"
+                print "$ concoord route53key [AWS_SECRET_ACCESS_KEY]"
+                sys.exit(1)
+
             # initialize Route 53 connection
             self.route53_name = domain+'.'
             self.route53_conn = Route53Connection(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
             # get the zone_id for the domainname, the domainname
             # should be added to the zones beforehand
-            self.route53_zone_id = concoord.concoordroute53.get_zone_id(self.route53_conn, self.route53_name)
+            self.route53_zone_id = self.get_zone_id(self.route53_conn, self.route53_name)
             self.updateroute53()
-        elif self.servicetype == NS_MASTER:
+        else: # STANDALONE NAMESERVER
+            self.addr = addr if addr else findOwnIP()
             self.udpport = 53
             self.udpsocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
             try:
                 self.udpsocket.bind((self.addr,self.udpport))
+                print "Connected to " + self.addr + ":" + str(self.udpport)
             except socket.error as e:
-                if self.debug: self.logger.write("DNS Error", "Can't bind to UDP port 53: %s" % str(e))
-                self._graceexit(1)
-        else:
-            if self.debug: self.logger.write("Initialization Error", "Servicetype is required. Use -t option.")
-            self._graceexit(1)
+                print "Can't bind to UDP port 53: %s" % str(e)
+                raise e
 
         # When the nameserver starts the revision number is 00 for that day
         self.revision = strftime("%Y%m%d", gmtime())+str(0).zfill(2)
 
-    def startservice(self):
-        """Starts the background services associated with a node."""
-        Replica.startservice(self)
-        if self.servicetype == NS_MASTER:
-            # Start a thread for the UDP server
-            UDP_server_thread = Thread(target=self.udp_server_loop, name='UDPServerThread')
-            UDP_server_thread.start()
+    def add_logger(self, logger):
+        self.logger = logger
 
     def udp_server_loop(self):
-        while self.alive:
+        while True:
             try:
                 inputready,outputready,exceptready = select.select([self.udpsocket],[],[self.udpsocket])
                 for s in exceptready:
@@ -118,7 +119,8 @@ class Nameserver(Replica):
                     self.handle_query(data,clientaddr)
             except KeyboardInterrupt, EOFError:
                 os._exit(0)
-            except:
+            except Exception as e:
+                print "Error:", type(e), e.message
                 continue
         self.udpsocket.close()
         return
@@ -128,9 +130,10 @@ class Nameserver(Replica):
             yield address
 
     def nsresponse(self, question=''):
-        for address in get_addresses(self.nameservers):
-            yield address
-        yield self.addr
+        # Check which Replicas are also Nameservers
+        for replica in self.replicas:
+            if replica.type == NODE_NAMESERVER:
+                yield replica.addr
 
     def srvresponse(self, question=''):
         for address,port in get_addressportpairs(self.replicas):
@@ -138,11 +141,9 @@ class Nameserver(Replica):
 
     def txtresponse(self, question=''):
         txtstr = ''
-        for groupname,group in self.groups.iteritems():
-            for peer in group:
-                txtstr += node_names[peer.type] +' '+ peer.addr + ':' + str(peer.port) + ';'
-        txtstr += node_names[self.type] +' '+ self.addr + ':' + str(self.port)
-        return txtstr
+        for peer in self.replicas:
+            txtstr += node_names[peer.type] +' '+ peer.addr + ':' + str(peer.port) + ';'
+        return txtstr[:-1]
 
     def ismydomainname(self, question):
         return question.name == self.mydomain or (question.rdtype == dns.rdatatype.SRV and question.name == self.mysrvdomain)
@@ -177,7 +178,8 @@ class Nameserver(Replica):
                 elif question.rdtype == dns.rdatatype.NS:
                     # NS Queries --> List all Nameserver nodes
                     for address in self.nsresponse(question):
-                        answerstr += self.create_answer_section(question, name=address)
+                        #answerstr += self.create_answer_section(question, name=address)
+                        answerstr += self.create_answer_section(question, addr=address)
                 elif question.rdtype == dns.rdatatype.SOA:
                     # SOA Query --> Reply with Metadata
                     answerstr = self.create_soa_answer_section(question)
@@ -194,10 +196,9 @@ class Nameserver(Replica):
                 if self.debug: self.logger.write("DNS State", "UNSUPPORTED QUERY, %s" %str(question))
                 return
         if self.debug: self.logger.write("DNS State", "RESPONSE:\n%s\n---\n" % str(response))
-        try:
-            self.udpsocket.sendto(response.to_wire(), addr)
-        except:
-            if self.debug: self.logger.write("DNS Error", "Cannot send RESPONSE:\n%s\n---\n" % str(response))
+
+        towire = response.to_wire()
+        self.udpsocket.sendto(towire, addr)
 
     def create_response(self, id, opcode=0, rcode=0, flags='', question='', answer='', authority='', additional=''):
         answerstr     = ';ANSWER\n'     + answer     + '\n' if answer != '' else ''
@@ -236,13 +237,13 @@ class Nameserver(Replica):
                                                             minimum)
         return answerstr
 
-    def create_answer_section(self, question, ttl=30, rrclass=1, addr='', name='', txt=None):
+    def create_answer_section(self, question, ttl=30, rrclass=1, addr='', txt=None):
         if question.rdtype == dns.rdatatype.A:
             resp = str(addr)
         elif question.rdtype == dns.rdatatype.TXT:
             resp = '"%s"' % txt
         elif question.rdtype == dns.rdatatype.NS:
-            resp = str(name)
+            resp = str(addr)
         answerstr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[question.rdtype]), resp)
         return answerstr
 
@@ -254,31 +255,64 @@ class Nameserver(Replica):
         additionalstr = "%s %s %s %s %s\n" % (str(question.name), str(ttl), str(RRCLASS[rrclass]), str(RRTYPE[rrtype]), str(addr))
         return additionalstr
 
-    def _add_node(self, nodetype, nodename):
-        nodetype = int(nodetype)
-        if self.debug: self.logger.write("State", "Adding node: %s %s" % (node_names[nodetype], nodename))
-        ipaddr,port = nodename.split(":")
-        nodepeer = Peer(ipaddr,int(port),nodetype)
-        self.groups[nodetype][nodepeer] = 0
+    def update(self):
         self.updaterevision()
-        if self.servicetype == NS_SLAVE:
-            self.updatemaster(nodepeer, add=True)
-        elif self.servicetype == NS_ROUTE53:
-            self.updateroute53()
-
-    def _del_node(self, nodetype, nodename):
-        nodetype = int(nodetype)
-        if self.debug: self.logger.write("State", "Deleting node: %s %s" % (node_names[nodetype], nodename))
-        ipaddr,port = nodename.split(":")
-        nodepeer = Peer(ipaddr,int(port),nodetype)
-        del self.groups[nodetype][nodepeer]
-        self.updaterevision()
-        if self.servicetype == NS_SLAVE:
-            self.updatemaster(nodepeer)
-        elif self.servicetype == NS_ROUTE53:
+        if self.route53:
             self.updateroute53()
 
     ########## ROUTE 53 ##########
+
+    def get_zone_id(self, conn, name):
+        response = conn.get_all_hosted_zones()
+        for zoneinfo in response['ListHostedZonesResponse']['HostedZones']:
+            if zoneinfo['Name'] == name:
+                return zoneinfo['Id'].split("/")[-1]
+
+    def append_record(self, conn, hosted_zone_id, name, type, newvalues, ttl=600,
+                      identifier=None, weight=None, comment=""):
+        values = get_values(conn, hosted_zone_id, name, type)
+        if values == '':
+            values = newvalues
+        else:
+            values += ',' + newvalues
+        change_record(conn, hosted_zone_id, name, type, values, ttl=ttl, identifier=identifier, weight=weight, comment=comment)
+
+    def get_values(self, conn, hosted_zone_id, name, type):
+        response = conn.get_all_rrsets(hosted_zone_id, 'A', name)
+        for record in response:
+            if record.type == type:
+                values = ','.join(record.resource_records)
+        return values
+
+    def add_record_bool(self, conn, zone_id, name, type, values, ttl=600, identifier=None, weight=None, comment=""):
+        # Add Record succeeds only when the type doesn't exist yet
+        try:
+            add_record(conn, zone_id, name, type, values, ttl=ttl, identifier=identifier, weight=weight, comment=comment)
+        except DNSServerError as e:
+            return False
+        return True
+
+    def change_record_bool(self, conn, zone_id, name, type, values, ttl=600, identifier=None, weight=None, comment=""):
+        try:
+            change_record(conn, zone_id, name, type, values, ttl=ttl, identifier=identifier, weight=weight, comment=comment)
+        except DNSServerError as e:
+            print e
+            return False
+        return True
+
+    def append_record_bool(self, conn, zone_id, name, type, values, ttl=600, identifier=None, weight=None, comment=""):
+        try:
+            append_record(conn, zone_id, name, type, values, ttl=ttl, identifier=identifier, weight=weight, comment=comment)
+        except DNSServerError as e:
+            print e
+            return False
+        return True
+
+    def del_record_bool(self, conn, zone_id, name, type, values, ttl=600, identifier=None, weight=None, comment=""):
+        try:
+            del_record(conn, zone_id, name, type, values, ttl=ttl, identifier=identifier, weight=weight, comment=comment)
+        except DNSServerError as e:
+            print e
 
     def route53_a(self):
         values = []
@@ -288,8 +322,8 @@ class Nameserver(Replica):
 
     def route53_srv(self):
         values = []
-        priority=0
-        weight=100
+        priority = 0
+        weight = 100
         for address,port in get_addressportpairs(self.replicas):
             values.append('%d %d %d %s' % (priority, weight, port, address+self.ipconverter))
         return ','.join(values)
@@ -305,36 +339,21 @@ class Nameserver(Replica):
         return strings
 
     def updateroute53(self):
-        if self.debug: self.logger.write("State", "Updating Route 53")
         # type A: update only if added node is a Replica
         rtype = 'A'
         newvalue = self.route53_a()
+        self.change_record_bool(self.route53_conn, self.route53_zone_id,
+                           self.route53_name, 'A', newvalue)
         # type SRV: update only if added node is a Replica
         rtype = 'SRV'
         newvalue = self.route53_srv()
+        self.change_record_bool(self.route53_conn, self.route53_zone_id,
+                           self.route53_name, 'SRV', newvalue)
         # type TXT: All Nodes
         rtype = 'TXT'
         newvalue = ','.join(self.route53_txt())
-
-    ########## MASTER ##########
-    def master_srv(self):
-        values = []
-        priority = 0
-        weight = 100
-        for address,port in get_addressportpairs(self.replicas):
-            values.append('%d %d %d %s' % (priority, weight, port, address+self.ipconverter))
-        return values
-
-    def updatemaster(self, node, add=True):
-        if self.debug: self.logger.write("State", "Updating Master at %s" % self.master)
-        nscoord = NameserverCoord(self.master)
-        nodes = {}
-        for nodetype,group in self.groups.iteritems():
-            nodes[nodetype] = set()
-            for address,port in get_addressportpairs(self.groups[nodetype]):
-                nodes[nodetype].add(address + ':' + str(port))
-        nodes[self.type].add(self.addr + ':' + str(self.port))
-        nscoord.updatesubdomain(str(self.mydomain), nodes)
+        self.change_record_bool(self.route53_conn, self.route53_zone_id,
+                           self.route53_name, 'TXT', newvalue)
 
     def updaterevision(self):
         if self.debug: self.logger.write("State", "Updating Revision -- from: %s" % self.revision)
@@ -345,13 +364,3 @@ class Nameserver(Replica):
         else:
             self.revision = strftime("%Y%m%d", gmtime())+str(0).zfill(2)
         if self.debug: self.logger.write("State", "Updating Revision -- to: %s" % self.revision)
-
-def main():
-    nameservernode = Nameserver(instantiateobj=True)
-    nameservernode.startservice()
-    signal.signal(signal.SIGINT, nameservernode.terminate_handler)
-    signal.signal(signal.SIGTERM, nameservernode.terminate_handler)
-    signal.pause()
-
-if __name__=='__main__':
-    main()

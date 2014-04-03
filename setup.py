@@ -30,7 +30,7 @@ setup(
     classifiers=classifiers,
     entry_points={
         'console_scripts': ['concoord = concoord.main:main',
-                            'openreplica = concoord.openreplica.main:main',]
+                            'openreplica = concoord.openreplica.main:main']
     },
     install_requires=[
         'python>=2.7',

@@ -11,6 +11,7 @@ import time, socket, select
 from Queue import Queue
 from threading import Thread, RLock, Lock, Condition, Timer, Semaphore
 from concoord.enums import *
+from concoord.nameserver import Nameserver
 from concoord.exception import ConnectionError
 from concoord.utils import *
 from concoord.message import *
@@ -26,7 +27,7 @@ except:
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-a", "--addr", action="store", dest="addr",
-                    help="addr for the node")
+                    help="address for the node")
 parser.add_argument("-p", "--port", action="store", dest="port", type=int,
                     help="port for the node")
 parser.add_argument("-b", "--boot", action="store", dest="bootstrap",
@@ -35,16 +36,10 @@ parser.add_argument("-o", "--objectname", action="store", dest="objectname", def
                     help="client object dotted name")
 parser.add_argument("-l", "--logger", action="store", dest="logger", default='',
                     help="logger address")
-parser.add_argument("-c", "--configpath", action="store", dest="configpath", default='',
-                    help="config file path")
-parser.add_argument("-n", "--name", action="store", dest="domain", default='',
-                    help="domainname that the nameserver will accept queries for")
-parser.add_argument("-t", "--type", action="store", dest="type", default='',
-                    help="1: Master Nameserver "\
-                         "2: Slave Nameserver (requires a Master) " \
-                         "3: Route53 (requires a Route53 zone)")
-parser.add_argument("-m", "--master", action="store", dest="master", default='',
-                    help="ipaddr:port for the master nameserver")
+parser.add_argument("-n", "--domainname", action="store", dest="domain", default='',
+                    help="domain name that the nameserver will accept queries for")
+parser.add_argument("-r", "--route53", action="store_true", dest="route53", default=False,
+                    help="use Route53 (requires a Route53 zone)")
 parser.add_argument("-w", "--writetodisk", action="store_true", dest="writetodisk", default=False,
                     help="writing to disk on/off")
 parser.add_argument("-d", "--debug", action="store_true", dest="debug", default=False,
@@ -56,31 +51,30 @@ class Node():
     are extended by Replicas and Nameservers.
     """
     def __init__(self,
-                 nodetype,
                  addr=args.addr,
                  port=args.port,
                  givenbootstraplist=args.bootstrap,
                  debugoption=args.debug,
                  objectname=args.objectname,
-                 instantiateobj=False,
-                 configpath=args.configpath,
                  logger=args.logger,
                  writetodisk=args.writetodisk):
         self.addr = addr if addr else findOwnIP()
         self.port = port
-        self.type = nodetype
         self.debug = debugoption
         self.durable = writetodisk
-        if instantiateobj:
-            if objectname == '':
-                parser.print_help()
-                self._graceexit(1)
-            self.objectname = objectname
+        self.isnameserver = args.domain != ''
+        self.domain = args.domain
+        self.useroute53 = args.route53
+        if objectname == '':
+            parser.print_help()
+            self._graceexit(1)
+        self.objectname = objectname
         # initialize receive queue
         self.receivedmessages_semaphore = Semaphore(0)
         self.receivedmessages = []
         # lock to synchronize message handling
         self.lock = Lock()
+
         # create server socket and bind to a port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -109,6 +103,29 @@ class Node():
         except AttributeError as e:
             # the os doesn't support epoll
             self.connectionpool.epoll = None
+
+        # set the logger
+        if logger:
+            LOGGERNODE = logger
+        else:
+            LOGGERNODE = None
+
+        # Initialize replicas
+        # Keeps {peer:outofreachcount}
+        self.replicas = {}
+        # Nameserver state
+        if self.isnameserver:
+            self.type = NODE_NAMESERVER
+            try:
+                self.nameserver = Nameserver(self.addr, self.domain, self.useroute53,
+                                             self.replicas, self.debug)
+            except Exception as e:
+                print "Error:", e
+                print "Could not start Replica as a Nameserver, exiting."
+                self._graceexit(1)
+        else:
+            self.type = NODE_REPLICA
+
         self.alive = True
         self.me = Peer(self.addr,self.port,self.type)
         # set id
@@ -117,26 +134,10 @@ class Node():
         self.connectionpool.add_connection_to_self(self.me,
                                                    SelfConnection(self.receivedmessages,
                                                                   self.receivedmessages_semaphore))
-
-        # set path for additional configuration data
-        self.configpath = configpath
-        # set the logger
-        try:
-            LOGGERNODE = load_configdict(self.configpath)['LOGGERNODE']
-        except KeyError as e:
-            if logger:
-                LOGGERNODE=logger
-            else:
-                LOGGERNODE = None
         self.logger = Logger("%s-%s" % (node_names[self.type],self.id), lognode=LOGGERNODE)
+        if self.isnameserver:
+            self.nameserver.add_logger(self.logger)
         print "%s-%s connected." % (node_names[self.type],self.id)
-        # Initialize groups
-        # Keeps {peer:outofreachcount}
-        self.replicas = {}
-        self.nameservers = {}
-        self.groups = {NODE_REPLICA: self.replicas,
-                       NODE_NAMESERVER: self.nameservers}
-#        self.groups[self.me.type][self.me] = 0
 
         # Keeps the liveness of the nodes
         self.nodeliveness = {}
@@ -146,8 +147,7 @@ class Node():
             self.discoverbootstrap(givenbootstraplist)
             self.connecttobootstrap()
 
-        if self.type == NODE_REPLICA or self.type == NODE_NAMESERVER:
-            self.stateuptodate = False
+        self.stateuptodate = False
 
     def _getipportpairs(self, bootaddr, bootport):
         for node in socket.getaddrinfo(bootaddr, bootport, socket.AF_INET, socket.SOCK_STREAM):
@@ -220,9 +220,8 @@ class Node():
 
     def statestr(self):
         returnstr = ""
-        for type,group in self.groups.iteritems():
-            for peer in group.iterkeys():
-                returnstr += node_names[type] + " %s:%d\n" % (peer.addr,peer.port)
+        for peer in self.replicas:
+            returnstr += node_names[peer.type] + " %s:%d\n" % (peer.addr,peer.port)
         if hasattr(self, 'pendingcommands') and len(self.pendingcommands) > 0:
             pending =  "".join("%d: %s" % (cno, proposal) for cno,proposal \
                                    in self.pendingcommands.iteritems())
@@ -234,29 +233,28 @@ class Node():
         # Only ping neighbors that didn't send a message recently
         while True:
             # Check nodeliveness
-            for gtype,group in self.groups.iteritems():
-                for peer in group:
-                    if peer == self.me:
-                        continue
-                    if peer in self.nodeliveness:
-                        nosound = time.time() - self.nodeliveness[peer]
-                    else:
-                        nosound = LIVENESSTIMEOUT + 1
+            for peer in self.replicas:
+                if peer == self.me:
+                    continue
+                if peer in self.nodeliveness:
+                    nosound = time.time() - self.nodeliveness[peer]
+                else:
+                    nosound = LIVENESSTIMEOUT + 1
 
-                    if nosound <= LIVENESSTIMEOUT:
-                        # Peer is alive
-                        self.groups[peer.type][peer] = 0
-                        continue
-                    if nosound > LIVENESSTIMEOUT:
-                        # Send PING to node
-                        if self.debug: self.logger.write("State", "Sending PING to %s" % str(peer))
-                        pingmessage = create_message(MSG_PING, self.me)
-                        successid = self.send(pingmessage, peer=peer)
-                    if successid < 0 or nosound > (2*LIVENESSTIMEOUT):
-                        # Neighbor not responding, mark the neighbor
-                        if self.debug: self.logger.write("State",
-                                                         "Neighbor not responding")
-                        self.groups[peer.type][peer] += 1
+                if nosound <= LIVENESSTIMEOUT:
+                    # Peer is alive
+                    self.replicas[peer] = 0
+                    continue
+                if nosound > LIVENESSTIMEOUT:
+                    # Send PING to node
+                    if self.debug: self.logger.write("State", "Sending PING to %s" % str(peer))
+                    pingmessage = create_message(MSG_PING, self.me)
+                    successid = self.send(pingmessage, peer=peer)
+                if successid < 0 or nosound > (2*LIVENESSTIMEOUT):
+                    # Neighbor not responding, mark the neighbor
+                    if self.debug: self.logger.write("State",
+                                                     "Neighbor not responding")
+                    self.replicas[peer] += 1
             time.sleep(LIVENESSTIMEOUT)
 
     def clean_nascent(self):
@@ -348,7 +346,6 @@ class Node():
             for message in connection.received_bytes():
                 if self.debug: self.logger.write("State", "received %s" % str(message))
                 if message.type == MSG_STATUS:
-                    if self.type == NODE_REPLICA:
                         if self.debug: self.logger.write("State",
                                                          "Answering status message %s"
                                                          % self.__str__())
@@ -357,11 +354,10 @@ class Node():
                         clientsock.send(message)
                         return False
                 # Update nodeliveness
-                if message.source.type == NODE_REPLICA or \
-                        message.source.type == NODE_NAMESERVER:
+                if message.source.type != NODE_CLIENT:
                     self.nodeliveness[message.source] = time.time()
-                    if message.source in self.groups[message.source.type]:
-                        self.groups[message.source.type][message.source] = 0
+                    if message.source in self.replicas:
+                        self.replicas[message.source] = 0
 
                 # add to receivedmessages
                 self.receivedmessages.append((message,connection))

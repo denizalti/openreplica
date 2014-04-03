@@ -1,5 +1,5 @@
-Using OpenReplica
------------------
+OpenReplica
+-----------
 
 OpenReplica provides easily launch for concoord on remote machines,
 and it is especially built to launch concoord instances on Amazon EC2
@@ -136,11 +136,12 @@ To start replica nodes to join an active ConCoord instance:
 The nodes can also be run in the debug mode or with a logger with the
 commands shown below:
 
-``Usage: openreplica replica [-h] [-a ADDR] [-p PORT] [-b BOOTSTRAP] [-o OBJECTNAME] [-l LOGGER] [-w] [-d]``
+``Usage: openreplica replica [-h] [-a ADDR] [-p PORT] [-b BOOTSTRAP] [-o OBJECTNAME] [-l LOGGER] [-n DOMAIN] [-r] [-w] [-d]``
+
 where,
   ``-h, --help``				 show this help message and exit
 
-  ``-a ADDR, --addr ADDR``  	      	   	 addr for the node
+  ``-a ADDR, --addr ADDR``  	      	   	 address for the node
 
   ``-p PORT, --port PORT``			 port for the node
 
@@ -150,44 +151,114 @@ where,
 
   ``-l LOGGER, --logger LOGGER``		 logger address
 
+  ``-n DOMAIN, --domainname DOMAIN``             domain name that the name server will accept queries for
+
+  ``-r, --route53``                              use Route53
+
   ``-w, --writetodisk``           		 writing to disk on/off
 
   ``-d, --debug``           			 debug on/off
 
-Starting Nameserver Nodes
+Starting Replicas as Name Servers
 +++++++++++++++++++++++++
 
-Before starting a standalone nameserver node, first make sure
-that you have at least one replica running. Once your replica nodes
-are set up, you can start the nameserver to answer queries.
+You can dynamically locate nodes in a given ConCoord instance using
+DNS queries if the instance includes replicas that can act as name
+servers. There are two ways you can run a ConCoord Replica as a name
+server.
 
-Starting a Standalone Nameserver
-********************************
+* **Master Name Server:** Keeps track of the view and responds to DNS
+  queries itself. Requires su privileges to bind to port 53.
 
-You can start the nameserver to answer queries for
-``counterdomain.com`` as follows:
+* **Route53 Name Server:** Keeps track of the view and updates an Amazon
+  Route53 account. Amazon Route53 answers to DNS queries on behalf of
+  the slave name server. Requires a ready-to-use Amazon Route53
+  account.
 
-.. sourcecode:: console
+Master Name Server
++++++++++++++++++++++
 
-  $ sudo openreplica nameserver -n counterdomain.com -o concoord.object.counter.Counter -b 127.0.0.1:14000 -t 1
-
-Amazon Route 53 Nameserver
-**************************
-
-Before starting a nameserver connected to Amazon Route 53, you should
-have a Route 53 account set up and ready to receive requests. After
-your Route 53 account is ready, the nameserver can update the master
-every time the view of its system changes automatically.
-
-To use Amazon Route 53 you can pass your credentials into the methods
-that create connections or edit them in the configuration file.
-
-     AWS_ACCESS_KEY_ID - Your AWS Access Key ID
-     AWS_SECRET_ACCESS_KEY - Your AWS Secret Access Key
-
-Once you make sure that your Route53 account is set up and your
-credentials are updated, you can start the nameserver as follows:
+To use a replica node as a master name server first you have to setup
+the name server delegations (you can do this by updating the domain
+name server information of any domain name you own from the domain
+registrar you use (godaddy, namecheap etc.)). Once all the delegations
+are setup for the ip address the replica uses, you can start a replica
+node as a name server for ``counterdomain.com`` as follows:
 
 .. sourcecode:: console
 
-  $ openreplica nameserver -n counterdomain.com -o concoord.object.counter.Counter -b 127.0.0.1:14000 -t 3 -c configfilepath
+  $ openreplica replica -o concoord.object.counter.Counter -a 127.0.0.1 -n counterdomain.com
+
+And to start the replica to join an already running ConCoord instance,
+provide the bootstrap:
+
+.. sourcecode:: console
+
+  $ openreplica replica -o concoord.object.counter.Counter -a 127.0.0.1 -b 127.0.0.1:14000 -n counterdomain.com
+
+When the replica starts running, you can send queries for
+``counterdomain.com`` and see the most current set of nodes as
+follows:
+
+.. sourcecode:: console
+
+  $ dig -t a counterdomain.com                   # returns set of Replicas
+
+  $ dig -t srv _concoord._tcp.counterdomain.com  # returns set of Replicas with ports
+
+  $ dig -t txt counterdomain.com                 # returns set of all nodes
+
+  $ dig -t ns counterdomain.com                  # returns set of name servers
+
+Amazon Route53 Name Server
+++++++++++++++++++++++++++
+
+First make sure that boto is installed on the machine you want to run
+the Route53 name server. OpenReplica tries to do this automatically
+when a replica is run as a Route53 name server, but if it fails to do
+so, you can easily install boto on the machine you want as follows:
+
+.. sourcecode:: console
+
+  $ pip install boto
+
+Before starting a name server connected to Amazon Route53, you should
+have a Route53 account set up and ready to receive requests. This is
+done through the AWS Console (http://console.aws.amazon.com/route53), by
+creating a new Hosted Zone to host your domain name.
+
+After your Route53 account is set up, the name server can update
+Route53 records every time the view of the system changes.
+
+To use the Name Server to update Amazon Route53, you should provide
+your ``AWS_ACCESS_KEY_ID`` and ``AWS_SECRET_ACCESS_KEY``. You can retrieve
+these from the AWS Console (http://console.aws.amazon.com/iam/), by
+looking under the security credentials of the username that you used
+while creating the Hosted Zone for your domain name. Once you have the
+information, you can set up Route53 configuration easily as follows:
+
+.. sourcecode:: console
+
+  $ openreplica route53 [public_dns AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY]
+
+
+Once you make sure that your Route53 account is set up and the
+configuration file includes your AWS credentials, you can start the
+replica with a name server as follows:
+
+.. sourcecode:: console
+
+  $ openreplica replica -o concoord.object.counter.Counter -n counterdomain.com -r
+
+When the replica starts running, you can send queries for
+``counterdomain.com`` and see the most current set of nodes as follows:
+
+.. sourcecode:: console
+
+  $ dig -t a counterdomain.com                   # returns set of Replicas
+
+  $ dig -t srv _concoord._tcp.counterdomain.com  # returns set of Replicas with ports
+
+  $ dig -t txt counterdomain.com                 # returns set of all nodes
+
+  $ dig -t ns counterdomain.com                  # returns set of name servers
