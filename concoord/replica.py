@@ -1208,6 +1208,7 @@ class Replica(Node):
                                       {FLD_BALLOTNUMBER: self.quorumballotnumber,
                                        FLD_INRESPONSETO: msg.ballotnumber,
                                        FLD_PVALUESET: self.quorumaccepted.pvalues})
+            st = 'ADOPTED'
         # or else it should be a precise duplicate of the last request
         # in this case we do nothing
         elif msg.ballotnumber == self.quorumballotnumber and \
@@ -1223,9 +1224,9 @@ class Replica(Node):
                                       {FLD_BALLOTNUMBER: self.quorumballotnumber,
                                        FLD_INRESPONSETO: msg.ballotnumber,
                                        FLD_PVALUESET: self.quorumaccepted.pvalues})
-
-        if self.debug: self.logger.write("Paxos State", "prepare responding with %s"
-                          % str(replymsg))
+            st = 'PREEMPTED'
+        if self.debug: self.logger.write("Paxos State", "Prepare responding %s with %s to %s"
+                                         % (st, str(FLD_INRESPONSETO), str(FLD_BALLOTNUMBER)))
         conn.send(replymsg)
 
     def msg_propose(self, conn, msg):
