@@ -1226,7 +1226,7 @@ class Replica(Node):
                                        FLD_PVALUESET: self.quorumaccepted.pvalues})
             st = 'PREEMPTED'
         if self.debug: self.logger.write("Paxos State", "Prepare responding %s with %s to %s"
-                                         % (st, str(FLD_INRESPONSETO), str(FLD_BALLOTNUMBER)))
+                                         % (st, str(self.quorumballotnumber), str(msg.ballotnumber)))
         conn.send(replymsg)
 
     def msg_propose(self, conn, msg):
