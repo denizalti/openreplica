@@ -974,6 +974,19 @@ class Replica(Node):
         handles clientrequest message received according to replica's state
         - if not leader: reject
         - if leader: add connection to client connections and handle request"""
+        if len(self.replicas) == 0:
+            if self.debug: self.logger.write("State", "Adding SELF")
+            # Agree on adding self and the first replica:
+            self.become_leader()
+            # Add self
+            self.replicas[self.me] = 0
+            addcommand = self.create_add_command(self.me)
+            self.pick_commandnumber_add_to_pending(addcommand)
+            for i in range(WINDOW+3):
+                noopcommand = self.create_noop_command()
+                self.pick_commandnumber_add_to_pending(noopcommand)
+            self.issue_pending_commands()
+            return
         if not self.stateuptodate:
             return
         if self.isleader:
@@ -1025,6 +1038,21 @@ class Replica(Node):
     def msg_clientrequest_batch(self, msgconnlist):
         """called holding self.lock
         handles clientrequest messages that are batched together"""
+        if len(self.replicas) == 0:
+            if self.debug: self.logger.write("State", "Adding SELF")
+            # Agree on adding self and the first replica:
+            self.become_leader()
+            # Add self
+            self.replicas[self.me] = 0
+            addcommand = self.create_add_command(self.me)
+            self.pick_commandnumber_add_to_pending(addcommand)
+            for i in range(WINDOW+3):
+                noopcommand = self.create_noop_command()
+                self.pick_commandnumber_add_to_pending(noopcommand)
+            self.issue_pending_commands()
+            return
+        if not self.stateuptodate:
+            return
         if self.isleader:
             # if leader, handle the clientrequest
             for (msg,conn) in msgconnlist:
@@ -1069,50 +1097,6 @@ class Replica(Node):
                         self.send_reject_to_client(conn, msg.command.clientcommandnumber)
                         msgconnlist.remove((msg,conn))
                 self.handle_client_command_batch(msgconnlist, prepare=self.leader_initializing)
-
-    def msg_incclientrequest(self, conn, msg):
-        """handles inconsistent requests from the client"""
-        commandtuple = tuple(msg.command.command)
-        commandname = commandtuple[0]
-        commandargs = commandtuple[1:]
-        send_result_to_client = True
-        try:
-            method = getattr(self.object, commandname)
-            try:
-                givenresult = self._apply_args_to_method(method, commandargs, command)
-                clientreplycode = CR_OK
-                send_result_to_client = True
-            except BlockingReturn as blockingretexp:
-                givenresult = blockingretexp.returnvalue
-                clientreplycode = CR_BLOCK
-                send_result_to_client = True
-            except UnblockingReturn as unblockingretexp:
-                # Get the information about the method call
-                # These will be used to update executed and
-                # to send reply message to the caller client
-                givenresult = unblockingretexp.returnvalue
-                unblocked = unblockingretexp.unblocked
-                clientreplycode = CR_OK
-                send_result_to_client = True
-                # If there are clients to be unblocked that have
-                # been blocked previously send them unblock messages
-                for unblockedclientcommand in unblocked.iterkeys():
-                    self.send_reply_to_client(CR_UNBLOCK, None, unblockedclientcommand)
-            except Exception as e:
-                givenresult = pickle.dumps(e)
-                clientreplycode = CR_EXCEPTION
-                send_result_to_client = True
-                unblocked = {}
-        except (TypeError, AttributeError) as t:
-            if self.debug: self.logger.write("Execution Error",
-                                             "command not supported: %s" % (command))
-            if self.debug: self.logger.write("Execution Error", "%s" % str(t))
-            givenresult = 'COMMAND NOT SUPPORTED'
-            clientreplycode = CR_EXCEPTION
-            unblocked = {}
-            send_result_to_client = True
-        if commandname not in METACOMMANDS and send_result_to_client:
-            self.send_reply_to_client(clientreplycode, givenresult, command)
 
     def msg_clientreply(self, conn, msg):
         """this only occurs in response to commands initiated by the shell"""
