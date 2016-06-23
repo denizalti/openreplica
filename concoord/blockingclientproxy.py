@@ -160,8 +160,8 @@ class ClientProxy():
             print "Unexpected Client Reply Code: %d" % reqdesc.reply.replycode
 
     def recv_loop(self, *args):
-        socketset = [self.socket]
         while True:
+            socketset = [self.socket]
             try:
                 needreconfig = False
                 inputready,outputready,exceptready = select.select(socketset, [], socketset, 0)
